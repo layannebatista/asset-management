@@ -1,0 +1,6 @@
+
+notification:
+  email:
+    enabled: true
+  whatsapp:
+    enabled: true
