@@ -8,16 +8,16 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class HealthController implements HealthIndicator {
 
-    @Override
-    public Health health() {
-        return Health.up()
-                .withDetail("application", "asset-management")
-                .withDetail("status", "RUNNING")
-                .build();
-    }
+  @Override
+  public Health health() {
+    return Health.up()
+        .withDetail("application", "asset-management")
+        .withDetail("status", "RUNNING")
+        .build();
+  }
 
-    @GetMapping("/health")
-    public Health healthEndpoint() {
-        return health();
-    }
+  @GetMapping("/health")
+  public Health healthEndpoint() {
+    return health();
+  }
 }

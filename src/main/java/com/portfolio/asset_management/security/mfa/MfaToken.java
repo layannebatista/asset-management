@@ -8,52 +8,49 @@ import java.util.UUID;
 @Table(name = "mfa_tokens")
 public class MfaToken {
 
-    @Id
-    @GeneratedValue
-    private UUID id;
+  @Id @GeneratedValue private UUID id;
 
-    @Column(nullable = false)
-    private UUID userId;
+  @Column(nullable = false)
+  private UUID userId;
 
-    @Column(nullable = false, length = 10)
-    private String code;
+  @Column(nullable = false, length = 10)
+  private String code;
 
-    @Column(nullable = false)
-    private LocalDateTime expiresAt;
+  @Column(nullable = false)
+  private LocalDateTime expiresAt;
 
-    @Column(nullable = false)
-    private boolean used = false;
+  @Column(nullable = false)
+  private boolean used = false;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
+  @Column(nullable = false)
+  private LocalDateTime createdAt;
 
-    protected MfaToken() {
-    }
+  protected MfaToken() {}
 
-    public MfaToken(UUID userId, String code, LocalDateTime expiresAt) {
-        this.userId = userId;
-        this.code = code;
-        this.expiresAt = expiresAt;
-        this.createdAt = LocalDateTime.now();
-    }
+  public MfaToken(UUID userId, String code, LocalDateTime expiresAt) {
+    this.userId = userId;
+    this.code = code;
+    this.expiresAt = expiresAt;
+    this.createdAt = LocalDateTime.now();
+  }
 
-    public boolean isExpired() {
-        return LocalDateTime.now().isAfter(expiresAt);
-    }
+  public boolean isExpired() {
+    return LocalDateTime.now().isAfter(expiresAt);
+  }
 
-    public void markAsUsed() {
-        this.used = true;
-    }
+  public void markAsUsed() {
+    this.used = true;
+  }
 
-    public UUID getId() {
-        return id;
-    }
+  public UUID getId() {
+    return id;
+  }
 
-    public UUID getUserId() {
-        return userId;
-    }
+  public UUID getUserId() {
+    return userId;
+  }
 
-    public boolean isUsed() {
-        return used;
-    }
+  public boolean isUsed() {
+    return used;
+  }
 }

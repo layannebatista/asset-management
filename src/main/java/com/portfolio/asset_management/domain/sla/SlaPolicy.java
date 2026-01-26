@@ -8,48 +8,45 @@ import java.util.UUID;
 @Table(name = "sla_policies")
 public class SlaPolicy {
 
-    @Id
-    @GeneratedValue
-    private UUID id;
+  @Id @GeneratedValue private UUID id;
 
-    @Column(name = "policy_name", nullable = false, unique = true)
-    private String policyName;
+  @Column(name = "policy_name", nullable = false, unique = true)
+  private String policyName;
 
-    @Column(name = "max_duration_hours", nullable = false)
-    private long maxDurationHours;
+  @Column(name = "max_duration_hours", nullable = false)
+  private long maxDurationHours;
 
-    @Column(name = "applies_to_category", nullable = false)
-    private String appliesToCategory;
+  @Column(name = "applies_to_category", nullable = false)
+  private String appliesToCategory;
 
-    @Column(name = "active", nullable = false)
-    private boolean active = true;
+  @Column(name = "active", nullable = false)
+  private boolean active = true;
 
-    protected SlaPolicy() {
-    }
+  protected SlaPolicy() {}
 
-    public SlaPolicy(String policyName, long maxDurationHours, String appliesToCategory) {
-        this.policyName = policyName;
-        this.maxDurationHours = maxDurationHours;
-        this.appliesToCategory = appliesToCategory;
-    }
+  public SlaPolicy(String policyName, long maxDurationHours, String appliesToCategory) {
+    this.policyName = policyName;
+    this.maxDurationHours = maxDurationHours;
+    this.appliesToCategory = appliesToCategory;
+  }
 
-    public UUID getId() {
-        return id;
-    }
+  public UUID getId() {
+    return id;
+  }
 
-    public String getPolicyName() {
-        return policyName;
-    }
+  public String getPolicyName() {
+    return policyName;
+  }
 
-    public Duration getMaxDuration() {
-        return Duration.ofHours(maxDurationHours);
-    }
+  public Duration getMaxDuration() {
+    return Duration.ofHours(maxDurationHours);
+  }
 
-    public String getAppliesToCategory() {
-        return appliesToCategory;
-    }
+  public String getAppliesToCategory() {
+    return appliesToCategory;
+  }
 
-    public boolean isActive() {
-        return active;
-    }
+  public boolean isActive() {
+    return active;
+  }
 }

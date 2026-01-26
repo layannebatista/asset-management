@@ -10,21 +10,18 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @EnableAsync
 public class MessageConfig {
 
-    /**
-     * Executor padrão para:
-     * - envio de notificações (email / whatsapp)
-     * - publicação de eventos de auditoria
-     * - retries assíncronos
-     * - processamento desacoplado
-     */
-    @Bean(name = "messageTaskExecutor")
-    public TaskExecutor messageTaskExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(5);
-        executor.setMaxPoolSize(20);
-        executor.setQueueCapacity(500);
-        executor.setThreadNamePrefix("message-exec-");
-        executor.initialize();
-        return executor;
-    }
+  /**
+   * Executor padrão para: - envio de notificações (email / whatsapp) - publicação de eventos de
+   * auditoria - retries assíncronos - processamento desacoplado
+   */
+  @Bean(name = "messageTaskExecutor")
+  public TaskExecutor messageTaskExecutor() {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(5);
+    executor.setMaxPoolSize(20);
+    executor.setQueueCapacity(500);
+    executor.setThreadNamePrefix("message-exec-");
+    executor.initialize();
+    return executor;
+  }
 }

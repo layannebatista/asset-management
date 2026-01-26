@@ -10,45 +10,43 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 public class SecurityConfig {
 
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+  private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-    }
+  public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+  }
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-        http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
+    http.csrf(csrf -> csrf.disable())
+        .authorizeHttpRequests(
+            auth ->
+                auth
 
-                // públicos
-                .requestMatchers("/health", "/actuator/**").permitAll()
+                    // públicos
+                    .requestMatchers("/health", "/actuator/**")
+                    .permitAll()
 
-                // INVENTÁRIO – somente gestor ou admin
-                .requestMatchers("/api/inventories/**")
+                    // INVENTÁRIO – somente gestor ou admin
+                    .requestMatchers("/api/inventories/**")
                     .hasAnyRole("GESTOR", "ADMIN")
 
-                // MANUTENÇÃO – gestor ou admin
-                .requestMatchers("/api/maintenances/**")
+                    // MANUTENÇÃO – gestor ou admin
+                    .requestMatchers("/api/maintenances/**")
                     .hasAnyRole("GESTOR", "ADMIN")
 
-                // TRANSFERÊNCIAS – gestor ou admin
-                .requestMatchers("/api/transfers/**")
+                    // TRANSFERÊNCIAS – gestor ou admin
+                    .requestMatchers("/api/transfers/**")
                     .hasAnyRole("GESTOR", "ADMIN")
 
-                // ATIVOS – leitura para todos autenticados
-                .requestMatchers("/api/assets/**")
+                    // ATIVOS – leitura para todos autenticados
+                    .requestMatchers("/api/assets/**")
                     .hasAnyRole("USUARIO", "GESTOR", "ADMIN")
+                    .anyRequest()
+                    .authenticated())
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(
-                jwtAuthenticationFilter,
-                UsernamePasswordAuthenticationFilter.class
-            );
-
-        return http.build();
-    }
+    return http.build();
+  }
 }

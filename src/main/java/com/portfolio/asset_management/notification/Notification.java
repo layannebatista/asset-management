@@ -8,44 +8,40 @@ import java.util.UUID;
 @Table(name = "notifications")
 public class Notification {
 
-    @Id
-    @GeneratedValue
-    private UUID id;
+  @Id @GeneratedValue private UUID id;
 
-    @Column(nullable = false)
-    private UUID userId;
+  @Column(nullable = false)
+  private UUID userId;
 
-    @Column(nullable = false, length = 50)
-    private String channel; // EMAIL, WHATSAPP, SYSTEM
+  @Column(nullable = false, length = 50)
+  private String channel; // EMAIL, WHATSAPP, SYSTEM
 
-    @Column(nullable = false, length = 500)
-    private String message;
+  @Column(nullable = false, length = 500)
+  private String message;
 
-    @Column(nullable = false)
-    private boolean delivered = false;
+  @Column(nullable = false)
+  private boolean delivered = false;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
+  @Column(nullable = false)
+  private LocalDateTime createdAt;
 
-    @Column
-    private LocalDateTime deliveredAt;
+  @Column private LocalDateTime deliveredAt;
 
-    protected Notification() {
-    }
+  protected Notification() {}
 
-    public Notification(UUID userId, String channel, String message) {
-        this.userId = userId;
-        this.channel = channel;
-        this.message = message;
-        this.createdAt = LocalDateTime.now();
-    }
+  public Notification(UUID userId, String channel, String message) {
+    this.userId = userId;
+    this.channel = channel;
+    this.message = message;
+    this.createdAt = LocalDateTime.now();
+  }
 
-    public void markDelivered() {
-        this.delivered = true;
-        this.deliveredAt = LocalDateTime.now();
-    }
+  public void markDelivered() {
+    this.delivered = true;
+    this.deliveredAt = LocalDateTime.now();
+  }
 
-    public UUID getId() {
-        return id;
-    }
+  public UUID getId() {
+    return id;
+  }
 }

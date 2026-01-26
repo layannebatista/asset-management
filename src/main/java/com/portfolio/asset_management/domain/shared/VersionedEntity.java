@@ -7,11 +7,11 @@ import jakarta.persistence.Version;
 @MappedSuperclass
 public abstract class VersionedEntity {
 
-    @Version
-    @Column(name = "version")
-    private Long version;
+  @Version
+  @Column(name = "version")
+  private Long version;
 
-    public Long getVersion() {
-        return version;
-    }
+  public Long getVersion() {
+    return version;
+  }
 }

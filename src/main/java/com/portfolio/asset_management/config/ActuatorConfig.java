@@ -11,29 +11,23 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 public class ActuatorConfig {
 
-    /**
-     * Segurança específica para endpoints do Actuator
-     * Health e Info públicos, demais protegidos
-     */
-    @Bean
-    public SecurityFilterChain actuatorSecurityFilterChain(
-            HttpSecurity http,
-            WebEndpointProperties webEndpointProperties
-    ) throws Exception {
+  /** Segurança específica para endpoints do Actuator Health e Info públicos, demais protegidos */
+  @Bean
+  public SecurityFilterChain actuatorSecurityFilterChain(
+      HttpSecurity http, WebEndpointProperties webEndpointProperties) throws Exception {
 
-        String actuatorBasePath = webEndpointProperties.getBasePath();
+    String actuatorBasePath = webEndpointProperties.getBasePath();
 
-        http
-            .securityMatcher(actuatorBasePath + "/**")
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    EndpointRequest.to("health", "info")
-                ).permitAll()
-                .anyRequest().hasRole("ADMIN")
-            )
-            .httpBasic(Customizer.withDefaults())
-            .csrf(csrf -> csrf.disable());
+    http.securityMatcher(actuatorBasePath + "/**")
+        .authorizeHttpRequests(
+            auth ->
+                auth.requestMatchers(EndpointRequest.to("health", "info"))
+                    .permitAll()
+                    .anyRequest()
+                    .hasRole("ADMIN"))
+        .httpBasic(Customizer.withDefaults())
+        .csrf(csrf -> csrf.disable());
 
-        return http.build();
-    }
+    return http.build();
+  }
 }

@@ -10,167 +10,168 @@ import com.portfolio.asset_management.infrastructure.persistence.AssetLifecycleR
 import com.portfolio.asset_management.infrastructure.persistence.AssetRepository;
 import com.portfolio.asset_management.infrastructure.persistence.TransferApprovalRepository;
 import com.portfolio.asset_management.infrastructure.persistence.TransferRequestRepository;
+import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.UUID;
 
 @Service
 public class TransferService {
 
-    private final AssetRepository assetRepository;
-    private final TransferRequestRepository transferRequestRepository;
-    private final TransferApprovalRepository transferApprovalRepository;
-    private final AssetLifecycleRepository assetLifecycleRepository;
+  private final AssetRepository assetRepository;
+  private final TransferRequestRepository transferRequestRepository;
+  private final TransferApprovalRepository transferApprovalRepository;
+  private final AssetLifecycleRepository assetLifecycleRepository;
 
-    public TransferService(
-            AssetRepository assetRepository,
-            TransferRequestRepository transferRequestRepository,
-            TransferApprovalRepository transferApprovalRepository,
-            AssetLifecycleRepository assetLifecycleRepository
-    ) {
-        this.assetRepository = assetRepository;
-        this.transferRequestRepository = transferRequestRepository;
-        this.transferApprovalRepository = transferApprovalRepository;
-        this.assetLifecycleRepository = assetLifecycleRepository;
+  public TransferService(
+      AssetRepository assetRepository,
+      TransferRequestRepository transferRequestRepository,
+      TransferApprovalRepository transferApprovalRepository,
+      AssetLifecycleRepository assetLifecycleRepository) {
+    this.assetRepository = assetRepository;
+    this.transferRequestRepository = transferRequestRepository;
+    this.transferApprovalRepository = transferApprovalRepository;
+    this.assetLifecycleRepository = assetLifecycleRepository;
+  }
+
+  /* ======================================================
+  CRIAR SOLICITAÇÃO DE TRANSFERÊNCIA
+  ====================================================== */
+
+  @Transactional
+  public TransferRequest requestTransfer(
+      UUID assetId, UUID toUnitId, UUID toResponsibleUserId, UUID requestedBy) {
+    Asset asset =
+        assetRepository
+            .findById(assetId)
+            .orElseThrow(() -> new IllegalStateException("Ativo não encontrado"));
+
+    if (asset.getStatus() != AssetStatus.EM_USO) {
+      throw new IllegalStateException("Ativo não está disponível para transferência");
     }
 
-    /* ======================================================
-       CRIAR SOLICITAÇÃO DE TRANSFERÊNCIA
-       ====================================================== */
+    boolean alreadyPending =
+        transferRequestRepository.existsByAssetIdAndStatus(assetId, TransferStatus.PENDENTE);
 
-    @Transactional
-    public TransferRequest requestTransfer(
-            UUID assetId,
-            UUID toUnitId,
-            UUID toResponsibleUserId,
-            UUID requestedBy
-    ) {
-        Asset asset = assetRepository.findById(assetId)
-                .orElseThrow(() -> new IllegalStateException("Ativo não encontrado"));
-
-        if (asset.getStatus() != AssetStatus.EM_USO) {
-            throw new IllegalStateException("Ativo não está disponível para transferência");
-        }
-
-        boolean alreadyPending =
-                transferRequestRepository.existsByAssetIdAndStatus(assetId, TransferStatus.PENDENTE);
-
-        if (alreadyPending) {
-            throw new IllegalStateException("Já existe uma transferência pendente para este ativo");
-        }
-
-        asset.startTransfer();
-        assetRepository.save(asset);
-
-        TransferRequest request = TransferRequest.create(
-                asset.getId(),
-                asset.getUnitId(),
-                toUnitId,
-                asset.getResponsibleUserId(),
-                toResponsibleUserId,
-                requestedBy
-        );
-
-        transferRequestRepository.save(request);
-
-        AssetLifecycleEvent event = AssetLifecycleEvent.ofStatusChange(
-                asset.getId(),
-                AssetStatus.EM_USO,
-                AssetStatus.EM_TRANSFERENCIA,
-                "TRANSFER_REQUESTED",
-                requestedBy,
-                null
-        );
-
-        assetLifecycleRepository.save(event);
-
-        return request;
+    if (alreadyPending) {
+      throw new IllegalStateException("Já existe uma transferência pendente para este ativo");
     }
 
-    /* ======================================================
-       APROVAR TRANSFERÊNCIA
-       ====================================================== */
+    asset.startTransfer();
+    assetRepository.save(asset);
 
-    @Transactional
-    public void approveTransfer(UUID transferRequestId, UUID approverId) {
-        TransferRequest request = transferRequestRepository.findById(transferRequestId)
-                .orElseThrow(() -> new IllegalStateException("Solicitação de transferência não encontrada"));
+    TransferRequest request =
+        TransferRequest.create(
+            asset.getId(),
+            asset.getUnitId(),
+            toUnitId,
+            asset.getResponsibleUserId(),
+            toResponsibleUserId,
+            requestedBy);
 
-        if (transferApprovalRepository.existsByTransferRequestId(transferRequestId)) {
-            throw new IllegalStateException("Essa transferência já foi decidida");
-        }
+    transferRequestRepository.save(request);
 
-        request.approve(approverId);
-        transferRequestRepository.save(request);
+    AssetLifecycleEvent event =
+        AssetLifecycleEvent.ofStatusChange(
+            asset.getId(),
+            AssetStatus.EM_USO,
+            AssetStatus.EM_TRANSFERENCIA,
+            "TRANSFER_REQUESTED",
+            requestedBy,
+            null);
 
-        TransferApproval approval =
-                TransferApproval.approve(request.getId(), approverId);
+    assetLifecycleRepository.save(event);
 
-        transferApprovalRepository.save(approval);
+    return request;
+  }
 
-        Asset asset = assetRepository.findById(request.getAssetId())
-                .orElseThrow(() -> new IllegalStateException("Ativo não encontrado"));
+  /* ======================================================
+  APROVAR TRANSFERÊNCIA
+  ====================================================== */
 
-        AssetStatus previousStatus = asset.getStatus();
+  @Transactional
+  public void approveTransfer(UUID transferRequestId, UUID approverId) {
+    TransferRequest request =
+        transferRequestRepository
+            .findById(transferRequestId)
+            .orElseThrow(
+                () -> new IllegalStateException("Solicitação de transferência não encontrada"));
 
-        asset.approveTransfer(
-                request.getToUnitId(),
-                request.getToResponsibleUserId()
-        );
-
-        assetRepository.save(asset);
-
-        AssetLifecycleEvent event = AssetLifecycleEvent.ofStatusChange(
-                asset.getId(),
-                previousStatus,
-                AssetStatus.EM_USO,
-                "TRANSFER_APPROVED",
-                approverId,
-                null
-        );
-
-        assetLifecycleRepository.save(event);
+    if (transferApprovalRepository.existsByTransferRequestId(transferRequestId)) {
+      throw new IllegalStateException("Essa transferência já foi decidida");
     }
 
-    /* ======================================================
-       REJEITAR TRANSFERÊNCIA
-       ====================================================== */
+    request.approve(approverId);
+    transferRequestRepository.save(request);
 
-    @Transactional
-    public void rejectTransfer(UUID transferRequestId, UUID approverId, String reason) {
-        TransferRequest request = transferRequestRepository.findById(transferRequestId)
-                .orElseThrow(() -> new IllegalStateException("Solicitação de transferência não encontrada"));
+    TransferApproval approval = TransferApproval.approve(request.getId(), approverId);
 
-        if (transferApprovalRepository.existsByTransferRequestId(transferRequestId)) {
-            throw new IllegalStateException("Essa transferência já foi decidida");
-        }
+    transferApprovalRepository.save(approval);
 
-        request.reject(approverId, reason);
-        transferRequestRepository.save(request);
+    Asset asset =
+        assetRepository
+            .findById(request.getAssetId())
+            .orElseThrow(() -> new IllegalStateException("Ativo não encontrado"));
 
-        TransferApproval approval =
-                TransferApproval.reject(request.getId(), approverId, reason);
+    AssetStatus previousStatus = asset.getStatus();
 
-        transferApprovalRepository.save(approval);
+    asset.approveTransfer(request.getToUnitId(), request.getToResponsibleUserId());
 
-        Asset asset = assetRepository.findById(request.getAssetId())
-                .orElseThrow(() -> new IllegalStateException("Ativo não encontrado"));
+    assetRepository.save(asset);
 
-        AssetStatus previousStatus = asset.getStatus();
+    AssetLifecycleEvent event =
+        AssetLifecycleEvent.ofStatusChange(
+            asset.getId(),
+            previousStatus,
+            AssetStatus.EM_USO,
+            "TRANSFER_APPROVED",
+            approverId,
+            null);
 
-        asset.returnFromMaintenance(); // volta para EM_USO
-        assetRepository.save(asset);
+    assetLifecycleRepository.save(event);
+  }
 
-        AssetLifecycleEvent event = AssetLifecycleEvent.ofStatusChange(
-                asset.getId(),
-                previousStatus,
-                AssetStatus.EM_USO,
-                "TRANSFER_REJECTED",
-                approverId,
-                reason
-        );
+  /* ======================================================
+  REJEITAR TRANSFERÊNCIA
+  ====================================================== */
 
-        assetLifecycleRepository.save(event);
+  @Transactional
+  public void rejectTransfer(UUID transferRequestId, UUID approverId, String reason) {
+    TransferRequest request =
+        transferRequestRepository
+            .findById(transferRequestId)
+            .orElseThrow(
+                () -> new IllegalStateException("Solicitação de transferência não encontrada"));
+
+    if (transferApprovalRepository.existsByTransferRequestId(transferRequestId)) {
+      throw new IllegalStateException("Essa transferência já foi decidida");
     }
+
+    request.reject(approverId, reason);
+    transferRequestRepository.save(request);
+
+    TransferApproval approval = TransferApproval.reject(request.getId(), approverId, reason);
+
+    transferApprovalRepository.save(approval);
+
+    Asset asset =
+        assetRepository
+            .findById(request.getAssetId())
+            .orElseThrow(() -> new IllegalStateException("Ativo não encontrado"));
+
+    AssetStatus previousStatus = asset.getStatus();
+
+    asset.returnFromMaintenance(); // volta para EM_USO
+    assetRepository.save(asset);
+
+    AssetLifecycleEvent event =
+        AssetLifecycleEvent.ofStatusChange(
+            asset.getId(),
+            previousStatus,
+            AssetStatus.EM_USO,
+            "TRANSFER_REJECTED",
+            approverId,
+            reason);
+
+    assetLifecycleRepository.save(event);
+  }
 }

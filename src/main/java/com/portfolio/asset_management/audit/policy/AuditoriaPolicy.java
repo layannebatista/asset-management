@@ -4,29 +4,27 @@ import java.time.Duration;
 
 public class AuditoriaPolicy {
 
-    private boolean immutableEvents;
-    private Duration retentionPeriod;
-    private boolean anonymizePersonalData;
+  private boolean immutableEvents;
+  private Duration retentionPeriod;
+  private boolean anonymizePersonalData;
 
-    public AuditoriaPolicy(
-            boolean immutableEvents,
-            Duration retentionPeriod,
-            boolean anonymizePersonalData) {
+  public AuditoriaPolicy(
+      boolean immutableEvents, Duration retentionPeriod, boolean anonymizePersonalData) {
 
-        this.immutableEvents = immutableEvents;
-        this.retentionPeriod = retentionPeriod;
-        this.anonymizePersonalData = anonymizePersonalData;
-    }
+    this.immutableEvents = immutableEvents;
+    this.retentionPeriod = retentionPeriod;
+    this.anonymizePersonalData = anonymizePersonalData;
+  }
 
-    public boolean isImmutableEvents() {
-        return immutableEvents;
-    }
+  public boolean isImmutableEvents() {
+    return immutableEvents;
+  }
 
-    public Duration getRetentionPeriod() {
-        return retentionPeriod;
-    }
+  public Duration getRetentionPeriod() {
+    return retentionPeriod;
+  }
 
-    public boolean isAnonymizePersonalData() {
-        return anonymizePersonalData;
-    }
+  public boolean isAnonymizePersonalData() {
+    return anonymizePersonalData;
+  }
 }
