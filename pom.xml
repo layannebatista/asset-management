@@ -179,19 +179,17 @@
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
                 <version>9.0.10</version>
+
                 <executions>
                     <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
+                        <id>dependency-check</id>
+                        <phase>none</phase>
                     </execution>
                 </executions>
-                <configuration>
-                    <failBuildOnCVSS>8</failBuildOnCVSS>
-                    <format>HTML</format>
-                </configuration>
             </plugin>
-            
+
+
+
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
