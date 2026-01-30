@@ -1,5 +1,6 @@
 package com.portfolio.asset_management.domain.asset;
 
+import jakarta.persistence.*;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -14,23 +15,39 @@ import java.util.UUID;
  * Todas as transições acontecem por ações explícitas.
  * Nenhuma alteração direta de status é permitida.
  */
+@Entity
+@Table(name = "assets")
 public class Asset {
 
+  @Id
+  @GeneratedValue
+  @Column(nullable = false, updatable = false)
   private UUID id;
+
+  @Column(nullable = false, unique = true)
   private String assetCode;
 
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
   private AssetStatus status;
 
+  @Column
   private UUID unitId;
+
+  @Column
   private UUID responsibleUserId;
 
+  @Column(nullable = false)
   private boolean transferenciaEmAndamento;
+
+  @Column(nullable = false)
   private boolean inventarioEmAndamento;
 
+  @Column
   private String writeOffReason;
 
   protected Asset() {
-    // construtor protegido para JPA
+    // construtor protegido exigido pelo JPA
   }
 
   public Asset(String assetCode) {
