@@ -5,101 +5,63 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
- * Representa um processo de manutenção de um ativo.
+ * PROJEÇÃO de leitura do processo de Manutenção.
  *
- * <p>Essa entidade NÃO altera o ativo diretamente. Ela representa apenas o ciclo da manutenção.
+ * <p>Este modelo NÃO é Aggregate Root.
+ * NÃO contém regras de negócio.
+ * NÃO governa fluxo.
+ *
+ * <p>Ele representa uma visão consolidada da manutenção
+ * para fins de consulta, listagem e relatórios.
+ *
+ * <p>O processo oficial de manutenção é representado por:
+ * {@link MaintenanceRequest}
  */
 @Entity
 @Table(name = "maintenances")
 public class Maintenance {
 
-  @Id @GeneratedValue private UUID id;
+  @Id
+  private UUID id;
 
-  @Column(name = "asset_id", nullable = false)
+  @Column(nullable = false)
   private UUID assetId;
 
-  @Column(name = "description", nullable = false, length = 255)
-  private String description;
-
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false, length = 30)
-  private MaintenanceStatus status;
+  @Column(nullable = false)
+  private MaintenanceRequestStatus status;
 
-  @Column(name = "opened_by", nullable = false)
-  private UUID openedBy;
+  @Column(nullable = false)
+  private LocalDateTime createdAt;
 
-  @Column(name = "opened_at", nullable = false, updatable = false)
-  private LocalDateTime openedAt;
-
-  @Column(name = "started_at")
   private LocalDateTime startedAt;
-
-  @Column(name = "finished_at")
   private LocalDateTime finishedAt;
-
-  @Column(name = "canceled_at")
-  private LocalDateTime canceledAt;
-
-  @Column(name = "canceled_reason", length = 255)
-  private String canceledReason;
+  private LocalDateTime cancelledAt;
 
   protected Maintenance() {
-    // JPA only
+    // JPA
   }
 
-  private Maintenance(UUID assetId, String description, UUID openedBy) {
-    this.assetId = assetId;
-    this.description = description;
-    this.openedBy = openedBy;
-    this.status = MaintenanceStatus.ABERTA;
-    this.openedAt = LocalDateTime.now();
-  }
-
-  /* ======================================================
-  FÁBRICA (CRIAÇÃO)
-  ====================================================== */
-
-  public static Maintenance open(UUID assetId, String description, UUID openedBy) {
-    return new Maintenance(assetId, description, openedBy);
-  }
-
-  /* ======================================================
-  TRANSIÇÕES DE ESTADO
-  ====================================================== */
-
-  public void start() {
-    ensureStatus(MaintenanceStatus.ABERTA);
-    this.status = MaintenanceStatus.EM_EXECUCAO;
-    this.startedAt = LocalDateTime.now();
-  }
-
-  public void finish() {
-    ensureStatus(MaintenanceStatus.EM_EXECUCAO);
-    this.status = MaintenanceStatus.FINALIZADA;
-    this.finishedAt = LocalDateTime.now();
-  }
-
-  public void cancel(String reason) {
-    ensureStatus(MaintenanceStatus.ABERTA);
-    this.status = MaintenanceStatus.CANCELADA;
-    this.canceledReason = reason;
-    this.canceledAt = LocalDateTime.now();
+  /**
+   * Constrói a projeção a partir do Aggregate Root.
+   * Este método deve ser usado por serviços de projeção
+   * ou listeners de eventos.
+   */
+  public static Maintenance from(MaintenanceRequest request) {
+    Maintenance maintenance = new Maintenance();
+    maintenance.id = request.getId();
+    maintenance.assetId = request.getAssetId();
+    maintenance.status = request.getStatus();
+    maintenance.createdAt = request.getCreatedAt();
+    maintenance.startedAt = request.getStartedAt();
+    maintenance.finishedAt = request.getFinishedAt();
+    maintenance.cancelledAt = request.getCancelledAt();
+    return maintenance;
   }
 
   /* ======================================================
-  REGRAS INTERNAS
-  ====================================================== */
-
-  private void ensureStatus(MaintenanceStatus expected) {
-    if (this.status != expected) {
-      throw new IllegalStateException(
-          "Manutenção não pode mudar de estado. Estado atual: " + status);
-    }
-  }
-
-  /* ======================================================
-  GETTERS (SOMENTE LEITURA)
-  ====================================================== */
+     GETTERS — SOMENTE LEITURA
+     ====================================================== */
 
   public UUID getId() {
     return id;
@@ -109,20 +71,12 @@ public class Maintenance {
     return assetId;
   }
 
-  public String getDescription() {
-    return description;
-  }
-
-  public MaintenanceStatus getStatus() {
+  public MaintenanceRequestStatus getStatus() {
     return status;
   }
 
-  public UUID getOpenedBy() {
-    return openedBy;
-  }
-
-  public LocalDateTime getOpenedAt() {
-    return openedAt;
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
   }
 
   public LocalDateTime getStartedAt() {
@@ -133,11 +87,7 @@ public class Maintenance {
     return finishedAt;
   }
 
-  public LocalDateTime getCanceledAt() {
-    return canceledAt;
-  }
-
-  public String getCanceledReason() {
-    return canceledReason;
+  public LocalDateTime getCancelledAt() {
+    return cancelledAt;
   }
 }

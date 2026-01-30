@@ -3,28 +3,23 @@ package com.portfolio.asset_management.infrastructure.persistence;
 import com.portfolio.asset_management.domain.inventory.InventoryCycle;
 import com.portfolio.asset_management.domain.inventory.InventoryStatus;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- * Repositório responsável pela persistência dos ciclos de inventário.
+ * Repositório do Aggregate Root InventoryCycle.
  *
- * <p>NÃO contém regra de negócio.
+ * <p>Responsável apenas por persistência.
+ * NÃO contém regras de negócio.
  */
 @Repository
-public interface InventoryCycleRepository extends JpaRepository<InventoryCycle, UUID> {
+public interface InventoryCycleRepository
+    extends JpaRepository<InventoryCycle, UUID> {
 
-  /** Verifica se já existe um ciclo ABERTO para a unidade informada. */
-  boolean existsByUnitIdAndStatus(UUID unitId, InventoryStatus status);
-
-  /** Busca o ciclo ABERTO da unidade, se existir. */
-  Optional<InventoryCycle> findByUnitIdAndStatus(UUID unitId, InventoryStatus status);
-
-  /** Lista ciclos por status. */
+  /**
+   * Lista ciclos por status.
+   * Usado apenas para consultas.
+   */
   List<InventoryCycle> findAllByStatus(InventoryStatus status);
-
-  /** Lista todos os ciclos de uma unidade. */
-  List<InventoryCycle> findAllByUnitId(UUID unitId);
 }

@@ -9,19 +9,18 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- * Repositório responsável exclusivamente pela persistência de ativos.
+ * Repositório de persistência do Asset.
  *
- * <p>NÃO contém regra de negócio.
+ * Responsável apenas por acesso a dados.
+ * Nenhuma regra de negócio deve existir aqui.
+ *
  */
 @Repository
 public interface AssetRepository extends JpaRepository<Asset, UUID> {
 
-  /** Busca um ativo pelo código único. */
-  Optional<Asset> findByAssetCode(String assetCode);
-
-  /** Verifica se já existe um ativo com o código informado. */
   boolean existsByAssetCode(String assetCode);
 
-  /** Lista ativos por status. */
+  Optional<Asset> findByAssetCode(String assetCode);
+
   List<Asset> findAllByStatus(AssetStatus status);
 }

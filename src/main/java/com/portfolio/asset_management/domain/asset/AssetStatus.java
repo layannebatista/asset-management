@@ -1,28 +1,98 @@
 package com.portfolio.asset_management.domain.asset;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 /**
- * Representa o estado REAL do ativo ao longo do seu ciclo de vida.
+ * Representa o estado atual do Ativo dentro do seu ciclo de vida.
  *
- * <p>Regras importantes: - Estados representam a situação física/operacional do ativo - Estados NÃO
- * representam telas, permissões ou workflows - BAIXADO é estado final e não permite transição
+ * Este enum descreve SOMENTE estados possíveis.
+ * Regras de transição e validações ficam no domínio (Asset).
+ *
+ 
  */
 public enum AssetStatus {
 
-  /** Ativo criado no sistema, ainda não está em uso. */
-  CADASTRADO,
+  /**
+   * Ativo recém-cadastrado no sistema.
+   * Ainda não está em uso.
+   */
+  CADASTRADO(EnumSet.of(
+      AssetAction.ATIVAR
+  )),
 
-  /** Ativo em uso normal pela empresa. */
-  EM_USO,
+  /**
+   * Ativo em uso normal.
+   */
+  EM_USO(EnumSet.of(
+      AssetAction.SOLICITAR_TRANSFERENCIA,
+      AssetAction.ENVIAR_PARA_MANUTENCAO,
+      AssetAction.INICIAR_INVENTARIO,
+      AssetAction.BAIXAR
+  )),
 
-  /** Ativo em processo de transferência. Durante esse estado, o ativo fica bloqueado. */
-  EM_TRANSFERENCIA,
+  /**
+   * Transferência solicitada e aguardando aprovação.
+   */
+  TRANSFERENCIA_SOLICITADA(EnumSet.of(
+      AssetAction.APROVAR_TRANSFERENCIA,
+      AssetAction.REJEITAR_TRANSFERENCIA
+  )),
 
-  /** Ativo indisponível por manutenção. */
-  EM_MANUTENCAO,
+  /**
+   * Transferência aprovada e aguardando confirmação de recebimento.
+   */
+  TRANSFERENCIA_APROVADA(EnumSet.of(
+      AssetAction.CONFIRMAR_RECEBIMENTO
+  )),
 
-  /** Ativo não localizado durante inventário. */
-  NAO_LOCALIZADO,
+  /**
+   * Ativo em manutenção.
+   */
+  EM_MANUTENCAO(EnumSet.of(
+      AssetAction.RETORNAR_DA_MANUTENCAO
+  )),
 
-  /** Estado final. Ativo baixado definitivamente. */
-  BAIXADO
+  /**
+   * Ativo em processo de inventário/conferência.
+   */
+  EM_INVENTARIO(EnumSet.of(
+      AssetAction.CONFIRMAR_LOCALIZADO,
+      AssetAction.MARCAR_NAO_LOCALIZADO
+  )),
+
+  /**
+   * Ativo não localizado durante inventário.
+   */
+  NAO_LOCALIZADO(EnumSet.of(
+      AssetAction.LOCALIZAR_ATIVO,
+      AssetAction.BAIXAR
+  )),
+
+  /**
+   * Estado final do ativo.
+   */
+  BAIXADO(EnumSet.noneOf(AssetAction.class));
+
+  private final Set<AssetAction> allowedActions;
+
+  AssetStatus(Set<AssetAction> allowedActions) {
+    this.allowedActions = allowedActions;
+  }
+
+  /* ======================================================
+     API DE DOMÍNIO (BDD FRIENDLY)
+     ====================================================== */
+
+  public boolean permite(AssetAction action) {
+    return allowedActions.contains(action);
+  }
+
+  public boolean isTerminal() {
+    return this == BAIXADO;
+  }
+
+  public Set<AssetAction> getAllowedActions() {
+    return EnumSet.copyOf(allowedActions);
+  }
 }

@@ -1,135 +1,170 @@
 package com.portfolio.asset_management.application.service;
 
 import com.portfolio.asset_management.domain.asset.Asset;
+import com.portfolio.asset_management.domain.asset.AssetAction;
 import com.portfolio.asset_management.domain.asset.AssetLifecycleEvent;
 import com.portfolio.asset_management.domain.asset.AssetStatus;
-import com.portfolio.asset_management.domain.inventory.*;
-import com.portfolio.asset_management.infrastructure.persistence.*;
+import com.portfolio.asset_management.domain.inventory.InventoryCheck;
+import com.portfolio.asset_management.domain.inventory.InventoryCheckResult;
+import com.portfolio.asset_management.domain.inventory.InventoryCycle;
+import com.portfolio.asset_management.domain.inventory.InventoryItem;
+import com.portfolio.asset_management.infrastructure.persistence.AssetLifecycleRepository;
+import com.portfolio.asset_management.infrastructure.persistence.AssetRepository;
+import com.portfolio.asset_management.infrastructure.persistence.InventoryCheckRepository;
+import com.portfolio.asset_management.infrastructure.persistence.InventoryCycleRepository;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Serviço de aplicação do módulo Inventory.
+ *
+ * <p>Responsável apenas por ORQUESTRAR:
+ * - InventoryCycle
+ * - InventoryItem
+ * - InventoryCheck
+ * - Asset
+ *
+ * <p>Este service NÃO contém regra de negócio.
+ * Todas as validações de fluxo devem existir no domínio.
+ */
 @Service
 public class InventoryService {
 
-  private final AssetRepository assetRepository;
   private final InventoryCycleRepository inventoryCycleRepository;
   private final InventoryCheckRepository inventoryCheckRepository;
+  private final AssetRepository assetRepository;
   private final AssetLifecycleRepository assetLifecycleRepository;
 
   public InventoryService(
-      AssetRepository assetRepository,
       InventoryCycleRepository inventoryCycleRepository,
       InventoryCheckRepository inventoryCheckRepository,
+      AssetRepository assetRepository,
       AssetLifecycleRepository assetLifecycleRepository) {
-    this.assetRepository = assetRepository;
+
     this.inventoryCycleRepository = inventoryCycleRepository;
     this.inventoryCheckRepository = inventoryCheckRepository;
+    this.assetRepository = assetRepository;
     this.assetLifecycleRepository = assetLifecycleRepository;
   }
 
   /* ======================================================
-  ABRIR CICLO DE INVENTÁRIO
-  ====================================================== */
+     CRIAR CICLO DE INVENTÁRIO
+     ====================================================== */
 
   @Transactional
-  public InventoryCycle openInventory(UUID unitId, UUID openedBy) {
-
-    boolean hasOpenCycle =
-        inventoryCycleRepository.existsByUnitIdAndStatus(unitId, InventoryStatus.ABERTO);
-
-    if (hasOpenCycle) {
-      throw new IllegalStateException("Já existe um inventário aberto para esta unidade");
-    }
-
-    InventoryCycle cycle = InventoryCycle.open(unitId, openedBy);
+  public InventoryCycle iniciarCiclo() {
+    InventoryCycle cycle = InventoryCycle.iniciar();
     return inventoryCycleRepository.save(cycle);
   }
 
   /* ======================================================
-  REGISTRAR CONFERÊNCIA DE ATIVO
-  ====================================================== */
+     ADICIONAR ATIVO AO INVENTÁRIO
+     ====================================================== */
 
   @Transactional
-  public InventoryCheck checkAsset(
+  public void adicionarAtivoAoCiclo(
       UUID inventoryCycleId,
-      UUID assetId,
-      InventoryCheckResult result,
-      UUID checkedBy,
-      String observation) {
-    InventoryCycle cycle =
-        inventoryCycleRepository
-            .findById(inventoryCycleId)
-            .orElseThrow(() -> new IllegalStateException("Ciclo de inventário não encontrado"));
+      UUID assetId) {
 
-    if (cycle.getStatus() != InventoryStatus.ABERTO) {
-      throw new IllegalStateException("Inventário não está aberto");
-    }
+    InventoryCycle cycle = getCycle(inventoryCycleId);
 
-    boolean alreadyChecked =
-        inventoryCheckRepository.existsByInventoryCycleIdAndAssetId(inventoryCycleId, assetId);
+    InventoryItem item = InventoryItem.criar(assetId);
+    cycle.adicionarItem(item);
 
-    if (alreadyChecked) {
-      throw new IllegalStateException("Ativo já foi conferido neste inventário");
-    }
-
-    InventoryCheck check =
-        InventoryCheck.create(inventoryCycleId, assetId, result, checkedBy, observation);
-
-    inventoryCheckRepository.save(check);
-
-    if (result == InventoryCheckResult.NAO_LOCALIZADO) {
-      markAssetAsNotLocated(assetId, checkedBy);
-    }
-
-    return check;
-  }
-
-  /* ======================================================
-  FECHAR CICLO DE INVENTÁRIO
-  ====================================================== */
-
-  @Transactional
-  public void closeInventory(UUID inventoryCycleId, UUID closedBy) {
-
-    InventoryCycle cycle =
-        inventoryCycleRepository
-            .findById(inventoryCycleId)
-            .orElseThrow(() -> new IllegalStateException("Ciclo de inventário não encontrado"));
-
-    cycle.close();
     inventoryCycleRepository.save(cycle);
   }
 
   /* ======================================================
-  REGRAS INTERNAS
-  ====================================================== */
+     REGISTRAR CHECK DE INVENTÁRIO
+     ====================================================== */
 
-  private void markAssetAsNotLocated(UUID assetId, UUID triggeredBy) {
+  @Transactional
+  public void registrarCheck(
+      UUID inventoryCycleId,
+      UUID assetId,
+      InventoryCheckResult result,
+      UUID checkedBy) {
 
-    Asset asset =
-        assetRepository
-            .findById(assetId)
-            .orElseThrow(() -> new IllegalStateException("Ativo não encontrado"));
+    InventoryCycle cycle = getCycle(inventoryCycleId);
 
-    if (asset.getStatus() != AssetStatus.EM_USO) {
-      return; // não altera ativos em manutenção, transferência etc.
-    }
+    InventoryItem item =
+        cycle.getItems().stream()
+            .filter(i -> i.getAssetId().equals(assetId))
+            .findFirst()
+            .orElseThrow(() ->
+                new IllegalStateException(
+                    "Ativo não pertence a este ciclo de inventário"));
 
-    AssetStatus previousStatus = asset.getStatus();
+    item.registrarResultado(result);
 
-    asset.markAsNotLocated();
-    assetRepository.save(asset);
+    InventoryCheck check =
+        InventoryCheck.registrar(
+            inventoryCycleId,
+            assetId,
+            result,
+            checkedBy);
 
-    AssetLifecycleEvent event =
-        AssetLifecycleEvent.ofStatusChange(
-            asset.getId(),
-            previousStatus,
-            AssetStatus.NAO_LOCALIZADO,
-            "INVENTORY_NOT_FOUND",
-            triggeredBy,
-            null);
+    inventoryCheckRepository.save(check);
 
-    assetLifecycleRepository.save(event);
+    inventoryCycleRepository.save(cycle);
+  }
+
+  /* ======================================================
+     FECHAR CICLO DE INVENTÁRIO
+     ====================================================== */
+
+  @Transactional
+  public void fecharCiclo(
+      UUID inventoryCycleId,
+      UUID closedBy) {
+
+    InventoryCycle cycle = getCycle(inventoryCycleId);
+    cycle.fechar();
+
+    inventoryCycleRepository.save(cycle);
+
+    // Impacto no Asset após fechamento
+    cycle.getItems().forEach(item -> {
+      Asset asset = getAsset(item.getAssetId());
+      AssetStatus previousStatus = asset.getStatus();
+
+      if (item.isNaoLocalizado()) {
+        asset.marcarNaoLocalizado();
+        assetLifecycleRepository.save(
+            AssetLifecycleEvent.create(
+                asset.getId(),
+                previousStatus,
+                asset.getStatus(),
+                AssetAction.MARCAR_NAO_LOCALIZADO,
+                inventoryCycleId,
+                closedBy,
+                "Ativo não localizado no inventário"));
+      }
+    });
+
+    // Persistir ativos alterados
+    cycle.getItems().forEach(item -> {
+      Asset asset = getAsset(item.getAssetId());
+      assetRepository.save(asset);
+    });
+  }
+
+  /* ======================================================
+     APOIO
+     ====================================================== */
+
+  private InventoryCycle getCycle(UUID inventoryCycleId) {
+    return inventoryCycleRepository.findById(inventoryCycleId)
+        .orElseThrow(() ->
+            new IllegalStateException(
+                "Ciclo de inventário não encontrado"));
+  }
+
+  private Asset getAsset(UUID assetId) {
+    return assetRepository.findById(assetId)
+        .orElseThrow(() ->
+            new IllegalStateException(
+                "Ativo não encontrado"));
   }
 }

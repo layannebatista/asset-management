@@ -1,113 +1,199 @@
 package com.portfolio.asset_management.domain.asset;
 
-import com.portfolio.asset_management.domain.shared.VersionedEntity;
-import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
-@Entity
-@Table(name = "assets")
-public class Asset extends VersionedEntity {
+/**
+ * Entidade de domínio Asset.
+ *
+ * Responsável por:
+ * - manter o estado atual do ativo
+ * - aplicar regras de negócio
+ * - governar o lifecycle
+ *
+ * Todas as transições acontecem por ações explícitas.
+ * Nenhuma alteração direta de status é permitida.
+ */
+public class Asset {
 
-  @Id @GeneratedValue private UUID id;
-
-  @Column(nullable = false, unique = true, length = 100)
+  private UUID id;
   private String assetCode;
 
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false, length = 50)
   private AssetStatus status;
 
-  @Column(name = "unit_id")
   private UUID unitId;
-
-  @Column(name = "responsible_user_id")
   private UUID responsibleUserId;
 
-  @Column(nullable = false, updatable = false)
-  private LocalDateTime createdAt;
+  private boolean transferenciaEmAndamento;
+  private boolean inventarioEmAndamento;
 
-  @Column private LocalDateTime lastStatusChangeAt;
+  private String writeOffReason;
 
   protected Asset() {
-    // JPA only
+    // construtor protegido para JPA
   }
 
   public Asset(String assetCode) {
+    if (assetCode == null || assetCode.isBlank()) {
+      throw new IllegalArgumentException("Código do ativo é obrigatório");
+    }
     this.assetCode = assetCode;
     this.status = AssetStatus.CADASTRADO;
-    this.createdAt = LocalDateTime.now();
-    this.lastStatusChangeAt = this.createdAt;
   }
 
   /* ======================================================
-  TRANSIÇÕES DE ESTADO — ÚNICA FORMA DE MUDAR O ATIVO
-  ====================================================== */
+     AÇÕES DE NEGÓCIO — LIFECYCLE
+     ====================================================== */
 
-  public void activate(UUID unitId, UUID responsibleUserId) {
-    ensureStatus(AssetStatus.CADASTRADO);
+  public void ativar(UUID unitId, UUID responsibleUserId) {
+    assertActionAllowed(AssetAction.ATIVAR);
+
+    if (unitId == null) {
+      throw new IllegalStateException("Unidade é obrigatória para ativar o ativo");
+    }
+    if (responsibleUserId == null) {
+      throw new IllegalStateException("Responsável é obrigatório para ativar o ativo");
+    }
+
     this.unitId = unitId;
     this.responsibleUserId = responsibleUserId;
-    changeStatus(AssetStatus.EM_USO);
+    this.status = AssetStatus.EM_USO;
   }
 
-  public void startTransfer() {
-    ensureStatus(AssetStatus.EM_USO);
-    changeStatus(AssetStatus.EM_TRANSFERENCIA);
+  /* ===================== TRANSFERÊNCIA ===================== */
+
+  public void solicitarTransferencia() {
+    assertActionAllowed(AssetAction.SOLICITAR_TRANSFERENCIA);
+    assertNoProcessInProgress();
+
+    this.transferenciaEmAndamento = true;
+    this.status = AssetStatus.TRANSFERENCIA_SOLICITADA;
   }
 
-  public void approveTransfer(UUID newUnitId, UUID newResponsibleUserId) {
-    ensureStatus(AssetStatus.EM_TRANSFERENCIA);
+  public void aprovarTransferencia() {
+    assertActionAllowed(AssetAction.APROVAR_TRANSFERENCIA);
+    assertTransferenciaEmAndamento();
+
+    this.status = AssetStatus.TRANSFERENCIA_APROVADA;
+  }
+
+  public void rejeitarTransferencia() {
+    assertActionAllowed(AssetAction.REJEITAR_TRANSFERENCIA);
+    assertTransferenciaEmAndamento();
+
+    this.transferenciaEmAndamento = false;
+    this.status = AssetStatus.EM_USO;
+  }
+
+  public void confirmarRecebimento(
+      UUID newUnitId,
+      UUID newResponsibleUserId) {
+
+    assertActionAllowed(AssetAction.CONFIRMAR_RECEBIMENTO);
+    assertTransferenciaEmAndamento();
+
+    if (newUnitId == null || newResponsibleUserId == null) {
+      throw new IllegalStateException(
+          "Unidade e responsável de destino são obrigatórios");
+    }
+
     this.unitId = newUnitId;
     this.responsibleUserId = newResponsibleUserId;
-    changeStatus(AssetStatus.EM_USO);
+    this.transferenciaEmAndamento = false;
+    this.status = AssetStatus.EM_USO;
   }
 
-  public void sendToMaintenance() {
-    ensureStatus(AssetStatus.EM_USO);
-    changeStatus(AssetStatus.EM_MANUTENCAO);
+  /* ===================== MANUTENÇÃO ===================== */
+
+  public void enviarParaManutencao() {
+    assertActionAllowed(AssetAction.ENVIAR_PARA_MANUTENCAO);
+    assertNoProcessInProgress();
+
+    this.status = AssetStatus.EM_MANUTENCAO;
   }
 
-  public void returnFromMaintenance() {
-    ensureStatus(AssetStatus.EM_MANUTENCAO);
-    changeStatus(AssetStatus.EM_USO);
+  public void retornarDaManutencao() {
+    assertActionAllowed(AssetAction.RETORNAR_DA_MANUTENCAO);
+    this.status = AssetStatus.EM_USO;
   }
 
-  public void markAsNotLocated() {
-    ensureStatus(AssetStatus.EM_USO);
-    changeStatus(AssetStatus.NAO_LOCALIZADO);
+  /* ===================== INVENTÁRIO ===================== */
+
+  public void iniciarInventario() {
+    assertActionAllowed(AssetAction.INICIAR_INVENTARIO);
+    assertNoProcessInProgress();
+
+    this.inventarioEmAndamento = true;
+    this.status = AssetStatus.EM_INVENTARIO;
   }
 
-  public void writeOff(String reason) {
-    ensureNotFinalState();
-    changeStatus(AssetStatus.BAIXADO);
+  public void confirmarLocalizado() {
+    assertActionAllowed(AssetAction.CONFIRMAR_LOCALIZADO);
+    assertInventarioEmAndamento();
+
+    this.inventarioEmAndamento = false;
+    this.status = AssetStatus.EM_USO;
+  }
+
+  public void marcarNaoLocalizado() {
+    assertActionAllowed(AssetAction.MARCAR_NAO_LOCALIZADO);
+    assertInventarioEmAndamento();
+
+    this.inventarioEmAndamento = false;
+    this.status = AssetStatus.NAO_LOCALIZADO;
+  }
+
+  public void localizarAtivo() {
+    assertActionAllowed(AssetAction.LOCALIZAR_ATIVO);
+    this.status = AssetStatus.EM_USO;
+  }
+
+  /* ===================== BAIXA ===================== */
+
+  public void baixar(String reason) {
+    assertActionAllowed(AssetAction.BAIXAR);
+
+    if (reason == null || reason.isBlank()) {
+      throw new IllegalStateException("Motivo da baixa é obrigatório");
+    }
+
+    this.writeOffReason = reason;
+    this.status = AssetStatus.BAIXADO;
   }
 
   /* ======================================================
-  REGRAS INTERNAS
-  ====================================================== */
+     VALIDAÇÕES DE DOMÍNIO
+     ====================================================== */
 
-  private void changeStatus(AssetStatus newStatus) {
-    this.status = newStatus;
-    this.lastStatusChangeAt = LocalDateTime.now();
-  }
-
-  private void ensureStatus(AssetStatus expected) {
-    if (this.status != expected) {
+  private void assertActionAllowed(AssetAction action) {
+    if (!status.permite(action)) {
       throw new IllegalStateException(
-          "Transição inválida. Estado atual: " + status + ", esperado: " + expected);
+          "Ação '" + action + "' não permitida para o status atual: " + status);
     }
   }
 
-  private void ensureNotFinalState() {
-    if (this.status == AssetStatus.BAIXADO) {
-      throw new IllegalStateException("Ativo já está em estado final: BAIXADO");
+  private void assertNoProcessInProgress() {
+    if (transferenciaEmAndamento || inventarioEmAndamento) {
+      throw new IllegalStateException(
+          "Ativo possui um processo em andamento e não pode executar esta ação");
+    }
+  }
+
+  private void assertTransferenciaEmAndamento() {
+    if (!transferenciaEmAndamento) {
+      throw new IllegalStateException("Não existe transferência em andamento");
+    }
+  }
+
+  private void assertInventarioEmAndamento() {
+    if (!inventarioEmAndamento) {
+      throw new IllegalStateException("Não existe inventário em andamento");
     }
   }
 
   /* ======================================================
-  GETTERS (SOMENTE LEITURA)
-  ====================================================== */
+     GETTERS (SEM SETTERS)
+     ====================================================== */
 
   public UUID getId() {
     return id;
@@ -129,11 +215,32 @@ public class Asset extends VersionedEntity {
     return responsibleUserId;
   }
 
-  public LocalDateTime getCreatedAt() {
-    return createdAt;
+  public boolean isTransferenciaEmAndamento() {
+    return transferenciaEmAndamento;
   }
 
-  public LocalDateTime getLastStatusChangeAt() {
-    return lastStatusChangeAt;
+  public boolean isInventarioEmAndamento() {
+    return inventarioEmAndamento;
+  }
+
+  public String getWriteOffReason() {
+    return writeOffReason;
+  }
+
+  /* ======================================================
+     EQUALS & HASHCODE
+     ====================================================== */
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof Asset)) return false;
+    Asset asset = (Asset) o;
+    return Objects.equals(id, asset.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id);
   }
 }

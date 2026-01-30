@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: asset-management
+
+  datasource:
+    url: jdbc:h2:mem:assetdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+  h2:
+    console:
+      enabled: false
+
+server:
+  port: 8080

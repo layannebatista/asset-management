@@ -1,13 +1,25 @@
 package com.portfolio.asset_management.api.controller;
 
 import com.portfolio.asset_management.application.service.MaintenanceService;
-import com.portfolio.asset_management.domain.maintenance.Maintenance;
+import com.portfolio.asset_management.domain.maintenance.MaintenanceRequest;
+import java.util.List;
 import java.util.UUID;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Controller REST do módulo de Manutenção.
+ *
+ * <p>Expõe endpoints semânticos alinhados ao processo de negócio.
+ * Nenhuma regra de negócio deve existir aqui.
+ *
+ * <p>Preparado para:
+ * - Rest Assured
+ * - BDD
+ * - Testes de integração
+ */
 @RestController
-@RequestMapping("/api/maintenances")
+@RequestMapping("/maintenance-requests")
 public class MaintenanceController {
 
   private final MaintenanceService maintenanceService;
@@ -17,47 +29,82 @@ public class MaintenanceController {
   }
 
   /* ======================================================
-  ABRIR MANUTENÇÃO
-  ====================================================== */
+     CRIAR SOLICITAÇÃO DE MANUTENÇÃO
+     ====================================================== */
 
-  @PostMapping("/open")
-  public ResponseEntity<Maintenance> openMaintenance(
-      @RequestParam UUID assetId, @RequestParam String description, @RequestParam UUID openedBy) {
-    Maintenance maintenance = maintenanceService.openMaintenance(assetId, description, openedBy);
-    return ResponseEntity.ok(maintenance);
+  @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
+  public MaintenanceRequest criarSolicitacao(
+      @RequestParam UUID assetId,
+      @RequestParam UUID requestedBy) {
+
+    return maintenanceService.criarSolicitacao(
+        assetId,
+        requestedBy);
   }
 
   /* ======================================================
-  INICIAR MANUTENÇÃO
-  ====================================================== */
+     INICIAR MANUTENÇÃO
+     ====================================================== */
 
-  @PostMapping("/{maintenanceId}/start")
-  public ResponseEntity<Void> startMaintenance(@PathVariable UUID maintenanceId) {
-    maintenanceService.startMaintenance(maintenanceId);
-    return ResponseEntity.ok().build();
+  @PostMapping("/{requestId}/iniciar")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void iniciarManutencao(
+      @PathVariable UUID requestId,
+      @RequestParam UUID triggeredBy) {
+
+    maintenanceService.iniciarManutencao(
+        requestId,
+        triggeredBy);
   }
 
   /* ======================================================
-  FINALIZAR MANUTENÇÃO
-  ====================================================== */
+     FINALIZAR MANUTENÇÃO
+     ====================================================== */
 
-  @PostMapping("/{maintenanceId}/finish")
-  public ResponseEntity<Void> finishMaintenance(
-      @PathVariable UUID maintenanceId, @RequestParam UUID finishedBy) {
-    maintenanceService.finishMaintenance(maintenanceId, finishedBy);
-    return ResponseEntity.ok().build();
+  @PostMapping("/{requestId}/finalizar")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void finalizarManutencao(
+      @PathVariable UUID requestId,
+      @RequestParam UUID triggeredBy) {
+
+    maintenanceService.finalizarManutencao(
+        requestId,
+        triggeredBy);
   }
 
   /* ======================================================
-  CANCELAR MANUTENÇÃO
-  ====================================================== */
+     CANCELAR MANUTENÇÃO
+     ====================================================== */
 
-  @PostMapping("/{maintenanceId}/cancel")
-  public ResponseEntity<Void> cancelMaintenance(
-      @PathVariable UUID maintenanceId,
-      @RequestParam UUID canceledBy,
+  @PostMapping("/{requestId}/cancelar")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void cancelarManutencao(
+      @PathVariable UUID requestId,
+      @RequestParam UUID triggeredBy,
       @RequestParam String reason) {
-    maintenanceService.cancelMaintenance(maintenanceId, canceledBy, reason);
-    return ResponseEntity.ok().build();
+
+    maintenanceService.cancelarManutencao(
+        requestId,
+        triggeredBy,
+        reason);
+  }
+
+  /* ======================================================
+     CONSULTAS
+     ====================================================== */
+
+  @GetMapping("/{requestId}")
+  public MaintenanceRequest buscarPorId(
+      @PathVariable UUID requestId) {
+
+    return maintenanceService.buscarPorId(requestId);
+  }
+
+  @GetMapping
+  public List<MaintenanceRequest> listarPorAsset(
+      @RequestParam UUID assetId) {
+
+    return maintenanceService.listarPorAsset(assetId);
   }
 }

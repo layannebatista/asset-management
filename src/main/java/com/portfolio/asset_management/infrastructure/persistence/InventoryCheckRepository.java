@@ -1,27 +1,28 @@
 package com.portfolio.asset_management.infrastructure.persistence;
 
 import com.portfolio.asset_management.domain.inventory.InventoryCheck;
-import com.portfolio.asset_management.domain.inventory.InventoryCheckResult;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- * Repositório responsável pela persistência das conferências de inventário.
+ * Repositório de registros históricos de inventário.
  *
- * <p>NÃO contém regra de negócio.
+ * <p>InventoryCheck é IMUTÁVEL.
+ * Este repositório não deve ser usado para atualização.
  */
 @Repository
-public interface InventoryCheckRepository extends JpaRepository<InventoryCheck, UUID> {
+public interface InventoryCheckRepository
+    extends JpaRepository<InventoryCheck, UUID> {
 
-  /** Verifica se um ativo já foi conferido dentro de um ciclo de inventário. */
-  boolean existsByInventoryCycleIdAndAssetId(UUID inventoryCycleId, UUID assetId);
-
-  /** Lista todas as conferências de um ciclo. */
+  /**
+   * Lista checks por ciclo de inventário.
+   */
   List<InventoryCheck> findAllByInventoryCycleId(UUID inventoryCycleId);
 
-  /** Lista todos os ativos não localizados em um ciclo. */
-  List<InventoryCheck> findAllByInventoryCycleIdAndResult(
-      UUID inventoryCycleId, InventoryCheckResult result);
+  /**
+   * Lista checks por ativo.
+   */
+  List<InventoryCheck> findAllByAssetId(UUID assetId);
 }

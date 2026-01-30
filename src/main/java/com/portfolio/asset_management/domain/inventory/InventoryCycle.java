@@ -2,117 +2,116 @@ package com.portfolio.asset_management.domain.inventory;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.*;
 
-/** Representa um ciclo de inventário físico de ativos para uma unidade específica. */
 @Entity
 @Table(name = "inventory_cycles")
 public class InventoryCycle {
 
-  @Id @GeneratedValue private UUID id;
-
-  @Column(name = "unit_id", nullable = false)
-  private UUID unitId;
+  @Id
+  @GeneratedValue
+  private UUID id;
 
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false, length = 30)
+  @Column(nullable = false)
   private InventoryStatus status;
 
-  @Column(name = "opened_by", nullable = false)
-  private UUID openedBy;
+  @Column(nullable = false)
+  private LocalDateTime startedAt;
 
-  @Column(name = "opened_at", nullable = false, updatable = false)
-  private LocalDateTime openedAt;
-
-  @Column(name = "closed_at")
   private LocalDateTime closedAt;
 
-  @Column(name = "canceled_at")
-  private LocalDateTime canceledAt;
-
-  @Column(name = "canceled_reason", length = 255)
-  private String canceledReason;
+  @OneToMany(mappedBy = "inventoryCycle", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<InventoryItem> items = new ArrayList<>();
 
   protected InventoryCycle() {
-    // JPA only
+    // JPA
   }
 
-  private InventoryCycle(UUID unitId, UUID openedBy) {
-    this.unitId = unitId;
-    this.openedBy = openedBy;
+  private InventoryCycle(LocalDateTime startedAt) {
     this.status = InventoryStatus.ABERTO;
-    this.openedAt = LocalDateTime.now();
+    this.startedAt = startedAt;
   }
 
-  /* ======================================================
-  FÁBRICA (CRIAÇÃO)
-  ====================================================== */
+  /* ===================== FACTORY ===================== */
 
-  public static InventoryCycle open(UUID unitId, UUID openedBy) {
-    return new InventoryCycle(unitId, openedBy);
+  public static InventoryCycle iniciar() {
+    return new InventoryCycle(LocalDateTime.now());
   }
 
-  /* ======================================================
-  TRANSIÇÕES DE ESTADO
-  ====================================================== */
+  /* ================= REGRAS DE NEGÓCIO ================= */
 
-  public void close() {
-    ensureStatus(InventoryStatus.ABERTO);
+  public void adicionarItem(InventoryItem item) {
+    assertAberto();
+
+    if (item == null) {
+      throw new IllegalArgumentException("Item de inventário é obrigatório");
+    }
+
+    boolean duplicado =
+        items.stream().anyMatch(i -> i.getAssetId().equals(item.getAssetId()));
+
+    if (duplicado) {
+      throw new IllegalStateException(
+          "Ativo já adicionado ao ciclo de inventário");
+    }
+
+    item.associarAoCiclo(this);
+    items.add(item);
+  }
+
+  public void fechar() {
+    assertAberto();
+
+    if (items.isEmpty()) {
+      throw new IllegalStateException(
+          "Inventário não pode ser fechado sem itens");
+    }
+
+    boolean naoVerificado =
+        items.stream().anyMatch(item -> !item.isVerificado());
+
+    if (naoVerificado) {
+      throw new IllegalStateException(
+          "Inventário não pode ser fechado com itens não verificados");
+    }
+
     this.status = InventoryStatus.FECHADO;
     this.closedAt = LocalDateTime.now();
   }
 
-  public void cancel(String reason) {
-    ensureStatus(InventoryStatus.ABERTO);
-    this.status = InventoryStatus.CANCELADO;
-    this.canceledReason = reason;
-    this.canceledAt = LocalDateTime.now();
-  }
+  /* ===================== APOIO ===================== */
 
-  /* ======================================================
-  REGRAS INTERNAS
-  ====================================================== */
-
-  private void ensureStatus(InventoryStatus expected) {
-    if (this.status != expected) {
+  private void assertAberto() {
+    if (status != InventoryStatus.ABERTO) {
       throw new IllegalStateException(
-          "Ciclo de inventário não pode mudar de estado. Estado atual: " + status);
+          "Operação permitida apenas com inventário aberto");
     }
   }
 
-  /* ======================================================
-  GETTERS (SOMENTE LEITURA)
-  ====================================================== */
+  public boolean isAberto() {
+    return status == InventoryStatus.ABERTO;
+  }
+
+  /* ===================== GETTERS ===================== */
 
   public UUID getId() {
     return id;
-  }
-
-  public UUID getUnitId() {
-    return unitId;
   }
 
   public InventoryStatus getStatus() {
     return status;
   }
 
-  public UUID getOpenedBy() {
-    return openedBy;
-  }
-
-  public LocalDateTime getOpenedAt() {
-    return openedAt;
+  public LocalDateTime getStartedAt() {
+    return startedAt;
   }
 
   public LocalDateTime getClosedAt() {
     return closedAt;
   }
 
-  public LocalDateTime getCanceledAt() {
-    return canceledAt;
-  }
-
-  public String getCanceledReason() {
-    return canceledReason;
+  public List<InventoryItem> getItems() {
+    return List.copyOf(items);
   }
 }

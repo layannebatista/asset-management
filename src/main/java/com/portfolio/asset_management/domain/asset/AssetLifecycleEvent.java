@@ -1,80 +1,132 @@
 package com.portfolio.asset_management.domain.asset;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Evento imutável que registra toda mudança relevante no ciclo de vida de um ativo.
+ * Evento de ciclo de vida do Asset.
  *
- * <p>Esse evento é usado para: - auditoria - histórico - compliance - rastreabilidade
+ * Representa uma mudança relevante de estado ou ação de negócio
+ * executada sobre um ativo.
+ *
+ * Este evento é utilizado para:
+ * - auditoria
+ * - histórico
+ * - cenários BDD
+ * - rastreabilidade de processos (transferência, inventário, etc.)
  */
-@Entity
-@Table(name = "asset_lifecycle_events")
 public class AssetLifecycleEvent {
 
-  @Id @GeneratedValue private UUID id;
+  private UUID id;
 
-  @Column(name = "asset_id", nullable = false)
   private UUID assetId;
 
-  @Enumerated(EnumType.STRING)
-  @Column(name = "previous_status", nullable = false, length = 50)
   private AssetStatus previousStatus;
-
-  @Enumerated(EnumType.STRING)
-  @Column(name = "new_status", nullable = false, length = 50)
   private AssetStatus newStatus;
 
-  @Column(name = "event_type", nullable = false, length = 100)
-  private String eventType;
+  private AssetAction action;
 
-  @Column(name = "triggered_by")
+  /**
+   * Identificador do processo relacionado ao evento.
+   * Ex: transferência, inventário, manutenção.
+   */
+  private UUID processId;
+
+  /**
+   * Usuário ou sistema que disparou a ação.
+   */
   private UUID triggeredBy;
 
-  @Column(name = "reason", length = 255)
-  private String reason;
+  /**
+   * Contexto livre para auditoria.
+   * Pode armazenar motivo, observação ou metadado simples.
+   */
+  private String context;
 
-  @Column(name = "occurred_at", nullable = false, updatable = false)
   private LocalDateTime occurredAt;
 
   protected AssetLifecycleEvent() {
-    // JPA only
+    // construtor protegido para JPA
   }
 
   private AssetLifecycleEvent(
       UUID assetId,
       AssetStatus previousStatus,
       AssetStatus newStatus,
-      String eventType,
+      AssetAction action,
+      UUID processId,
       UUID triggeredBy,
-      String reason) {
+      String context,
+      LocalDateTime occurredAt) {
+
     this.assetId = assetId;
     this.previousStatus = previousStatus;
     this.newStatus = newStatus;
-    this.eventType = eventType;
+    this.action = action;
+    this.processId = processId;
     this.triggeredBy = triggeredBy;
-    this.reason = reason;
-    this.occurredAt = LocalDateTime.now();
+    this.context = context;
+    this.occurredAt = occurredAt;
   }
 
   /* ======================================================
-  FÁBRICAS (ÚNICA FORMA DE CRIAR EVENTOS)
-  ====================================================== */
+     FACTORY METHODS (PADRÃO DE MERCADO)
+     ====================================================== */
 
-  public static AssetLifecycleEvent ofStatusChange(
+  public static AssetLifecycleEvent create(
       UUID assetId,
-      AssetStatus from,
-      AssetStatus to,
-      String eventType,
+      AssetStatus previousStatus,
+      AssetStatus newStatus,
+      AssetAction action,
       UUID triggeredBy,
-      String reason) {
-    return new AssetLifecycleEvent(assetId, from, to, eventType, triggeredBy, reason);
+      String context) {
+
+    return create(
+        assetId,
+        previousStatus,
+        newStatus,
+        action,
+        null,
+        triggeredBy,
+        context
+    );
+  }
+
+  public static AssetLifecycleEvent create(
+      UUID assetId,
+      AssetStatus previousStatus,
+      AssetStatus newStatus,
+      AssetAction action,
+      UUID processId,
+      UUID triggeredBy,
+      String context) {
+
+    if (assetId == null) {
+      throw new IllegalArgumentException("AssetId é obrigatório para evento de lifecycle");
+    }
+    if (newStatus == null) {
+      throw new IllegalArgumentException("Novo status é obrigatório para evento de lifecycle");
+    }
+    if (action == null) {
+      throw new IllegalArgumentException("Ação é obrigatória para evento de lifecycle");
+    }
+
+    return new AssetLifecycleEvent(
+        assetId,
+        previousStatus,
+        newStatus,
+        action,
+        processId,
+        triggeredBy,
+        context,
+        LocalDateTime.now()
+    );
   }
 
   /* ======================================================
-  GETTERS (EVENTO É SOMENTE LEITURA)
-  ====================================================== */
+     GETTERS
+     ====================================================== */
 
   public UUID getId() {
     return id;
@@ -92,19 +144,40 @@ public class AssetLifecycleEvent {
     return newStatus;
   }
 
-  public String getEventType() {
-    return eventType;
+  public AssetAction getAction() {
+    return action;
+  }
+
+  public UUID getProcessId() {
+    return processId;
   }
 
   public UUID getTriggeredBy() {
     return triggeredBy;
   }
 
-  public String getReason() {
-    return reason;
+  public String getContext() {
+    return context;
   }
 
   public LocalDateTime getOccurredAt() {
     return occurredAt;
+  }
+
+  /* ======================================================
+     EQUALS & HASHCODE
+     ====================================================== */
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof AssetLifecycleEvent)) return false;
+    AssetLifecycleEvent that = (AssetLifecycleEvent) o;
+    return Objects.equals(id, that.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id);
   }
 }

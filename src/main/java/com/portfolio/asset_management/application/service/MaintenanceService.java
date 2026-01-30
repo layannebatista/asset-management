@@ -1,162 +1,195 @@
 package com.portfolio.asset_management.application.service;
 
 import com.portfolio.asset_management.domain.asset.Asset;
+import com.portfolio.asset_management.domain.asset.AssetAction;
 import com.portfolio.asset_management.domain.asset.AssetLifecycleEvent;
 import com.portfolio.asset_management.domain.asset.AssetStatus;
-import com.portfolio.asset_management.domain.maintenance.Maintenance;
-import com.portfolio.asset_management.domain.maintenance.MaintenanceStatus;
+import com.portfolio.asset_management.domain.maintenance.MaintenanceRequest;
 import com.portfolio.asset_management.infrastructure.persistence.AssetLifecycleRepository;
 import com.portfolio.asset_management.infrastructure.persistence.AssetRepository;
-import com.portfolio.asset_management.infrastructure.persistence.MaintenanceRepository;
+import com.portfolio.asset_management.infrastructure.persistence.MaintenanceRequestRepository;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Serviço de aplicação responsável por orquestrar
+ * o processo de Manutenção de Ativos.
+ *
+ * <p>Este service NÃO contém regra de negócio.
+ * Ele coordena MaintenanceRequest e Asset.
+ */
 @Service
 public class MaintenanceService {
 
+  private final MaintenanceRequestRepository maintenanceRequestRepository;
   private final AssetRepository assetRepository;
-  private final MaintenanceRepository maintenanceRepository;
-  private final AssetLifecycleRepository assetLifecycleRepository;
+  private final AssetLifecycleRepository lifecycleRepository;
 
   public MaintenanceService(
+      MaintenanceRequestRepository maintenanceRequestRepository,
       AssetRepository assetRepository,
-      MaintenanceRepository maintenanceRepository,
-      AssetLifecycleRepository assetLifecycleRepository) {
+      AssetLifecycleRepository lifecycleRepository) {
+
+    this.maintenanceRequestRepository = maintenanceRequestRepository;
     this.assetRepository = assetRepository;
-    this.maintenanceRepository = maintenanceRepository;
-    this.assetLifecycleRepository = assetLifecycleRepository;
+    this.lifecycleRepository = lifecycleRepository;
   }
 
   /* ======================================================
-  ABRIR MANUTENÇÃO
-  ====================================================== */
+     CRIAR SOLICITAÇÃO DE MANUTENÇÃO
+     ====================================================== */
 
   @Transactional
-  public Maintenance openMaintenance(UUID assetId, String description, UUID openedBy) {
-    Asset asset =
-        assetRepository
-            .findById(assetId)
-            .orElseThrow(() -> new IllegalStateException("Ativo não encontrado"));
+  public MaintenanceRequest criarSolicitacao(
+      UUID assetId,
+      UUID requestedBy) {
+
+    Asset asset = getAsset(assetId);
 
     if (asset.getStatus() != AssetStatus.EM_USO) {
-      throw new IllegalStateException("Ativo não pode entrar em manutenção");
+      throw new IllegalStateException(
+          "Apenas ativos em uso podem ser enviados para manutenção");
     }
 
-    boolean hasActiveMaintenance =
-        maintenanceRepository.existsByAssetIdAndStatusIn(
-            assetId, List.of(MaintenanceStatus.ABERTA, MaintenanceStatus.EM_EXECUCAO));
+    maintenanceRequestRepository
+        .findAtivaByAssetId(assetId)
+        .ifPresent(r -> {
+          throw new IllegalStateException(
+              "Já existe uma manutenção ativa para este ativo");
+        });
 
-    if (hasActiveMaintenance) {
-      throw new IllegalStateException("Já existe manutenção ativa para este ativo");
-    }
+    MaintenanceRequest request =
+        MaintenanceRequest.criar(assetId, requestedBy);
 
-    asset.sendToMaintenance();
-    assetRepository.save(asset);
+    MaintenanceRequest savedRequest =
+        maintenanceRequestRepository.save(request);
 
-    Maintenance maintenance = Maintenance.open(assetId, description, openedBy);
-
-    maintenanceRepository.save(maintenance);
-
-    AssetLifecycleEvent event =
-        AssetLifecycleEvent.ofStatusChange(
-            asset.getId(),
-            AssetStatus.EM_USO,
-            AssetStatus.EM_MANUTENCAO,
-            "MAINTENANCE_OPENED",
-            openedBy,
-            description);
-
-    assetLifecycleRepository.save(event);
-
-    return maintenance;
+    return savedRequest;
   }
 
   /* ======================================================
-  INICIAR MANUTENÇÃO
-  ====================================================== */
+     INICIAR MANUTENÇÃO
+     ====================================================== */
 
   @Transactional
-  public void startMaintenance(UUID maintenanceId) {
-    Maintenance maintenance =
-        maintenanceRepository
-            .findById(maintenanceId)
-            .orElseThrow(() -> new IllegalStateException("Manutenção não encontrada"));
+  public void iniciarManutencao(
+      UUID requestId,
+      UUID triggeredBy) {
 
-    maintenance.start();
-    maintenanceRepository.save(maintenance);
-  }
+    MaintenanceRequest request = getRequest(requestId);
+    request.iniciarManutencao();
 
-  /* ======================================================
-  FINALIZAR MANUTENÇÃO
-  ====================================================== */
+    maintenanceRequestRepository.save(request);
 
-  @Transactional
-  public void finishMaintenance(UUID maintenanceId, UUID finishedBy) {
-    Maintenance maintenance =
-        maintenanceRepository
-            .findById(maintenanceId)
-            .orElseThrow(() -> new IllegalStateException("Manutenção não encontrada"));
-
-    maintenance.finish();
-    maintenanceRepository.save(maintenance);
-
-    Asset asset =
-        assetRepository
-            .findById(maintenance.getAssetId())
-            .orElseThrow(() -> new IllegalStateException("Ativo não encontrado"));
-
+    Asset asset = getAsset(request.getAssetId());
     AssetStatus previousStatus = asset.getStatus();
 
-    asset.returnFromMaintenance();
+    asset.enviarParaManutencao();
     assetRepository.save(asset);
 
-    AssetLifecycleEvent event =
-        AssetLifecycleEvent.ofStatusChange(
+    lifecycleRepository.save(
+        AssetLifecycleEvent.create(
             asset.getId(),
             previousStatus,
-            AssetStatus.EM_USO,
-            "MAINTENANCE_FINISHED",
-            finishedBy,
-            null);
-
-    assetLifecycleRepository.save(event);
+            asset.getStatus(),
+            AssetAction.ENVIAR_PARA_MANUTENCAO,
+            requestId,
+            triggeredBy,
+            "Ativo enviado para manutenção"));
   }
 
   /* ======================================================
-  CANCELAR MANUTENÇÃO
-  ====================================================== */
+     FINALIZAR MANUTENÇÃO
+     ====================================================== */
 
   @Transactional
-  public void cancelMaintenance(UUID maintenanceId, UUID canceledBy, String reason) {
-    Maintenance maintenance =
-        maintenanceRepository
-            .findById(maintenanceId)
-            .orElseThrow(() -> new IllegalStateException("Manutenção não encontrada"));
+  public void finalizarManutencao(
+      UUID requestId,
+      UUID triggeredBy) {
 
-    maintenance.cancel(reason);
-    maintenanceRepository.save(maintenance);
+    MaintenanceRequest request = getRequest(requestId);
+    request.finalizarManutencao();
 
-    Asset asset =
-        assetRepository
-            .findById(maintenance.getAssetId())
-            .orElseThrow(() -> new IllegalStateException("Ativo não encontrado"));
+    maintenanceRequestRepository.save(request);
 
+    Asset asset = getAsset(request.getAssetId());
     AssetStatus previousStatus = asset.getStatus();
 
-    asset.returnFromMaintenance();
+    asset.retornarDaManutencao();
     assetRepository.save(asset);
 
-    AssetLifecycleEvent event =
-        AssetLifecycleEvent.ofStatusChange(
+    lifecycleRepository.save(
+        AssetLifecycleEvent.create(
             asset.getId(),
             previousStatus,
-            AssetStatus.EM_USO,
-            "MAINTENANCE_CANCELED",
-            canceledBy,
-            reason);
+            asset.getStatus(),
+            AssetAction.RETORNAR_DA_MANUTENCAO,
+            requestId,
+            triggeredBy,
+            "Manutenção finalizada"));
+  }
 
-    assetLifecycleRepository.save(event);
+  /* ======================================================
+     CANCELAR MANUTENÇÃO
+     ====================================================== */
+
+  @Transactional
+  public void cancelarManutencao(
+      UUID requestId,
+      UUID triggeredBy,
+      String reason) {
+
+    MaintenanceRequest request = getRequest(requestId);
+    request.cancelar(reason);
+
+    maintenanceRequestRepository.save(request);
+
+    Asset asset = getAsset(request.getAssetId());
+    AssetStatus previousStatus = asset.getStatus();
+
+    asset.retornarDaManutencao();
+    assetRepository.save(asset);
+
+    lifecycleRepository.save(
+        AssetLifecycleEvent.create(
+            asset.getId(),
+            previousStatus,
+            asset.getStatus(),
+            AssetAction.RETORNAR_DA_MANUTENCAO,
+            requestId,
+            triggeredBy,
+            reason));
+  }
+
+  /* ======================================================
+     CONSULTAS
+     ====================================================== */
+
+  @Transactional(readOnly = true)
+  public MaintenanceRequest buscarPorId(UUID requestId) {
+    return getRequest(requestId);
+  }
+
+  @Transactional(readOnly = true)
+  public List<MaintenanceRequest> listarPorAsset(UUID assetId) {
+    return maintenanceRequestRepository.findAllByAssetId(assetId);
+  }
+
+  /* ======================================================
+     APOIO
+     ====================================================== */
+
+  private MaintenanceRequest getRequest(UUID requestId) {
+    return maintenanceRequestRepository.findById(requestId)
+        .orElseThrow(() ->
+            new IllegalStateException("Solicitação de manutenção não encontrada"));
+  }
+
+  private Asset getAsset(UUID assetId) {
+    return assetRepository.findById(assetId)
+        .orElseThrow(() ->
+            new IllegalStateException("Ativo não encontrado"));
   }
 }

@@ -1,15 +1,28 @@
 package com.portfolio.asset_management.api.controller;
 
 import com.portfolio.asset_management.application.service.InventoryService;
-import com.portfolio.asset_management.domain.inventory.InventoryCheck;
 import com.portfolio.asset_management.domain.inventory.InventoryCheckResult;
 import com.portfolio.asset_management.domain.inventory.InventoryCycle;
 import java.util.UUID;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+/**
+ * Controller REST do módulo Inventory.
+ *
+ * <p>Responsável apenas por expor o processo de inventário
+ * via HTTP.
+ *
+ * <p>NÃO contém regra de negócio.
+ * NÃO altera domínio diretamente.
+ *
+ * <p>Preparado para:
+ * - Rest Assured
+ * - BDD
+ * - Testes de integração
+ */
 @RestController
-@RequestMapping("/api/inventories")
+@RequestMapping("/inventory-cycles")
 public class InventoryController {
 
   private final InventoryService inventoryService;
@@ -19,40 +32,61 @@ public class InventoryController {
   }
 
   /* ======================================================
-  ABRIR INVENTÁRIO
-  ====================================================== */
+     INICIAR CICLO DE INVENTÁRIO
+     ====================================================== */
 
-  @PostMapping("/open")
-  public ResponseEntity<InventoryCycle> openInventory(
-      @RequestParam UUID unitId, @RequestParam UUID openedBy) {
-    InventoryCycle cycle = inventoryService.openInventory(unitId, openedBy);
-    return ResponseEntity.ok(cycle);
+  @PostMapping
+  @ResponseStatus(HttpStatus.CREATED)
+  public InventoryCycle iniciarCiclo() {
+    return inventoryService.iniciarCiclo();
   }
 
   /* ======================================================
-  REGISTRAR CONFERÊNCIA DE ATIVO
-  ====================================================== */
+     ADICIONAR ATIVO AO CICLO
+     ====================================================== */
 
-  @PostMapping("/{inventoryCycleId}/check")
-  public ResponseEntity<InventoryCheck> checkAsset(
-      @PathVariable UUID inventoryCycleId,
+  @PostMapping("/{cycleId}/items")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void adicionarAtivo(
+      @PathVariable UUID cycleId,
+      @RequestParam UUID assetId) {
+
+    inventoryService.adicionarAtivoAoCiclo(
+        cycleId,
+        assetId);
+  }
+
+  /* ======================================================
+     REGISTRAR CHECK DE INVENTÁRIO
+     ====================================================== */
+
+  @PostMapping("/{cycleId}/checks")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void registrarCheck(
+      @PathVariable UUID cycleId,
       @RequestParam UUID assetId,
       @RequestParam InventoryCheckResult result,
-      @RequestParam UUID checkedBy,
-      @RequestParam(required = false) String observation) {
-    InventoryCheck check =
-        inventoryService.checkAsset(inventoryCycleId, assetId, result, checkedBy, observation);
-    return ResponseEntity.ok(check);
+      @RequestParam UUID checkedBy) {
+
+    inventoryService.registrarCheck(
+        cycleId,
+        assetId,
+        result,
+        checkedBy);
   }
 
   /* ======================================================
-  FECHAR INVENTÁRIO
-  ====================================================== */
+     FECHAR CICLO DE INVENTÁRIO
+     ====================================================== */
 
-  @PostMapping("/{inventoryCycleId}/close")
-  public ResponseEntity<Void> closeInventory(
-      @PathVariable UUID inventoryCycleId, @RequestParam UUID closedBy) {
-    inventoryService.closeInventory(inventoryCycleId, closedBy);
-    return ResponseEntity.ok().build();
+  @PostMapping("/{cycleId}/close")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void fecharCiclo(
+      @PathVariable UUID cycleId,
+      @RequestParam UUID closedBy) {
+
+    inventoryService.fecharCiclo(
+        cycleId,
+        closedBy);
   }
 }

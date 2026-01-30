@@ -1,18 +1,32 @@
 package com.portfolio.asset_management.domain.inventory;
 
 /**
- * Representa o estado real de um ciclo de inventário.
+ * Status do ciclo de Inventário.
  *
- * <p>Estados refletem o ciclo de vida do inventário e NÃO representam status do ativo.
+ * <p>Representa o estado do PROCESSO de inventário,
+ * e não o estado de ativos ou itens individuais.
+ *
+ * <p>Fluxo válido:
+ * ABERTO -> FECHADO
  */
 public enum InventoryStatus {
 
-  /** Ciclo de inventário em andamento. */
+  /**
+   * Ciclo de inventário em andamento.
+   * Permite adicionar itens e registrar checks.
+   */
   ABERTO,
 
-  /** Ciclo de inventário encerrado. */
-  FECHADO,
+  /**
+   * Ciclo de inventário encerrado.
+   * Estado final e imutável.
+   */
+  FECHADO;
 
-  /** Ciclo de inventário cancelado. */
-  CANCELADO
+  /**
+   * Indica se o ciclo está encerrado.
+   */
+  public boolean isFinal() {
+    return this == FECHADO;
+  }
 }

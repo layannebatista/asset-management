@@ -7,13 +7,19 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 /**
- * Repositório responsável pelo histórico de ciclo de vida dos ativos.
+ * Repositório de persistência dos eventos de ciclo de vida do Asset.
  *
- * <p>NÃO contém regra de negócio.
+ * Responsável por fornecer histórico e auditoria
+ * das ações executadas sobre o ativo.
+ *
  */
 @Repository
-public interface AssetLifecycleRepository extends JpaRepository<AssetLifecycleEvent, UUID> {
+public interface AssetLifecycleRepository
+    extends JpaRepository<AssetLifecycleEvent, UUID> {
 
-  /** Lista todos os eventos de um ativo, ordenados do mais antigo para o mais recente. */
+  /**
+   * Retorna o histórico completo de lifecycle de um ativo,
+   * ordenado cronologicamente.
+   */
   List<AssetLifecycleEvent> findAllByAssetIdOrderByOccurredAtAsc(UUID assetId);
 }

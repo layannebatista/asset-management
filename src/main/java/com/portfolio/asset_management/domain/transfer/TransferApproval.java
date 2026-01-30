@@ -2,63 +2,104 @@ package com.portfolio.asset_management.domain.transfer;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Representa a decisão formal sobre uma solicitação de transferência.
+ * Entidade de governança que representa a decisão formal
+ * de aprovação ou rejeição de uma TransferRequest.
  *
- * <p>Esta entidade é IMUTÁVEL. Uma vez criada, não pode ser alterada.
+ * TransferApproval NÃO governa o processo.
+ * Ela registra uma decisão imutável, auditável e rastreável.
+ *
+ * Sempre pertence a uma TransferRequest.
  */
 @Entity
 @Table(name = "transfer_approvals")
 public class TransferApproval {
 
-  @Id @GeneratedValue private UUID id;
+  @Id
+  @GeneratedValue
+  private UUID id;
 
-  @Column(name = "transfer_request_id", nullable = false)
+  @Column(nullable = false)
   private UUID transferRequestId;
 
+  @Column(nullable = false)
+  private UUID decidedBy;
+
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false, length = 30)
-  private TransferStatus decision;
+  @Column(nullable = false)
+  private TransferApprovalDecision decision;
 
-  @Column(name = "approved_by", nullable = false)
-  private UUID approvedBy;
+  @Column(nullable = false)
+  private LocalDateTime decidedAt;
 
-  @Column(name = "approved_at", nullable = false, updatable = false)
-  private LocalDateTime approvedAt;
-
-  @Column(name = "reason", length = 255)
-  private String reason;
+  @Column(length = 500)
+  private String comment;
 
   protected TransferApproval() {
-    // JPA only
+    // JPA
   }
 
   private TransferApproval(
-      UUID transferRequestId, TransferStatus decision, UUID approvedBy, String reason) {
+      UUID transferRequestId,
+      UUID decidedBy,
+      TransferApprovalDecision decision,
+      String comment) {
+
+    if (transferRequestId == null) {
+      throw new IllegalArgumentException("TransferRequest é obrigatória para aprovação");
+    }
+    if (decidedBy == null) {
+      throw new IllegalArgumentException("Aprovador é obrigatório");
+    }
+    if (decision == null) {
+      throw new IllegalArgumentException("Decisão é obrigatória");
+    }
+    if (decision == TransferApprovalDecision.REJEITADA
+        && (comment == null || comment.isBlank())) {
+      throw new IllegalStateException("Comentário é obrigatório para rejeição");
+    }
+
     this.transferRequestId = transferRequestId;
+    this.decidedBy = decidedBy;
     this.decision = decision;
-    this.approvedBy = approvedBy;
-    this.reason = reason;
-    this.approvedAt = LocalDateTime.now();
+    this.comment = comment;
+    this.decidedAt = LocalDateTime.now();
   }
 
   /* ======================================================
-  FÁBRICAS (ÚNICA FORMA DE CRIAR)
-  ====================================================== */
+     FACTORIES
+     ====================================================== */
 
-  public static TransferApproval approve(UUID transferRequestId, UUID approvedBy) {
-    return new TransferApproval(transferRequestId, TransferStatus.APROVADA, approvedBy, null);
+  public static TransferApproval aprovar(
+      UUID transferRequestId,
+      UUID decidedBy,
+      String comment) {
+
+    return new TransferApproval(
+        transferRequestId,
+        decidedBy,
+        TransferApprovalDecision.APROVADA,
+        comment);
   }
 
-  public static TransferApproval reject(UUID transferRequestId, UUID approvedBy, String reason) {
-    return new TransferApproval(transferRequestId, TransferStatus.REJEITADA, approvedBy, reason);
+  public static TransferApproval rejeitar(
+      UUID transferRequestId,
+      UUID decidedBy,
+      String comment) {
+
+    return new TransferApproval(
+        transferRequestId,
+        decidedBy,
+        TransferApprovalDecision.REJEITADA,
+        comment);
   }
 
   /* ======================================================
-  GETTERS (SOMENTE LEITURA)
-  ====================================================== */
+     GETTERS (IMUTÁVEL)
+     ====================================================== */
 
   public UUID getId() {
     return id;
@@ -68,19 +109,36 @@ public class TransferApproval {
     return transferRequestId;
   }
 
-  public TransferStatus getDecision() {
+  public UUID getDecidedBy() {
+    return decidedBy;
+  }
+
+  public TransferApprovalDecision getDecision() {
     return decision;
   }
 
-  public UUID getApprovedBy() {
-    return approvedBy;
+  public LocalDateTime getDecidedAt() {
+    return decidedAt;
   }
 
-  public LocalDateTime getApprovedAt() {
-    return approvedAt;
+  public String getComment() {
+    return comment;
   }
 
-  public String getReason() {
-    return reason;
+  /* ======================================================
+     EQUALS & HASHCODE
+     ====================================================== */
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof TransferApproval)) return false;
+    TransferApproval that = (TransferApproval) o;
+    return Objects.equals(id, that.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id);
   }
 }

@@ -1,17 +1,35 @@
 package com.portfolio.asset_management.domain.transfer;
 
 /**
- * Representa o estado de uma solicitação de transferência.
+ * Estados possíveis de uma Transferência.
  *
- * <p>Estados possíveis: - PENDENTE: aguardando decisão - APROVADA: aprovada e pronta para execução
- * - REJEITADA: recusada - CANCELADA: cancelada pelo solicitante
+ * Define a máquina de estados do processo de transferência.
+ * Não contém regra de negócio, apenas semântica de estado.
  */
 public enum TransferStatus {
-  PENDENTE,
 
+  /**
+   * Transferência criada e aguardando aprovação.
+   */
+  SOLICITADA,
+
+  /**
+   * Transferência aprovada e aguardando confirmação de recebimento.
+   */
   APROVADA,
 
+  /**
+   * Transferência rejeitada.
+   */
   REJEITADA,
 
+  /**
+   * Transferência concluída com sucesso.
+   */
+  CONCLUIDA,
+
+  /**
+   * Transferência cancelada ou expirada.
+   */
   CANCELADA
 }

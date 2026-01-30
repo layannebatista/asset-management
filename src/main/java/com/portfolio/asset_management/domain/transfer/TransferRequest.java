@@ -2,130 +2,181 @@ package com.portfolio.asset_management.domain.transfer;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Representa uma solicitação formal de transferência de um ativo.
+ * Aggregate Root do processo de Transferência de Ativos.
  *
- * <p>Essa entidade NÃO altera o ativo diretamente. Ela representa apenas o processo de decisão.
+ * Representa o workflow completo de uma transferência,
+ * desde a criação até a execução final, com governança,
+ * aprovação e auditoria.
+ *
+ * Este objeto é a FONTE DA VERDADE do processo.
+ * Nenhuma regra de fluxo deve existir fora dele.
  */
 @Entity
 @Table(name = "transfer_requests")
 public class TransferRequest {
 
-  @Id @GeneratedValue private UUID id;
+  @Id
+  @GeneratedValue
+  private UUID id;
 
-  @Column(name = "asset_id", nullable = false)
+  @Column(nullable = false)
   private UUID assetId;
 
-  @Column(name = "from_unit_id", nullable = false)
-  private UUID fromUnitId;
+  @Column(nullable = false)
+  private UUID originUnitId;
 
-  @Column(name = "to_unit_id", nullable = false)
-  private UUID toUnitId;
+  @Column(nullable = false)
+  private UUID destinationUnitId;
 
-  @Column(name = "from_responsible_user_id", nullable = false)
-  private UUID fromResponsibleUserId;
-
-  @Column(name = "to_responsible_user_id", nullable = false)
-  private UUID toResponsibleUserId;
-
-  @Enumerated(EnumType.STRING)
-  @Column(nullable = false, length = 30)
-  private TransferStatus status;
-
-  @Column(name = "requested_by", nullable = false)
+  @Column(nullable = false)
   private UUID requestedBy;
 
-  @Column(name = "requested_at", nullable = false, updatable = false)
-  private LocalDateTime requestedAt;
+  @Column(nullable = false)
+  @Enumerated(EnumType.STRING)
+  private TransferRequestStatus status;
 
-  @Column(name = "decision_at")
-  private LocalDateTime decisionAt;
+  @Column(nullable = false)
+  private LocalDateTime createdAt;
 
-  @Column(name = "decision_by")
-  private UUID decisionBy;
+  private LocalDateTime approvedAt;
+  private LocalDateTime executedAt;
+  private LocalDateTime cancelledAt;
+  private LocalDateTime rejectedAt;
 
-  @Column(name = "decision_reason", length = 255)
-  private String decisionReason;
+  private String rejectionReason;
+  private String cancellationReason;
+
+  @Version
+  private Long version;
 
   protected TransferRequest() {
-    // JPA only
+    // JPA
   }
 
   private TransferRequest(
       UUID assetId,
-      UUID fromUnitId,
-      UUID toUnitId,
-      UUID fromResponsibleUserId,
-      UUID toResponsibleUserId,
+      UUID originUnitId,
+      UUID destinationUnitId,
       UUID requestedBy) {
+
+    if (assetId == null) {
+      throw new IllegalArgumentException("Asset é obrigatório para transferência");
+    }
+    if (originUnitId == null || destinationUnitId == null) {
+      throw new IllegalArgumentException("Unidade de origem e destino são obrigatórias");
+    }
+    if (originUnitId.equals(destinationUnitId)) {
+      throw new IllegalStateException("Unidade de origem e destino não podem ser iguais");
+    }
+    if (requestedBy == null) {
+      throw new IllegalArgumentException("Solicitante é obrigatório");
+    }
+
     this.assetId = assetId;
-    this.fromUnitId = fromUnitId;
-    this.toUnitId = toUnitId;
-    this.fromResponsibleUserId = fromResponsibleUserId;
-    this.toResponsibleUserId = toResponsibleUserId;
+    this.originUnitId = originUnitId;
+    this.destinationUnitId = destinationUnitId;
     this.requestedBy = requestedBy;
-    this.status = TransferStatus.PENDENTE;
-    this.requestedAt = LocalDateTime.now();
+    this.status = TransferRequestStatus.CRIADA;
+    this.createdAt = LocalDateTime.now();
   }
 
   /* ======================================================
-  FÁBRICA (CRIAÇÃO)
-  ====================================================== */
+     FACTORY
+     ====================================================== */
 
-  public static TransferRequest create(
+  public static TransferRequest criar(
       UUID assetId,
-      UUID fromUnitId,
-      UUID toUnitId,
-      UUID fromResponsibleUserId,
-      UUID toResponsibleUserId,
+      UUID originUnitId,
+      UUID destinationUnitId,
       UUID requestedBy) {
+
     return new TransferRequest(
-        assetId, fromUnitId, toUnitId, fromResponsibleUserId, toResponsibleUserId, requestedBy);
+        assetId,
+        originUnitId,
+        destinationUnitId,
+        requestedBy);
   }
 
   /* ======================================================
-  TRANSIÇÕES DE ESTADO
-  ====================================================== */
+     AÇÕES DE DOMÍNIO (REGRAS DE NEGÓCIO)
+     ====================================================== */
 
-  public void approve(UUID approverId) {
-    ensurePending();
-    this.status = TransferStatus.APROVADA;
-    this.decisionBy = approverId;
-    this.decisionAt = LocalDateTime.now();
+  public void solicitarAprovacao() {
+    assertStatus(TransferRequestStatus.CRIADA);
+
+    this.status = TransferRequestStatus.EM_APROVACAO;
   }
 
-  public void reject(UUID approverId, String reason) {
-    ensurePending();
-    this.status = TransferStatus.REJEITADA;
-    this.decisionBy = approverId;
-    this.decisionReason = reason;
-    this.decisionAt = LocalDateTime.now();
+  public void aprovar() {
+    assertStatus(TransferRequestStatus.EM_APROVACAO);
+
+    this.status = TransferRequestStatus.APROVADA;
+    this.approvedAt = LocalDateTime.now();
   }
 
-  public void cancel(UUID requesterId, String reason) {
-    ensurePending();
-    this.status = TransferStatus.CANCELADA;
-    this.decisionBy = requesterId;
-    this.decisionReason = reason;
-    this.decisionAt = LocalDateTime.now();
+  public void rejeitar(String reason) {
+    assertStatus(TransferRequestStatus.EM_APROVACAO);
+
+    if (reason == null || reason.isBlank()) {
+      throw new IllegalStateException("Motivo é obrigatório para rejeição");
+    }
+
+    this.status = TransferRequestStatus.REJEITADA;
+    this.rejectionReason = reason;
+    this.rejectedAt = LocalDateTime.now();
+  }
+
+  public void executar() {
+    assertStatus(TransferRequestStatus.APROVADA);
+
+    this.status = TransferRequestStatus.EXECUTADA;
+    this.executedAt = LocalDateTime.now();
+  }
+
+  public void cancelar(String reason) {
+    if (isFinal()) {
+      throw new IllegalStateException("Transferência já encerrada não pode ser cancelada");
+    }
+
+    if (reason == null || reason.isBlank()) {
+      throw new IllegalStateException("Motivo é obrigatório para cancelamento");
+    }
+
+    this.status = TransferRequestStatus.CANCELADA;
+    this.cancellationReason = reason;
+    this.cancelledAt = LocalDateTime.now();
   }
 
   /* ======================================================
-  REGRAS INTERNAS
-  ====================================================== */
+     REGRAS DE APOIO
+     ====================================================== */
 
-  private void ensurePending() {
-    if (this.status != TransferStatus.PENDENTE) {
+  public boolean isAtiva() {
+    return status == TransferRequestStatus.CRIADA
+        || status == TransferRequestStatus.EM_APROVACAO
+        || status == TransferRequestStatus.APROVADA;
+  }
+
+  public boolean isFinal() {
+    return status == TransferRequestStatus.REJEITADA
+        || status == TransferRequestStatus.EXECUTADA
+        || status == TransferRequestStatus.CANCELADA;
+  }
+
+  private void assertStatus(TransferRequestStatus expected) {
+    if (this.status != expected) {
       throw new IllegalStateException(
-          "Transferência não pode ser alterada. Estado atual: " + status);
+          "Ação inválida para o status atual da transferência: " + status);
     }
   }
 
   /* ======================================================
-  GETTERS (SOMENTE LEITURA)
-  ====================================================== */
+     GETTERS
+     ====================================================== */
 
   public UUID getId() {
     return id;
@@ -135,43 +186,64 @@ public class TransferRequest {
     return assetId;
   }
 
-  public UUID getFromUnitId() {
-    return fromUnitId;
+  public UUID getOriginUnitId() {
+    return originUnitId;
   }
 
-  public UUID getToUnitId() {
-    return toUnitId;
-  }
-
-  public UUID getFromResponsibleUserId() {
-    return fromResponsibleUserId;
-  }
-
-  public UUID getToResponsibleUserId() {
-    return toResponsibleUserId;
-  }
-
-  public TransferStatus getStatus() {
-    return status;
+  public UUID getDestinationUnitId() {
+    return destinationUnitId;
   }
 
   public UUID getRequestedBy() {
     return requestedBy;
   }
 
-  public LocalDateTime getRequestedAt() {
-    return requestedAt;
+  public TransferRequestStatus getStatus() {
+    return status;
   }
 
-  public LocalDateTime getDecisionAt() {
-    return decisionAt;
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
   }
 
-  public UUID getDecisionBy() {
-    return decisionBy;
+  public LocalDateTime getApprovedAt() {
+    return approvedAt;
   }
 
-  public String getDecisionReason() {
-    return decisionReason;
+  public LocalDateTime getExecutedAt() {
+    return executedAt;
+  }
+
+  public LocalDateTime getCancelledAt() {
+    return cancelledAt;
+  }
+
+  public LocalDateTime getRejectedAt() {
+    return rejectedAt;
+  }
+
+  public String getRejectionReason() {
+    return rejectionReason;
+  }
+
+  public String getCancellationReason() {
+    return cancellationReason;
+  }
+
+  /* ======================================================
+     EQUALS & HASHCODE
+     ====================================================== */
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof TransferRequest)) return false;
+    TransferRequest that = (TransferRequest) o;
+    return Objects.equals(id, that.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id);
   }
 }

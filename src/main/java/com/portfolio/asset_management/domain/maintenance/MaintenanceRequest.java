@@ -2,67 +2,181 @@ package com.portfolio.asset_management.domain.maintenance;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Objects;
+import java.util.UUID;
 
+/**
+ * Aggregate Root do processo de Manutenção de Ativos.
+ *
+ * <p>Representa o workflow completo de manutenção,
+ * desde a solicitação até a finalização ou cancelamento.
+ *
+ * <p>Este objeto governa o processo.
+ * Nenhuma regra de fluxo deve existir fora dele.
+ */
 @Entity
 @Table(name = "maintenance_requests")
 public class MaintenanceRequest {
 
   @Id
-  @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  @GeneratedValue
+  private UUID id;
 
-  private Long assetId;
+  @Column(nullable = false)
+  private UUID assetId;
 
-  private String description;
+  @Column(nullable = false)
+  private UUID requestedBy;
 
-  private String status;
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private MaintenanceRequestStatus status;
 
-  private LocalDateTime openedAt;
+  @Column(nullable = false)
+  private LocalDateTime createdAt;
 
-  private LocalDateTime closedAt;
+  private LocalDateTime startedAt;
+  private LocalDateTime finishedAt;
+  private LocalDateTime cancelledAt;
 
-  private Long requestedBy;
+  private String cancellationReason;
 
-  protected MaintenanceRequest() {}
+  @Version
+  private Long version;
 
-  public MaintenanceRequest(Long assetId, String description, Long requestedBy) {
-    this.assetId = assetId;
-    this.description = description;
-    this.requestedBy = requestedBy;
-    this.status = "OPEN";
-    this.openedAt = LocalDateTime.now();
+  protected MaintenanceRequest() {
+    // JPA
   }
 
-  public Long getId() {
+  private MaintenanceRequest(UUID assetId, UUID requestedBy) {
+    if (assetId == null) {
+      throw new IllegalArgumentException("Asset é obrigatório para manutenção");
+    }
+    if (requestedBy == null) {
+      throw new IllegalArgumentException("Solicitante é obrigatório");
+    }
+
+    this.assetId = assetId;
+    this.requestedBy = requestedBy;
+    this.status = MaintenanceRequestStatus.CRIADA;
+    this.createdAt = LocalDateTime.now();
+  }
+
+  /* ======================================================
+     FACTORY
+     ====================================================== */
+
+  public static MaintenanceRequest criar(UUID assetId, UUID requestedBy) {
+    return new MaintenanceRequest(assetId, requestedBy);
+  }
+
+  /* ======================================================
+     AÇÕES DE DOMÍNIO (REGRAS DE NEGÓCIO)
+     ====================================================== */
+
+  public void iniciarManutencao() {
+    assertStatus(MaintenanceRequestStatus.CRIADA);
+
+    this.status = MaintenanceRequestStatus.EM_MANUTENCAO;
+    this.startedAt = LocalDateTime.now();
+  }
+
+  public void finalizarManutencao() {
+    assertStatus(MaintenanceRequestStatus.EM_MANUTENCAO);
+
+    this.status = MaintenanceRequestStatus.FINALIZADA;
+    this.finishedAt = LocalDateTime.now();
+  }
+
+  public void cancelar(String reason) {
+    if (isFinal()) {
+      throw new IllegalStateException("Manutenção já encerrada não pode ser cancelada");
+    }
+
+    if (reason == null || reason.isBlank()) {
+      throw new IllegalStateException("Motivo é obrigatório para cancelamento");
+    }
+
+    this.status = MaintenanceRequestStatus.CANCELADA;
+    this.cancellationReason = reason;
+    this.cancelledAt = LocalDateTime.now();
+  }
+
+  /* ======================================================
+     REGRAS DE APOIO
+     ====================================================== */
+
+  public boolean isAtiva() {
+    return status == MaintenanceRequestStatus.CRIADA
+        || status == MaintenanceRequestStatus.EM_MANUTENCAO;
+  }
+
+  public boolean isFinal() {
+    return status == MaintenanceRequestStatus.FINALIZADA
+        || status == MaintenanceRequestStatus.CANCELADA;
+  }
+
+  private void assertStatus(MaintenanceRequestStatus expected) {
+    if (this.status != expected) {
+      throw new IllegalStateException(
+          "Ação inválida para o status atual da manutenção: " + status);
+    }
+  }
+
+  /* ======================================================
+     GETTERS
+     ====================================================== */
+
+  public UUID getId() {
     return id;
   }
 
-  public Long getAssetId() {
+  public UUID getAssetId() {
     return assetId;
   }
 
-  public String getDescription() {
-    return description;
-  }
-
-  public String getStatus() {
-    return status;
-  }
-
-  public LocalDateTime getOpenedAt() {
-    return openedAt;
-  }
-
-  public LocalDateTime getClosedAt() {
-    return closedAt;
-  }
-
-  public Long getRequestedBy() {
+  public UUID getRequestedBy() {
     return requestedBy;
   }
 
-  public void close() {
-    this.status = "CLOSED";
-    this.closedAt = LocalDateTime.now();
+  public MaintenanceRequestStatus getStatus() {
+    return status;
+  }
+
+  public LocalDateTime getCreatedAt() {
+    return createdAt;
+  }
+
+  public LocalDateTime getStartedAt() {
+    return startedAt;
+  }
+
+  public LocalDateTime getFinishedAt() {
+    return finishedAt;
+  }
+
+  public LocalDateTime getCancelledAt() {
+    return cancelledAt;
+  }
+
+  public String getCancellationReason() {
+    return cancellationReason;
+  }
+
+  /* ======================================================
+     EQUALS & HASHCODE
+     ====================================================== */
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) return true;
+    if (!(o instanceof MaintenanceRequest)) return false;
+    MaintenanceRequest that = (MaintenanceRequest) o;
+    return Objects.equals(id, that.id);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id);
   }
 }

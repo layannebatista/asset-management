@@ -4,80 +4,67 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-/**
- * Representa a conferência de um ativo dentro de um ciclo de inventário.
- *
- * <p>Esta entidade é IMUTÁVEL.
- */
 @Entity
-@Table(
-    name = "inventory_checks",
-    uniqueConstraints = {
-      @UniqueConstraint(
-          name = "uk_inventory_cycle_asset",
-          columnNames = {"inventory_cycle_id", "asset_id"})
-    })
+@Table(name = "inventory_checks")
 public class InventoryCheck {
 
-  @Id @GeneratedValue private UUID id;
+  @Id
+  @GeneratedValue
+  private UUID id;
 
-  @Column(name = "inventory_cycle_id", nullable = false)
+  @Column(nullable = false)
   private UUID inventoryCycleId;
 
-  @Column(name = "asset_id", nullable = false)
+  @Column(nullable = false)
   private UUID assetId;
 
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false, length = 30)
+  @Column(nullable = false)
   private InventoryCheckResult result;
 
-  @Column(name = "checked_by", nullable = false)
+  @Column(nullable = false)
   private UUID checkedBy;
 
-  @Column(name = "checked_at", nullable = false, updatable = false)
+  @Column(nullable = false)
   private LocalDateTime checkedAt;
 
-  @Column(name = "observation", length = 255)
-  private String observation;
-
   protected InventoryCheck() {
-    // JPA only
+    // JPA
   }
 
   private InventoryCheck(
       UUID inventoryCycleId,
       UUID assetId,
       InventoryCheckResult result,
-      UUID checkedBy,
-      String observation) {
+      UUID checkedBy) {
+
     this.inventoryCycleId = inventoryCycleId;
     this.assetId = assetId;
     this.result = result;
     this.checkedBy = checkedBy;
-    this.observation = observation;
     this.checkedAt = LocalDateTime.now();
   }
 
-  /* ======================================================
-  FÁBRICA (CRIAÇÃO)
-  ====================================================== */
+  /* ===================== FACTORY ===================== */
 
-  public static InventoryCheck create(
+  public static InventoryCheck registrar(
       UUID inventoryCycleId,
       UUID assetId,
       InventoryCheckResult result,
-      UUID checkedBy,
-      String observation) {
-    return new InventoryCheck(inventoryCycleId, assetId, result, checkedBy, observation);
+      UUID checkedBy) {
+
+    if (inventoryCycleId == null || assetId == null || result == null || checkedBy == null) {
+      throw new IllegalArgumentException("Dados obrigatórios para registrar check");
+    }
+
+    return new InventoryCheck(
+        inventoryCycleId,
+        assetId,
+        result,
+        checkedBy);
   }
 
-  /* ======================================================
-  GETTERS (SOMENTE LEITURA)
-  ====================================================== */
-
-  public UUID getId() {
-    return id;
-  }
+  /* ===================== GETTERS ===================== */
 
   public UUID getInventoryCycleId() {
     return inventoryCycleId;
@@ -97,9 +84,5 @@ public class InventoryCheck {
 
   public LocalDateTime getCheckedAt() {
     return checkedAt;
-  }
-
-  public String getObservation() {
-    return observation;
   }
 }
