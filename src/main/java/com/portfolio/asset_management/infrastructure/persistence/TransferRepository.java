@@ -1,7 +1,7 @@
 package com.portfolio.asset_management.infrastructure.persistence;
 
 import com.portfolio.asset_management.domain.transfer.Transfer;
-import com.portfolio.asset_management.domain.transfer.TransferStatus;
+import com.portfolio.asset_management.domain.transfer.TransferRequestStatus;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -13,7 +13,6 @@ import org.springframework.stereotype.Repository;
  *
  * Responsável exclusivamente por acesso a dados.
  * Nenhuma regra de negócio deve existir aqui.
- *
  */
 @Repository
 public interface TransferRepository extends JpaRepository<Transfer, UUID> {
@@ -24,9 +23,9 @@ public interface TransferRepository extends JpaRepository<Transfer, UUID> {
    * Usado para garantir que não existam duas transferências simultâneas
    * para o mesmo ativo.
    */
-  Optional<Transfer> findByAssetIdAndStatusIn(
+  Optional<Transfer> findByAssetIdAndRequestStatusIn(
       UUID assetId,
-      List<TransferStatus> statuses);
+      List<TransferRequestStatus> requestStatuses);
 
   /**
    * Retorna todas as transferências de um ativo.
@@ -36,5 +35,5 @@ public interface TransferRepository extends JpaRepository<Transfer, UUID> {
   /**
    * Retorna transferências por status.
    */
-  List<Transfer> findAllByStatus(TransferStatus status);
+  List<Transfer> findAllByRequestStatus(TransferRequestStatus requestStatus);
 }

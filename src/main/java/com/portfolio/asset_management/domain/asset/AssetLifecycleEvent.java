@@ -1,5 +1,6 @@
 package com.portfolio.asset_management.domain.asset;
 
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
@@ -16,34 +17,51 @@ import java.util.UUID;
  * - cenários BDD
  * - rastreabilidade de processos (transferência, inventário, etc.)
  */
+@Entity
+@Table(name = "asset_lifecycle_events")
 public class AssetLifecycleEvent {
 
+  @Id
+  @GeneratedValue
+  @Column(nullable = false, updatable = false)
   private UUID id;
 
+  @Column(nullable = false)
   private UUID assetId;
 
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
   private AssetStatus previousStatus;
+
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
   private AssetStatus newStatus;
 
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
   private AssetAction action;
 
   /**
    * Identificador do processo relacionado ao evento.
    * Ex: transferência, inventário, manutenção.
    */
+  @Column
   private UUID processId;
 
   /**
    * Usuário ou sistema que disparou a ação.
    */
+  @Column(nullable = false)
   private UUID triggeredBy;
 
   /**
    * Contexto livre para auditoria.
    * Pode armazenar motivo, observação ou metadado simples.
    */
+  @Column
   private String context;
 
+  @Column(nullable = false, updatable = false)
   private LocalDateTime occurredAt;
 
   protected AssetLifecycleEvent() {
@@ -110,6 +128,9 @@ public class AssetLifecycleEvent {
     }
     if (action == null) {
       throw new IllegalArgumentException("Ação é obrigatória para evento de lifecycle");
+    }
+    if (triggeredBy == null) {
+      throw new IllegalArgumentException("TriggeredBy é obrigatório para evento de lifecycle");
     }
 
     return new AssetLifecycleEvent(
