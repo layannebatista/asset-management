@@ -14,11 +14,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Serviço de aplicação responsável por orquestrar
- * o processo de Manutenção de Ativos.
+ * Serviço de aplicação responsável por orquestrar o processo de Manutenção de Ativos.
  *
- * <p>Este service NÃO contém regra de negócio.
- * Ele coordena MaintenanceRequest e Asset.
+ * <p>Este service NÃO contém regra de negócio. Ele coordena MaintenanceRequest e Asset.
  */
 @Service
 public class MaintenanceService {
@@ -38,45 +36,38 @@ public class MaintenanceService {
   }
 
   /* ======================================================
-     CRIAR SOLICITAÇÃO DE MANUTENÇÃO
-     ====================================================== */
+  CRIAR SOLICITAÇÃO DE MANUTENÇÃO
+  ====================================================== */
 
   @Transactional
-  public MaintenanceRequest criarSolicitacao(
-      UUID assetId,
-      UUID requestedBy) {
+  public MaintenanceRequest criarSolicitacao(UUID assetId, UUID requestedBy) {
 
     Asset asset = getAsset(assetId);
 
     if (asset.getStatus() != AssetStatus.EM_USO) {
-      throw new IllegalStateException(
-          "Apenas ativos em uso podem ser enviados para manutenção");
+      throw new IllegalStateException("Apenas ativos em uso podem ser enviados para manutenção");
     }
 
     maintenanceRequestRepository
         .findAtivaByAssetId(assetId)
-        .ifPresent(r -> {
-          throw new IllegalStateException(
-              "Já existe uma manutenção ativa para este ativo");
-        });
+        .ifPresent(
+            r -> {
+              throw new IllegalStateException("Já existe uma manutenção ativa para este ativo");
+            });
 
-    MaintenanceRequest request =
-        MaintenanceRequest.criar(assetId, requestedBy);
+    MaintenanceRequest request = MaintenanceRequest.criar(assetId, requestedBy);
 
-    MaintenanceRequest savedRequest =
-        maintenanceRequestRepository.save(request);
+    MaintenanceRequest savedRequest = maintenanceRequestRepository.save(request);
 
     return savedRequest;
   }
 
   /* ======================================================
-     INICIAR MANUTENÇÃO
-     ====================================================== */
+  INICIAR MANUTENÇÃO
+  ====================================================== */
 
   @Transactional
-  public void iniciarManutencao(
-      UUID requestId,
-      UUID triggeredBy) {
+  public void iniciarManutencao(UUID requestId, UUID triggeredBy) {
 
     MaintenanceRequest request = getRequest(requestId);
     request.iniciarManutencao();
@@ -101,13 +92,11 @@ public class MaintenanceService {
   }
 
   /* ======================================================
-     FINALIZAR MANUTENÇÃO
-     ====================================================== */
+  FINALIZAR MANUTENÇÃO
+  ====================================================== */
 
   @Transactional
-  public void finalizarManutencao(
-      UUID requestId,
-      UUID triggeredBy) {
+  public void finalizarManutencao(UUID requestId, UUID triggeredBy) {
 
     MaintenanceRequest request = getRequest(requestId);
     request.finalizarManutencao();
@@ -132,14 +121,11 @@ public class MaintenanceService {
   }
 
   /* ======================================================
-     CANCELAR MANUTENÇÃO
-     ====================================================== */
+  CANCELAR MANUTENÇÃO
+  ====================================================== */
 
   @Transactional
-  public void cancelarManutencao(
-      UUID requestId,
-      UUID triggeredBy,
-      String reason) {
+  public void cancelarManutencao(UUID requestId, UUID triggeredBy, String reason) {
 
     MaintenanceRequest request = getRequest(requestId);
     request.cancelar(reason);
@@ -164,8 +150,8 @@ public class MaintenanceService {
   }
 
   /* ======================================================
-     CONSULTAS
-     ====================================================== */
+  CONSULTAS
+  ====================================================== */
 
   @Transactional(readOnly = true)
   public MaintenanceRequest buscarPorId(UUID requestId) {
@@ -178,18 +164,18 @@ public class MaintenanceService {
   }
 
   /* ======================================================
-     APOIO
-     ====================================================== */
+  APOIO
+  ====================================================== */
 
   private MaintenanceRequest getRequest(UUID requestId) {
-    return maintenanceRequestRepository.findById(requestId)
-        .orElseThrow(() ->
-            new IllegalStateException("Solicitação de manutenção não encontrada"));
+    return maintenanceRequestRepository
+        .findById(requestId)
+        .orElseThrow(() -> new IllegalStateException("Solicitação de manutenção não encontrada"));
   }
 
   private Asset getAsset(UUID assetId) {
-    return assetRepository.findById(assetId)
-        .orElseThrow(() ->
-            new IllegalStateException("Ativo não encontrado"));
+    return assetRepository
+        .findById(assetId)
+        .orElseThrow(() -> new IllegalStateException("Ativo não encontrado"));
   }
 }

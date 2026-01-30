@@ -7,22 +7,18 @@ import java.util.UUID;
 /**
  * PROJEÇÃO de leitura do processo de Manutenção.
  *
- * <p>Este modelo NÃO é Aggregate Root.
- * NÃO contém regras de negócio.
- * NÃO governa fluxo.
+ * <p>Este modelo NÃO é Aggregate Root. NÃO contém regras de negócio. NÃO governa fluxo.
  *
- * <p>Ele representa uma visão consolidada da manutenção
- * para fins de consulta, listagem e relatórios.
+ * <p>Ele representa uma visão consolidada da manutenção para fins de consulta, listagem e
+ * relatórios.
  *
- * <p>O processo oficial de manutenção é representado por:
- * {@link MaintenanceRequest}
+ * <p>O processo oficial de manutenção é representado por: {@link MaintenanceRequest}
  */
 @Entity
 @Table(name = "maintenances")
 public class Maintenance {
 
-  @Id
-  private UUID id;
+  @Id private UUID id;
 
   @Column(nullable = false)
   private UUID assetId;
@@ -43,9 +39,8 @@ public class Maintenance {
   }
 
   /**
-   * Constrói a projeção a partir do Aggregate Root.
-   * Este método deve ser usado por serviços de projeção
-   * ou listeners de eventos.
+   * Constrói a projeção a partir do Aggregate Root. Este método deve ser usado por serviços de
+   * projeção ou listeners de eventos.
    */
   public static Maintenance from(MaintenanceRequest request) {
     Maintenance maintenance = new Maintenance();
@@ -60,8 +55,8 @@ public class Maintenance {
   }
 
   /* ======================================================
-     GETTERS — SOMENTE LEITURA
-     ====================================================== */
+  GETTERS — SOMENTE LEITURA
+  ====================================================== */
 
   public UUID getId() {
     return id;

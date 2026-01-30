@@ -10,16 +10,11 @@ import org.springframework.web.bind.annotation.*;
 /**
  * Controller REST do módulo Inventory.
  *
- * <p>Responsável apenas por expor o processo de inventário
- * via HTTP.
+ * <p>Responsável apenas por expor o processo de inventário via HTTP.
  *
- * <p>NÃO contém regra de negócio.
- * NÃO altera domínio diretamente.
+ * <p>NÃO contém regra de negócio. NÃO altera domínio diretamente.
  *
- * <p>Preparado para:
- * - Rest Assured
- * - BDD
- * - Testes de integração
+ * <p>Preparado para: - Rest Assured - BDD - Testes de integração
  */
 @RestController
 @RequestMapping("/inventory-cycles")
@@ -32,8 +27,8 @@ public class InventoryController {
   }
 
   /* ======================================================
-     INICIAR CICLO DE INVENTÁRIO
-     ====================================================== */
+  INICIAR CICLO DE INVENTÁRIO
+  ====================================================== */
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
@@ -42,23 +37,19 @@ public class InventoryController {
   }
 
   /* ======================================================
-     ADICIONAR ATIVO AO CICLO
-     ====================================================== */
+  ADICIONAR ATIVO AO CICLO
+  ====================================================== */
 
   @PostMapping("/{cycleId}/items")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void adicionarAtivo(
-      @PathVariable UUID cycleId,
-      @RequestParam UUID assetId) {
+  public void adicionarAtivo(@PathVariable UUID cycleId, @RequestParam UUID assetId) {
 
-    inventoryService.adicionarAtivoAoCiclo(
-        cycleId,
-        assetId);
+    inventoryService.adicionarAtivoAoCiclo(cycleId, assetId);
   }
 
   /* ======================================================
-     REGISTRAR CHECK DE INVENTÁRIO
-     ====================================================== */
+  REGISTRAR CHECK DE INVENTÁRIO
+  ====================================================== */
 
   @PostMapping("/{cycleId}/checks")
   @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -68,25 +59,17 @@ public class InventoryController {
       @RequestParam InventoryCheckResult result,
       @RequestParam UUID checkedBy) {
 
-    inventoryService.registrarCheck(
-        cycleId,
-        assetId,
-        result,
-        checkedBy);
+    inventoryService.registrarCheck(cycleId, assetId, result, checkedBy);
   }
 
   /* ======================================================
-     FECHAR CICLO DE INVENTÁRIO
-     ====================================================== */
+  FECHAR CICLO DE INVENTÁRIO
+  ====================================================== */
 
   @PostMapping("/{cycleId}/close")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void fecharCiclo(
-      @PathVariable UUID cycleId,
-      @RequestParam UUID closedBy) {
+  public void fecharCiclo(@PathVariable UUID cycleId, @RequestParam UUID closedBy) {
 
-    inventoryService.fecharCiclo(
-        cycleId,
-        closedBy);
+    inventoryService.fecharCiclo(cycleId, closedBy);
   }
 }

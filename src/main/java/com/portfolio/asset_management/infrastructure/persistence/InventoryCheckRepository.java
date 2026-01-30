@@ -9,20 +9,14 @@ import org.springframework.stereotype.Repository;
 /**
  * Repositório de registros históricos de inventário.
  *
- * <p>InventoryCheck é IMUTÁVEL.
- * Este repositório não deve ser usado para atualização.
+ * <p>InventoryCheck é IMUTÁVEL. Este repositório não deve ser usado para atualização.
  */
 @Repository
-public interface InventoryCheckRepository
-    extends JpaRepository<InventoryCheck, UUID> {
+public interface InventoryCheckRepository extends JpaRepository<InventoryCheck, UUID> {
 
-  /**
-   * Lista checks por ciclo de inventário.
-   */
+  /** Lista checks por ciclo de inventário. */
   List<InventoryCheck> findAllByInventoryCycleId(UUID inventoryCycleId);
 
-  /**
-   * Lista checks por ativo.
-   */
+  /** Lista checks por ativo. */
   List<InventoryCheck> findAllByAssetId(UUID assetId);
 }

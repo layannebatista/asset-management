@@ -6,21 +6,19 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Entidade de governança que representa a decisão formal
- * de aprovação ou rejeição de uma TransferRequest.
+ * Entidade de governança que representa a decisão formal de aprovação ou rejeição de uma
+ * TransferRequest.
  *
- * TransferApproval NÃO governa o processo.
- * Ela registra uma decisão imutável, auditável e rastreável.
+ * <p>TransferApproval NÃO governa o processo. Ela registra uma decisão imutável, auditável e
+ * rastreável.
  *
- * Sempre pertence a uma TransferRequest.
+ * <p>Sempre pertence a uma TransferRequest.
  */
 @Entity
 @Table(name = "transfer_approvals")
 public class TransferApproval {
 
-  @Id
-  @GeneratedValue
-  private UUID id;
+  @Id @GeneratedValue private UUID id;
 
   @Column(nullable = false)
   private UUID transferRequestId;
@@ -43,10 +41,7 @@ public class TransferApproval {
   }
 
   private TransferApproval(
-      UUID transferRequestId,
-      UUID decidedBy,
-      TransferApprovalDecision decision,
-      String comment) {
+      UUID transferRequestId, UUID decidedBy, TransferApprovalDecision decision, String comment) {
 
     if (transferRequestId == null) {
       throw new IllegalArgumentException("TransferRequest é obrigatória para aprovação");
@@ -57,8 +52,7 @@ public class TransferApproval {
     if (decision == null) {
       throw new IllegalArgumentException("Decisão é obrigatória");
     }
-    if (decision == TransferApprovalDecision.REJEITADA
-        && (comment == null || comment.isBlank())) {
+    if (decision == TransferApprovalDecision.REJEITADA && (comment == null || comment.isBlank())) {
       throw new IllegalStateException("Comentário é obrigatório para rejeição");
     }
 
@@ -70,36 +64,24 @@ public class TransferApproval {
   }
 
   /* ======================================================
-     FACTORIES
-     ====================================================== */
+  FACTORIES
+  ====================================================== */
 
-  public static TransferApproval aprovar(
-      UUID transferRequestId,
-      UUID decidedBy,
-      String comment) {
+  public static TransferApproval aprovar(UUID transferRequestId, UUID decidedBy, String comment) {
 
     return new TransferApproval(
-        transferRequestId,
-        decidedBy,
-        TransferApprovalDecision.APROVADA,
-        comment);
+        transferRequestId, decidedBy, TransferApprovalDecision.APROVADA, comment);
   }
 
-  public static TransferApproval rejeitar(
-      UUID transferRequestId,
-      UUID decidedBy,
-      String comment) {
+  public static TransferApproval rejeitar(UUID transferRequestId, UUID decidedBy, String comment) {
 
     return new TransferApproval(
-        transferRequestId,
-        decidedBy,
-        TransferApprovalDecision.REJEITADA,
-        comment);
+        transferRequestId, decidedBy, TransferApprovalDecision.REJEITADA, comment);
   }
 
   /* ======================================================
-     GETTERS (IMUTÁVEL)
-     ====================================================== */
+  GETTERS (IMUTÁVEL)
+  ====================================================== */
 
   public UUID getId() {
     return id;
@@ -126,8 +108,8 @@ public class TransferApproval {
   }
 
   /* ======================================================
-     EQUALS & HASHCODE
-     ====================================================== */
+  EQUALS & HASHCODE
+  ====================================================== */
 
   @Override
   public boolean equals(Object o) {

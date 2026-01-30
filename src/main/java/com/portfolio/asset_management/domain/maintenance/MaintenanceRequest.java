@@ -8,19 +8,16 @@ import java.util.UUID;
 /**
  * Aggregate Root do processo de Manutenção de Ativos.
  *
- * <p>Representa o workflow completo de manutenção,
- * desde a solicitação até a finalização ou cancelamento.
+ * <p>Representa o workflow completo de manutenção, desde a solicitação até a finalização ou
+ * cancelamento.
  *
- * <p>Este objeto governa o processo.
- * Nenhuma regra de fluxo deve existir fora dele.
+ * <p>Este objeto governa o processo. Nenhuma regra de fluxo deve existir fora dele.
  */
 @Entity
 @Table(name = "maintenance_requests")
 public class MaintenanceRequest {
 
-  @Id
-  @GeneratedValue
-  private UUID id;
+  @Id @GeneratedValue private UUID id;
 
   @Column(nullable = false)
   private UUID assetId;
@@ -41,8 +38,7 @@ public class MaintenanceRequest {
 
   private String cancellationReason;
 
-  @Version
-  private Long version;
+  @Version private Long version;
 
   protected MaintenanceRequest() {
     // JPA
@@ -63,16 +59,16 @@ public class MaintenanceRequest {
   }
 
   /* ======================================================
-     FACTORY
-     ====================================================== */
+  FACTORY
+  ====================================================== */
 
   public static MaintenanceRequest criar(UUID assetId, UUID requestedBy) {
     return new MaintenanceRequest(assetId, requestedBy);
   }
 
   /* ======================================================
-     AÇÕES DE DOMÍNIO (REGRAS DE NEGÓCIO)
-     ====================================================== */
+  AÇÕES DE DOMÍNIO (REGRAS DE NEGÓCIO)
+  ====================================================== */
 
   public void iniciarManutencao() {
     assertStatus(MaintenanceRequestStatus.CRIADA);
@@ -103,8 +99,8 @@ public class MaintenanceRequest {
   }
 
   /* ======================================================
-     REGRAS DE APOIO
-     ====================================================== */
+  REGRAS DE APOIO
+  ====================================================== */
 
   public boolean isAtiva() {
     return status == MaintenanceRequestStatus.CRIADA
@@ -118,14 +114,13 @@ public class MaintenanceRequest {
 
   private void assertStatus(MaintenanceRequestStatus expected) {
     if (this.status != expected) {
-      throw new IllegalStateException(
-          "Ação inválida para o status atual da manutenção: " + status);
+      throw new IllegalStateException("Ação inválida para o status atual da manutenção: " + status);
     }
   }
 
   /* ======================================================
-     GETTERS
-     ====================================================== */
+  GETTERS
+  ====================================================== */
 
   public UUID getId() {
     return id;
@@ -164,8 +159,8 @@ public class MaintenanceRequest {
   }
 
   /* ======================================================
-     EQUALS & HASHCODE
-     ====================================================== */
+  EQUALS & HASHCODE
+  ====================================================== */
 
   @Override
   public boolean equals(Object o) {

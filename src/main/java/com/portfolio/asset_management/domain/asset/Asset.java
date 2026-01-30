@@ -7,13 +7,11 @@ import java.util.UUID;
 /**
  * Entidade de domínio Asset.
  *
- * Responsável por:
- * - manter o estado atual do ativo
- * - aplicar regras de negócio
- * - governar o lifecycle
+ * <p>Responsável por: - manter o estado atual do ativo - aplicar regras de negócio - governar o
+ * lifecycle
  *
- * Todas as transições acontecem por ações explícitas.
- * Nenhuma alteração direta de status é permitida.
+ * <p>Todas as transições acontecem por ações explícitas. Nenhuma alteração direta de status é
+ * permitida.
  */
 @Entity
 @Table(name = "assets")
@@ -31,11 +29,9 @@ public class Asset {
   @Column(nullable = false)
   private AssetStatus status;
 
-  @Column
-  private UUID unitId;
+  @Column private UUID unitId;
 
-  @Column
-  private UUID responsibleUserId;
+  @Column private UUID responsibleUserId;
 
   @Column(nullable = false)
   private boolean transferenciaEmAndamento;
@@ -43,8 +39,7 @@ public class Asset {
   @Column(nullable = false)
   private boolean inventarioEmAndamento;
 
-  @Column
-  private String writeOffReason;
+  @Column private String writeOffReason;
 
   protected Asset() {
     // construtor protegido exigido pelo JPA
@@ -59,8 +54,8 @@ public class Asset {
   }
 
   /* ======================================================
-     AÇÕES DE NEGÓCIO — LIFECYCLE
-     ====================================================== */
+  AÇÕES DE NEGÓCIO — LIFECYCLE
+  ====================================================== */
 
   public void ativar(UUID unitId, UUID responsibleUserId) {
     assertActionAllowed(AssetAction.ATIVAR);
@@ -102,16 +97,13 @@ public class Asset {
     this.status = AssetStatus.EM_USO;
   }
 
-  public void confirmarRecebimento(
-      UUID newUnitId,
-      UUID newResponsibleUserId) {
+  public void confirmarRecebimento(UUID newUnitId, UUID newResponsibleUserId) {
 
     assertActionAllowed(AssetAction.CONFIRMAR_RECEBIMENTO);
     assertTransferenciaEmAndamento();
 
     if (newUnitId == null || newResponsibleUserId == null) {
-      throw new IllegalStateException(
-          "Unidade e responsável de destino são obrigatórios");
+      throw new IllegalStateException("Unidade e responsável de destino são obrigatórios");
     }
 
     this.unitId = newUnitId;
@@ -179,8 +171,8 @@ public class Asset {
   }
 
   /* ======================================================
-     VALIDAÇÕES DE DOMÍNIO
-     ====================================================== */
+  VALIDAÇÕES DE DOMÍNIO
+  ====================================================== */
 
   private void assertActionAllowed(AssetAction action) {
     if (!status.permite(action)) {
@@ -209,8 +201,8 @@ public class Asset {
   }
 
   /* ======================================================
-     GETTERS (SEM SETTERS)
-     ====================================================== */
+  GETTERS (SEM SETTERS)
+  ====================================================== */
 
   public UUID getId() {
     return id;
@@ -245,8 +237,8 @@ public class Asset {
   }
 
   /* ======================================================
-     EQUALS & HASHCODE
-     ====================================================== */
+  EQUALS & HASHCODE
+  ====================================================== */
 
   @Override
   public boolean equals(Object o) {

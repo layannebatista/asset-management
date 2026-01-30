@@ -8,9 +8,7 @@ import java.util.UUID;
 @Table(name = "inventory_items")
 public class InventoryItem {
 
-  @Id
-  @GeneratedValue
-  private UUID id;
+  @Id @GeneratedValue private UUID id;
 
   @Column(nullable = false)
   private UUID assetId;
@@ -49,18 +47,15 @@ public class InventoryItem {
 
   public void registrarResultado(InventoryCheckResult result) {
     if (!inventoryCycle.isAberto()) {
-      throw new IllegalStateException(
-          "Não é possível registrar resultado com inventário fechado");
+      throw new IllegalStateException("Não é possível registrar resultado com inventário fechado");
     }
 
     if (this.result != null) {
-      throw new IllegalStateException(
-          "Resultado já registrado para este ativo");
+      throw new IllegalStateException("Resultado já registrado para este ativo");
     }
 
     if (result == null) {
-      throw new IllegalArgumentException(
-          "Resultado do inventário é obrigatório");
+      throw new IllegalArgumentException("Resultado do inventário é obrigatório");
     }
 
     this.result = result;

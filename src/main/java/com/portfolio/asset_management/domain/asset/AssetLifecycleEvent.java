@@ -8,14 +8,10 @@ import java.util.UUID;
 /**
  * Evento de ciclo de vida do Asset.
  *
- * Representa uma mudança relevante de estado ou ação de negócio
- * executada sobre um ativo.
+ * <p>Representa uma mudança relevante de estado ou ação de negócio executada sobre um ativo.
  *
- * Este evento é utilizado para:
- * - auditoria
- * - histórico
- * - cenários BDD
- * - rastreabilidade de processos (transferência, inventário, etc.)
+ * <p>Este evento é utilizado para: - auditoria - histórico - cenários BDD - rastreabilidade de
+ * processos (transferência, inventário, etc.)
  */
 @Entity
 @Table(name = "asset_lifecycle_events")
@@ -41,25 +37,15 @@ public class AssetLifecycleEvent {
   @Column(nullable = false)
   private AssetAction action;
 
-  /**
-   * Identificador do processo relacionado ao evento.
-   * Ex: transferência, inventário, manutenção.
-   */
-  @Column
-  private UUID processId;
+  /** Identificador do processo relacionado ao evento. Ex: transferência, inventário, manutenção. */
+  @Column private UUID processId;
 
-  /**
-   * Usuário ou sistema que disparou a ação.
-   */
+  /** Usuário ou sistema que disparou a ação. */
   @Column(nullable = false)
   private UUID triggeredBy;
 
-  /**
-   * Contexto livre para auditoria.
-   * Pode armazenar motivo, observação ou metadado simples.
-   */
-  @Column
-  private String context;
+  /** Contexto livre para auditoria. Pode armazenar motivo, observação ou metadado simples. */
+  @Column private String context;
 
   @Column(nullable = false, updatable = false)
   private LocalDateTime occurredAt;
@@ -89,8 +75,8 @@ public class AssetLifecycleEvent {
   }
 
   /* ======================================================
-     FACTORY METHODS (PADRÃO DE MERCADO)
-     ====================================================== */
+  FACTORY METHODS (PADRÃO DE MERCADO)
+  ====================================================== */
 
   public static AssetLifecycleEvent create(
       UUID assetId,
@@ -100,15 +86,7 @@ public class AssetLifecycleEvent {
       UUID triggeredBy,
       String context) {
 
-    return create(
-        assetId,
-        previousStatus,
-        newStatus,
-        action,
-        null,
-        triggeredBy,
-        context
-    );
+    return create(assetId, previousStatus, newStatus, action, null, triggeredBy, context);
   }
 
   public static AssetLifecycleEvent create(
@@ -141,13 +119,12 @@ public class AssetLifecycleEvent {
         processId,
         triggeredBy,
         context,
-        LocalDateTime.now()
-    );
+        LocalDateTime.now());
   }
 
   /* ======================================================
-     GETTERS
-     ====================================================== */
+  GETTERS
+  ====================================================== */
 
   public UUID getId() {
     return id;
@@ -186,8 +163,8 @@ public class AssetLifecycleEvent {
   }
 
   /* ======================================================
-     EQUALS & HASHCODE
-     ====================================================== */
+  EQUALS & HASHCODE
+  ====================================================== */
 
   @Override
   public boolean equals(Object o) {

@@ -8,20 +8,16 @@ import java.util.UUID;
 /**
  * Aggregate Root do processo de Transferência de Ativos.
  *
- * Representa o workflow completo de uma transferência,
- * desde a criação até a execução final, com governança,
- * aprovação e auditoria.
+ * <p>Representa o workflow completo de uma transferência, desde a criação até a execução final, com
+ * governança, aprovação e auditoria.
  *
- * Este objeto é a FONTE DA VERDADE do processo.
- * Nenhuma regra de fluxo deve existir fora dele.
+ * <p>Este objeto é a FONTE DA VERDADE do processo. Nenhuma regra de fluxo deve existir fora dele.
  */
 @Entity
 @Table(name = "transfer_requests")
 public class TransferRequest {
 
-  @Id
-  @GeneratedValue
-  private UUID id;
+  @Id @GeneratedValue private UUID id;
 
   @Column(nullable = false)
   private UUID assetId;
@@ -50,18 +46,14 @@ public class TransferRequest {
   private String rejectionReason;
   private String cancellationReason;
 
-  @Version
-  private Long version;
+  @Version private Long version;
 
   protected TransferRequest() {
     // JPA
   }
 
   private TransferRequest(
-      UUID assetId,
-      UUID originUnitId,
-      UUID destinationUnitId,
-      UUID requestedBy) {
+      UUID assetId, UUID originUnitId, UUID destinationUnitId, UUID requestedBy) {
 
     if (assetId == null) {
       throw new IllegalArgumentException("Asset é obrigatório para transferência");
@@ -85,25 +77,18 @@ public class TransferRequest {
   }
 
   /* ======================================================
-     FACTORY
-     ====================================================== */
+  FACTORY
+  ====================================================== */
 
   public static TransferRequest criar(
-      UUID assetId,
-      UUID originUnitId,
-      UUID destinationUnitId,
-      UUID requestedBy) {
+      UUID assetId, UUID originUnitId, UUID destinationUnitId, UUID requestedBy) {
 
-    return new TransferRequest(
-        assetId,
-        originUnitId,
-        destinationUnitId,
-        requestedBy);
+    return new TransferRequest(assetId, originUnitId, destinationUnitId, requestedBy);
   }
 
   /* ======================================================
-     AÇÕES DE DOMÍNIO (REGRAS DE NEGÓCIO)
-     ====================================================== */
+  AÇÕES DE DOMÍNIO (REGRAS DE NEGÓCIO)
+  ====================================================== */
 
   public void solicitarAprovacao() {
     assertStatus(TransferRequestStatus.CRIADA);
@@ -152,8 +137,8 @@ public class TransferRequest {
   }
 
   /* ======================================================
-     REGRAS DE APOIO
-     ====================================================== */
+  REGRAS DE APOIO
+  ====================================================== */
 
   public boolean isAtiva() {
     return status == TransferRequestStatus.CRIADA
@@ -175,8 +160,8 @@ public class TransferRequest {
   }
 
   /* ======================================================
-     GETTERS
-     ====================================================== */
+  GETTERS
+  ====================================================== */
 
   public UUID getId() {
     return id;
@@ -231,8 +216,8 @@ public class TransferRequest {
   }
 
   /* ======================================================
-     EQUALS & HASHCODE
-     ====================================================== */
+  EQUALS & HASHCODE
+  ====================================================== */
 
   @Override
   public boolean equals(Object o) {

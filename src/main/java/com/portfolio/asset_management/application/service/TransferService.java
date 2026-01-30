@@ -5,9 +5,7 @@ import com.portfolio.asset_management.domain.asset.AssetAction;
 import com.portfolio.asset_management.domain.asset.AssetLifecycleEvent;
 import com.portfolio.asset_management.domain.asset.AssetStatus;
 import com.portfolio.asset_management.domain.transfer.TransferApproval;
-import com.portfolio.asset_management.domain.transfer.TransferApprovalDecision;
 import com.portfolio.asset_management.domain.transfer.TransferRequest;
-import com.portfolio.asset_management.domain.transfer.TransferRequestStatus;
 import com.portfolio.asset_management.infrastructure.persistence.AssetLifecycleRepository;
 import com.portfolio.asset_management.infrastructure.persistence.AssetRepository;
 import com.portfolio.asset_management.infrastructure.persistence.TransferApprovalRepository;
@@ -18,11 +16,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Serviço de aplicação responsável por orquestrar
- * o processo de Transferência de Ativos.
+ * Serviço de aplicação responsável por orquestrar o processo de Transferência de Ativos.
  *
- * <p>Este service NÃO contém regra de negócio.
- * Ele coordena TransferRequest, TransferApproval e Asset.
+ * <p>Este service NÃO contém regra de negócio. Ele coordena TransferRequest, TransferApproval e
+ * Asset.
  */
 @Service
 public class TransferService {
@@ -45,29 +42,24 @@ public class TransferService {
   }
 
   /* ======================================================
-     CRIAR TRANSFER REQUEST
-     ====================================================== */
+  CRIAR TRANSFER REQUEST
+  ====================================================== */
 
   @Transactional
   public TransferRequest criarTransferRequest(
-      UUID assetId,
-      UUID destinationUnitId,
-      UUID requestedBy) {
+      UUID assetId, UUID destinationUnitId, UUID requestedBy) {
 
     Asset asset = getAsset(assetId);
 
     transferRequestRepository
         .findAtivaByAssetId(assetId)
-        .ifPresent(r -> {
-          throw new IllegalStateException(
-              "Já existe uma transferência ativa para este ativo");
-        });
+        .ifPresent(
+            r -> {
+              throw new IllegalStateException("Já existe uma transferência ativa para este ativo");
+            });
 
-    TransferRequest request = TransferRequest.criar(
-        assetId,
-        asset.getUnitId(),
-        destinationUnitId,
-        requestedBy);
+    TransferRequest request =
+        TransferRequest.criar(assetId, asset.getUnitId(), destinationUnitId, requestedBy);
 
     TransferRequest savedRequest = transferRequestRepository.save(request);
 
@@ -89,8 +81,8 @@ public class TransferService {
   }
 
   /* ======================================================
-     SOLICITAR APROVAÇÃO
-     ====================================================== */
+  SOLICITAR APROVAÇÃO
+  ====================================================== */
 
   @Transactional
   public void solicitarAprovacao(UUID requestId) {
@@ -100,22 +92,16 @@ public class TransferService {
   }
 
   /* ======================================================
-     APROVAR TRANSFERÊNCIA
-     ====================================================== */
+  APROVAR TRANSFERÊNCIA
+  ====================================================== */
 
   @Transactional
-  public TransferApproval aprovarTransferencia(
-      UUID requestId,
-      UUID approvedBy,
-      String comment) {
+  public TransferApproval aprovarTransferencia(UUID requestId, UUID approvedBy, String comment) {
 
     TransferRequest request = getRequest(requestId);
     request.aprovar();
 
-    TransferApproval approval = TransferApproval.aprovar(
-        requestId,
-        approvedBy,
-        comment);
+    TransferApproval approval = TransferApproval.aprovar(requestId, approvedBy, comment);
 
     transferApprovalRepository.save(approval);
     transferRequestRepository.save(request);
@@ -140,22 +126,16 @@ public class TransferService {
   }
 
   /* ======================================================
-     REJEITAR TRANSFERÊNCIA
-     ====================================================== */
+  REJEITAR TRANSFERÊNCIA
+  ====================================================== */
 
   @Transactional
-  public TransferApproval rejeitarTransferencia(
-      UUID requestId,
-      UUID rejectedBy,
-      String reason) {
+  public TransferApproval rejeitarTransferencia(UUID requestId, UUID rejectedBy, String reason) {
 
     TransferRequest request = getRequest(requestId);
     request.rejeitar(reason);
 
-    TransferApproval approval = TransferApproval.rejeitar(
-        requestId,
-        rejectedBy,
-        reason);
+    TransferApproval approval = TransferApproval.rejeitar(requestId, rejectedBy, reason);
 
     transferApprovalRepository.save(approval);
     transferRequestRepository.save(request);
@@ -180,13 +160,11 @@ public class TransferService {
   }
 
   /* ======================================================
-     EXECUTAR TRANSFERÊNCIA
-     ====================================================== */
+  EXECUTAR TRANSFERÊNCIA
+  ====================================================== */
 
   @Transactional
-  public void executarTransferencia(
-      UUID requestId,
-      UUID newResponsibleUserId) {
+  public void executarTransferencia(UUID requestId, UUID newResponsibleUserId) {
 
     TransferRequest request = getRequest(requestId);
     request.executar();
@@ -196,9 +174,7 @@ public class TransferService {
     Asset asset = getAsset(request.getAssetId());
     AssetStatus previousStatus = asset.getStatus();
 
-    asset.confirmarRecebimento(
-        request.getDestinationUnitId(),
-        newResponsibleUserId);
+    asset.confirmarRecebimento(request.getDestinationUnitId(), newResponsibleUserId);
 
     assetRepository.save(asset);
 
@@ -214,14 +190,11 @@ public class TransferService {
   }
 
   /* ======================================================
-     CANCELAR TRANSFERÊNCIA
-     ====================================================== */
+  CANCELAR TRANSFERÊNCIA
+  ====================================================== */
 
   @Transactional
-  public void cancelarTransferencia(
-      UUID requestId,
-      UUID cancelledBy,
-      String reason) {
+  public void cancelarTransferencia(UUID requestId, UUID cancelledBy, String reason) {
 
     TransferRequest request = getRequest(requestId);
     request.cancelar(reason);
@@ -246,8 +219,8 @@ public class TransferService {
   }
 
   /* ======================================================
-     CONSULTAS
-     ====================================================== */
+  CONSULTAS
+  ====================================================== */
 
   @Transactional(readOnly = true)
   public TransferRequest getTransferRequest(UUID requestId) {
@@ -260,16 +233,18 @@ public class TransferService {
   }
 
   /* ======================================================
-     APOIO
-     ====================================================== */
+  APOIO
+  ====================================================== */
 
   private TransferRequest getRequest(UUID requestId) {
-    return transferRequestRepository.findById(requestId)
+    return transferRequestRepository
+        .findById(requestId)
         .orElseThrow(() -> new IllegalStateException("TransferRequest não encontrada"));
   }
 
   private Asset getAsset(UUID assetId) {
-    return assetRepository.findById(assetId)
+    return assetRepository
+        .findById(assetId)
         .orElseThrow(() -> new IllegalStateException("Ativo não encontrado"));
   }
 }

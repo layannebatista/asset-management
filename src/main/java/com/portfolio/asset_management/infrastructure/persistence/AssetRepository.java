@@ -11,9 +11,7 @@ import org.springframework.stereotype.Repository;
 /**
  * Repositório de persistência do Asset.
  *
- * Responsável apenas por acesso a dados.
- * Nenhuma regra de negócio deve existir aqui.
- *
+ * <p>Responsável apenas por acesso a dados. Nenhuma regra de negócio deve existir aqui.
  */
 @Repository
 public interface AssetRepository extends JpaRepository<Asset, UUID> {

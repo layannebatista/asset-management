@@ -10,13 +10,10 @@ import org.springframework.web.bind.annotation.*;
 /**
  * Controller REST do módulo de Manutenção.
  *
- * <p>Expõe endpoints semânticos alinhados ao processo de negócio.
- * Nenhuma regra de negócio deve existir aqui.
+ * <p>Expõe endpoints semânticos alinhados ao processo de negócio. Nenhuma regra de negócio deve
+ * existir aqui.
  *
- * <p>Preparado para:
- * - Rest Assured
- * - BDD
- * - Testes de integração
+ * <p>Preparado para: - Rest Assured - BDD - Testes de integração
  */
 @RestController
 @RequestMapping("/maintenance-requests")
@@ -29,81 +26,63 @@ public class MaintenanceController {
   }
 
   /* ======================================================
-     CRIAR SOLICITAÇÃO DE MANUTENÇÃO
-     ====================================================== */
+  CRIAR SOLICITAÇÃO DE MANUTENÇÃO
+  ====================================================== */
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
   public MaintenanceRequest criarSolicitacao(
-      @RequestParam UUID assetId,
-      @RequestParam UUID requestedBy) {
+      @RequestParam UUID assetId, @RequestParam UUID requestedBy) {
 
-    return maintenanceService.criarSolicitacao(
-        assetId,
-        requestedBy);
+    return maintenanceService.criarSolicitacao(assetId, requestedBy);
   }
 
   /* ======================================================
-     INICIAR MANUTENÇÃO
-     ====================================================== */
+  INICIAR MANUTENÇÃO
+  ====================================================== */
 
   @PostMapping("/{requestId}/iniciar")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void iniciarManutencao(
-      @PathVariable UUID requestId,
-      @RequestParam UUID triggeredBy) {
+  public void iniciarManutencao(@PathVariable UUID requestId, @RequestParam UUID triggeredBy) {
 
-    maintenanceService.iniciarManutencao(
-        requestId,
-        triggeredBy);
+    maintenanceService.iniciarManutencao(requestId, triggeredBy);
   }
 
   /* ======================================================
-     FINALIZAR MANUTENÇÃO
-     ====================================================== */
+  FINALIZAR MANUTENÇÃO
+  ====================================================== */
 
   @PostMapping("/{requestId}/finalizar")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void finalizarManutencao(
-      @PathVariable UUID requestId,
-      @RequestParam UUID triggeredBy) {
+  public void finalizarManutencao(@PathVariable UUID requestId, @RequestParam UUID triggeredBy) {
 
-    maintenanceService.finalizarManutencao(
-        requestId,
-        triggeredBy);
+    maintenanceService.finalizarManutencao(requestId, triggeredBy);
   }
 
   /* ======================================================
-     CANCELAR MANUTENÇÃO
-     ====================================================== */
+  CANCELAR MANUTENÇÃO
+  ====================================================== */
 
   @PostMapping("/{requestId}/cancelar")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void cancelarManutencao(
-      @PathVariable UUID requestId,
-      @RequestParam UUID triggeredBy,
-      @RequestParam String reason) {
+      @PathVariable UUID requestId, @RequestParam UUID triggeredBy, @RequestParam String reason) {
 
-    maintenanceService.cancelarManutencao(
-        requestId,
-        triggeredBy,
-        reason);
+    maintenanceService.cancelarManutencao(requestId, triggeredBy, reason);
   }
 
   /* ======================================================
-     CONSULTAS
-     ====================================================== */
+  CONSULTAS
+  ====================================================== */
 
   @GetMapping("/{requestId}")
-  public MaintenanceRequest buscarPorId(
-      @PathVariable UUID requestId) {
+  public MaintenanceRequest buscarPorId(@PathVariable UUID requestId) {
 
     return maintenanceService.buscarPorId(requestId);
   }
 
   @GetMapping
-  public List<MaintenanceRequest> listarPorAsset(
-      @RequestParam UUID assetId) {
+  public List<MaintenanceRequest> listarPorAsset(@RequestParam UUID assetId) {
 
     return maintenanceService.listarPorAsset(assetId);
   }

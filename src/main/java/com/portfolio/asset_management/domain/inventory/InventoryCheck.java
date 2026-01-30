@@ -8,9 +8,7 @@ import java.util.UUID;
 @Table(name = "inventory_checks")
 public class InventoryCheck {
 
-  @Id
-  @GeneratedValue
-  private UUID id;
+  @Id @GeneratedValue private UUID id;
 
   @Column(nullable = false)
   private UUID inventoryCycleId;
@@ -33,10 +31,7 @@ public class InventoryCheck {
   }
 
   private InventoryCheck(
-      UUID inventoryCycleId,
-      UUID assetId,
-      InventoryCheckResult result,
-      UUID checkedBy) {
+      UUID inventoryCycleId, UUID assetId, InventoryCheckResult result, UUID checkedBy) {
 
     this.inventoryCycleId = inventoryCycleId;
     this.assetId = assetId;
@@ -48,20 +43,13 @@ public class InventoryCheck {
   /* ===================== FACTORY ===================== */
 
   public static InventoryCheck registrar(
-      UUID inventoryCycleId,
-      UUID assetId,
-      InventoryCheckResult result,
-      UUID checkedBy) {
+      UUID inventoryCycleId, UUID assetId, InventoryCheckResult result, UUID checkedBy) {
 
     if (inventoryCycleId == null || assetId == null || result == null || checkedBy == null) {
       throw new IllegalArgumentException("Dados obrigatórios para registrar check");
     }
 
-    return new InventoryCheck(
-        inventoryCycleId,
-        assetId,
-        result,
-        checkedBy);
+    return new InventoryCheck(inventoryCycleId, assetId, result, checkedBy);
   }
 
   /* ===================== GETTERS ===================== */

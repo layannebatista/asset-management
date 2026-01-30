@@ -7,19 +7,16 @@ import java.util.UUID;
 /**
  * Projeção de leitura da Transferência de um Ativo.
  *
- * Este modelo NÃO é Aggregate Root.
- * NÃO contém regra de negócio.
- * NÃO governa fluxo.
+ * <p>Este modelo NÃO é Aggregate Root. NÃO contém regra de negócio. NÃO governa fluxo.
  *
- * Ele representa uma visão consolidada do processo
- * de transferência para fins de consulta, listagem e relatórios.
+ * <p>Ele representa uma visão consolidada do processo de transferência para fins de consulta,
+ * listagem e relatórios.
  */
 @Entity
 @Table(name = "transfers")
 public class Transfer {
 
-  @Id
-  private UUID id;
+  @Id private UUID id;
 
   @Column(nullable = false)
   private UUID assetId;
@@ -47,8 +44,8 @@ public class Transfer {
   }
 
   /**
-   * Cria uma projeção de leitura a partir da TransferRequest.
-   * Esse método deve ser usado por listeners / serviços de projeção.
+   * Cria uma projeção de leitura a partir da TransferRequest. Esse método deve ser usado por
+   * listeners / serviços de projeção.
    */
   public static Transfer from(TransferRequest request) {
     Transfer transfer = new Transfer();
@@ -66,8 +63,8 @@ public class Transfer {
   }
 
   /* ======================================================
-     GETTERS (SOMENTE LEITURA)
-     ====================================================== */
+  GETTERS (SOMENTE LEITURA)
+  ====================================================== */
 
   public UUID getId() {
     return id;

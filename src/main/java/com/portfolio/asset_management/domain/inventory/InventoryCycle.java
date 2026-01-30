@@ -8,9 +8,7 @@ import java.util.*;
 @Table(name = "inventory_cycles")
 public class InventoryCycle {
 
-  @Id
-  @GeneratedValue
-  private UUID id;
+  @Id @GeneratedValue private UUID id;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
@@ -48,12 +46,10 @@ public class InventoryCycle {
       throw new IllegalArgumentException("Item de inventário é obrigatório");
     }
 
-    boolean duplicado =
-        items.stream().anyMatch(i -> i.getAssetId().equals(item.getAssetId()));
+    boolean duplicado = items.stream().anyMatch(i -> i.getAssetId().equals(item.getAssetId()));
 
     if (duplicado) {
-      throw new IllegalStateException(
-          "Ativo já adicionado ao ciclo de inventário");
+      throw new IllegalStateException("Ativo já adicionado ao ciclo de inventário");
     }
 
     item.associarAoCiclo(this);
@@ -64,16 +60,13 @@ public class InventoryCycle {
     assertAberto();
 
     if (items.isEmpty()) {
-      throw new IllegalStateException(
-          "Inventário não pode ser fechado sem itens");
+      throw new IllegalStateException("Inventário não pode ser fechado sem itens");
     }
 
-    boolean naoVerificado =
-        items.stream().anyMatch(item -> !item.isVerificado());
+    boolean naoVerificado = items.stream().anyMatch(item -> !item.isVerificado());
 
     if (naoVerificado) {
-      throw new IllegalStateException(
-          "Inventário não pode ser fechado com itens não verificados");
+      throw new IllegalStateException("Inventário não pode ser fechado com itens não verificados");
     }
 
     this.status = InventoryStatus.FECHADO;
@@ -84,8 +77,7 @@ public class InventoryCycle {
 
   private void assertAberto() {
     if (status != InventoryStatus.ABERTO) {
-      throw new IllegalStateException(
-          "Operação permitida apenas com inventário aberto");
+      throw new IllegalStateException("Operação permitida apenas com inventário aberto");
     }
   }
 

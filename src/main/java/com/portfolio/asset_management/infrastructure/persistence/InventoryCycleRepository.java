@@ -10,16 +10,11 @@ import org.springframework.stereotype.Repository;
 /**
  * Repositório do Aggregate Root InventoryCycle.
  *
- * <p>Responsável apenas por persistência.
- * NÃO contém regras de negócio.
+ * <p>Responsável apenas por persistência. NÃO contém regras de negócio.
  */
 @Repository
-public interface InventoryCycleRepository
-    extends JpaRepository<InventoryCycle, UUID> {
+public interface InventoryCycleRepository extends JpaRepository<InventoryCycle, UUID> {
 
-  /**
-   * Lista ciclos por status.
-   * Usado apenas para consultas.
-   */
+  /** Lista ciclos por status. Usado apenas para consultas. */
   List<InventoryCycle> findAllByStatus(InventoryStatus status);
 }

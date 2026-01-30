@@ -12,9 +12,7 @@ import org.springframework.web.bind.annotation.*;
 /**
  * Controller REST do módulo Asset.
  *
- * Responsável apenas por expor endpoints HTTP.
- * Nenhuma regra de negócio deve existir aqui.
- *
+ * <p>Responsável apenas por expor endpoints HTTP. Nenhuma regra de negócio deve existir aqui.
  */
 @RestController
 @RequestMapping("/assets")
@@ -27,8 +25,8 @@ public class AssetController {
   }
 
   /* ======================================================
-     CADASTRO
-     ====================================================== */
+  CADASTRO
+  ====================================================== */
 
   @PostMapping
   @ResponseStatus(HttpStatus.CREATED)
@@ -37,8 +35,8 @@ public class AssetController {
   }
 
   /* ======================================================
-     ATIVAÇÃO
-     ====================================================== */
+  ATIVAÇÃO
+  ====================================================== */
 
   @PostMapping("/{assetId}/ativar")
   public Asset ativar(
@@ -51,29 +49,26 @@ public class AssetController {
   }
 
   /* ======================================================
-     TRANSFERÊNCIA
-     ====================================================== */
+  TRANSFERÊNCIA
+  ====================================================== */
 
   @PostMapping("/{assetId}/transferencia/solicitar")
   public Asset solicitarTransferencia(
-      @PathVariable UUID assetId,
-      @RequestParam(required = false) UUID triggeredBy) {
+      @PathVariable UUID assetId, @RequestParam(required = false) UUID triggeredBy) {
 
     return assetService.solicitarTransferencia(assetId, triggeredBy);
   }
 
   @PostMapping("/{assetId}/transferencia/aprovar")
   public Asset aprovarTransferencia(
-      @PathVariable UUID assetId,
-      @RequestParam(required = false) UUID triggeredBy) {
+      @PathVariable UUID assetId, @RequestParam(required = false) UUID triggeredBy) {
 
     return assetService.aprovarTransferencia(assetId, triggeredBy);
   }
 
   @PostMapping("/{assetId}/transferencia/rejeitar")
   public Asset rejeitarTransferencia(
-      @PathVariable UUID assetId,
-      @RequestParam(required = false) UUID triggeredBy) {
+      @PathVariable UUID assetId, @RequestParam(required = false) UUID triggeredBy) {
 
     return assetService.rejeitarTransferencia(assetId, triggeredBy);
   }
@@ -85,69 +80,62 @@ public class AssetController {
       @RequestParam UUID newResponsibleUserId,
       @RequestParam(required = false) UUID triggeredBy) {
 
-    return assetService.confirmarRecebimento(
-        assetId, newUnitId, newResponsibleUserId, triggeredBy);
+    return assetService.confirmarRecebimento(assetId, newUnitId, newResponsibleUserId, triggeredBy);
   }
 
   /* ======================================================
-     MANUTENÇÃO
-     ====================================================== */
+  MANUTENÇÃO
+  ====================================================== */
 
   @PostMapping("/{assetId}/manutencao/enviar")
   public Asset enviarParaManutencao(
-      @PathVariable UUID assetId,
-      @RequestParam(required = false) UUID triggeredBy) {
+      @PathVariable UUID assetId, @RequestParam(required = false) UUID triggeredBy) {
 
     return assetService.enviarParaManutencao(assetId, triggeredBy);
   }
 
   @PostMapping("/{assetId}/manutencao/retornar")
   public Asset retornarDaManutencao(
-      @PathVariable UUID assetId,
-      @RequestParam(required = false) UUID triggeredBy) {
+      @PathVariable UUID assetId, @RequestParam(required = false) UUID triggeredBy) {
 
     return assetService.retornarDaManutencao(assetId, triggeredBy);
   }
 
   /* ======================================================
-     INVENTÁRIO
-     ====================================================== */
+  INVENTÁRIO
+  ====================================================== */
 
   @PostMapping("/{assetId}/inventario/iniciar")
   public Asset iniciarInventario(
-      @PathVariable UUID assetId,
-      @RequestParam(required = false) UUID triggeredBy) {
+      @PathVariable UUID assetId, @RequestParam(required = false) UUID triggeredBy) {
 
     return assetService.iniciarInventario(assetId, triggeredBy);
   }
 
   @PostMapping("/{assetId}/inventario/confirmar-localizado")
   public Asset confirmarLocalizado(
-      @PathVariable UUID assetId,
-      @RequestParam(required = false) UUID triggeredBy) {
+      @PathVariable UUID assetId, @RequestParam(required = false) UUID triggeredBy) {
 
     return assetService.confirmarLocalizado(assetId, triggeredBy);
   }
 
   @PostMapping("/{assetId}/inventario/nao-localizado")
   public Asset marcarNaoLocalizado(
-      @PathVariable UUID assetId,
-      @RequestParam(required = false) UUID triggeredBy) {
+      @PathVariable UUID assetId, @RequestParam(required = false) UUID triggeredBy) {
 
     return assetService.marcarNaoLocalizado(assetId, triggeredBy);
   }
 
   @PostMapping("/{assetId}/localizar")
   public Asset localizarAtivo(
-      @PathVariable UUID assetId,
-      @RequestParam(required = false) UUID triggeredBy) {
+      @PathVariable UUID assetId, @RequestParam(required = false) UUID triggeredBy) {
 
     return assetService.localizarAtivo(assetId, triggeredBy);
   }
 
   /* ======================================================
-     BAIXA
-     ====================================================== */
+  BAIXA
+  ====================================================== */
 
   @PostMapping("/{assetId}/baixar")
   public Asset baixar(
@@ -159,8 +147,8 @@ public class AssetController {
   }
 
   /* ======================================================
-     CONSULTAS
-     ====================================================== */
+  CONSULTAS
+  ====================================================== */
 
   @GetMapping("/{assetId}")
   public Asset buscarPorId(@PathVariable UUID assetId) {

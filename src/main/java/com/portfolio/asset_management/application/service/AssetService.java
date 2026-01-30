@@ -14,8 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Serviço de aplicação responsável por orquestrar os casos de uso do Asset.
  *
- * Regras de negócio e lifecycle ficam exclusivamente no domínio (Asset).
- * Este service apenas coordena persistência e eventos.
+ * <p>Regras de negócio e lifecycle ficam exclusivamente no domínio (Asset). Este service apenas
+ * coordena persistência e eventos.
  */
 @Service
 public class AssetService {
@@ -24,15 +24,14 @@ public class AssetService {
   private final AssetLifecycleRepository lifecycleRepository;
 
   public AssetService(
-      AssetRepository assetRepository,
-      AssetLifecycleRepository lifecycleRepository) {
+      AssetRepository assetRepository, AssetLifecycleRepository lifecycleRepository) {
     this.assetRepository = assetRepository;
     this.lifecycleRepository = lifecycleRepository;
   }
 
   /* ======================================================
-     CRIAÇÃO
-     ====================================================== */
+  CRIAÇÃO
+  ====================================================== */
 
   @Transactional
   public Asset cadastrarAsset(String assetCode) {
@@ -61,15 +60,11 @@ public class AssetService {
   }
 
   /* ======================================================
-     ATIVAÇÃO
-     ====================================================== */
+  ATIVAÇÃO
+  ====================================================== */
 
   @Transactional
-  public Asset ativarAsset(
-      UUID assetId,
-      UUID unitId,
-      UUID responsibleUserId,
-      UUID triggeredBy) {
+  public Asset ativarAsset(UUID assetId, UUID unitId, UUID responsibleUserId, UUID triggeredBy) {
 
     Asset asset = getAssetById(assetId);
     AssetStatus previousStatus = asset.getStatus();
@@ -90,8 +85,8 @@ public class AssetService {
   }
 
   /* ======================================================
-     TRANSFERÊNCIA
-     ====================================================== */
+  TRANSFERÊNCIA
+  ====================================================== */
 
   @Transactional
   public Asset solicitarTransferencia(UUID assetId, UUID triggeredBy) {
@@ -158,10 +153,7 @@ public class AssetService {
 
   @Transactional
   public Asset confirmarRecebimento(
-      UUID assetId,
-      UUID newUnitId,
-      UUID newResponsibleUserId,
-      UUID triggeredBy) {
+      UUID assetId, UUID newUnitId, UUID newResponsibleUserId, UUID triggeredBy) {
 
     Asset asset = getAssetById(assetId);
     AssetStatus previousStatus = asset.getStatus();
@@ -182,8 +174,8 @@ public class AssetService {
   }
 
   /* ======================================================
-     MANUTENÇÃO
-     ====================================================== */
+  MANUTENÇÃO
+  ====================================================== */
 
   @Transactional
   public Asset enviarParaManutencao(UUID assetId, UUID triggeredBy) {
@@ -228,8 +220,8 @@ public class AssetService {
   }
 
   /* ======================================================
-     INVENTÁRIO
-     ====================================================== */
+  INVENTÁRIO
+  ====================================================== */
 
   @Transactional
   public Asset iniciarInventario(UUID assetId, UUID triggeredBy) {
@@ -316,14 +308,11 @@ public class AssetService {
   }
 
   /* ======================================================
-     BAIXA
-     ====================================================== */
+  BAIXA
+  ====================================================== */
 
   @Transactional
-  public Asset baixarAsset(
-      UUID assetId,
-      String reason,
-      UUID triggeredBy) {
+  public Asset baixarAsset(UUID assetId, String reason, UUID triggeredBy) {
 
     Asset asset = getAssetById(assetId);
     AssetStatus previousStatus = asset.getStatus();
@@ -344,8 +333,8 @@ public class AssetService {
   }
 
   /* ======================================================
-     CONSULTAS
-     ====================================================== */
+  CONSULTAS
+  ====================================================== */
 
   @Transactional(readOnly = true)
   public Asset getAssetById(UUID assetId) {
