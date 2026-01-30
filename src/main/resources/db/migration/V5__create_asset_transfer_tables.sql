@@ -1,6 +1,0 @@
-CREATE TABLE asset_transfer (
-    id BIGSERIAL PRIMARY KEY,
-    asset_id BIGINT NOT NULL,
-    status VARCHAR(50) NOT NULL,
-    requested_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
