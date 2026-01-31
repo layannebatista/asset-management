@@ -1,11 +1,8 @@
 package com.portfolio.asset_management.shared.exception;
 
-import com.portfolio.asset_management.shared.dto.ApiErrorResponse;
-import com.portfolio.asset_management.shared.dto.FieldErrorDTO;
-import jakarta.validation.ConstraintViolationException;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
+import java.time.OffsetDateTime;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -14,50 +11,57 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 /**
- * Handler global de exceções da aplicação.
- *
- * <p>Responsável por interceptar exceções lançadas pelos controllers e convertê-las em respostas
- * padronizadas para a API.
+ * Handler global responsável por interceptar e tratar exceções lançadas pela aplicação,
+ * padronizando as respostas da API.
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+  @ExceptionHandler(BusinessException.class)
+  public ResponseEntity<Object> handleBusinessException(BusinessException ex) {
+    return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+  }
+
+  @ExceptionHandler(NotFoundException.class)
+  public ResponseEntity<Object> handleNotFoundException(NotFoundException ex) {
+    return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+  }
+
+  @ExceptionHandler(ForbiddenException.class)
+  public ResponseEntity<Object> handleForbiddenException(ForbiddenException ex) {
+    return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage());
+  }
+
   @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ResponseEntity<ApiErrorResponse> handleMethodArgumentNotValidException(
-      MethodArgumentNotValidException ex) {
+  public ResponseEntity<Object> handleValidationException(MethodArgumentNotValidException ex) {
 
-    List<FieldErrorDTO> fieldErrors =
-        ex.getBindingResult().getFieldErrors().stream()
-            .map(this::mapToFieldErrorDTO)
-            .collect(Collectors.toList());
+    Map<String, String> fieldErrors = new HashMap<>();
 
-    ApiErrorResponse response =
-        new ApiErrorResponse(
-            LocalDateTime.now(), HttpStatus.BAD_REQUEST.value(), "Erro de validação", fieldErrors);
+    for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+      fieldErrors.put(error.getField(), error.getDefaultMessage());
+    }
 
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    Map<String, Object> body = new HashMap<>();
+    body.put("timestamp", OffsetDateTime.now());
+    body.put("status", HttpStatus.BAD_REQUEST.value());
+    body.put("error", "Validation error");
+    body.put("fields", fieldErrors);
+
+    return ResponseEntity.badRequest().body(body);
   }
 
-  @ExceptionHandler(ConstraintViolationException.class)
-  public ResponseEntity<ApiErrorResponse> handleConstraintViolationException(
-      ConstraintViolationException ex) {
-
-    List<FieldErrorDTO> fieldErrors =
-        ex.getConstraintViolations().stream()
-            .map(
-                violation ->
-                    new FieldErrorDTO(
-                        violation.getPropertyPath().toString(), violation.getMessage()))
-            .collect(Collectors.toList());
-
-    ApiErrorResponse response =
-        new ApiErrorResponse(
-            LocalDateTime.now(), HttpStatus.BAD_REQUEST.value(), "Erro de validação", fieldErrors);
-
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+  @ExceptionHandler(Exception.class)
+  public ResponseEntity<Object> handleGenericException(Exception ex) {
+    return buildResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR, "Erro inesperado. Entre em contato com o suporte.");
   }
 
-  private FieldErrorDTO mapToFieldErrorDTO(FieldError fieldError) {
-    return new FieldErrorDTO(fieldError.getField(), fieldError.getDefaultMessage());
+  private ResponseEntity<Object> buildResponse(HttpStatus status, String message) {
+    Map<String, Object> body = new HashMap<>();
+    body.put("timestamp", OffsetDateTime.now());
+    body.put("status", status.value());
+    body.put("error", message);
+
+    return ResponseEntity.status(status).body(body);
   }
 }
