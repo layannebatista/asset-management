@@ -1,11 +1,11 @@
 package com.portfolio.asset_management.asset.service;
 
-import com.portfolio.asset_management.audit.enums.AuditEventType;
-import com.portfolio.asset_management.audit.service.AuditService;
 import com.portfolio.asset_management.asset.entity.Asset;
 import com.portfolio.asset_management.asset.enums.AssetStatus;
 import com.portfolio.asset_management.asset.enums.AssetType;
 import com.portfolio.asset_management.asset.repository.AssetRepository;
+import com.portfolio.asset_management.audit.enums.AuditEventType;
+import com.portfolio.asset_management.audit.service.AuditService;
 import com.portfolio.asset_management.organization.entity.Organization;
 import com.portfolio.asset_management.shared.exception.BusinessException;
 import com.portfolio.asset_management.shared.exception.NotFoundException;
@@ -49,10 +49,10 @@ public class AssetService {
     // Auditoria – criação de ativo
     auditService.registerEvent(
         AuditEventType.ASSET_CREATED,
-        null,                       // ação administrativa / sistema
-        organization.getId(),       // organizationId
-        unit.getId(),               // unitId
-        saved.getId(),              // targetId
+        null, // ação administrativa / sistema
+        organization.getId(), // organizationId
+        unit.getId(), // unitId
+        saved.getId(), // targetId
         "Asset created");
 
     return saved;
@@ -61,8 +61,7 @@ public class AssetService {
   public Asset findById(Long assetId) {
     return assetRepository
         .findById(assetId)
-        .orElseThrow(() ->
-            new NotFoundException("Ativo não encontrado"));
+        .orElseThrow(() -> new NotFoundException("Ativo não encontrado"));
   }
 
   /** Atribui um ativo a um usuário. */

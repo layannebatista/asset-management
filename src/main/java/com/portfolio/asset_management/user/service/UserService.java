@@ -48,25 +48,17 @@ public class UserService {
 
     validateEmailUniqueness(email);
 
-    User user =
-        new User(
-            name,
-            email,
-            passwordHash,
-            role,
-            organization,
-            unit,
-            documentNumber);
+    User user = new User(name, email, passwordHash, role, organization, unit, documentNumber);
 
     User saved = userRepository.save(user);
 
     // Auditoria – criação de usuário
     auditService.registerEvent(
         AuditEventType.USER_CREATED,
-        null,                       // ação administrativa / sistema
-        organization.getId(),       // organizationId
-        unit.getId(),               // unitId
-        saved.getId(),              // targetId
+        null, // ação administrativa / sistema
+        organization.getId(), // organizationId
+        unit.getId(), // unitId
+        saved.getId(), // targetId
         "User created");
 
     return saved;
@@ -75,15 +67,13 @@ public class UserService {
   public User findById(Long id) {
     return userRepository
         .findById(id)
-        .orElseThrow(() ->
-            new NotFoundException("Usuário não encontrado"));
+        .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
   }
 
   public User findByEmail(String email) {
     return userRepository
         .findByEmail(email)
-        .orElseThrow(() ->
-            new NotFoundException("Usuário não encontrado"));
+        .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
   }
 
   @Transactional

@@ -23,8 +23,7 @@ public class OrganizationService {
   private final AuditService auditService;
 
   public OrganizationService(
-      OrganizationRepository organizationRepository,
-      AuditService auditService) {
+      OrganizationRepository organizationRepository, AuditService auditService) {
     this.organizationRepository = organizationRepository;
     this.auditService = auditService;
   }
@@ -39,10 +38,10 @@ public class OrganizationService {
     // Auditoria – criação de organização
     auditService.registerEvent(
         AuditEventType.ORGANIZATION_CREATED,
-        null,              // ação administrativa / sistema
-        saved.getId(),     // organizationId
-        null,              // unitId
-        saved.getId(),     // targetId
+        null, // ação administrativa / sistema
+        saved.getId(), // organizationId
+        null, // unitId
+        saved.getId(), // targetId
         "Organization created");
 
     return saved;
@@ -51,8 +50,7 @@ public class OrganizationService {
   public Organization findById(Long id) {
     return organizationRepository
         .findById(id)
-        .orElseThrow(() ->
-            new NotFoundException("Organização não encontrada"));
+        .orElseThrow(() -> new NotFoundException("Organização não encontrada"));
   }
 
   @Transactional

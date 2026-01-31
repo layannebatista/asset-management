@@ -40,8 +40,7 @@ public class UnitService {
         .findByOrganizationAndMainUnitTrue(organization)
         .ifPresent(
             existing -> {
-              throw new BusinessException(
-                  "A organização já possui uma unidade principal");
+              throw new BusinessException("A organização já possui uma unidade principal");
             });
 
     Unit mainUnit = new Unit("Unidade Principal", organization, true);
@@ -50,10 +49,10 @@ public class UnitService {
     // Auditoria – criação de unidade principal
     auditService.registerEvent(
         AuditEventType.UNIT_CREATED,
-        null,                         // ação administrativa / sistema
-        organization.getId(),         // organizationId
-        saved.getId(),                // unitId
-        saved.getId(),                // targetId
+        null, // ação administrativa / sistema
+        organization.getId(), // organizationId
+        saved.getId(), // unitId
+        saved.getId(), // targetId
         "Main unit created");
 
     return saved;
@@ -68,10 +67,10 @@ public class UnitService {
     // Auditoria – criação de unidade
     auditService.registerEvent(
         AuditEventType.UNIT_CREATED,
-        null,                         // ação administrativa / sistema
-        organization.getId(),         // organizationId
-        saved.getId(),                // unitId
-        saved.getId(),                // targetId
+        null, // ação administrativa / sistema
+        organization.getId(), // organizationId
+        saved.getId(), // unitId
+        saved.getId(), // targetId
         "Unit created");
 
     return saved;
@@ -84,8 +83,7 @@ public class UnitService {
   public Unit findById(Long id) {
     return unitRepository
         .findById(id)
-        .orElseThrow(() ->
-            new NotFoundException("Unidade não encontrada"));
+        .orElseThrow(() -> new NotFoundException("Unidade não encontrada"));
   }
 
   @Transactional
