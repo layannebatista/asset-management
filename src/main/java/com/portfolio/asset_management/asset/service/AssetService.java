@@ -1,10 +1,14 @@
 package com.portfolio.asset_management.asset.service;
 
+import com.portfolio.asset_management.audit.enums.AuditEventType;
+import com.portfolio.asset_management.audit.service.AuditService;
 import com.portfolio.asset_management.asset.entity.Asset;
 import com.portfolio.asset_management.asset.enums.AssetStatus;
 import com.portfolio.asset_management.asset.enums.AssetType;
 import com.portfolio.asset_management.asset.repository.AssetRepository;
 import com.portfolio.asset_management.organization.entity.Organization;
+import com.portfolio.asset_management.shared.exception.BusinessException;
+import com.portfolio.asset_management.shared.exception.NotFoundException;
 import com.portfolio.asset_management.unit.entity.Unit;
 import com.portfolio.asset_management.user.entity.User;
 import java.util.Optional;
@@ -21,9 +25,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class AssetService {
 
   private final AssetRepository assetRepository;
+  private final AuditService auditService;
 
-  public AssetService(AssetRepository assetRepository) {
+  public AssetService(AssetRepository assetRepository, AuditService auditService) {
     this.assetRepository = assetRepository;
+    this.auditService = auditService;
   }
 
   /**
@@ -38,13 +44,25 @@ public class AssetService {
     validateAssetTagUniqueness(assetTag);
 
     Asset asset = new Asset(assetTag, type, model, organization, unit);
-    return assetRepository.save(asset);
+    Asset saved = assetRepository.save(asset);
+
+    // Auditoria – criação de ativo
+    auditService.registerEvent(
+        AuditEventType.ASSET_CREATED,
+        null,                       // ação administrativa / sistema
+        organization.getId(),       // organizationId
+        unit.getId(),               // unitId
+        saved.getId(),              // targetId
+        "Asset created");
+
+    return saved;
   }
 
   public Asset findById(Long assetId) {
     return assetRepository
         .findById(assetId)
-        .orElseThrow(() -> new RuntimeException("Ativo não encontrado"));
+        .orElseThrow(() ->
+            new NotFoundException("Ativo não encontrado"));
   }
 
   /** Atribui um ativo a um usuário. */
@@ -53,7 +71,7 @@ public class AssetService {
     Asset asset = findById(assetId);
 
     if (asset.getStatus() != AssetStatus.AVAILABLE) {
-      throw new RuntimeException("Ativo não disponível para atribuição");
+      throw new BusinessException("Ativo não disponível para atribuição");
     }
 
     asset.assignToUser(user);
@@ -65,7 +83,7 @@ public class AssetService {
     Asset asset = findById(assetId);
 
     if (asset.getStatus() != AssetStatus.ASSIGNED) {
-      throw new RuntimeException("Ativo não está atribuído a um usuário");
+      throw new BusinessException("Ativo não está atribuído a um usuário");
     }
 
     asset.unassignUser();
@@ -83,7 +101,7 @@ public class AssetService {
 
     if (asset.getStatus() == AssetStatus.IN_MAINTENANCE
         || asset.getStatus() == AssetStatus.RETIRED) {
-      throw new RuntimeException("Ativo não pode ser transferido neste status");
+      throw new BusinessException("Ativo não pode ser transferido neste status");
     }
 
     asset.changeUnit(newUnit);
@@ -101,7 +119,7 @@ public class AssetService {
   private void validateAssetTagUniqueness(String assetTag) {
     Optional<Asset> existing = assetRepository.findByAssetTag(assetTag);
     if (existing.isPresent()) {
-      throw new RuntimeException("Já existe um ativo com este identificador");
+      throw new BusinessException("Já existe um ativo com este identificador");
     }
   }
 }

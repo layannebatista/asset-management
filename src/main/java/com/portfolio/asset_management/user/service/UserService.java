@@ -1,7 +1,11 @@
 package com.portfolio.asset_management.user.service;
 
+import com.portfolio.asset_management.audit.enums.AuditEventType;
+import com.portfolio.asset_management.audit.service.AuditService;
 import com.portfolio.asset_management.organization.entity.Organization;
 import com.portfolio.asset_management.security.enums.UserRole;
+import com.portfolio.asset_management.shared.exception.BusinessException;
+import com.portfolio.asset_management.shared.exception.NotFoundException;
 import com.portfolio.asset_management.unit.entity.Unit;
 import com.portfolio.asset_management.user.entity.User;
 import com.portfolio.asset_management.user.enums.UserStatus;
@@ -19,9 +23,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
   private final UserRepository userRepository;
+  private final AuditService auditService;
 
-  public UserService(UserRepository userRepository) {
+  public UserService(UserRepository userRepository, AuditService auditService) {
     this.userRepository = userRepository;
+    this.auditService = auditService;
   }
 
   /**
@@ -42,21 +48,42 @@ public class UserService {
 
     validateEmailUniqueness(email);
 
-    User user = new User(name, email, passwordHash, role, organization, unit, documentNumber);
+    User user =
+        new User(
+            name,
+            email,
+            passwordHash,
+            role,
+            organization,
+            unit,
+            documentNumber);
 
-    return userRepository.save(user);
+    User saved = userRepository.save(user);
+
+    // Auditoria – criação de usuário
+    auditService.registerEvent(
+        AuditEventType.USER_CREATED,
+        null,                       // ação administrativa / sistema
+        organization.getId(),       // organizationId
+        unit.getId(),               // unitId
+        saved.getId(),              // targetId
+        "User created");
+
+    return saved;
   }
 
   public User findById(Long id) {
     return userRepository
         .findById(id)
-        .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        .orElseThrow(() ->
+            new NotFoundException("Usuário não encontrado"));
   }
 
   public User findByEmail(String email) {
     return userRepository
         .findByEmail(email)
-        .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+        .orElseThrow(() ->
+            new NotFoundException("Usuário não encontrado"));
   }
 
   @Transactional
@@ -86,7 +113,7 @@ public class UserService {
   private void validateEmailUniqueness(String email) {
     Optional<User> existing = userRepository.findByEmail(email);
     if (existing.isPresent()) {
-      throw new RuntimeException("Já existe um usuário com este email");
+      throw new BusinessException("Já existe um usuário com este email");
     }
   }
 }

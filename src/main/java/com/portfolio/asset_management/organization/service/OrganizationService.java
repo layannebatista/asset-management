@@ -1,8 +1,12 @@
 package com.portfolio.asset_management.organization.service;
 
+import com.portfolio.asset_management.audit.enums.AuditEventType;
+import com.portfolio.asset_management.audit.service.AuditService;
 import com.portfolio.asset_management.organization.entity.Organization;
 import com.portfolio.asset_management.organization.enums.OrganizationStatus;
 import com.portfolio.asset_management.organization.repository.OrganizationRepository;
+import com.portfolio.asset_management.shared.exception.BusinessException;
+import com.portfolio.asset_management.shared.exception.NotFoundException;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,9 +20,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrganizationService {
 
   private final OrganizationRepository organizationRepository;
+  private final AuditService auditService;
 
-  public OrganizationService(OrganizationRepository organizationRepository) {
+  public OrganizationService(
+      OrganizationRepository organizationRepository,
+      AuditService auditService) {
     this.organizationRepository = organizationRepository;
+    this.auditService = auditService;
   }
 
   @Transactional
@@ -26,13 +34,25 @@ public class OrganizationService {
     validateOrganizationNameUniqueness(name);
 
     Organization organization = new Organization(name);
-    return organizationRepository.save(organization);
+    Organization saved = organizationRepository.save(organization);
+
+    // Auditoria – criação de organização
+    auditService.registerEvent(
+        AuditEventType.ORGANIZATION_CREATED,
+        null,              // ação administrativa / sistema
+        saved.getId(),     // organizationId
+        null,              // unitId
+        saved.getId(),     // targetId
+        "Organization created");
+
+    return saved;
   }
 
   public Organization findById(Long id) {
     return organizationRepository
         .findById(id)
-        .orElseThrow(() -> new RuntimeException("Organização não encontrada"));
+        .orElseThrow(() ->
+            new NotFoundException("Organização não encontrada"));
   }
 
   @Transactional
@@ -50,7 +70,7 @@ public class OrganizationService {
   private void validateOrganizationNameUniqueness(String name) {
     Optional<Organization> existing = organizationRepository.findByName(name);
     if (existing.isPresent()) {
-      throw new RuntimeException("Já existe uma organização com este nome");
+      throw new BusinessException("Já existe uma organização com este nome");
     }
   }
 }

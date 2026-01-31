@@ -1,6 +1,10 @@
 package com.portfolio.asset_management.unit.service;
 
+import com.portfolio.asset_management.audit.enums.AuditEventType;
+import com.portfolio.asset_management.audit.service.AuditService;
 import com.portfolio.asset_management.organization.entity.Organization;
+import com.portfolio.asset_management.shared.exception.BusinessException;
+import com.portfolio.asset_management.shared.exception.NotFoundException;
 import com.portfolio.asset_management.unit.entity.Unit;
 import com.portfolio.asset_management.unit.enums.UnitStatus;
 import com.portfolio.asset_management.unit.repository.UnitRepository;
@@ -18,9 +22,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class UnitService {
 
   private final UnitRepository unitRepository;
+  private final AuditService auditService;
 
-  public UnitService(UnitRepository unitRepository) {
+  public UnitService(UnitRepository unitRepository, AuditService auditService) {
     this.unitRepository = unitRepository;
+    this.auditService = auditService;
   }
 
   /**
@@ -34,18 +40,41 @@ public class UnitService {
         .findByOrganizationAndMainUnitTrue(organization)
         .ifPresent(
             existing -> {
-              throw new RuntimeException("A organização já possui uma unidade principal");
+              throw new BusinessException(
+                  "A organização já possui uma unidade principal");
             });
 
     Unit mainUnit = new Unit("Unidade Principal", organization, true);
-    return unitRepository.save(mainUnit);
+    Unit saved = unitRepository.save(mainUnit);
+
+    // Auditoria – criação de unidade principal
+    auditService.registerEvent(
+        AuditEventType.UNIT_CREATED,
+        null,                         // ação administrativa / sistema
+        organization.getId(),         // organizationId
+        saved.getId(),                // unitId
+        saved.getId(),                // targetId
+        "Main unit created");
+
+    return saved;
   }
 
   /** Cria uma nova unidade (filial) não principal. */
   @Transactional
   public Unit createUnit(String name, Organization organization) {
     Unit unit = new Unit(name, organization, false);
-    return unitRepository.save(unit);
+    Unit saved = unitRepository.save(unit);
+
+    // Auditoria – criação de unidade
+    auditService.registerEvent(
+        AuditEventType.UNIT_CREATED,
+        null,                         // ação administrativa / sistema
+        organization.getId(),         // organizationId
+        saved.getId(),                // unitId
+        saved.getId(),                // targetId
+        "Unit created");
+
+    return saved;
   }
 
   public List<Unit> findByOrganization(Organization organization) {
@@ -55,7 +84,8 @@ public class UnitService {
   public Unit findById(Long id) {
     return unitRepository
         .findById(id)
-        .orElseThrow(() -> new RuntimeException("Unidade não encontrada"));
+        .orElseThrow(() ->
+            new NotFoundException("Unidade não encontrada"));
   }
 
   @Transactional
