@@ -7,10 +7,12 @@ import com.portfolio.asset_management.asset.repository.AssetRepository;
 import com.portfolio.asset_management.audit.enums.AuditEventType;
 import com.portfolio.asset_management.audit.service.AuditService;
 import com.portfolio.asset_management.organization.entity.Organization;
+import com.portfolio.asset_management.security.context.LoggedUserContext;
 import com.portfolio.asset_management.shared.exception.BusinessException;
 import com.portfolio.asset_management.shared.exception.NotFoundException;
 import com.portfolio.asset_management.unit.entity.Unit;
 import com.portfolio.asset_management.user.entity.User;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,25 +20,68 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Service responsável pelas regras de negócio relacionadas aos ativos.
  *
- * <p>Centraliza o cadastro, atribuição, transferência e controle do ciclo de vida dos ativos no
- * sistema.
+ * <p>Inclui: - Regras de domínio - Auditoria - ABAC (controle de visibilidade por
+ * organização/unidade/usuário)
  */
 @Service
 public class AssetService {
 
   private final AssetRepository assetRepository;
   private final AuditService auditService;
+  private final LoggedUserContext loggedUser;
 
-  public AssetService(AssetRepository assetRepository, AuditService auditService) {
+  public AssetService(
+      AssetRepository assetRepository, AuditService auditService, LoggedUserContext loggedUser) {
     this.assetRepository = assetRepository;
     this.auditService = auditService;
+    this.loggedUser = loggedUser;
   }
 
-  /**
-   * Cria um novo ativo no sistema.
-   *
-   * <p>O ativo nasce com status AVAILABLE e sem vínculo com usuário.
-   */
+  // =========================================================
+  // ABAC
+  // =========================================================
+
+  /** Retorna apenas ativos visíveis para o usuário logado. */
+  public List<Asset> findVisibleAssets() {
+
+    if (loggedUser.isAdmin()) {
+      return assetRepository.findByOrganization_Id(loggedUser.getOrganizationId());
+    }
+
+    if (loggedUser.isManager()) {
+      return assetRepository.findByUnit_Id(loggedUser.getUnitId());
+    }
+
+    return assetRepository.findByAssignedUser_Id(loggedUser.getUserId());
+  }
+
+  /** Busca ativo aplicando permissão de acesso. */
+  public Asset findById(Long assetId) {
+
+    Asset asset =
+        assetRepository
+            .findById(assetId)
+            .orElseThrow(() -> new NotFoundException("Ativo não encontrado"));
+
+    if (loggedUser.isAdmin()) return asset;
+
+    if (loggedUser.isManager() && asset.getUnit().getId().equals(loggedUser.getUnitId())) {
+      return asset;
+    }
+
+    if (loggedUser.isOperator()
+        && asset.getAssignedUser() != null
+        && asset.getAssignedUser().getId().equals(loggedUser.getUserId())) {
+      return asset;
+    }
+
+    throw new BusinessException("Acesso negado ao ativo");
+  }
+
+  // =========================================================
+  // DOMÍNIO ORIGINAL (mantido)
+  // =========================================================
+
   @Transactional
   public Asset createAsset(
       String assetTag, AssetType type, String model, Organization organization, Unit unit) {
@@ -46,25 +91,17 @@ public class AssetService {
     Asset asset = new Asset(assetTag, type, model, organization, unit);
     Asset saved = assetRepository.save(asset);
 
-    // Auditoria – criação de ativo
     auditService.registerEvent(
         AuditEventType.ASSET_CREATED,
-        null, // ação administrativa / sistema
-        organization.getId(), // organizationId
-        unit.getId(), // unitId
-        saved.getId(), // targetId
+        null,
+        organization.getId(),
+        unit.getId(),
+        saved.getId(),
         "Asset created");
 
     return saved;
   }
 
-  public Asset findById(Long assetId) {
-    return assetRepository
-        .findById(assetId)
-        .orElseThrow(() -> new NotFoundException("Ativo não encontrado"));
-  }
-
-  /** Atribui um ativo a um usuário. */
   @Transactional
   public void assignAssetToUser(Long assetId, User user) {
     Asset asset = findById(assetId);
@@ -76,7 +113,6 @@ public class AssetService {
     asset.assignToUser(user);
   }
 
-  /** Remove o vínculo do ativo com o usuário. */
   @Transactional
   public void unassignAssetFromUser(Long assetId) {
     Asset asset = findById(assetId);
@@ -88,12 +124,6 @@ public class AssetService {
     asset.unassignUser();
   }
 
-  /**
-   * Transfere um ativo para outra unidade.
-   *
-   * <p>Este método representa apenas a mudança de unidade no domínio. O fluxo completo de
-   * transferência será tratado em módulo próprio.
-   */
   @Transactional
   public void changeAssetUnit(Long assetId, Unit newUnit) {
     Asset asset = findById(assetId);
@@ -107,7 +137,6 @@ public class AssetService {
     asset.setStatus(AssetStatus.IN_TRANSFER);
   }
 
-  /** Marca o ativo como desativado definitivamente. */
   @Transactional
   public void retireAsset(Long assetId) {
     Asset asset = findById(assetId);
