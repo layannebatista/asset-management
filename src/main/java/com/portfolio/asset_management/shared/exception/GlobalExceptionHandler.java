@@ -1,67 +1,93 @@
 package com.portfolio.asset_management.shared.exception;
 
-import java.time.OffsetDateTime;
-import java.util.HashMap;
-import java.util.Map;
+import com.portfolio.asset_management.shared.dto.ApiErrorResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.FieldError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-/**
- * Handler global responsável por interceptar e tratar exceções lançadas pela aplicação,
- * padronizando as respostas da API.
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+  @ExceptionHandler(ValidationException.class)
+  public ResponseEntity<ApiErrorResponse> handleValidationException(
+      ValidationException ex, HttpServletRequest request) {
+
+    ApiErrorResponse response =
+        new ApiErrorResponse(
+            HttpStatus.BAD_REQUEST.value(),
+            "Validation Error",
+            ex.getMessage(),
+            request.getRequestURI());
+
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+  }
+
   @ExceptionHandler(BusinessException.class)
-  public ResponseEntity<Object> handleBusinessException(BusinessException ex) {
-    return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+  public ResponseEntity<ApiErrorResponse> handleBusinessException(
+      BusinessException ex, HttpServletRequest request) {
+
+    ApiErrorResponse response =
+        new ApiErrorResponse(
+            HttpStatus.UNPROCESSABLE_ENTITY.value(),
+            "Business Rule Violation",
+            ex.getMessage(),
+            request.getRequestURI());
+
+    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
   }
 
   @ExceptionHandler(NotFoundException.class)
-  public ResponseEntity<Object> handleNotFoundException(NotFoundException ex) {
-    return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+  public ResponseEntity<ApiErrorResponse> handleNotFoundException(
+      NotFoundException ex, HttpServletRequest request) {
+
+    ApiErrorResponse response =
+        new ApiErrorResponse(
+            HttpStatus.NOT_FOUND.value(),
+            "Resource Not Found",
+            ex.getMessage(),
+            request.getRequestURI());
+
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
   }
 
   @ExceptionHandler(ForbiddenException.class)
-  public ResponseEntity<Object> handleForbiddenException(ForbiddenException ex) {
-    return buildResponse(HttpStatus.FORBIDDEN, ex.getMessage());
+  public ResponseEntity<ApiErrorResponse> handleForbiddenException(
+      ForbiddenException ex, HttpServletRequest request) {
+
+    ApiErrorResponse response =
+        new ApiErrorResponse(
+            HttpStatus.FORBIDDEN.value(), "Forbidden", ex.getMessage(), request.getRequestURI());
+
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
   }
 
-  @ExceptionHandler(MethodArgumentNotValidException.class)
-  public ResponseEntity<Object> handleValidationException(MethodArgumentNotValidException ex) {
+  @ExceptionHandler(AuthenticationException.class)
+  public ResponseEntity<ApiErrorResponse> handleAuthenticationException(
+      AuthenticationException ex, HttpServletRequest request) {
 
-    Map<String, String> fieldErrors = new HashMap<>();
+    ApiErrorResponse response =
+        new ApiErrorResponse(
+            HttpStatus.UNAUTHORIZED.value(),
+            "Authentication Failed",
+            ex.getMessage(),
+            request.getRequestURI());
 
-    for (FieldError error : ex.getBindingResult().getFieldErrors()) {
-      fieldErrors.put(error.getField(), error.getDefaultMessage());
-    }
-
-    Map<String, Object> body = new HashMap<>();
-    body.put("timestamp", OffsetDateTime.now());
-    body.put("status", HttpStatus.BAD_REQUEST.value());
-    body.put("error", "Validation error");
-    body.put("fields", fieldErrors);
-
-    return ResponseEntity.badRequest().body(body);
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
   }
 
   @ExceptionHandler(Exception.class)
-  public ResponseEntity<Object> handleGenericException(Exception ex) {
-    return buildResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR, "Erro inesperado. Entre em contato com o suporte.");
-  }
+  public ResponseEntity<ApiErrorResponse> handleGenericException(
+      Exception ex, HttpServletRequest request) {
 
-  private ResponseEntity<Object> buildResponse(HttpStatus status, String message) {
-    Map<String, Object> body = new HashMap<>();
-    body.put("timestamp", OffsetDateTime.now());
-    body.put("status", status.value());
-    body.put("error", message);
+    ApiErrorResponse response =
+        new ApiErrorResponse(
+            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+            "Internal Server Error",
+            "An unexpected error occurred",
+            request.getRequestURI());
 
-    return ResponseEntity.status(status).body(body);
+    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
   }
 }

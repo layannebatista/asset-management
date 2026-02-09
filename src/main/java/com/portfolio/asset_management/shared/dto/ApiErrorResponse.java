@@ -1,37 +1,29 @@
 package com.portfolio.asset_management.shared.dto;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
-/**
- * DTO responsável por padronizar as respostas de erro da API.
- *
- * <p>Utilizado para retornar erros de validação, regras de negócio e exceções tratadas de forma
- * consistente.
- */
 public class ApiErrorResponse {
 
-  private LocalDateTime timestamp;
   private int status;
+
   private String error;
-  private List<FieldErrorDTO> fieldErrors;
 
-  public ApiErrorResponse() {}
+  private String message;
 
-  public ApiErrorResponse(
-      LocalDateTime timestamp, int status, String error, List<FieldErrorDTO> fieldErrors) {
-    this.timestamp = timestamp;
+  private String path;
+
+  private LocalDateTime timestamp;
+
+  public ApiErrorResponse() {
+    this.timestamp = LocalDateTime.now();
+  }
+
+  public ApiErrorResponse(int status, String error, String message, String path) {
     this.status = status;
     this.error = error;
-    this.fieldErrors = fieldErrors;
-  }
-
-  public LocalDateTime getTimestamp() {
-    return timestamp;
-  }
-
-  public void setTimestamp(LocalDateTime timestamp) {
-    this.timestamp = timestamp;
+    this.message = message;
+    this.path = path;
+    this.timestamp = LocalDateTime.now();
   }
 
   public int getStatus() {
@@ -50,11 +42,23 @@ public class ApiErrorResponse {
     this.error = error;
   }
 
-  public List<FieldErrorDTO> getFieldErrors() {
-    return fieldErrors;
+  public String getMessage() {
+    return message;
   }
 
-  public void setFieldErrors(List<FieldErrorDTO> fieldErrors) {
-    this.fieldErrors = fieldErrors;
+  public void setMessage(String message) {
+    this.message = message;
+  }
+
+  public String getPath() {
+    return path;
+  }
+
+  public void setPath(String path) {
+    this.path = path;
+  }
+
+  public LocalDateTime getTimestamp() {
+    return timestamp;
   }
 }
