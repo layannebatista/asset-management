@@ -2,10 +2,9 @@ package com.portfolio.asset_management.shared.enums;
 
 public interface StatusBaseEnum {
 
-    String getCode();
+  String getCode();
 
-    String getDescription();
+  String getDescription();
 
-    boolean isFinalState();
-
+  boolean isFinalState();
 }
