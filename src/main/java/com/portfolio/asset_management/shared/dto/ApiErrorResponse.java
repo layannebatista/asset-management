@@ -1,60 +1,65 @@
 package com.portfolio.asset_management.shared.dto;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
-/**
- * DTO responsável por padronizar as respostas de erro da API.
- *
- * <p>Utilizado para retornar erros de validação, regras de negócio e exceções tratadas de forma
- * consistente.
- */
 public class ApiErrorResponse {
 
-  private LocalDateTime timestamp;
-  private int status;
-  private String error;
-  private List<FieldErrorDTO> fieldErrors;
+    private int status;
 
-  public ApiErrorResponse() {}
+    private String error;
 
-  public ApiErrorResponse(
-      LocalDateTime timestamp, int status, String error, List<FieldErrorDTO> fieldErrors) {
-    this.timestamp = timestamp;
-    this.status = status;
-    this.error = error;
-    this.fieldErrors = fieldErrors;
-  }
+    private String message;
 
-  public LocalDateTime getTimestamp() {
-    return timestamp;
-  }
+    private String path;
 
-  public void setTimestamp(LocalDateTime timestamp) {
-    this.timestamp = timestamp;
-  }
+    private LocalDateTime timestamp;
 
-  public int getStatus() {
-    return status;
-  }
+    public ApiErrorResponse() {
+        this.timestamp = LocalDateTime.now();
+    }
 
-  public void setStatus(int status) {
-    this.status = status;
-  }
+    public ApiErrorResponse(int status, String error, String message, String path) {
+        this.status = status;
+        this.error = error;
+        this.message = message;
+        this.path = path;
+        this.timestamp = LocalDateTime.now();
+    }
 
-  public String getError() {
-    return error;
-  }
+    public int getStatus() {
+        return status;
+    }
 
-  public void setError(String error) {
-    this.error = error;
-  }
+    public void setStatus(int status) {
+        this.status = status;
+    }
 
-  public List<FieldErrorDTO> getFieldErrors() {
-    return fieldErrors;
-  }
+    public String getError() {
+        return error;
+    }
 
-  public void setFieldErrors(List<FieldErrorDTO> fieldErrors) {
-    this.fieldErrors = fieldErrors;
-  }
+    public void setError(String error) {
+        this.error = error;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
 }
