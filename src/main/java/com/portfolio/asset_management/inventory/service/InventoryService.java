@@ -39,10 +39,7 @@ public class InventoryService {
     }
 
     InventorySession session =
-        new InventorySession(
-            unit.getOrganization(),
-            unit,
-            loggedUser.getUser());
+        new InventorySession(unit.getOrganization(), unit, loggedUser.getUser());
 
     InventorySession saved = repository.save(session);
 
@@ -52,7 +49,8 @@ public class InventoryService {
   public InventoryResponseDTO findById(Long id) {
 
     InventorySession session =
-        repository.findById(id)
+        repository
+            .findById(id)
             .orElseThrow(() -> new NotFoundException("Inventory session not found"));
 
     if (!session.getOrganization().getId().equals(loggedUser.getOrganizationId())) {
@@ -64,8 +62,7 @@ public class InventoryService {
 
   public List<InventoryResponseDTO> list() {
 
-    return repository.findByOrganization_Id(loggedUser.getOrganizationId())
-        .stream()
+    return repository.findByOrganization_Id(loggedUser.getOrganizationId()).stream()
         .map(this::map)
         .collect(Collectors.toList());
   }
@@ -74,7 +71,8 @@ public class InventoryService {
   public void start(Long id) {
 
     InventorySession session =
-        repository.findById(id)
+        repository
+            .findById(id)
             .orElseThrow(() -> new NotFoundException("Inventory session not found"));
 
     validateOwnership(session);
@@ -86,7 +84,8 @@ public class InventoryService {
   public void close(Long id) {
 
     InventorySession session =
-        repository.findById(id)
+        repository
+            .findById(id)
             .orElseThrow(() -> new NotFoundException("Inventory session not found"));
 
     validateOwnership(session);
@@ -98,7 +97,8 @@ public class InventoryService {
   public void cancel(Long id) {
 
     InventorySession session =
-        repository.findById(id)
+        repository
+            .findById(id)
             .orElseThrow(() -> new NotFoundException("Inventory session not found"));
 
     validateOwnership(session);

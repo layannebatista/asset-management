@@ -4,8 +4,7 @@ import jakarta.validation.constraints.NotNull;
 
 public class InventoryCreateDTO {
 
-  @NotNull
-  private Long unitId;
+  @NotNull private Long unitId;
 
   public InventoryCreateDTO() {}
 
