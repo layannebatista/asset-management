@@ -1,8 +1,7 @@
 package com.portfolio.asset_management.shared.exception;
 
-import java.util.List;
-
 import com.portfolio.asset_management.shared.dto.FieldErrorDTO;
+import java.util.List;
 
 public class ValidationException extends RuntimeException {
 
