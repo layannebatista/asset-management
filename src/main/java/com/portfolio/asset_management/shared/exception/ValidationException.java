@@ -26,4 +26,3 @@ public class ValidationException extends RuntimeException {
     return fieldErrors;
   }
 }
-
