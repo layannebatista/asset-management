@@ -11,36 +11,30 @@ import com.portfolio.asset_management.user.entity.User;
 import com.portfolio.asset_management.user.enums.UserStatus;
 import com.portfolio.asset_management.user.repository.UserRepository;
 import java.util.Optional;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Service responsável pelas regras de negócio relacionadas aos usuários.
- *
- * <p>Centraliza a criação, ativação, bloqueio e validações do ciclo de vida do usuário no sistema.
- */
 @Service
 public class UserService {
 
   private final UserRepository userRepository;
   private final AuditService auditService;
+  private final PasswordEncoder passwordEncoder;
 
-  public UserService(UserRepository userRepository, AuditService auditService) {
+  public UserService(
+      UserRepository userRepository, AuditService auditService, PasswordEncoder passwordEncoder) {
+
     this.userRepository = userRepository;
     this.auditService = auditService;
+    this.passwordEncoder = passwordEncoder;
   }
 
-  /**
-   * Cria um usuário internamente (por administrador).
-   *
-   * <p>O usuário é criado com status PENDING_ACTIVATION e deve aceitar os termos de LGPD no
-   * primeiro acesso.
-   */
   @Transactional
   public User createUser(
       String name,
       String email,
-      String passwordHash,
+      String rawPassword,
       UserRole role,
       Organization organization,
       Unit unit,
@@ -48,17 +42,18 @@ public class UserService {
 
     validateEmailUniqueness(email);
 
+    String passwordHash = passwordEncoder.encode(rawPassword);
+
     User user = new User(name, email, passwordHash, role, organization, unit, documentNumber);
 
     User saved = userRepository.save(user);
 
-    // Auditoria – criação de usuário
     auditService.registerEvent(
         AuditEventType.USER_CREATED,
-        null, // ação administrativa / sistema
-        organization.getId(), // organizationId
-        unit.getId(), // unitId
-        saved.getId(), // targetId
+        null,
+        organization.getId(),
+        unit.getId(),
+        saved.getId(),
         "User created");
 
     return saved;
@@ -101,7 +96,9 @@ public class UserService {
   }
 
   private void validateEmailUniqueness(String email) {
+
     Optional<User> existing = userRepository.findByEmail(email);
+
     if (existing.isPresent()) {
       throw new BusinessException("Já existe um usuário com este email");
     }

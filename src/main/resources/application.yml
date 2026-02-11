@@ -2,6 +2,7 @@ server:
   port: 8080
 
 spring:
+
   application:
     name: asset-management
 
@@ -13,7 +14,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none   # 🔥 MUITO IMPORTANTE
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
@@ -21,11 +22,18 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   flyway:
-    enabled: false     # 👈 continua false por enquanto
+    enabled: true
+    locations: classpath:db/migration
     baseline-on-migrate: true
+    validate-on-migrate: true
 
 management:
   endpoints:
     web:
       exposure:
         include: health,info
+
+security:
+  jwt:
+    secret: very-secret-key-change-in-production-123456789
+    expiration: 86400000
