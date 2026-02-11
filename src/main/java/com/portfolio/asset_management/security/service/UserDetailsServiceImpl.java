@@ -7,11 +7,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 
-/**
- * Integra usuários do banco com o Spring Security.
- *
- * <p>Usa UserDetails padrão do Spring (mais simples).
- */
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
@@ -31,18 +26,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     return new org.springframework.security.core.userdetails.User(
         user.getEmail(),
-        userPassword(user),
-        List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().toString())));
-  }
-
-  /** Aqui sim podemos acessar senha internamente no mesmo pacote. */
-  private String userPassword(User user) {
-    try {
-      var field = User.class.getDeclaredField("passwordHash");
-      field.setAccessible(true);
-      return (String) field.get(user);
-    } catch (Exception ex) {
-      throw new RuntimeException(ex);
-    }
+        user.getPasswordHash(),
+        List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
   }
 }

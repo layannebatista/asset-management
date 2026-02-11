@@ -8,11 +8,6 @@ import com.portfolio.asset_management.user.service.UserService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Controller responsável pelos endpoints de gerenciamento de usuários.
- *
- * <p>Apenas administradores podem criar e gerenciar usuários.
- */
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -23,37 +18,32 @@ public class UserController {
     this.userService = userService;
   }
 
-  /** Criação interna de usuário (somente ADMIN). */
   @PreAuthorize("hasRole('ADMIN')")
   @PostMapping
   public User createUser(
       @RequestParam String name,
       @RequestParam String email,
-      @RequestParam String passwordHash,
+      @RequestParam String password,
       @RequestParam UserRole role,
       @RequestParam Organization organization,
       @RequestParam Unit unit,
       @RequestParam String documentNumber) {
 
-    return userService.createUser(
-        name, email, passwordHash, role, organization, unit, documentNumber);
+    return userService.createUser(name, email, password, role, organization, unit, documentNumber);
   }
 
-  /** Consulta usuário por id (somente ADMIN). */
   @PreAuthorize("hasRole('ADMIN')")
   @GetMapping("/{id}")
   public User findById(@PathVariable Long id) {
     return userService.findById(id);
   }
 
-  /** Bloqueia usuário (somente ADMIN). */
   @PreAuthorize("hasRole('ADMIN')")
   @PatchMapping("/{id}/block")
   public void blockUser(@PathVariable Long id) {
     userService.blockUser(id);
   }
 
-  /** Ativa usuário (somente ADMIN). */
   @PreAuthorize("hasRole('ADMIN')")
   @PatchMapping("/{id}/activate")
   public void activateUser(@PathVariable Long id) {
