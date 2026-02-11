@@ -1,60 +1,54 @@
 package com.portfolio.asset_management.audit.controller;
 
-import com.portfolio.asset_management.audit.dto.AuditEventResponseDTO;
 import com.portfolio.asset_management.audit.entity.AuditEvent;
-import com.portfolio.asset_management.audit.enums.AuditEventType;
-import com.portfolio.asset_management.audit.service.AuditService;
-import com.portfolio.asset_management.security.context.LoggedUserContext;
+import com.portfolio.asset_management.audit.repository.AuditEventRepository;
 import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/audit")
 public class AuditController {
 
-  private final AuditService auditService;
+  private final AuditEventRepository auditEventRepository;
 
-  private final LoggedUserContext loggedUserContext;
-
-  public AuditController(AuditService auditService, LoggedUserContext loggedUserContext) {
-
-    this.auditService = auditService;
-    this.loggedUserContext = loggedUserContext;
+  public AuditController(AuditEventRepository auditEventRepository) {
+    this.auditEventRepository = auditEventRepository;
   }
 
-  @GetMapping("/my-organization")
-  public List<AuditEventResponseDTO> getMyOrganizationEvents() {
-
-    Long organizationId = loggedUserContext.getOrganizationId();
-
-    List<AuditEvent> events = auditService.findByOrganization(organizationId);
-
-    return events.stream().map(AuditEventResponseDTO::new).collect(Collectors.toList());
+  /** Retorna todos os eventos de auditoria */
+  @GetMapping
+  public List<AuditEvent> getAllEvents() {
+    return auditEventRepository.findAll();
   }
 
-  @GetMapping("/user/{userId}")
-  public List<AuditEventResponseDTO> getEventsByUser(@PathVariable Long userId) {
+  /** Retorna um evento específico por ID */
+  @GetMapping("/{id}")
+  public AuditEvent getEventById(@PathVariable Long id) {
 
-    List<AuditEvent> events = auditService.findByUser(userId);
-
-    return events.stream().map(AuditEventResponseDTO::new).collect(Collectors.toList());
+    return auditEventRepository
+        .findById(id)
+        .orElseThrow(() -> new RuntimeException("Evento de auditoria não encontrado: " + id));
   }
 
-  @GetMapping("/target")
-  public List<AuditEventResponseDTO> getEventsByTarget(
-      @RequestParam String targetType, @RequestParam Long targetId) {
+  /** Retorna eventos por organização */
+  @GetMapping("/organization/{organizationId}")
+  public List<AuditEvent> getEventsByOrganization(@PathVariable Long organizationId) {
 
-    List<AuditEvent> events = auditService.findByTarget(targetType, targetId);
-
-    return events.stream().map(AuditEventResponseDTO::new).collect(Collectors.toList());
+    return auditEventRepository.findByOrganizationId(organizationId);
   }
 
+  /** Retorna eventos por organização e unidade */
+  @GetMapping("/organization/{organizationId}/unit/{unitId}")
+  public List<AuditEvent> getEventsByOrganizationAndUnit(
+      @PathVariable Long organizationId, @PathVariable Long unitId) {
+
+    return auditEventRepository.findByOrganizationIdAndUnitId(organizationId, unitId);
+  }
+
+  /** Retorna eventos por tipo */
   @GetMapping("/type/{type}")
-  public List<AuditEventResponseDTO> getEventsByType(@PathVariable AuditEventType type) {
+  public List<AuditEvent> getEventsByType(@PathVariable String type) {
 
-    List<AuditEvent> events = auditService.findByType(type);
-
-    return events.stream().map(AuditEventResponseDTO::new).collect(Collectors.toList());
+    return auditEventRepository.findByType(type);
   }
 }
