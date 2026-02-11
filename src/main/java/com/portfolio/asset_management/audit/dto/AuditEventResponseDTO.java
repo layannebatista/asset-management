@@ -1,50 +1,56 @@
 package com.portfolio.asset_management.audit.dto;
 
+import com.portfolio.asset_management.audit.entity.AuditEvent;
 import com.portfolio.asset_management.audit.enums.AuditEventType;
 import java.time.OffsetDateTime;
 
-/**
- * DTO de resposta para eventos de auditoria.
- *
- * <p>Representa a visão externa de um evento auditável, utilizada em consultas e relatórios.
- */
 public class AuditEventResponseDTO {
 
-  private final Long id;
-  private final AuditEventType type;
-  private final Long actorUserId;
-  private final Long organizationId;
-  private final Long unitId;
-  private final Long targetId;
-  private final String details;
-  private final OffsetDateTime createdAt;
+  private Long id;
 
-  public AuditEventResponseDTO(
-      Long id,
-      AuditEventType type,
-      Long actorUserId,
-      Long organizationId,
-      Long unitId,
-      Long targetId,
-      String details,
-      OffsetDateTime createdAt) {
+  private AuditEventType eventType;
 
-    this.id = id;
-    this.type = type;
-    this.actorUserId = actorUserId;
-    this.organizationId = organizationId;
-    this.unitId = unitId;
-    this.targetId = targetId;
-    this.details = details;
-    this.createdAt = createdAt;
+  private String targetType;
+
+  private Long targetId;
+
+  private Long actorUserId;
+
+  private Long organizationId;
+
+  private Long unitId;
+
+  private String details;
+
+  private OffsetDateTime createdAt;
+
+  public AuditEventResponseDTO(AuditEvent entity) {
+
+    this.id = entity.getId();
+    this.eventType = entity.getType();
+    this.targetType = entity.getTargetType();
+    this.targetId = entity.getTargetId();
+    this.actorUserId = entity.getActorUserId();
+    this.organizationId = entity.getOrganizationId();
+    this.unitId = entity.getUnitId();
+    this.details = entity.getDetails();
+    this.createdAt = entity.getCreatedAt();
   }
 
   public Long getId() {
     return id;
   }
 
-  public AuditEventType getType() {
-    return type;
+  public AuditEventType getEventType() {
+    return eventType;
+  }
+
+  public String getTargetType() {
+    return targetType;
+  }
+
+  public Long getTargetId() {
+    return targetId;
   }
 
   public Long getActorUserId() {
@@ -57,10 +63,6 @@ public class AuditEventResponseDTO {
 
   public Long getUnitId() {
     return unitId;
-  }
-
-  public Long getTargetId() {
-    return targetId;
   }
 
   public String getDetails() {

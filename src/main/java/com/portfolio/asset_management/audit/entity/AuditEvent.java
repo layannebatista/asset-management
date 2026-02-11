@@ -1,22 +1,9 @@
 package com.portfolio.asset_management.audit.entity;
 
 import com.portfolio.asset_management.audit.enums.AuditEventType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 
-/**
- * Entidade que representa um evento de auditoria do sistema.
- *
- * <p>Registra ações relevantes de negócio para fins de rastreabilidade, conformidade e análise
- * histórica.
- */
 @Entity
 @Table(name = "audit_events")
 public class AuditEvent {
@@ -29,35 +16,50 @@ public class AuditEvent {
   @Column(nullable = false)
   private AuditEventType type;
 
-  /**
-   * Identificador do usuário que executou a ação. Pode ser null para ações automáticas do sistema.
-   */
   @Column(name = "actor_user_id")
   private Long actorUserId;
 
-  /** Organização relacionada ao evento. */
   @Column(name = "organization_id", nullable = false)
   private Long organizationId;
 
-  /** Unidade relacionada ao evento (quando aplicável). */
   @Column(name = "unit_id")
   private Long unitId;
 
-  /** Recurso principal afetado pelo evento (ex: assetId, userId). */
   @Column(name = "target_id")
   private Long targetId;
 
-  /** Informações adicionais do evento em formato texto/JSON simples. */
+  @Column(name = "target_type")
+  private String targetType;
+
   @Column(columnDefinition = "TEXT")
   private String details;
 
-  @Column(name = "created_at", nullable = false)
+  @Column(name = "created_at", nullable = false, updatable = false)
   private OffsetDateTime createdAt;
 
-  protected AuditEvent() {
-    // Construtor protegido para uso do JPA
+  protected AuditEvent() {}
+
+  // NOVO construtor enterprise
+  public AuditEvent(
+      AuditEventType type,
+      Long actorUserId,
+      Long organizationId,
+      Long unitId,
+      Long targetId,
+      String targetType,
+      String details) {
+
+    this.type = type;
+    this.actorUserId = actorUserId;
+    this.organizationId = organizationId;
+    this.unitId = unitId;
+    this.targetId = targetId;
+    this.targetType = targetType;
+    this.details = details;
+    this.createdAt = OffsetDateTime.now();
   }
 
+  // CONSTRUTOR LEGADO — ESSENCIAL PARA NÃO QUEBRAR SERVICES EXISTENTES
   public AuditEvent(
       AuditEventType type,
       Long actorUserId,
@@ -71,8 +73,16 @@ public class AuditEvent {
     this.organizationId = organizationId;
     this.unitId = unitId;
     this.targetId = targetId;
+    this.targetType = null;
     this.details = details;
     this.createdAt = OffsetDateTime.now();
+  }
+
+  @PrePersist
+  protected void onCreate() {
+    if (this.createdAt == null) {
+      this.createdAt = OffsetDateTime.now();
+    }
   }
 
   public Long getId() {
@@ -97,6 +107,10 @@ public class AuditEvent {
 
   public Long getTargetId() {
     return targetId;
+  }
+
+  public String getTargetType() {
+    return targetType;
   }
 
   public String getDetails() {
