@@ -1,7 +1,7 @@
 package com.portfolio.asset_management.audit.controller;
 
 import com.portfolio.asset_management.audit.entity.AuditEvent;
-import com.portfolio.asset_management.audit.repository.AuditRepository;
+import com.portfolio.asset_management.audit.repository.AuditEventRepository;
 import java.util.List;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,32 +9,24 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/audit")
 public class AuditController {
 
-  private final AuditRepository auditRepository;
+  private final AuditEventRepository auditEventRepository;
 
-  public AuditController(AuditRepository auditRepository) {
-    this.auditRepository = auditRepository;
+  public AuditController(AuditEventRepository auditEventRepository) {
+    this.auditEventRepository = auditEventRepository;
   }
 
-  @GetMapping("/organization/{organizationId}")
-  public List<AuditEvent> findByOrganization(@PathVariable Long organizationId) {
-
-    return auditRepository.findByOrganizationIdOrderByCreatedAtDesc(organizationId);
-  }
-
-  @GetMapping("/user/{userId}")
-  public List<AuditEvent> findByUser(@PathVariable Long userId) {
-
-    return auditRepository.findByUserIdOrderByCreatedAtDesc(userId);
-  }
-
-  @GetMapping("/target/{targetId}")
-  public List<AuditEvent> findByTarget(@PathVariable Long targetId) {
-
-    return auditRepository.findByTargetIdOrderByCreatedAtDesc(targetId);
-  }
-
-  @GetMapping("/all")
+  /** Retorna todos os eventos de auditoria. */
+  @GetMapping
   public List<AuditEvent> findAll() {
-    return auditRepository.findAll();
+    return auditEventRepository.findAll();
+  }
+
+  /** Retorna um evento específico pelo ID. */
+  @GetMapping("/{id}")
+  public AuditEvent findById(@PathVariable Long id) {
+
+    return auditEventRepository
+        .findById(id)
+        .orElseThrow(() -> new RuntimeException("Evento de auditoria não encontrado"));
   }
 }
