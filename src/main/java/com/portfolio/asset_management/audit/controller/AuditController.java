@@ -15,40 +15,16 @@ public class AuditController {
     this.auditEventRepository = auditEventRepository;
   }
 
-  /** Retorna todos os eventos de auditoria */
   @GetMapping
   public List<AuditEvent> getAllEvents() {
     return auditEventRepository.findAll();
   }
 
-  /** Retorna um evento específico por ID */
   @GetMapping("/{id}")
   public AuditEvent getEventById(@PathVariable Long id) {
 
     return auditEventRepository
         .findById(id)
-        .orElseThrow(() -> new RuntimeException("Evento de auditoria não encontrado: " + id));
-  }
-
-  /** Retorna eventos por organização */
-  @GetMapping("/organization/{organizationId}")
-  public List<AuditEvent> getEventsByOrganization(@PathVariable Long organizationId) {
-
-    return auditEventRepository.findByOrganizationId(organizationId);
-  }
-
-  /** Retorna eventos por organização e unidade */
-  @GetMapping("/organization/{organizationId}/unit/{unitId}")
-  public List<AuditEvent> getEventsByOrganizationAndUnit(
-      @PathVariable Long organizationId, @PathVariable Long unitId) {
-
-    return auditEventRepository.findByOrganizationIdAndUnitId(organizationId, unitId);
-  }
-
-  /** Retorna eventos por tipo */
-  @GetMapping("/type/{type}")
-  public List<AuditEvent> getEventsByType(@PathVariable String type) {
-
-    return auditEventRepository.findByType(type);
+        .orElseThrow(() -> new RuntimeException("AuditEvent não encontrado: " + id));
   }
 }
