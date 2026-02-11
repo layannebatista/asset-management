@@ -2,6 +2,7 @@ package com.portfolio.asset_management.security.service;
 
 import com.portfolio.asset_management.user.entity.User;
 import com.portfolio.asset_management.user.repository.UserRepository;
+import java.lang.reflect.Field;
 import java.util.List;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
@@ -26,7 +27,23 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     return new org.springframework.security.core.userdetails.User(
         user.getEmail(),
-        user.getPasswordHash(),
+        extractPassword(user),
         List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
+  }
+
+  private String extractPassword(User user) {
+
+    try {
+
+      Field field = User.class.getDeclaredField("passwordHash");
+
+      field.setAccessible(true);
+
+      return (String) field.get(user);
+
+    } catch (Exception ex) {
+
+      throw new RuntimeException("Erro ao acessar passwordHash", ex);
+    }
   }
 }
