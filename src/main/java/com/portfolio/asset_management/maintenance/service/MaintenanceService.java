@@ -46,39 +46,29 @@ public class MaintenanceService {
     Asset asset =
         assetRepository
             .findById(assetId)
-            .orElseThrow(
-                () -> new NotFoundException("Ativo não encontrado"));
+            .orElseThrow(() -> new NotFoundException("Ativo não encontrado"));
 
-    Long organizationId =
-        loggedUserContext.getOrganizationId();
+    Long organizationId = loggedUserContext.getOrganizationId();
 
-    if (!asset.getOrganization()
-        .getId()
-        .equals(organizationId)) {
+    if (!asset.getOrganization().getId().equals(organizationId)) {
 
-      throw new ForbiddenException(
-          "Você não tem permissão para este ativo");
+      throw new ForbiddenException("Você não tem permissão para este ativo");
     }
 
     if (asset.getStatus() == AssetStatus.RETIRED
         || asset.getStatus() == AssetStatus.IN_TRANSFER
         || asset.getStatus() == AssetStatus.IN_MAINTENANCE) {
 
-      throw new ValidationException(
-          "Este ativo não pode entrar em manutenção");
+      throw new ValidationException("Este ativo não pode entrar em manutenção");
     }
 
     Optional<MaintenanceRecord> active =
         maintenanceRepository.findByAssetIdAndStatusIn(
-            assetId,
-            List.of(
-                MaintenanceStatus.REQUESTED,
-                MaintenanceStatus.IN_PROGRESS));
+            assetId, List.of(MaintenanceStatus.REQUESTED, MaintenanceStatus.IN_PROGRESS));
 
     if (active.isPresent()) {
 
-      throw new ValidationException(
-          "Já existe manutenção ativa para este ativo");
+      throw new ValidationException("Já existe manutenção ativa para este ativo");
     }
 
     MaintenanceRecord record =
@@ -89,8 +79,7 @@ public class MaintenanceService {
             loggedUserContext.getUserId(),
             description);
 
-    MaintenanceRecord saved =
-        maintenanceRepository.save(record);
+    MaintenanceRecord saved = maintenanceRepository.save(record);
 
     auditService.registerEvent(
         AuditEventType.ASSET_STATUS_CHANGED,
@@ -109,23 +98,18 @@ public class MaintenanceService {
     MaintenanceRecord record =
         maintenanceRepository
             .findById(maintenanceId)
-            .orElseThrow(
-                () -> new NotFoundException("Manutenção não encontrada"));
+            .orElseThrow(() -> new NotFoundException("Manutenção não encontrada"));
 
     if (record.getStatus() != MaintenanceStatus.REQUESTED) {
 
-      throw new ValidationException(
-          "Manutenção não pode ser iniciada neste estado");
+      throw new ValidationException("Manutenção não pode ser iniciada neste estado");
     }
 
-    record.start(
-        loggedUserContext.getUserId());
+    record.start(loggedUserContext.getUserId());
 
-    Asset asset =
-        record.getAsset();
+    Asset asset = record.getAsset();
 
-    asset.changeStatus(
-        AssetStatus.IN_MAINTENANCE);
+    asset.changeStatus(AssetStatus.IN_MAINTENANCE);
 
     auditService.registerEvent(
         AuditEventType.ASSET_STATUS_CHANGED,
@@ -144,31 +128,24 @@ public class MaintenanceService {
     MaintenanceRecord record =
         maintenanceRepository
             .findById(maintenanceId)
-            .orElseThrow(
-                () -> new NotFoundException("Manutenção não encontrada"));
+            .orElseThrow(() -> new NotFoundException("Manutenção não encontrada"));
 
     if (record.getStatus() != MaintenanceStatus.IN_PROGRESS) {
 
-      throw new ValidationException(
-          "Manutenção não pode ser concluída neste estado");
+      throw new ValidationException("Manutenção não pode ser concluída neste estado");
     }
 
-    record.complete(
-        loggedUserContext.getUserId(),
-        resolution);
+    record.complete(loggedUserContext.getUserId(), resolution);
 
-    Asset asset =
-        record.getAsset();
+    Asset asset = record.getAsset();
 
     if (asset.getAssignedUser() != null) {
 
-      asset.changeStatus(
-          AssetStatus.ASSIGNED);
+      asset.changeStatus(AssetStatus.ASSIGNED);
 
     } else {
 
-      asset.changeStatus(
-          AssetStatus.AVAILABLE);
+      asset.changeStatus(AssetStatus.AVAILABLE);
     }
 
     auditService.registerEvent(
@@ -188,23 +165,19 @@ public class MaintenanceService {
     MaintenanceRecord record =
         maintenanceRepository
             .findById(maintenanceId)
-            .orElseThrow(
-                () -> new NotFoundException("Manutenção não encontrada"));
+            .orElseThrow(() -> new NotFoundException("Manutenção não encontrada"));
 
     record.cancel();
 
-    Asset asset =
-        record.getAsset();
+    Asset asset = record.getAsset();
 
     if (asset.getAssignedUser() != null) {
 
-      asset.changeStatus(
-          AssetStatus.ASSIGNED);
+      asset.changeStatus(AssetStatus.ASSIGNED);
 
     } else {
 
-      asset.changeStatus(
-          AssetStatus.AVAILABLE);
+      asset.changeStatus(AssetStatus.AVAILABLE);
     }
 
     auditService.registerEvent(

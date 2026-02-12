@@ -9,42 +9,24 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface AssetRepository extends JpaRepository<Asset, Long> {
 
-  /**
-   * Busca asset por assetTag.
-   */
+  /** Busca asset por assetTag. */
   Optional<Asset> findByAssetTag(String assetTag);
 
-  /**
-   * Verifica existência por assetTag.
-   */
+  /** Verifica existência por assetTag. */
   boolean existsByAssetTag(String assetTag);
 
-  /**
-   * Lista assets por organization.
-   */
+  /** Lista assets por organization. */
   List<Asset> findByOrganization_Id(Long organizationId);
 
-  /**
-   * Lista assets por unit.
-   */
+  /** Lista assets por unit. */
   List<Asset> findByUnit_Id(Long unitId);
 
-  /**
-   * Lista assets por user atribuído.
-   */
+  /** Lista assets por user atribuído. */
   List<Asset> findByAssignedUser_Id(Long userId);
 
-  /**
-   * Verifica existência por id e organization.
-   */
-  boolean existsByIdAndOrganization_Id(
-      Long id,
-      Long organizationId);
+  /** Verifica existência por id e organization. */
+  boolean existsByIdAndOrganization_Id(Long id, Long organizationId);
 
-  /**
-   * Busca asset por id e organization.
-   */
-  Optional<Asset> findByIdAndOrganization_Id(
-      Long id,
-      Long organizationId);
+  /** Busca asset por id e organization. */
+  Optional<Asset> findByIdAndOrganization_Id(Long id, Long organizationId);
 }

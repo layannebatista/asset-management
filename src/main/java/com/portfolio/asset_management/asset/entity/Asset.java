@@ -41,15 +41,10 @@ public class Asset {
   @JoinColumn(name = "user_id")
   private User assignedUser;
 
-  protected Asset() {
-  }
+  protected Asset() {}
 
   public Asset(
-      String assetTag,
-      AssetType type,
-      String model,
-      Organization organization,
-      Unit unit) {
+      String assetTag, AssetType type, String model, Organization organization, Unit unit) {
 
     if (assetTag == null || assetTag.isBlank()) {
       throw new IllegalArgumentException("assetTag é obrigatório");
@@ -111,10 +106,7 @@ public class Asset {
     return assignedUser;
   }
 
-  /**
-   * Método controlado para mudança de status.
-   * Necessário para maintenance, transfer, etc.
-   */
+  /** Método controlado para mudança de status. Necessário para maintenance, transfer, etc. */
   public void changeStatus(AssetStatus status) {
 
     if (status == null) {
@@ -124,9 +116,7 @@ public class Asset {
     this.status = status;
   }
 
-  /**
-   * Atribui ativo a usuário.
-   */
+  /** Atribui ativo a usuário. */
   public void assignToUser(User user) {
 
     if (user == null) {
@@ -137,18 +127,14 @@ public class Asset {
     this.status = AssetStatus.ASSIGNED;
   }
 
-  /**
-   * Remove atribuição.
-   */
+  /** Remove atribuição. */
   public void unassignUser() {
 
     this.assignedUser = null;
     this.status = AssetStatus.AVAILABLE;
   }
 
-  /**
-   * Transferência de unidade.
-   */
+  /** Transferência de unidade. */
   public void changeUnit(Unit unit) {
 
     if (unit == null) {
@@ -159,9 +145,7 @@ public class Asset {
     this.status = AssetStatus.IN_TRANSFER;
   }
 
-  /**
-   * Aposenta ativo.
-   */
+  /** Aposenta ativo. */
   public void retire() {
 
     if (this.status == AssetStatus.RETIRED) {

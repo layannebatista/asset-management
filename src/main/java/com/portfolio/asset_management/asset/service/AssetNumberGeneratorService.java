@@ -8,15 +8,14 @@ import org.springframework.stereotype.Service;
 /**
  * Serviço responsável por gerar assetTag único.
  *
- * Garante unicidade e formato consistente enterprise.
+ * <p>Garante unicidade e formato consistente enterprise.
  */
 @Service
 public class AssetNumberGeneratorService {
 
   private final AssetRepository assetRepository;
 
-  public AssetNumberGeneratorService(
-      AssetRepository assetRepository) {
+  public AssetNumberGeneratorService(AssetRepository assetRepository) {
 
     this.assetRepository = assetRepository;
   }
@@ -24,11 +23,9 @@ public class AssetNumberGeneratorService {
   /**
    * Gera novo assetTag único.
    *
-   * Formato:
-   * AST-{timestamp}-{random}
+   * <p>Formato: AST-{timestamp}-{random}
    *
-   * Exemplo:
-   * AST-1707752201-A1B2C3
+   * <p>Exemplo: AST-1707752201-A1B2C3
    */
   public String generate() {
 
@@ -47,11 +44,7 @@ public class AssetNumberGeneratorService {
 
     long timestamp = Instant.now().getEpochSecond();
 
-    String random =
-        UUID.randomUUID()
-            .toString()
-            .substring(0, 6)
-            .toUpperCase();
+    String random = UUID.randomUUID().toString().substring(0, 6).toUpperCase();
 
     return "AST-" + timestamp + "-" + random;
   }

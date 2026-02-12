@@ -7,9 +7,7 @@ import com.portfolio.asset_management.unit.entity.Unit;
 import com.portfolio.asset_management.user.entity.User;
 import org.springframework.stereotype.Service;
 
-/**
- * Serviço responsável por controlar transições de status do Asset.
- */
+/** Serviço responsável por controlar transições de status do Asset. */
 @Service
 public class AssetStatusService {
 
@@ -19,14 +17,12 @@ public class AssetStatusService {
 
     if (asset.getStatus() == AssetStatus.RETIRED) {
 
-      throw new BusinessException(
-          "Ativo aposentado não pode ser atribuído");
+      throw new BusinessException("Ativo aposentado não pode ser atribuído");
     }
 
     if (asset.getAssignedUser() != null) {
 
-      throw new BusinessException(
-          "Ativo já está atribuído");
+      throw new BusinessException("Ativo já está atribuído");
     }
 
     asset.assignToUser(user);
@@ -38,24 +34,20 @@ public class AssetStatusService {
 
     if (asset.getAssignedUser() == null) {
 
-      throw new BusinessException(
-          "Ativo não está atribuído");
+      throw new BusinessException("Ativo não está atribuído");
     }
 
     asset.unassignUser();
   }
 
-  /**
-   * Transferência de unidade.
-   */
+  /** Transferência de unidade. */
   public void transfer(Asset asset, Unit targetUnit) {
 
     requireAsset(asset);
 
     if (asset.getStatus() == AssetStatus.RETIRED) {
 
-      throw new BusinessException(
-          "Ativo aposentado não pode ser transferido");
+      throw new BusinessException("Ativo aposentado não pode ser transferido");
     }
 
     if (asset.getAssignedUser() != null) {
@@ -72,16 +64,13 @@ public class AssetStatusService {
 
     if (asset.getStatus() == AssetStatus.RETIRED) {
 
-      throw new BusinessException(
-          "Ativo já está aposentado");
+      throw new BusinessException("Ativo já está aposentado");
     }
 
     asset.retire();
   }
 
-  /**
-   * Marca como disponível (via unassign seguro).
-   */
+  /** Marca como disponível (via unassign seguro). */
   public void markAvailable(Asset asset) {
 
     requireAsset(asset);
@@ -96,8 +85,7 @@ public class AssetStatusService {
 
     if (asset == null) {
 
-      throw new IllegalArgumentException(
-          "asset é obrigatório");
+      throw new IllegalArgumentException("asset é obrigatório");
     }
   }
 }
