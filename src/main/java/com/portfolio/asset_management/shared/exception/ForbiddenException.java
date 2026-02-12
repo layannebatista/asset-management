@@ -1,79 +1,59 @@
 package com.portfolio.asset_management.shared.exception;
 
 import com.portfolio.asset_management.shared.constants.ErrorCodes;
-
 import java.util.List;
 
 /**
- * Exceção lançada quando o usuário está autenticado,
- * mas não tem permissão para executar a ação.
+ * Exceção lançada quando o usuário está autenticado, mas não tem permissão para executar a ação.
  *
- * Exemplos:
- * - acessar recurso de outro tenant
- * - acessar recurso sem role adequada
- * - tentar modificar recurso protegido
- * - violação de RBAC ou ABAC
+ * <p>Exemplos: - acessar recurso de outro tenant - acessar recurso sem role adequada - tentar
+ * modificar recurso protegido - violação de RBAC ou ABAC
  */
 public class ForbiddenException extends RuntimeException {
 
-    private final String errorCode;
+  private final String errorCode;
 
-    private final List<String> details;
+  private final List<String> details;
 
-    /**
-     * Construtor padrão com mensagem.
-     */
-    public ForbiddenException(String message) {
+  /** Construtor padrão com mensagem. */
+  public ForbiddenException(String message) {
 
-        super(message);
+    super(message);
 
-        this.errorCode = ErrorCodes.FORBIDDEN;
+    this.errorCode = ErrorCodes.FORBIDDEN;
 
-        this.details = null;
-    }
+    this.details = null;
+  }
 
-    /**
-     * Construtor com código personalizado.
-     */
-    public ForbiddenException(String errorCode, String message) {
+  /** Construtor com código personalizado. */
+  public ForbiddenException(String errorCode, String message) {
 
-        super(message);
+    super(message);
 
-        this.errorCode = errorCode;
+    this.errorCode = errorCode;
 
-        this.details = null;
-    }
+    this.details = null;
+  }
 
-    /**
-     * Construtor com código e detalhes adicionais.
-     */
-    public ForbiddenException(
-        String errorCode,
-        String message,
-        List<String> details
-    ) {
+  /** Construtor com código e detalhes adicionais. */
+  public ForbiddenException(String errorCode, String message, List<String> details) {
 
-        super(message);
+    super(message);
 
-        this.errorCode = errorCode;
+    this.errorCode = errorCode;
 
-        this.details = details;
-    }
+    this.details = details;
+  }
 
-    /**
-     * Retorna o código do erro.
-     */
-    public String getErrorCode() {
+  /** Retorna o código do erro. */
+  public String getErrorCode() {
 
-        return errorCode;
-    }
+    return errorCode;
+  }
 
-    /**
-     * Retorna detalhes adicionais.
-     */
-    public List<String> getDetails() {
+  /** Retorna detalhes adicionais. */
+  public List<String> getDetails() {
 
-        return details;
-    }
-
+    return details;
+  }
 }

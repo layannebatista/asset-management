@@ -1,82 +1,62 @@
 package com.portfolio.asset_management.shared.exception;
 
 import com.portfolio.asset_management.shared.constants.ErrorCodes;
-
 import java.util.List;
 
 /**
  * Exceção para violações de regras de negócio.
  *
- * Deve ser usada quando:
- * - uma operação é inválida dentro da lógica do sistema
- * - uma regra de negócio é violada
- * - uma ação não é permitida pelo estado atual
+ * <p>Deve ser usada quando: - uma operação é inválida dentro da lógica do sistema - uma regra de
+ * negócio é violada - uma ação não é permitida pelo estado atual
  *
- * Exemplos:
- * - atribuir ativo aposentado
- * - transferir ativo bloqueado
- * - criar entidade com dados inconsistentes
+ * <p>Exemplos: - atribuir ativo aposentado - transferir ativo bloqueado - criar entidade com dados
+ * inconsistentes
  */
 public class BusinessException extends RuntimeException {
 
-    private final String errorCode;
+  private final String errorCode;
 
-    private final List<String> details;
+  private final List<String> details;
 
-    /**
-     * Construtor padrão com mensagem.
-     */
-    public BusinessException(String message) {
+  /** Construtor padrão com mensagem. */
+  public BusinessException(String message) {
 
-        super(message);
+    super(message);
 
-        this.errorCode = ErrorCodes.BUSINESS_RULE_VIOLATION;
+    this.errorCode = ErrorCodes.BUSINESS_RULE_VIOLATION;
 
-        this.details = null;
-    }
+    this.details = null;
+  }
 
-    /**
-     * Construtor com código personalizado e mensagem.
-     */
-    public BusinessException(String errorCode, String message) {
+  /** Construtor com código personalizado e mensagem. */
+  public BusinessException(String errorCode, String message) {
 
-        super(message);
+    super(message);
 
-        this.errorCode = errorCode;
+    this.errorCode = errorCode;
 
-        this.details = null;
-    }
+    this.details = null;
+  }
 
-    /**
-     * Construtor com código, mensagem e detalhes.
-     */
-    public BusinessException(
-        String errorCode,
-        String message,
-        List<String> details
-    ) {
+  /** Construtor com código, mensagem e detalhes. */
+  public BusinessException(String errorCode, String message, List<String> details) {
 
-        super(message);
+    super(message);
 
-        this.errorCode = errorCode;
+    this.errorCode = errorCode;
 
-        this.details = details;
-    }
+    this.details = details;
+  }
 
-    /**
-     * Retorna o código do erro.
-     */
-    public String getErrorCode() {
+  /** Retorna o código do erro. */
+  public String getErrorCode() {
 
-        return errorCode;
-    }
+    return errorCode;
+  }
 
-    /**
-     * Retorna detalhes adicionais do erro.
-     */
-    public List<String> getDetails() {
+  /** Retorna detalhes adicionais do erro. */
+  public List<String> getDetails() {
 
-        return details;
-    }
-
+    return details;
+  }
 }
