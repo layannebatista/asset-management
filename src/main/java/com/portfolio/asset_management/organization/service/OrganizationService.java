@@ -16,9 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class OrganizationService {
 
   private final OrganizationRepository organizationRepository;
-
   private final UnitService unitService;
-
   private final AuditService auditService;
 
   public OrganizationService(
@@ -31,8 +29,11 @@ public class OrganizationService {
     this.auditService = auditService;
   }
 
+  /** Cria uma nova organização com unidade principal automática. */
   @Transactional
   public Organization createOrganization(String name) {
+
+    validateOrganizationName(name);
 
     validateOrganizationNameUniqueness(name);
 
@@ -40,10 +41,10 @@ public class OrganizationService {
 
     Organization saved = organizationRepository.save(organization);
 
-    // ✅ CRIA UNIDADE PRINCIPAL AUTOMATICAMENTE
+    // cria unidade principal automaticamente
     unitService.createMainUnit(saved);
 
-    // Auditoria
+    // auditoria
     auditService.registerEvent(
         AuditEventType.ORGANIZATION_CREATED,
         null,
@@ -55,29 +56,75 @@ public class OrganizationService {
     return saved;
   }
 
+  /** Busca organização por ID. */
   public Organization findById(Long id) {
+
+    if (id == null) {
+      throw new IllegalArgumentException("organizationId não pode ser null");
+    }
 
     return organizationRepository
         .findById(id)
         .orElseThrow(() -> new NotFoundException("Organização não encontrada"));
   }
 
+  /** Inativa organização. */
   @Transactional
   public void inactivateOrganization(Long id) {
 
     Organization organization = findById(id);
 
+    if (organization.getStatus() == OrganizationStatus.INACTIVE) {
+      return;
+    }
+
     organization.setStatus(OrganizationStatus.INACTIVE);
+
+    auditService.registerEvent(
+        AuditEventType.ORGANIZATION_INACTIVATED,
+        null,
+        organization.getId(),
+        null,
+        organization.getId(),
+        "Organization inactivated");
   }
 
+  /** Ativa organização. */
   @Transactional
   public void activateOrganization(Long id) {
 
     Organization organization = findById(id);
 
+    if (organization.getStatus() == OrganizationStatus.ACTIVE) {
+      return;
+    }
+
     organization.setStatus(OrganizationStatus.ACTIVE);
+
+    auditService.registerEvent(
+        AuditEventType.ORGANIZATION_ACTIVATED,
+        null,
+        organization.getId(),
+        null,
+        organization.getId(),
+        "Organization activated");
   }
 
+  /** Valida nome obrigatório. */
+  private void validateOrganizationName(String name) {
+
+    if (name == null || name.isBlank()) {
+
+      throw new BusinessException("Nome da organização é obrigatório");
+    }
+
+    if (name.length() > 255) {
+
+      throw new BusinessException("Nome da organização não pode exceder 255 caracteres");
+    }
+  }
+
+  /** Garante unicidade do nome. */
   private void validateOrganizationNameUniqueness(String name) {
 
     Optional<Organization> existing = organizationRepository.findByName(name);

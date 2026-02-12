@@ -23,8 +23,11 @@ public class UnitService {
     this.auditService = auditService;
   }
 
+  /** Cria unidade principal automaticamente. Usado pelo OrganizationService. */
   @Transactional
   public Unit createMainUnit(Organization organization) {
+
+    validateOrganization(organization);
 
     unitRepository
         .findByOrganizationAndMainUnitTrue(organization)
@@ -48,8 +51,13 @@ public class UnitService {
     return saved;
   }
 
+  /** Cria nova unidade. */
   @Transactional
   public Unit createUnit(String name, Organization organization) {
+
+    validateOrganization(organization);
+
+    validateUnitName(name);
 
     Unit unit = new Unit(name, organization, false);
 
@@ -66,31 +74,47 @@ public class UnitService {
     return saved;
   }
 
+  /** Lista unidades por organização. */
   public List<Unit> findByOrganization(Organization organization) {
+
+    validateOrganization(organization);
 
     return unitRepository.findByOrganization(organization);
   }
 
+  /** Busca unidade por id. */
   public Unit findById(Long id) {
+
+    if (id == null) {
+
+      throw new IllegalArgumentException("unitId não pode ser null");
+    }
 
     return unitRepository
         .findById(id)
         .orElseThrow(() -> new NotFoundException("Unidade não encontrada"));
   }
 
+  /** Inativa unidade. */
   @Transactional
   public void inactivateUnit(Long id) {
 
     Unit unit = findById(id);
 
     if (unit.getStatus() == UnitStatus.INACTIVE) {
+
       throw new BusinessException("Unidade já está inativa");
+    }
+
+    if (unit.isMainUnit()) {
+
+      throw new BusinessException("Não é permitido inativar a unidade principal");
     }
 
     unit.setStatus(UnitStatus.INACTIVE);
 
     auditService.registerEvent(
-        AuditEventType.UNIT_STATUS_CHANGED,
+        AuditEventType.UNIT_INACTIVATED,
         null,
         unit.getOrganization().getId(),
         unit.getId(),
@@ -98,23 +122,48 @@ public class UnitService {
         "Unit inactivated");
   }
 
+  /** Ativa unidade. */
   @Transactional
   public void activateUnit(Long id) {
 
     Unit unit = findById(id);
 
     if (unit.getStatus() == UnitStatus.ACTIVE) {
+
       throw new BusinessException("Unidade já está ativa");
     }
 
     unit.setStatus(UnitStatus.ACTIVE);
 
     auditService.registerEvent(
-        AuditEventType.UNIT_STATUS_CHANGED,
+        AuditEventType.UNIT_ACTIVATED,
         null,
         unit.getOrganization().getId(),
         unit.getId(),
         unit.getId(),
         "Unit activated");
+  }
+
+  /** Valida organização obrigatória. */
+  private void validateOrganization(Organization organization) {
+
+    if (organization == null || organization.getId() == null) {
+
+      throw new IllegalArgumentException("organization é obrigatório");
+    }
+  }
+
+  /** Valida nome da unidade. */
+  private void validateUnitName(String name) {
+
+    if (name == null || name.isBlank()) {
+
+      throw new BusinessException("Nome da unidade é obrigatório");
+    }
+
+    if (name.length() > 255) {
+
+      throw new BusinessException("Nome da unidade não pode exceder 255 caracteres");
+    }
   }
 }
