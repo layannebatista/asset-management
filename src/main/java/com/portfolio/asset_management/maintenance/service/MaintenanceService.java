@@ -111,8 +111,7 @@ public class MaintenanceService {
 
     asset.setStatus(AssetStatus.IN_MAINTENANCE);
 
-    historyService.registerStatusChange(
-        asset, previous, asset.getStatus());
+    historyService.registerStatusChange(asset, previous, asset.getStatus());
 
     return record;
   }
@@ -133,8 +132,7 @@ public class MaintenanceService {
 
     asset.setStatus(AssetStatus.AVAILABLE);
 
-    historyService.registerStatusChange(
-        asset, previous, asset.getStatus());
+    historyService.registerStatusChange(asset, previous, asset.getStatus());
 
     return record;
   }
@@ -155,8 +153,7 @@ public class MaintenanceService {
 
     asset.setStatus(AssetStatus.AVAILABLE);
 
-    historyService.registerStatusChange(
-        asset, previous, asset.getStatus());
+    historyService.registerStatusChange(asset, previous, asset.getStatus());
 
     return record;
   }
