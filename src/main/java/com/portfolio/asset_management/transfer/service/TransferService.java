@@ -3,8 +3,6 @@ package com.portfolio.asset_management.transfer.service;
 import com.portfolio.asset_management.asset.entity.Asset;
 import com.portfolio.asset_management.asset.enums.AssetStatus;
 import com.portfolio.asset_management.asset.service.AssetService;
-import com.portfolio.asset_management.audit.enums.AuditEventType;
-import com.portfolio.asset_management.audit.service.AuditService;
 import com.portfolio.asset_management.security.context.LoggedUserContext;
 import com.portfolio.asset_management.shared.exception.BusinessException;
 import com.portfolio.asset_management.shared.exception.NotFoundException;
@@ -22,20 +20,17 @@ public class TransferService {
   private final TransferRepository repository;
   private final AssetService assetService;
   private final UnitService unitService;
-  private final AuditService auditService;
   private final LoggedUserContext loggedUser;
 
   public TransferService(
       TransferRepository repository,
       AssetService assetService,
       UnitService unitService,
-      AuditService auditService,
       LoggedUserContext loggedUser) {
 
     this.repository = repository;
     this.assetService = assetService;
     this.unitService = unitService;
-    this.auditService = auditService;
     this.loggedUser = loggedUser;
   }
 
@@ -44,9 +39,7 @@ public class TransferService {
 
     Asset asset = assetService.findById(assetId);
 
-    if (asset.getStatus() != AssetStatus.AVAILABLE
-        && asset.getStatus() != AssetStatus.ASSIGNED) {
-
+    if (asset.getStatus() != AssetStatus.AVAILABLE && asset.getStatus() != AssetStatus.ASSIGNED) {
       throw new BusinessException("Ativo não pode ser transferido neste estado");
     }
 
@@ -57,21 +50,10 @@ public class TransferService {
 
     asset.setStatus(AssetStatus.IN_TRANSFER);
 
-    TransferRequest saved = repository.save(transfer);
-
-    auditService.registerEvent(
-        AuditEventType.ASSET_TRANSFERRED,
-        loggedUser.getUserId(),
-        asset.getOrganization().getId(),
-        asset.getUnit().getId(),
-        asset.getId(),
-        "Transfer requested");
-
-    return saved;
+    return repository.save(transfer);
   }
 
   public List<TransferRequest> list() {
-
     return repository.findByFromUnit_Id(loggedUser.getUnitId());
   }
 
@@ -94,14 +76,6 @@ public class TransferService {
     } else {
       asset.setStatus(AssetStatus.AVAILABLE);
     }
-
-    auditService.registerEvent(
-        AuditEventType.ASSET_TRANSFERRED,
-        loggedUser.getUserId(),
-        asset.getOrganization().getId(),
-        asset.getUnit().getId(),
-        asset.getId(),
-        "Transfer approved");
   }
 
   @Transactional
@@ -121,13 +95,5 @@ public class TransferService {
     } else {
       asset.setStatus(AssetStatus.AVAILABLE);
     }
-
-    auditService.registerEvent(
-        AuditEventType.ASSET_TRANSFERRED,
-        loggedUser.getUserId(),
-        asset.getOrganization().getId(),
-        asset.getUnit().getId(),
-        asset.getId(),
-        "Transfer rejected");
   }
 }
