@@ -29,6 +29,7 @@ public class UserService {
     this.userValidationService = userValidationService;
   }
 
+  /** Cria novo usuário. */
   @Transactional
   public User createUser(
       String name,
@@ -60,16 +61,19 @@ public class UserService {
     return saved;
   }
 
+  /** Busca usuário por ID. */
   public User findById(Long id) {
 
     return userValidationService.requireExisting(id);
   }
 
+  /** Busca usuário por email. */
   public User findByEmail(String email) {
 
     return userValidationService.requireExistingByEmail(email);
   }
 
+  /** Aceite LGPD. */
   @Transactional
   public void acceptLgpd(Long userId) {
 
@@ -79,13 +83,14 @@ public class UserService {
 
     auditService.registerEvent(
         AuditEventType.USER_LGPD_ACCEPTED,
-        null,
+        user.getId(),
         user.getOrganization().getId(),
         user.getUnit().getId(),
         user.getId(),
         "LGPD accepted");
   }
 
+  /** Ativa usuário. */
   @Transactional
   public void activateUser(Long userId) {
 
@@ -100,13 +105,14 @@ public class UserService {
 
     auditService.registerEvent(
         AuditEventType.USER_STATUS_CHANGED,
-        null,
+        user.getId(),
         user.getOrganization().getId(),
         user.getUnit().getId(),
         user.getId(),
         "User activated");
   }
 
+  /** Bloqueia usuário. */
   @Transactional
   public void blockUser(Long userId) {
 
@@ -121,13 +127,14 @@ public class UserService {
 
     auditService.registerEvent(
         AuditEventType.USER_STATUS_CHANGED,
-        null,
+        user.getId(),
         user.getOrganization().getId(),
         user.getUnit().getId(),
         user.getId(),
         "User blocked");
   }
 
+  /** Inativa usuário. */
   @Transactional
   public void inactivateUser(Long userId) {
 
@@ -142,7 +149,7 @@ public class UserService {
 
     auditService.registerEvent(
         AuditEventType.USER_STATUS_CHANGED,
-        null,
+        user.getId(),
         user.getOrganization().getId(),
         user.getUnit().getId(),
         user.getId(),
