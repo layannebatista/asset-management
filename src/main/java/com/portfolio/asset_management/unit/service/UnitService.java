@@ -12,12 +12,6 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Service responsável pelas regras de negócio relacionadas às unidades (filiais).
- *
- * <p>Garante a existência de uma única unidade principal por organização e centraliza operações de
- * criação, consulta e alteração de status.
- */
 @Service
 public class UnitService {
 
@@ -29,13 +23,9 @@ public class UnitService {
     this.auditService = auditService;
   }
 
-  /**
-   * Cria automaticamente a unidade principal de uma organização.
-   *
-   * <p>Este método deve ser chamado no fluxo de criação da organização.
-   */
   @Transactional
   public Unit createMainUnit(Organization organization) {
+
     unitRepository
         .findByOrganizationAndMainUnitTrue(organization)
         .ifPresent(
@@ -44,43 +34,45 @@ public class UnitService {
             });
 
     Unit mainUnit = new Unit("Unidade Principal", organization, true);
+
     Unit saved = unitRepository.save(mainUnit);
 
-    // Auditoria – criação de unidade principal
     auditService.registerEvent(
         AuditEventType.UNIT_CREATED,
-        null, // ação administrativa / sistema
-        organization.getId(), // organizationId
-        saved.getId(), // unitId
-        saved.getId(), // targetId
+        null,
+        organization.getId(),
+        saved.getId(),
+        saved.getId(),
         "Main unit created");
 
     return saved;
   }
 
-  /** Cria uma nova unidade (filial) não principal. */
   @Transactional
   public Unit createUnit(String name, Organization organization) {
+
     Unit unit = new Unit(name, organization, false);
+
     Unit saved = unitRepository.save(unit);
 
-    // Auditoria – criação de unidade
     auditService.registerEvent(
         AuditEventType.UNIT_CREATED,
-        null, // ação administrativa / sistema
-        organization.getId(), // organizationId
-        saved.getId(), // unitId
-        saved.getId(), // targetId
+        null,
+        organization.getId(),
+        saved.getId(),
+        saved.getId(),
         "Unit created");
 
     return saved;
   }
 
   public List<Unit> findByOrganization(Organization organization) {
+
     return unitRepository.findByOrganization(organization);
   }
 
   public Unit findById(Long id) {
+
     return unitRepository
         .findById(id)
         .orElseThrow(() -> new NotFoundException("Unidade não encontrada"));
@@ -88,13 +80,41 @@ public class UnitService {
 
   @Transactional
   public void inactivateUnit(Long id) {
+
     Unit unit = findById(id);
+
+    if (unit.getStatus() == UnitStatus.INACTIVE) {
+      throw new BusinessException("Unidade já está inativa");
+    }
+
     unit.setStatus(UnitStatus.INACTIVE);
+
+    auditService.registerEvent(
+        AuditEventType.UNIT_STATUS_CHANGED,
+        null,
+        unit.getOrganization().getId(),
+        unit.getId(),
+        unit.getId(),
+        "Unit inactivated");
   }
 
   @Transactional
   public void activateUnit(Long id) {
+
     Unit unit = findById(id);
+
+    if (unit.getStatus() == UnitStatus.ACTIVE) {
+      throw new BusinessException("Unidade já está ativa");
+    }
+
     unit.setStatus(UnitStatus.ACTIVE);
+
+    auditService.registerEvent(
+        AuditEventType.UNIT_STATUS_CHANGED,
+        null,
+        unit.getOrganization().getId(),
+        unit.getId(),
+        unit.getId(),
+        "Unit activated");
   }
 }

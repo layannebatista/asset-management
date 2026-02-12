@@ -2,6 +2,7 @@ package com.portfolio.asset_management.inventory.service;
 
 import com.portfolio.asset_management.inventory.dto.InventoryResponseDTO;
 import com.portfolio.asset_management.inventory.entity.InventorySession;
+import com.portfolio.asset_management.inventory.enums.InventoryStatus;
 import com.portfolio.asset_management.inventory.repository.InventorySessionRepository;
 import com.portfolio.asset_management.security.context.LoggedUserContext;
 import com.portfolio.asset_management.shared.exception.NotFoundException;
@@ -53,9 +54,7 @@ public class InventoryService {
             .findById(id)
             .orElseThrow(() -> new NotFoundException("Inventory session not found"));
 
-    if (!session.getOrganization().getId().equals(loggedUser.getOrganizationId())) {
-      throw new IllegalStateException("Access denied");
-    }
+    validateOwnership(session);
 
     return map(session);
   }
@@ -77,6 +76,10 @@ public class InventoryService {
 
     validateOwnership(session);
 
+    if (session.getStatus() != InventoryStatus.OPEN) {
+      throw new IllegalStateException("Inventory session cannot be started");
+    }
+
     session.start();
   }
 
@@ -89,6 +92,10 @@ public class InventoryService {
             .orElseThrow(() -> new NotFoundException("Inventory session not found"));
 
     validateOwnership(session);
+
+    if (session.getStatus() != InventoryStatus.IN_PROGRESS) {
+      throw new IllegalStateException("Inventory session cannot be closed");
+    }
 
     session.close();
   }
