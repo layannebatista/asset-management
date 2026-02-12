@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 /**
  * Serviço responsável por validações centralizadas de Asset.
  *
- * Garante integridade multi-tenant e consistência enterprise.
+ * <p>Garante integridade multi-tenant e consistência enterprise.
  */
 @Service
 public class AssetValidationService {
@@ -23,118 +23,84 @@ public class AssetValidationService {
   private final UnitValidationService unitValidationService;
 
   public AssetValidationService(
-      AssetRepository assetRepository,
-      UnitValidationService unitValidationService) {
+      AssetRepository assetRepository, UnitValidationService unitValidationService) {
 
     this.assetRepository = assetRepository;
     this.unitValidationService = unitValidationService;
   }
 
-  /**
-   * Valida assetTag obrigatório e formato.
-   */
+  /** Valida assetTag obrigatório e formato. */
   public void validateAssetTag(String assetTag) {
 
     if (assetTag == null || assetTag.isBlank()) {
 
-      throw new BusinessException(
-          "assetTag é obrigatório");
+      throw new BusinessException("assetTag é obrigatório");
     }
 
     if (assetTag.length() > 100) {
 
-      throw new BusinessException(
-          "assetTag inválido");
+      throw new BusinessException("assetTag inválido");
     }
   }
 
-  /**
-   * Garante unicidade do assetTag.
-   */
+  /** Garante unicidade do assetTag. */
   public void validateAssetTagUniqueness(String assetTag) {
 
     if (assetRepository.existsByAssetTag(assetTag)) {
 
-      throw new BusinessException(
-          "Já existe um ativo com este assetTag");
+      throw new BusinessException("Já existe um ativo com este assetTag");
     }
   }
 
-  /**
-   * Garante existência do asset.
-   */
+  /** Garante existência do asset. */
   public Asset requireExisting(Long assetId) {
 
     if (assetId == null) {
 
-      throw new IllegalArgumentException(
-          "assetId não pode ser null");
+      throw new IllegalArgumentException("assetId não pode ser null");
     }
 
     return assetRepository
         .findById(assetId)
-        .orElseThrow(
-            () -> new NotFoundException(
-                "Ativo não encontrado"));
+        .orElseThrow(() -> new NotFoundException("Ativo não encontrado"));
   }
 
-  /**
-   * Garante integridade organization ↔ unit.
-   */
-  public void validateOrganizationUnitIntegrity(
-      Organization organization,
-      Unit unit) {
+  /** Garante integridade organization ↔ unit. */
+  public void validateOrganizationUnitIntegrity(Organization organization, Unit unit) {
 
     if (organization == null || organization.getId() == null) {
 
-      throw new IllegalArgumentException(
-          "organization é obrigatório");
+      throw new IllegalArgumentException("organization é obrigatório");
     }
 
     if (unit == null || unit.getId() == null) {
 
-      throw new IllegalArgumentException(
-          "unit é obrigatório");
+      throw new IllegalArgumentException("unit é obrigatório");
     }
 
-    unitValidationService.validateOwnership(
-        unit,
-        organization);
+    unitValidationService.validateOwnership(unit, organization);
   }
 
-  /**
-   * Garante integridade asset ↔ user.
-   */
-  public void validateAssignmentIntegrity(
-      Asset asset,
-      User user) {
+  /** Garante integridade asset ↔ user. */
+  public void validateAssignmentIntegrity(Asset asset, User user) {
 
     if (user == null) {
 
-      throw new BusinessException(
-          "User é obrigatório");
+      throw new BusinessException("User é obrigatório");
     }
 
-    if (!asset.getOrganization().getId()
-        .equals(user.getOrganization().getId())) {
+    if (!asset.getOrganization().getId().equals(user.getOrganization().getId())) {
 
-      throw new BusinessException(
-          "Usuário não pertence à mesma organização do ativo");
+      throw new BusinessException("Usuário não pertence à mesma organização do ativo");
     }
   }
 
-  /**
-   * Garante que asset pertence à organization.
-   */
-  public void validateOwnership(
-      Asset asset,
-      Organization organization) {
+  /** Garante que asset pertence à organization. */
+  public void validateOwnership(Asset asset, Organization organization) {
 
-    if (!asset.getOrganization().getId()
-        .equals(organization.getId())) {
+    if (!asset.getOrganization().getId().equals(organization.getId())) {
 
-      throw new BusinessException(
-          "Ativo não pertence à organização informada");
+      throw new BusinessException("Ativo não pertence à organização informada");
     }
   }
 }

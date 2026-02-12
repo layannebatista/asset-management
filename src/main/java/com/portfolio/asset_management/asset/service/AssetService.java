@@ -56,18 +56,13 @@ public class AssetService {
       return repository.findAll();
     }
 
-    return repository.findByOrganization_Id(
-        loggedUser.getOrganizationId());
+    return repository.findByOrganization_Id(loggedUser.getOrganizationId());
   }
 
   public Asset findById(Long id) {
 
     Asset asset =
-        repository
-            .findById(id)
-            .orElseThrow(
-                () -> new NotFoundException(
-                    "Ativo não encontrado"));
+        repository.findById(id).orElseThrow(() -> new NotFoundException("Ativo não encontrado"));
 
     validateAccess(asset);
 
@@ -80,66 +75,37 @@ public class AssetService {
       return;
     }
 
-    if (!asset.getOrganization()
-        .getId()
-        .equals(loggedUser.getOrganizationId())) {
+    if (!asset.getOrganization().getId().equals(loggedUser.getOrganizationId())) {
 
-      throw new ForbiddenException(
-          "Access denied");
+      throw new ForbiddenException("Access denied");
     }
   }
 
   @Transactional
   public Asset createAsset(
-      String assetTag,
-      AssetType type,
-      String model,
-      Organization organization,
-      Unit unit) {
+      String assetTag, AssetType type, String model, Organization organization, Unit unit) {
 
     validationService.validateAssetTag(assetTag);
 
     validationService.validateAssetTagUniqueness(assetTag);
 
-    validationService.validateOrganizationUnitIntegrity(
-        organization,
-        unit);
+    validationService.validateOrganizationUnitIntegrity(organization, unit);
 
-    Asset asset =
-        new Asset(
-            assetTag,
-            type,
-            model,
-            organization,
-            unit);
+    Asset asset = new Asset(assetTag, type, model, organization, unit);
 
     return repository.save(asset);
   }
 
-  /**
-   * Criação com assetTag automático.
-   */
+  /** Criação com assetTag automático. */
   @Transactional
   public Asset createAssetAutoTag(
-      AssetType type,
-      String model,
-      Organization organization,
-      Unit unit) {
+      AssetType type, String model, Organization organization, Unit unit) {
 
-    validationService.validateOrganizationUnitIntegrity(
-        organization,
-        unit);
+    validationService.validateOrganizationUnitIntegrity(organization, unit);
 
-    String assetTag =
-        numberGeneratorService.generate();
+    String assetTag = numberGeneratorService.generate();
 
-    Asset asset =
-        new Asset(
-            assetTag,
-            type,
-            model,
-            organization,
-            unit);
+    Asset asset = new Asset(assetTag, type, model, organization, unit);
 
     return repository.save(asset);
   }
@@ -147,62 +113,39 @@ public class AssetService {
   @Transactional
   public void retireAsset(Long id) {
 
-    Asset asset =
-        findById(id);
+    Asset asset = findById(id);
 
     statusService.retire(asset);
   }
 
   @Transactional
-  public void assignAsset(
-      Long assetId,
-      Long userId) {
+  public void assignAsset(Long assetId, Long userId) {
 
-    Asset asset =
-        findById(assetId);
+    Asset asset = findById(assetId);
 
     User user =
         userRepository
             .findById(userId)
-            .orElseThrow(
-                () -> new NotFoundException(
-                    "Usuário não encontrado"));
+            .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
-    validationService.validateAssignmentIntegrity(
-        asset,
-        user);
+    validationService.validateAssignmentIntegrity(asset, user);
 
-    Long previousUserId =
-        asset.getAssignedUser() != null
-            ? asset.getAssignedUser().getId()
-            : null;
+    Long previousUserId = asset.getAssignedUser() != null ? asset.getAssignedUser().getId() : null;
 
-    statusService.assign(
-        asset,
-        user);
+    statusService.assign(asset, user);
 
-    assignmentHistoryService.registerAssignmentChange(
-        asset,
-        previousUserId,
-        userId);
+    assignmentHistoryService.registerAssignmentChange(asset, previousUserId, userId);
   }
 
   @Transactional
   public void unassignAsset(Long assetId) {
 
-    Asset asset =
-        findById(assetId);
+    Asset asset = findById(assetId);
 
-    Long previousUserId =
-        asset.getAssignedUser() != null
-            ? asset.getAssignedUser().getId()
-            : null;
+    Long previousUserId = asset.getAssignedUser() != null ? asset.getAssignedUser().getId() : null;
 
     statusService.unassign(asset);
 
-    assignmentHistoryService.registerAssignmentChange(
-        asset,
-        previousUserId,
-        null);
+    assignmentHistoryService.registerAssignmentChange(asset, previousUserId, null);
   }
 }
