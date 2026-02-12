@@ -1,12 +1,10 @@
 package com.portfolio.asset_management.user.controller;
 
-import com.portfolio.asset_management.user.dto.UserActivationDTO;
 import com.portfolio.asset_management.user.service.UserActivationService;
-import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/users/activation")
 public class UserActivationController {
 
   private final UserActivationService activationService;
@@ -16,10 +14,21 @@ public class UserActivationController {
     this.activationService = activationService;
   }
 
-  @PostMapping("/{id}/activate")
-  public void activateUser(@PathVariable Long id, @RequestBody @Valid UserActivationDTO dto) {
+  /** Gera token de ativação para usuário. */
+  @PostMapping("/token/{userId}")
+  public String generateToken(@PathVariable Long userId) {
 
-    activationService.activateUser(
-        id, dto.getPassword(), dto.getConfirmPassword(), dto.isLgpdAccepted());
+    return activationService.generateActivationToken(userId);
+  }
+
+  /** Ativa usuário usando token. */
+  @PostMapping("/activate")
+  public void activateUser(
+      @RequestParam String token,
+      @RequestParam String password,
+      @RequestParam String confirmPassword,
+      @RequestParam boolean lgpdAccepted) {
+
+    activationService.activateUser(token, password, confirmPassword, lgpdAccepted);
   }
 }
