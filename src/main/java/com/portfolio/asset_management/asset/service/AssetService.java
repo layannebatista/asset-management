@@ -4,137 +4,103 @@ import com.portfolio.asset_management.asset.entity.Asset;
 import com.portfolio.asset_management.asset.enums.AssetStatus;
 import com.portfolio.asset_management.asset.enums.AssetType;
 import com.portfolio.asset_management.asset.repository.AssetRepository;
-import com.portfolio.asset_management.audit.enums.AuditEventType;
-import com.portfolio.asset_management.audit.service.AuditService;
 import com.portfolio.asset_management.organization.entity.Organization;
 import com.portfolio.asset_management.security.context.LoggedUserContext;
 import com.portfolio.asset_management.shared.exception.BusinessException;
+import com.portfolio.asset_management.shared.exception.ForbiddenException;
 import com.portfolio.asset_management.shared.exception.NotFoundException;
 import com.portfolio.asset_management.unit.entity.Unit;
-import com.portfolio.asset_management.user.entity.User;
+import jakarta.transaction.Transactional;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AssetService {
 
-  private final AssetRepository assetRepository;
-  private final AuditService auditService;
+  private final AssetRepository repository;
   private final LoggedUserContext loggedUser;
 
-  public AssetService(
-      AssetRepository assetRepository, AuditService auditService, LoggedUserContext loggedUser) {
-
-    this.assetRepository = assetRepository;
-    this.auditService = auditService;
+  public AssetService(AssetRepository repository, LoggedUserContext loggedUser) {
+    this.repository = repository;
     this.loggedUser = loggedUser;
   }
 
+  /** Retorna ativos visíveis conforme role do usuário. */
   public List<Asset> findVisibleAssets() {
 
     if (loggedUser.isAdmin()) {
-      return assetRepository.findByOrganization_Id(loggedUser.getOrganizationId());
+      return repository.findByOrganization_Id(loggedUser.getOrganizationId());
     }
 
     if (loggedUser.isManager()) {
-      return assetRepository.findByUnit_Id(loggedUser.getUnitId());
+      return repository.findByUnit_Id(loggedUser.getUnitId());
     }
 
-    return assetRepository.findByAssignedUser_Id(loggedUser.getUserId());
+    return repository.findByAssignedUser_Id(loggedUser.getUserId());
   }
 
-  public Asset findById(Long assetId) {
+  /** Busca ativo por ID com validação de acesso. */
+  public Asset findById(Long id) {
 
     Asset asset =
-        assetRepository
-            .findById(assetId)
-            .orElseThrow(() -> new NotFoundException("Ativo não encontrado"));
+        repository.findById(id).orElseThrow(() -> new NotFoundException("Ativo não encontrado"));
 
-    if (loggedUser.isAdmin()) return asset;
+    validateAccess(asset);
 
-    if (loggedUser.isManager()
-        && asset.getUnit().getId().equals(loggedUser.getUnitId())) {
-      return asset;
-    }
-
-    if (loggedUser.isOperator()
-        && asset.getAssignedUser() != null
-        && asset.getAssignedUser().getId().equals(loggedUser.getUserId())) {
-      return asset;
-    }
-
-    throw new BusinessException("Acesso negado ao ativo");
+    return asset;
   }
 
+  /** Cria novo ativo. */
   @Transactional
   public Asset createAsset(
-      String assetTag,
-      AssetType type,
-      String model,
-      Organization organization,
-      Unit unit) {
+      String assetTag, AssetType type, String model, Organization organization, Unit unit) {
 
     validateAssetTagUniqueness(assetTag);
 
-    Asset asset = new Asset(assetTag, type, model, organization, unit);
-
-    Asset saved = assetRepository.save(asset);
-
-    auditService.registerEvent(
-        AuditEventType.ASSET_CREATED,
-        loggedUser.getUserId(),
-        organization.getId(),
-        unit.getId(),
-        saved.getId(),
-        "Asset created");
-
-    return saved;
-  }
-
-  @Transactional
-  public void assignAssetToUser(Long assetId, User user) {
-
-    Asset asset = findById(assetId);
-
-    if (asset.getStatus() != AssetStatus.AVAILABLE) {
-      throw new BusinessException("Ativo não disponível");
+    if (!organization.getId().equals(loggedUser.getOrganizationId())) {
+      throw new ForbiddenException("Não é permitido criar ativo em outra organização");
     }
 
-    asset.assignToUser(user);
+    Asset asset = new Asset(assetTag, type, model, organization, unit);
+
+    return repository.save(asset);
   }
 
+  /** Aposenta ativo. */
   @Transactional
-  public void unassignAssetFromUser(Long assetId) {
+  public void retireAsset(Long id) {
 
-    Asset asset = findById(assetId);
+    Asset asset = findById(id);
 
-    asset.unassignUser();
-  }
-
-  @Transactional
-  public void retireAsset(Long assetId) {
-
-    Asset asset = findById(assetId);
+    if (asset.getStatus() == AssetStatus.RETIRED) {
+      throw new BusinessException("Ativo já está aposentado");
+    }
 
     asset.setStatus(AssetStatus.RETIRED);
-
-    auditService.registerEvent(
-        AuditEventType.ASSET_RETIRED,
-        loggedUser.getUserId(),
-        asset.getOrganization().getId(),
-        asset.getUnit().getId(),
-        asset.getId(),
-        "Asset retired");
   }
 
+  /** Valida acesso ao ativo. */
+  private void validateAccess(Asset asset) {
+
+    if (loggedUser.isAdmin()) return;
+
+    if (loggedUser.isManager() && asset.getUnit().getId().equals(loggedUser.getUnitId())) {
+      return;
+    }
+
+    if (asset.getAssignedUser() != null
+        && asset.getAssignedUser().getId().equals(loggedUser.getUserId())) {
+      return;
+    }
+
+    throw new ForbiddenException("Você não tem acesso a este ativo");
+  }
+
+  /** Garante unicidade do assetTag. */
   private void validateAssetTagUniqueness(String assetTag) {
 
-    Optional<Asset> existing = assetRepository.findByAssetTag(assetTag);
-
-    if (existing.isPresent()) {
-      throw new BusinessException("Já existe um ativo com este identificador");
+    if (repository.findByAssetTag(assetTag).isPresent()) {
+      throw new BusinessException("Já existe um ativo com este assetTag");
     }
   }
 }
