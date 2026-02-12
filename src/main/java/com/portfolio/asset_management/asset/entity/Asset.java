@@ -5,24 +5,8 @@ import com.portfolio.asset_management.asset.enums.AssetType;
 import com.portfolio.asset_management.organization.entity.Organization;
 import com.portfolio.asset_management.unit.entity.Unit;
 import com.portfolio.asset_management.user.entity.User;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
-/**
- * Entidade que representa um ativo no sistema.
- *
- * <p>O ativo pode ou não estar vinculado a um usuário, mas sempre pertence a uma organização e a
- * uma unidade.
- */
 @Entity
 @Table(name = "assets")
 public class Asset {
@@ -31,7 +15,6 @@ public class Asset {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  /** Identificador único do ativo no sistema (ex: número patrimonial). */
   @Column(nullable = false, unique = true)
   private String assetTag;
 
@@ -59,11 +42,34 @@ public class Asset {
   private User assignedUser;
 
   protected Asset() {
-    // Construtor protegido para uso do JPA
   }
 
   public Asset(
-      String assetTag, AssetType type, String model, Organization organization, Unit unit) {
+      String assetTag,
+      AssetType type,
+      String model,
+      Organization organization,
+      Unit unit) {
+
+    if (assetTag == null || assetTag.isBlank()) {
+      throw new IllegalArgumentException("assetTag é obrigatório");
+    }
+
+    if (type == null) {
+      throw new IllegalArgumentException("type é obrigatório");
+    }
+
+    if (model == null || model.isBlank()) {
+      throw new IllegalArgumentException("model é obrigatório");
+    }
+
+    if (organization == null) {
+      throw new IllegalArgumentException("organization é obrigatório");
+    }
+
+    if (unit == null) {
+      throw new IllegalArgumentException("unit é obrigatório");
+    }
 
     this.assetTag = assetTag;
     this.type = type;
@@ -105,21 +111,64 @@ public class Asset {
     return assignedUser;
   }
 
-  public void setStatus(AssetStatus status) {
+  /**
+   * Método controlado para mudança de status.
+   * Necessário para maintenance, transfer, etc.
+   */
+  public void changeStatus(AssetStatus status) {
+
+    if (status == null) {
+      throw new IllegalArgumentException("status é obrigatório");
+    }
+
     this.status = status;
   }
 
+  /**
+   * Atribui ativo a usuário.
+   */
   public void assignToUser(User user) {
+
+    if (user == null) {
+      throw new IllegalArgumentException("user é obrigatório");
+    }
+
     this.assignedUser = user;
     this.status = AssetStatus.ASSIGNED;
   }
 
+  /**
+   * Remove atribuição.
+   */
   public void unassignUser() {
+
     this.assignedUser = null;
     this.status = AssetStatus.AVAILABLE;
   }
 
+  /**
+   * Transferência de unidade.
+   */
   public void changeUnit(Unit unit) {
+
+    if (unit == null) {
+      throw new IllegalArgumentException("unit é obrigatório");
+    }
+
     this.unit = unit;
+    this.status = AssetStatus.IN_TRANSFER;
+  }
+
+  /**
+   * Aposenta ativo.
+   */
+  public void retire() {
+
+    if (this.status == AssetStatus.RETIRED) {
+      return;
+    }
+
+    this.assignedUser = null;
+    this.status = AssetStatus.RETIRED;
   }
 }

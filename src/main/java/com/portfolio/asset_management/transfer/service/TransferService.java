@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 /**
  * Service responsável por TODAS as regras de negócio do fluxo de transferências.
  *
- * <p>Mantém compatibilidade total com o TransferController existente.
+ * Mantém compatibilidade total com o TransferController existente.
  */
 @Service
 public class TransferService {
@@ -40,92 +40,134 @@ public class TransferService {
     this.loggedUser = loggedUser;
   }
 
-  /** Solicita uma transferência. */
+  /**
+   * Solicita uma transferência.
+   */
   @Transactional
-  public TransferRequest request(Long assetId, Long toUnitId, String reason) {
+  public TransferRequest request(
+      Long assetId,
+      Long toUnitId,
+      String reason) {
 
-    Asset asset = assetService.findById(assetId);
+    Asset asset =
+        assetService.findById(assetId);
 
     if (asset.getStatus() != AssetStatus.AVAILABLE) {
 
-      throw new BusinessException("Ativo não disponível para transferência");
+      throw new BusinessException(
+          "Ativo não disponível para transferência");
     }
 
-    Unit toUnit = unitService.findById(toUnitId);
+    Unit toUnit =
+        unitService.findById(toUnitId);
 
     TransferRequest transfer =
-        new TransferRequest(asset, asset.getUnit(), toUnit, loggedUser.getUser(), reason);
+        new TransferRequest(
+            asset,
+            asset.getUnit(),
+            toUnit,
+            loggedUser.getUser(),
+            reason);
 
-    asset.setStatus(AssetStatus.IN_TRANSFER);
+    asset.changeStatus(
+        AssetStatus.IN_TRANSFER);
 
     return repository.save(transfer);
   }
 
-  /** Lista transferências da unidade do usuário. */
+  /**
+   * Lista transferências da unidade do usuário.
+   */
   public List<TransferRequest> list() {
 
-    return repository.findByFromUnit_Id(loggedUser.getUnitId());
-  }
-
-  /** Aprova transferência. */
-  @Transactional
-  public void approve(Long transferId, String comment) {
-
-    TransferRequest transfer =
-        repository
-            .findById(transferId)
-            .orElseThrow(() -> new NotFoundException("Transferência não encontrada"));
-
-    if (transfer.getStatus() != TransferStatus.PENDING) {
-
-      throw new BusinessException("Transferência não pode ser aprovada");
-    }
-
-    transfer.approve(loggedUser.getUser());
-  }
-
-  /** Rejeita transferência. */
-  @Transactional
-  public void reject(Long transferId, String comment) {
-
-    TransferRequest transfer =
-        repository
-            .findById(transferId)
-            .orElseThrow(() -> new NotFoundException("Transferência não encontrada"));
-
-    if (transfer.getStatus() != TransferStatus.PENDING) {
-
-      throw new BusinessException("Transferência não pode ser rejeitada");
-    }
-
-    transfer.reject(loggedUser.getUser());
-
-    transfer.getAsset().setStatus(AssetStatus.AVAILABLE);
+    return repository.findByFromUnit_Id(
+        loggedUser.getUnitId());
   }
 
   /**
-   * COMPLETA transferência.
-   *
-   * <p>Este é o método que o controller novo usa.
+   * Aprova transferência.
    */
   @Transactional
-  public void complete(Long transferId) {
+  public void approve(
+      Long transferId,
+      String comment) {
 
     TransferRequest transfer =
         repository
             .findById(transferId)
-            .orElseThrow(() -> new NotFoundException("Transferência não encontrada"));
+            .orElseThrow(
+                () -> new NotFoundException(
+                    "Transferência não encontrada"));
+
+    if (transfer.getStatus() != TransferStatus.PENDING) {
+
+      throw new BusinessException(
+          "Transferência não pode ser aprovada");
+    }
+
+    transfer.approve(
+        loggedUser.getUser());
+  }
+
+  /**
+   * Rejeita transferência.
+   */
+  @Transactional
+  public void reject(
+      Long transferId,
+      String comment) {
+
+    TransferRequest transfer =
+        repository
+            .findById(transferId)
+            .orElseThrow(
+                () -> new NotFoundException(
+                    "Transferência não encontrada"));
+
+    if (transfer.getStatus() != TransferStatus.PENDING) {
+
+      throw new BusinessException(
+          "Transferência não pode ser rejeitada");
+    }
+
+    transfer.reject(
+        loggedUser.getUser());
+
+    Asset asset =
+        transfer.getAsset();
+
+    asset.changeStatus(
+        AssetStatus.AVAILABLE);
+  }
+
+  /**
+   * Completa transferência.
+   */
+  @Transactional
+  public void complete(
+      Long transferId) {
+
+    TransferRequest transfer =
+        repository
+            .findById(transferId)
+            .orElseThrow(
+                () -> new NotFoundException(
+                    "Transferência não encontrada"));
 
     if (transfer.getStatus() != TransferStatus.APPROVED) {
 
-      throw new BusinessException("Transferência deve estar aprovada");
+      throw new BusinessException(
+          "Transferência deve estar aprovada");
     }
 
-    Asset asset = transfer.getAsset();
+    Asset asset =
+        transfer.getAsset();
 
-    asset.changeUnit(transfer.getToUnit());
+    asset.changeUnit(
+        transfer.getToUnit());
 
-    asset.setStatus(AssetStatus.AVAILABLE);
+    asset.changeStatus(
+        AssetStatus.AVAILABLE);
 
     transfer.complete();
   }
