@@ -23,11 +23,13 @@ public class TransferController {
   @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
   @PostMapping
   public TransferRequest create(@RequestBody @Valid TransferCreateDTO dto) {
+
     return service.request(dto.getAssetId(), dto.getToUnitId(), dto.getReason());
   }
 
   @GetMapping
   public List<TransferRequest> list() {
+
     return service.list();
   }
 
@@ -43,5 +45,12 @@ public class TransferController {
   public void reject(@PathVariable Long id, @RequestBody TransferApproveDTO dto) {
 
     service.reject(id, dto.getComment());
+  }
+
+  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PatchMapping("/{id}/complete")
+  public void complete(@PathVariable Long id) {
+
+    service.complete(id);
   }
 }

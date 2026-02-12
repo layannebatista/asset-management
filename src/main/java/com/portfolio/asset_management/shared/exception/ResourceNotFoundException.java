@@ -1,78 +1,59 @@
 package com.portfolio.asset_management.shared.exception;
 
 import com.portfolio.asset_management.shared.constants.ErrorCodes;
-
 import java.util.List;
 
 /**
  * Exceção usada quando um recurso não é encontrado.
  *
- * Exemplos:
- * - Asset não encontrado
- * - Usuário não encontrado
- * - Organização não encontrada
- * - Unidade não encontrada
+ * <p>Exemplos: - Asset não encontrado - Usuário não encontrado - Organização não encontrada -
+ * Unidade não encontrada
  */
 public class ResourceNotFoundException extends RuntimeException {
 
-    private final String errorCode;
+  private final String errorCode;
 
-    private final List<String> details;
+  private final List<String> details;
 
-    /**
-     * Construtor padrão com mensagem.
-     */
-    public ResourceNotFoundException(String message) {
+  /** Construtor padrão com mensagem. */
+  public ResourceNotFoundException(String message) {
 
-        super(message);
+    super(message);
 
-        this.errorCode = ErrorCodes.RESOURCE_NOT_FOUND;
+    this.errorCode = ErrorCodes.RESOURCE_NOT_FOUND;
 
-        this.details = null;
-    }
+    this.details = null;
+  }
 
-    /**
-     * Construtor com código personalizado.
-     */
-    public ResourceNotFoundException(String errorCode, String message) {
+  /** Construtor com código personalizado. */
+  public ResourceNotFoundException(String errorCode, String message) {
 
-        super(message);
+    super(message);
 
-        this.errorCode = errorCode;
+    this.errorCode = errorCode;
 
-        this.details = null;
-    }
+    this.details = null;
+  }
 
-    /**
-     * Construtor com código e detalhes adicionais.
-     */
-    public ResourceNotFoundException(
-        String errorCode,
-        String message,
-        List<String> details
-    ) {
+  /** Construtor com código e detalhes adicionais. */
+  public ResourceNotFoundException(String errorCode, String message, List<String> details) {
 
-        super(message);
+    super(message);
 
-        this.errorCode = errorCode;
+    this.errorCode = errorCode;
 
-        this.details = details;
-    }
+    this.details = details;
+  }
 
-    /**
-     * Retorna código do erro.
-     */
-    public String getErrorCode() {
+  /** Retorna código do erro. */
+  public String getErrorCode() {
 
-        return errorCode;
-    }
+    return errorCode;
+  }
 
-    /**
-     * Retorna detalhes adicionais.
-     */
-    public List<String> getDetails() {
+  /** Retorna detalhes adicionais. */
+  public List<String> getDetails() {
 
-        return details;
-    }
-
+    return details;
+  }
 }
