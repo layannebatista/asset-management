@@ -17,31 +17,29 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Service responsável pelas regras de negócio relacionadas aos ativos.
- *
- * <p>Inclui: - Regras de domínio - Auditoria - ABAC (controle de visibilidade por
- * organização/unidade/usuário)
- */
 @Service
 public class AssetService {
 
   private final AssetRepository assetRepository;
+
   private final AuditService auditService;
+
   private final LoggedUserContext loggedUser;
 
+  private final AssetStatusHistoryService historyService;
+
   public AssetService(
-      AssetRepository assetRepository, AuditService auditService, LoggedUserContext loggedUser) {
+      AssetRepository assetRepository,
+      AuditService auditService,
+      LoggedUserContext loggedUser,
+      AssetStatusHistoryService historyService) {
+
     this.assetRepository = assetRepository;
     this.auditService = auditService;
     this.loggedUser = loggedUser;
+    this.historyService = historyService;
   }
 
-  // =========================================================
-  // ABAC
-  // =========================================================
-
-  /** Retorna apenas ativos visíveis para o usuário logado. */
   public List<Asset> findVisibleAssets() {
 
     if (loggedUser.isAdmin()) {
@@ -55,7 +53,6 @@ public class AssetService {
     return assetRepository.findByAssignedUser_Id(loggedUser.getUserId());
   }
 
-  /** Busca ativo aplicando permissão de acesso. */
   public Asset findById(Long assetId) {
 
     Asset asset =
@@ -78,10 +75,6 @@ public class AssetService {
     throw new BusinessException("Acesso negado ao ativo");
   }
 
-  // =========================================================
-  // DOMÍNIO ORIGINAL (mantido)
-  // =========================================================
-
   @Transactional
   public Asset createAsset(
       String assetTag, AssetType type, String model, Organization organization, Unit unit) {
@@ -89,7 +82,10 @@ public class AssetService {
     validateAssetTagUniqueness(assetTag);
 
     Asset asset = new Asset(assetTag, type, model, organization, unit);
+
     Asset saved = assetRepository.save(asset);
+
+    historyService.registerStatusChange(saved, null, AssetStatus.AVAILABLE);
 
     auditService.registerEvent(
         AuditEventType.ASSET_CREATED,
@@ -104,48 +100,68 @@ public class AssetService {
 
   @Transactional
   public void assignAssetToUser(Long assetId, User user) {
+
     Asset asset = findById(assetId);
 
     if (asset.getStatus() != AssetStatus.AVAILABLE) {
-      throw new BusinessException("Ativo não disponível para atribuição");
+      throw new BusinessException("Ativo não disponível");
     }
 
+    AssetStatus previous = asset.getStatus();
+
     asset.assignToUser(user);
+
+    historyService.registerStatusChange(asset, previous, asset.getStatus());
   }
 
   @Transactional
   public void unassignAssetFromUser(Long assetId) {
+
     Asset asset = findById(assetId);
 
     if (asset.getStatus() != AssetStatus.ASSIGNED) {
-      throw new BusinessException("Ativo não está atribuído a um usuário");
+      throw new BusinessException("Ativo não está atribuído");
     }
 
+    AssetStatus previous = asset.getStatus();
+
     asset.unassignUser();
+
+    historyService.registerStatusChange(asset, previous, asset.getStatus());
   }
 
   @Transactional
   public void changeAssetUnit(Long assetId, Unit newUnit) {
+
     Asset asset = findById(assetId);
 
-    if (asset.getStatus() == AssetStatus.IN_MAINTENANCE
-        || asset.getStatus() == AssetStatus.RETIRED) {
-      throw new BusinessException("Ativo não pode ser transferido neste status");
-    }
+    AssetStatus previous = asset.getStatus();
 
     asset.changeUnit(newUnit);
+
     asset.setStatus(AssetStatus.IN_TRANSFER);
+
+    historyService.registerStatusChange(asset, previous, asset.getStatus());
   }
 
   @Transactional
   public void retireAsset(Long assetId) {
+
     Asset asset = findById(assetId);
+
+    AssetStatus previous = asset.getStatus();
+
     asset.setStatus(AssetStatus.RETIRED);
+
+    historyService.registerStatusChange(asset, previous, asset.getStatus());
+
     asset.unassignUser();
   }
 
   private void validateAssetTagUniqueness(String assetTag) {
+
     Optional<Asset> existing = assetRepository.findByAssetTag(assetTag);
+
     if (existing.isPresent()) {
       throw new BusinessException("Já existe um ativo com este identificador");
     }
