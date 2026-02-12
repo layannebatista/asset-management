@@ -1,93 +1,194 @@
 package com.portfolio.asset_management.shared.exception;
 
-import com.portfolio.asset_management.shared.dto.ApiErrorResponse;
+import com.portfolio.asset_management.shared.constants.ErrorCodes;
+import com.portfolio.asset_management.shared.response.ApiResponse;
+import com.portfolio.asset_management.shared.response.ErrorResponse;
+
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import org.springframework.security.access.AccessDeniedException;
+
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-  @ExceptionHandler(ValidationException.class)
-  public ResponseEntity<ApiErrorResponse> handleValidationException(
-      ValidationException ex, HttpServletRequest request) {
+    private static final Logger log =
+        LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    ApiErrorResponse response =
-        new ApiErrorResponse(
-            HttpStatus.BAD_REQUEST.value(),
-            "Validation Error",
-            ex.getMessage(),
-            request.getRequestURI());
+    /**
+     * RESOURCE NOT FOUND
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleResourceNotFound(
+        ResourceNotFoundException ex,
+        HttpServletRequest request
+    ) {
 
-    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-  }
+        log.warn("Resource not found: {}", ex.getMessage());
 
-  @ExceptionHandler(BusinessException.class)
-  public ResponseEntity<ApiErrorResponse> handleBusinessException(
-      BusinessException ex, HttpServletRequest request) {
+        ErrorResponse error = new ErrorResponse(
+            ErrorCodes.RESOURCE_NOT_FOUND,
+            ex.getMessage()
+        );
 
-    ApiErrorResponse response =
-        new ApiErrorResponse(
-            HttpStatus.UNPROCESSABLE_ENTITY.value(),
-            "Business Rule Violation",
-            ex.getMessage(),
-            request.getRequestURI());
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(ApiResponse.error(error));
+    }
 
-    return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(response);
-  }
+    /**
+     * BUSINESS RULE VIOLATION
+     */
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBusinessException(
+        BusinessException ex,
+        HttpServletRequest request
+    ) {
 
-  @ExceptionHandler(NotFoundException.class)
-  public ResponseEntity<ApiErrorResponse> handleNotFoundException(
-      NotFoundException ex, HttpServletRequest request) {
+        log.warn("Business rule violation: {}", ex.getMessage());
 
-    ApiErrorResponse response =
-        new ApiErrorResponse(
-            HttpStatus.NOT_FOUND.value(),
-            "Resource Not Found",
-            ex.getMessage(),
-            request.getRequestURI());
+        ErrorResponse error = new ErrorResponse(
+            ErrorCodes.BUSINESS_RULE_VIOLATION,
+            ex.getMessage()
+        );
 
-    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-  }
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.error(error));
+    }
 
-  @ExceptionHandler(ForbiddenException.class)
-  public ResponseEntity<ApiErrorResponse> handleForbiddenException(
-      ForbiddenException ex, HttpServletRequest request) {
+    /**
+     * VALIDATION ERRORS (@Valid)
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiResponse<Void>> handleValidationException(
+        MethodArgumentNotValidException ex,
+        HttpServletRequest request
+    ) {
 
-    ApiErrorResponse response =
-        new ApiErrorResponse(
-            HttpStatus.FORBIDDEN.value(), "Forbidden", ex.getMessage(), request.getRequestURI());
+        List<String> details = new ArrayList<>();
 
-    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
-  }
+        for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
 
-  @ExceptionHandler(AuthenticationException.class)
-  public ResponseEntity<ApiErrorResponse> handleAuthenticationException(
-      AuthenticationException ex, HttpServletRequest request) {
+            details.add(
+                fieldError.getField() + ": " + fieldError.getDefaultMessage()
+            );
+        }
 
-    ApiErrorResponse response =
-        new ApiErrorResponse(
-            HttpStatus.UNAUTHORIZED.value(),
-            "Authentication Failed",
-            ex.getMessage(),
-            request.getRequestURI());
+        log.warn("Validation error: {}", details);
 
-    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-  }
+        ErrorResponse error = new ErrorResponse(
+            ErrorCodes.VALIDATION_ERROR,
+            "Validation failed",
+            details
+        );
 
-  @ExceptionHandler(Exception.class)
-  public ResponseEntity<ApiErrorResponse> handleGenericException(
-      Exception ex, HttpServletRequest request) {
+        return ResponseEntity
+            .status(HttpStatus.BAD_REQUEST)
+            .body(ApiResponse.error(error));
+    }
 
-    ApiErrorResponse response =
-        new ApiErrorResponse(
-            HttpStatus.INTERNAL_SERVER_ERROR.value(),
-            "Internal Server Error",
-            "An unexpected error occurred",
-            request.getRequestURI());
+    /**
+     * UNAUTHORIZED
+     */
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleUnauthorized(
+        UnauthorizedException ex,
+        HttpServletRequest request
+    ) {
 
-    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-  }
+        log.warn("Unauthorized access: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+            ErrorCodes.UNAUTHORIZED,
+            ex.getMessage()
+        );
+
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(ApiResponse.error(error));
+    }
+
+    /**
+     * FORBIDDEN
+     */
+    @ExceptionHandler({
+        ForbiddenException.class,
+        AccessDeniedException.class
+    })
+    public ResponseEntity<ApiResponse<Void>> handleForbidden(
+        Exception ex,
+        HttpServletRequest request
+    ) {
+
+        log.warn("Forbidden access: {}", ex.getMessage());
+
+        ErrorResponse error = new ErrorResponse(
+            ErrorCodes.FORBIDDEN,
+            ex.getMessage()
+        );
+
+        return ResponseEntity
+            .status(HttpStatus.FORBIDDEN)
+            .body(ApiResponse.error(error));
+    }
+
+    /**
+     * DATABASE INTEGRITY
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrity(
+        DataIntegrityViolationException ex,
+        HttpServletRequest request
+    ) {
+
+        log.error("Database integrity violation", ex);
+
+        ErrorResponse error = new ErrorResponse(
+            ErrorCodes.BUSINESS_RULE_VIOLATION,
+            "Database integrity violation"
+        );
+
+        return ResponseEntity
+            .status(HttpStatus.CONFLICT)
+            .body(ApiResponse.error(error));
+    }
+
+    /**
+     * GENERIC FALLBACK
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Void>> handleGenericException(
+        Exception ex,
+        HttpServletRequest request
+    ) {
+
+        log.error("Unhandled exception", ex);
+
+        ErrorResponse error = new ErrorResponse(
+            ErrorCodes.INTERNAL_ERROR,
+            "Internal server error"
+        );
+
+        return ResponseEntity
+            .status(HttpStatus.INTERNAL_SERVER_ERROR)
+            .body(ApiResponse.error(error));
+    }
+
 }
