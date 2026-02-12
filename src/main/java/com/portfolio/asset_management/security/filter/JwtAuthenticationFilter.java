@@ -14,11 +14,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * Filtro responsável por interceptar requisições HTTP e autenticar o usuário com base em um token
- * JWT válido.
+ * Filtro responsável por:
  *
- * <p>Este filtro apenas autentica o usuário e popula o SecurityContext. Regras de autorização (RBAC
- * / ABAC) são tratadas em camadas posteriores.
+ * <p>- Extrair o token JWT do header Authorization - Validar o token - Carregar o usuário -
+ * Registrar o usuário no SecurityContext
+ *
+ * <p>Compatível com TokenService e LoggedUserContext.
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -34,23 +35,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
 
-    String authorizationHeader = request.getHeader("Authorization");
+    final String authorizationHeader = request.getHeader("Authorization");
 
-    if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-      String token = authorizationHeader.substring(7);
+    if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
 
-      if (tokenService.isTokenValid(token)) {
-        UserDetails userDetails = tokenService.getUserDetails(token);
+      filterChain.doFilter(request, response);
 
-        UsernamePasswordAuthenticationToken authentication =
-            new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities());
-
-        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-      }
+      return;
     }
+
+    final String token = authorizationHeader.substring(7);
+
+    if (!tokenService.isTokenValid(token)) {
+
+      filterChain.doFilter(request, response);
+
+      return;
+    }
+
+    UserDetails userDetails = tokenService.getUserDetails(token);
+
+    UsernamePasswordAuthenticationToken authentication =
+        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+    SecurityContextHolder.getContext().setAuthentication(authentication);
 
     filterChain.doFilter(request, response);
   }
