@@ -3,7 +3,6 @@ package com.portfolio.asset_management.maintenance.service;
 import com.portfolio.asset_management.asset.entity.Asset;
 import com.portfolio.asset_management.asset.enums.AssetStatus;
 import com.portfolio.asset_management.asset.repository.AssetRepository;
-import com.portfolio.asset_management.asset.service.AssetStatusHistoryService;
 import com.portfolio.asset_management.audit.enums.AuditEventType;
 import com.portfolio.asset_management.audit.service.AuditService;
 import com.portfolio.asset_management.maintenance.entity.MaintenanceRecord;
@@ -22,30 +21,22 @@ import org.springframework.transaction.annotation.Transactional;
 public class MaintenanceService {
 
   private final MaintenanceRepository maintenanceRepository;
-
   private final AssetRepository assetRepository;
-
   private final AuditService auditService;
-
   private final LoggedUserContext loggedUserContext;
-
-  private final AssetStatusHistoryService historyService;
 
   public MaintenanceService(
       MaintenanceRepository maintenanceRepository,
       AssetRepository assetRepository,
       AuditService auditService,
-      LoggedUserContext loggedUserContext,
-      AssetStatusHistoryService historyService) {
+      LoggedUserContext loggedUserContext) {
 
     this.maintenanceRepository = maintenanceRepository;
     this.assetRepository = assetRepository;
     this.auditService = auditService;
     this.loggedUserContext = loggedUserContext;
-    this.historyService = historyService;
   }
 
-  // ✅ RESTAURADO — necessário para MaintenanceController
   @Transactional
   public MaintenanceRecord create(Long assetId, String description) {
 
@@ -54,15 +45,17 @@ public class MaintenanceService {
             .findById(assetId)
             .orElseThrow(() -> new NotFoundException("Ativo não encontrado"));
 
-    if (!asset.getOrganization().getId().equals(loggedUserContext.getOrganizationId())) {
+    Long organizationId = loggedUserContext.getOrganizationId();
 
-      throw new ForbiddenException("Sem permissão para este ativo");
+    if (!asset.getOrganization().getId().equals(organizationId)) {
+      throw new ForbiddenException("Você não tem permissão para este ativo");
     }
 
-    if (asset.getStatus() == AssetStatus.IN_MAINTENANCE
-        || asset.getStatus() == AssetStatus.RETIRED) {
+    if (asset.getStatus() == AssetStatus.RETIRED
+        || asset.getStatus() == AssetStatus.IN_TRANSFER
+        || asset.getStatus() == AssetStatus.IN_MAINTENANCE) {
 
-      throw new ValidationException("Ativo não pode entrar em manutenção");
+      throw new ValidationException("Este ativo não pode entrar em manutenção");
     }
 
     Optional<MaintenanceRecord> active =
@@ -70,8 +63,7 @@ public class MaintenanceService {
             assetId, List.of(MaintenanceStatus.REQUESTED, MaintenanceStatus.IN_PROGRESS));
 
     if (active.isPresent()) {
-
-      throw new ValidationException("Já existe manutenção ativa");
+      throw new ValidationException("Já existe manutenção ativa para este ativo");
     }
 
     MaintenanceRecord record =
@@ -90,7 +82,7 @@ public class MaintenanceService {
         asset.getOrganization().getId(),
         asset.getUnit().getId(),
         asset.getId(),
-        "Maintenance requested");
+        "Manutenção solicitada");
 
     return saved;
   }
@@ -103,15 +95,23 @@ public class MaintenanceService {
             .findById(maintenanceId)
             .orElseThrow(() -> new NotFoundException("Manutenção não encontrada"));
 
+    if (record.getStatus() != MaintenanceStatus.REQUESTED) {
+      throw new ValidationException("Manutenção não pode ser iniciada neste estado");
+    }
+
     record.start(loggedUserContext.getUserId());
 
     Asset asset = record.getAsset();
 
-    AssetStatus previous = asset.getStatus();
-
     asset.setStatus(AssetStatus.IN_MAINTENANCE);
 
-    historyService.registerStatusChange(asset, previous, asset.getStatus());
+    auditService.registerEvent(
+        AuditEventType.ASSET_STATUS_CHANGED,
+        loggedUserContext.getUserId(),
+        asset.getOrganization().getId(),
+        asset.getUnit().getId(),
+        asset.getId(),
+        "Manutenção iniciada");
 
     return record;
   }
@@ -124,15 +124,27 @@ public class MaintenanceService {
             .findById(maintenanceId)
             .orElseThrow(() -> new NotFoundException("Manutenção não encontrada"));
 
+    if (record.getStatus() != MaintenanceStatus.IN_PROGRESS) {
+      throw new ValidationException("Manutenção não pode ser concluída neste estado");
+    }
+
     record.complete(loggedUserContext.getUserId(), resolution);
 
     Asset asset = record.getAsset();
 
-    AssetStatus previous = asset.getStatus();
+    if (asset.getAssignedUser() != null) {
+      asset.setStatus(AssetStatus.ASSIGNED);
+    } else {
+      asset.setStatus(AssetStatus.AVAILABLE);
+    }
 
-    asset.setStatus(AssetStatus.AVAILABLE);
-
-    historyService.registerStatusChange(asset, previous, asset.getStatus());
+    auditService.registerEvent(
+        AuditEventType.ASSET_STATUS_CHANGED,
+        loggedUserContext.getUserId(),
+        asset.getOrganization().getId(),
+        asset.getUnit().getId(),
+        asset.getId(),
+        "Manutenção concluída");
 
     return record;
   }
@@ -149,11 +161,19 @@ public class MaintenanceService {
 
     Asset asset = record.getAsset();
 
-    AssetStatus previous = asset.getStatus();
+    if (asset.getAssignedUser() != null) {
+      asset.setStatus(AssetStatus.ASSIGNED);
+    } else {
+      asset.setStatus(AssetStatus.AVAILABLE);
+    }
 
-    asset.setStatus(AssetStatus.AVAILABLE);
-
-    historyService.registerStatusChange(asset, previous, asset.getStatus());
+    auditService.registerEvent(
+        AuditEventType.ASSET_STATUS_CHANGED,
+        loggedUserContext.getUserId(),
+        asset.getOrganization().getId(),
+        asset.getUnit().getId(),
+        asset.getId(),
+        "Manutenção cancelada");
 
     return record;
   }

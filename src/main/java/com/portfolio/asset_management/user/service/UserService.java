@@ -11,7 +11,6 @@ import com.portfolio.asset_management.user.entity.User;
 import com.portfolio.asset_management.user.enums.UserStatus;
 import com.portfolio.asset_management.user.repository.UserRepository;
 import java.util.Optional;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,29 +19,23 @@ public class UserService {
 
   private final UserRepository userRepository;
   private final AuditService auditService;
-  private final PasswordEncoder passwordEncoder;
 
-  public UserService(
-      UserRepository userRepository, AuditService auditService, PasswordEncoder passwordEncoder) {
-
+  public UserService(UserRepository userRepository, AuditService auditService) {
     this.userRepository = userRepository;
     this.auditService = auditService;
-    this.passwordEncoder = passwordEncoder;
   }
 
   @Transactional
   public User createUser(
       String name,
       String email,
-      String rawPassword,
+      String passwordHash,
       UserRole role,
       Organization organization,
       Unit unit,
       String documentNumber) {
 
     validateEmailUniqueness(email);
-
-    String passwordHash = passwordEncoder.encode(rawPassword);
 
     User user = new User(name, email, passwordHash, role, organization, unit, documentNumber);
 
@@ -60,12 +53,14 @@ public class UserService {
   }
 
   public User findById(Long id) {
+
     return userRepository
         .findById(id)
         .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
   }
 
   public User findByEmail(String email) {
+
     return userRepository
         .findByEmail(email)
         .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
@@ -73,26 +68,70 @@ public class UserService {
 
   @Transactional
   public void acceptLgpd(Long userId) {
+
     User user = findById(userId);
+
     user.acceptLgpd();
   }
 
   @Transactional
   public void activateUser(Long userId) {
+
     User user = findById(userId);
+
+    if (user.getStatus() == UserStatus.ACTIVE) {
+      throw new BusinessException("Usuário já está ativo");
+    }
+
     user.setStatus(UserStatus.ACTIVE);
+
+    auditService.registerEvent(
+        AuditEventType.USER_STATUS_CHANGED,
+        null,
+        user.getOrganization().getId(),
+        user.getUnit().getId(),
+        user.getId(),
+        "User activated");
   }
 
   @Transactional
   public void blockUser(Long userId) {
+
     User user = findById(userId);
+
+    if (user.getStatus() == UserStatus.BLOCKED) {
+      throw new BusinessException("Usuário já está bloqueado");
+    }
+
     user.setStatus(UserStatus.BLOCKED);
+
+    auditService.registerEvent(
+        AuditEventType.USER_STATUS_CHANGED,
+        null,
+        user.getOrganization().getId(),
+        user.getUnit().getId(),
+        user.getId(),
+        "User blocked");
   }
 
   @Transactional
   public void inactivateUser(Long userId) {
+
     User user = findById(userId);
+
+    if (user.getStatus() == UserStatus.INACTIVE) {
+      throw new BusinessException("Usuário já está inativo");
+    }
+
     user.setStatus(UserStatus.INACTIVE);
+
+    auditService.registerEvent(
+        AuditEventType.USER_STATUS_CHANGED,
+        null,
+        user.getOrganization().getId(),
+        user.getUnit().getId(),
+        user.getId(),
+        "User inactivated");
   }
 
   private void validateEmailUniqueness(String email) {

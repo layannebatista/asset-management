@@ -21,24 +21,25 @@ import org.springframework.transaction.annotation.Transactional;
 public class AssetService {
 
   private final AssetRepository assetRepository;
-
   private final AuditService auditService;
-
-  private final LoggedUserContext loggedUser;
-
   private final AssetStatusHistoryService historyService;
+  private final LoggedUserContext loggedUser;
 
   public AssetService(
       AssetRepository assetRepository,
       AuditService auditService,
-      LoggedUserContext loggedUser,
-      AssetStatusHistoryService historyService) {
+      AssetStatusHistoryService historyService,
+      LoggedUserContext loggedUser) {
 
     this.assetRepository = assetRepository;
     this.auditService = auditService;
-    this.loggedUser = loggedUser;
     this.historyService = historyService;
+    this.loggedUser = loggedUser;
   }
+
+  // =========================================================
+  // ABAC
+  // =========================================================
 
   public List<Asset> findVisibleAssets() {
 
@@ -75,6 +76,10 @@ public class AssetService {
     throw new BusinessException("Acesso negado ao ativo");
   }
 
+  // =========================================================
+  // CREATE
+  // =========================================================
+
   @Transactional
   public Asset createAsset(
       String assetTag, AssetType type, String model, Organization organization, Unit unit) {
@@ -85,11 +90,11 @@ public class AssetService {
 
     Asset saved = assetRepository.save(asset);
 
-    historyService.registerStatusChange(saved, null, AssetStatus.AVAILABLE);
+    historyService.registerStatusChange(saved, null, saved.getStatus());
 
     auditService.registerEvent(
         AuditEventType.ASSET_CREATED,
-        null,
+        loggedUser.getUserId(),
         organization.getId(),
         unit.getId(),
         saved.getId(),
@@ -97,6 +102,10 @@ public class AssetService {
 
     return saved;
   }
+
+  // =========================================================
+  // ASSIGN
+  // =========================================================
 
   @Transactional
   public void assignAssetToUser(Long assetId, User user) {
@@ -112,7 +121,19 @@ public class AssetService {
     asset.assignToUser(user);
 
     historyService.registerStatusChange(asset, previous, asset.getStatus());
+
+    auditService.registerEvent(
+        AuditEventType.ASSET_ASSIGNED,
+        loggedUser.getUserId(),
+        asset.getOrganization().getId(),
+        asset.getUnit().getId(),
+        asset.getId(),
+        "Asset assigned");
   }
+
+  // =========================================================
+  // UNASSIGN
+  // =========================================================
 
   @Transactional
   public void unassignAssetFromUser(Long assetId) {
@@ -128,7 +149,19 @@ public class AssetService {
     asset.unassignUser();
 
     historyService.registerStatusChange(asset, previous, asset.getStatus());
+
+    auditService.registerEvent(
+        AuditEventType.ASSET_UNASSIGNED,
+        loggedUser.getUserId(),
+        asset.getOrganization().getId(),
+        asset.getUnit().getId(),
+        asset.getId(),
+        "Asset unassigned");
   }
+
+  // =========================================================
+  // TRANSFER
+  // =========================================================
 
   @Transactional
   public void changeAssetUnit(Long assetId, Unit newUnit) {
@@ -138,11 +171,22 @@ public class AssetService {
     AssetStatus previous = asset.getStatus();
 
     asset.changeUnit(newUnit);
-
     asset.setStatus(AssetStatus.IN_TRANSFER);
 
     historyService.registerStatusChange(asset, previous, asset.getStatus());
+
+    auditService.registerEvent(
+        AuditEventType.ASSET_TRANSFERRED,
+        loggedUser.getUserId(),
+        asset.getOrganization().getId(),
+        newUnit.getId(),
+        asset.getId(),
+        "Asset transferred");
   }
+
+  // =========================================================
+  // RETIRE
+  // =========================================================
 
   @Transactional
   public void retireAsset(Long assetId) {
@@ -152,11 +196,22 @@ public class AssetService {
     AssetStatus previous = asset.getStatus();
 
     asset.setStatus(AssetStatus.RETIRED);
+    asset.unassignUser();
 
     historyService.registerStatusChange(asset, previous, asset.getStatus());
 
-    asset.unassignUser();
+    auditService.registerEvent(
+        AuditEventType.ASSET_RETIRED,
+        loggedUser.getUserId(),
+        asset.getOrganization().getId(),
+        asset.getUnit().getId(),
+        asset.getId(),
+        "Asset retired");
   }
+
+  // =========================================================
+  // VALIDATION
+  // =========================================================
 
   private void validateAssetTagUniqueness(String assetTag) {
 
