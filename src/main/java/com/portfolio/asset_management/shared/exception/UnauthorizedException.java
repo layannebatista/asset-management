@@ -5,19 +5,16 @@ import com.portfolio.asset_management.shared.constants.ErrorCodes;
 import java.util.List;
 
 /**
- * Exceção para violações de regras de negócio.
- *
- * Deve ser usada quando:
- * - uma operação é inválida dentro da lógica do sistema
- * - uma regra de negócio é violada
- * - uma ação não é permitida pelo estado atual
+ * Exceção lançada quando o usuário não está autenticado
+ * ou quando o token é inválido.
  *
  * Exemplos:
- * - atribuir ativo aposentado
- * - transferir ativo bloqueado
- * - criar entidade com dados inconsistentes
+ * - JWT ausente
+ * - JWT inválido
+ * - JWT expirado
+ * - Sessão inexistente
  */
-public class BusinessException extends RuntimeException {
+public class UnauthorizedException extends RuntimeException {
 
     private final String errorCode;
 
@@ -26,19 +23,19 @@ public class BusinessException extends RuntimeException {
     /**
      * Construtor padrão com mensagem.
      */
-    public BusinessException(String message) {
+    public UnauthorizedException(String message) {
 
         super(message);
 
-        this.errorCode = ErrorCodes.BUSINESS_RULE_VIOLATION;
+        this.errorCode = ErrorCodes.UNAUTHORIZED;
 
         this.details = null;
     }
 
     /**
-     * Construtor com código personalizado e mensagem.
+     * Construtor com código personalizado.
      */
-    public BusinessException(String errorCode, String message) {
+    public UnauthorizedException(String errorCode, String message) {
 
         super(message);
 
@@ -48,9 +45,9 @@ public class BusinessException extends RuntimeException {
     }
 
     /**
-     * Construtor com código, mensagem e detalhes.
+     * Construtor com código e detalhes adicionais.
      */
-    public BusinessException(
+    public UnauthorizedException(
         String errorCode,
         String message,
         List<String> details
@@ -64,7 +61,7 @@ public class BusinessException extends RuntimeException {
     }
 
     /**
-     * Retorna o código do erro.
+     * Retorna código do erro.
      */
     public String getErrorCode() {
 
@@ -72,7 +69,7 @@ public class BusinessException extends RuntimeException {
     }
 
     /**
-     * Retorna detalhes adicionais do erro.
+     * Retorna detalhes adicionais.
      */
     public List<String> getDetails() {
 
