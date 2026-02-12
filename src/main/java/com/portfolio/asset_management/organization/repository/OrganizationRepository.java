@@ -1,6 +1,7 @@
 package com.portfolio.asset_management.organization.repository;
 
 import com.portfolio.asset_management.organization.entity.Organization;
+import com.portfolio.asset_management.organization.enums.OrganizationStatus;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -8,10 +9,20 @@ import org.springframework.stereotype.Repository;
 /**
  * Repositório responsável pelo acesso a dados da entidade Organization.
  *
- * <p>Centraliza operações de persistência e consulta relacionadas às organizações do sistema.
+ * <p>Centraliza todas as operações de persistência e consulta relacionadas ao tenant.
  */
 @Repository
 public interface OrganizationRepository extends JpaRepository<Organization, Long> {
 
+  /** Busca organization pelo nome. */
   Optional<Organization> findByName(String name);
+
+  /** Verifica se já existe organization com nome. */
+  boolean existsByName(String name);
+
+  /** Busca organization ativa pelo id. */
+  Optional<Organization> findByIdAndStatus(Long id, OrganizationStatus status);
+
+  /** Verifica se organization existe e está ativa. */
+  boolean existsByIdAndStatus(Long id, OrganizationStatus status);
 }
