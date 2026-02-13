@@ -2,11 +2,18 @@ package com.portfolio.asset_management.maintenance.entity;
 
 import com.portfolio.asset_management.asset.entity.Asset;
 import com.portfolio.asset_management.maintenance.enums.MaintenanceStatus;
+import com.portfolio.asset_management.shared.exception.BusinessException;
 import jakarta.persistence.*;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "maintenance_records")
+@Table(
+    name = "maintenance_records",
+    indexes = {
+      @Index(name = "idx_maintenance_asset", columnList = "asset_id"),
+      @Index(name = "idx_maintenance_org", columnList = "organization_id"),
+      @Index(name = "idx_maintenance_status", columnList = "status")
+    })
 public class MaintenanceRecord {
 
   @Id
@@ -51,15 +58,13 @@ public class MaintenanceRecord {
   @Column(name = "completed_at")
   private OffsetDateTime completedAt;
 
-  protected MaintenanceRecord() {
-    // Construtor protegido para uso do JPA
-  }
+  protected MaintenanceRecord() {}
 
   public MaintenanceRecord(
       Asset asset, Long organizationId, Long unitId, Long requestedByUserId, String description) {
 
     if (asset == null) {
-      throw new IllegalArgumentException("Ativo é obrigatório");
+      throw new IllegalArgumentException("asset é obrigatório");
     }
 
     if (organizationId == null) {
@@ -75,7 +80,17 @@ public class MaintenanceRecord {
     }
 
     if (description == null || description.isBlank()) {
-      throw new IllegalArgumentException("Descrição da manutenção é obrigatória");
+      throw new IllegalArgumentException("description é obrigatório");
+    }
+
+    if (!asset.getOrganization().getId().equals(organizationId)) {
+
+      throw new BusinessException("Asset não pertence à organization");
+    }
+
+    if (!asset.getUnit().getId().equals(unitId)) {
+
+      throw new BusinessException("Asset não pertence à unit");
     }
 
     this.asset = asset;
@@ -139,48 +154,81 @@ public class MaintenanceRecord {
     return completedAt;
   }
 
+  public boolean isActive() {
+
+    return status == MaintenanceStatus.REQUESTED || status == MaintenanceStatus.IN_PROGRESS;
+  }
+
+  public boolean isCompleted() {
+
+    return status == MaintenanceStatus.COMPLETED;
+  }
+
+  public boolean isCancelled() {
+
+    return status == MaintenanceStatus.CANCELLED;
+  }
+
   public void start(Long userId) {
 
-    if (this.status != MaintenanceStatus.REQUESTED) {
-      throw new IllegalStateException("Manutenção não pode ser iniciada neste estado");
+    if (status != MaintenanceStatus.REQUESTED) {
+
+      throw new BusinessException("Somente manutenção REQUESTED pode ser iniciada");
     }
 
     if (userId == null) {
-      throw new IllegalArgumentException("Usuário responsável é obrigatório");
+
+      throw new IllegalArgumentException("userId é obrigatório");
     }
 
-    this.status = MaintenanceStatus.IN_PROGRESS;
-    this.startedByUserId = userId;
-    this.startedAt = OffsetDateTime.now();
+    status = MaintenanceStatus.IN_PROGRESS;
+    startedByUserId = userId;
+    startedAt = OffsetDateTime.now();
   }
 
   public void complete(Long userId, String resolution) {
 
-    if (this.status != MaintenanceStatus.IN_PROGRESS) {
-      throw new IllegalStateException("Manutenção não pode ser finalizada neste estado");
+    if (status != MaintenanceStatus.IN_PROGRESS) {
+
+      throw new BusinessException("Somente manutenção IN_PROGRESS pode ser concluída");
     }
 
     if (userId == null) {
-      throw new IllegalArgumentException("Usuário responsável é obrigatório");
+
+      throw new IllegalArgumentException("userId é obrigatório");
     }
 
     if (resolution == null || resolution.isBlank()) {
-      throw new IllegalArgumentException("Descrição da resolução é obrigatória");
+
+      throw new IllegalArgumentException("resolution é obrigatório");
     }
 
-    this.status = MaintenanceStatus.COMPLETED;
-    this.completedByUserId = userId;
-    this.completedAt = OffsetDateTime.now();
+    status = MaintenanceStatus.COMPLETED;
+    completedByUserId = userId;
+    completedAt = OffsetDateTime.now();
     this.resolution = resolution;
   }
 
   public void cancel() {
 
-    if (this.status == MaintenanceStatus.COMPLETED || this.status == MaintenanceStatus.CANCELLED) {
+    if (status == MaintenanceStatus.COMPLETED) {
 
-      throw new IllegalStateException("Manutenção não pode ser cancelada neste estado");
+      throw new BusinessException("Manutenção concluída não pode ser cancelada");
     }
 
-    this.status = MaintenanceStatus.CANCELLED;
+    if (status == MaintenanceStatus.CANCELLED) {
+
+      throw new BusinessException("Manutenção já cancelada");
+    }
+
+    status = MaintenanceStatus.CANCELLED;
+  }
+
+  public void validateOwnership(Long organizationId) {
+
+    if (!this.organizationId.equals(organizationId)) {
+
+      throw new BusinessException("Manutenção não pertence à organization");
+    }
   }
 }

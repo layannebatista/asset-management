@@ -10,19 +10,32 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MaintenanceRepository extends JpaRepository<MaintenanceRecord, Long> {
 
-  /** Retorna o histórico de manutenção de um ativo. */
+  /** Histórico completo de manutenção de um asset. */
   List<MaintenanceRecord> findByAssetIdOrderByCreatedAtDesc(Long assetId);
 
-  /** Retorna todos os registros de manutenção de uma organização. */
+  /** Histórico completo por organization. */
   List<MaintenanceRecord> findByOrganizationIdOrderByCreatedAtDesc(Long organizationId);
 
-  /** Retorna todos os registros de manutenção de uma unidade. */
+  /** Histórico completo por unit. */
   List<MaintenanceRecord> findByUnitIdOrderByCreatedAtDesc(Long unitId);
 
-  /** Verifica se existe manutenção ativa para um ativo. */
+  /** Busca manutenção ativa. Usado para controle de concorrência. */
   Optional<MaintenanceRecord> findByAssetIdAndStatusIn(
       Long assetId, List<MaintenanceStatus> statuses);
 
-  /** Retorna registros com status específicos. */
+  /** Verifica existência de manutenção ativa. Muito mais eficiente que find(). */
+  boolean existsByAssetIdAndStatusIn(Long assetId, List<MaintenanceStatus> statuses);
+
+  /** Lista por status. */
   List<MaintenanceRecord> findByStatusIn(List<MaintenanceStatus> statuses);
+
+  /** Lista manutenções ativas. */
+  List<MaintenanceRecord> findByStatusInOrderByCreatedAtAsc(List<MaintenanceStatus> statuses);
+
+  /** Busca manutenções abertas de uma organization. */
+  List<MaintenanceRecord> findByOrganizationIdAndStatusIn(
+      Long organizationId, List<MaintenanceStatus> statuses);
+
+  /** Busca manutenções abertas de uma unit. */
+  List<MaintenanceRecord> findByUnitIdAndStatusIn(Long unitId, List<MaintenanceStatus> statuses);
 }
