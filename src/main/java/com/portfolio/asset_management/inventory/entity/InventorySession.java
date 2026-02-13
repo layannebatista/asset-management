@@ -2,43 +2,73 @@ package com.portfolio.asset_management.inventory.entity;
 
 import com.portfolio.asset_management.inventory.enums.InventoryStatus;
 import com.portfolio.asset_management.organization.entity.Organization;
+import com.portfolio.asset_management.shared.exception.BusinessException;
 import com.portfolio.asset_management.unit.entity.Unit;
 import com.portfolio.asset_management.user.entity.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "inventory_sessions")
+@Table(
+    name = "inventory_sessions",
+    indexes = {
+      @Index(name = "idx_inventory_session_org", columnList = "organization_id"),
+      @Index(name = "idx_inventory_session_unit", columnList = "unit_id"),
+      @Index(name = "idx_inventory_session_status", columnList = "status")
+    })
 public class InventorySession {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @ManyToOne(optional = false)
-  @JoinColumn(name = "organization_id", nullable = false)
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "organization_id", nullable = false, updatable = false)
   private Organization organization;
 
-  @ManyToOne(optional = false)
-  @JoinColumn(name = "unit_id", nullable = false)
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "unit_id", nullable = false, updatable = false)
   private Unit unit;
 
-  @ManyToOne(optional = false)
-  @JoinColumn(name = "created_by", nullable = false)
+  @ManyToOne(fetch = FetchType.LAZY, optional = false)
+  @JoinColumn(name = "created_by", nullable = false, updatable = false)
   private User createdBy;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false)
   private InventoryStatus status;
 
-  @Column(nullable = false)
+  @Column(nullable = false, updatable = false)
   private LocalDateTime createdAt;
 
-  private LocalDateTime closedAt;
+  @Column private LocalDateTime closedAt;
 
   protected InventorySession() {}
 
   public InventorySession(Organization organization, Unit unit, User createdBy) {
+
+    if (organization == null) {
+      throw new IllegalArgumentException("organization é obrigatório");
+    }
+
+    if (unit == null) {
+      throw new IllegalArgumentException("unit é obrigatório");
+    }
+
+    if (createdBy == null) {
+      throw new IllegalArgumentException("createdBy é obrigatório");
+    }
+
+    if (!unit.getOrganization().getId().equals(organization.getId())) {
+
+      throw new BusinessException("Unit não pertence à organization");
+    }
+
+    if (!createdBy.getOrganization().getId().equals(organization.getId())) {
+
+      throw new BusinessException("User não pertence à organization");
+    }
+
     this.organization = organization;
     this.unit = unit;
     this.createdBy = createdBy;
@@ -74,25 +104,71 @@ public class InventorySession {
     return closedAt;
   }
 
+  public boolean isOpen() {
+    return status == InventoryStatus.OPEN;
+  }
+
+  public boolean isInProgress() {
+    return status == InventoryStatus.IN_PROGRESS;
+  }
+
+  public boolean isClosed() {
+    return status == InventoryStatus.CLOSED;
+  }
+
+  public boolean isCancelled() {
+    return status == InventoryStatus.CANCELLED;
+  }
+
+  public boolean isActive() {
+    return status == InventoryStatus.OPEN || status == InventoryStatus.IN_PROGRESS;
+  }
+
+  /** Inicia sessão. */
   public void start() {
-    if (this.status != InventoryStatus.OPEN) {
-      throw new IllegalStateException("Inventory session cannot be started");
+
+    if (status != InventoryStatus.OPEN) {
+
+      throw new BusinessException("Somente sessões OPEN podem ser iniciadas");
     }
+
     this.status = InventoryStatus.IN_PROGRESS;
   }
 
+  /** Fecha sessão. */
   public void close() {
-    if (this.status != InventoryStatus.IN_PROGRESS) {
-      throw new IllegalStateException("Inventory session cannot be closed");
+
+    if (status != InventoryStatus.IN_PROGRESS) {
+
+      throw new BusinessException("Somente sessões IN_PROGRESS podem ser fechadas");
     }
+
     this.status = InventoryStatus.CLOSED;
     this.closedAt = LocalDateTime.now();
   }
 
+  /** Cancela sessão. */
   public void cancel() {
-    if (this.status == InventoryStatus.CLOSED) {
-      throw new IllegalStateException("Closed inventory session cannot be cancelled");
+
+    if (status == InventoryStatus.CLOSED) {
+
+      throw new BusinessException("Sessão fechada não pode ser cancelada");
     }
+
+    if (status == InventoryStatus.CANCELLED) {
+
+      throw new BusinessException("Sessão já está cancelada");
+    }
+
     this.status = InventoryStatus.CANCELLED;
+  }
+
+  /** Valida se pertence à organization. */
+  public void validateOwnership(Long organizationId) {
+
+    if (!organization.getId().equals(organizationId)) {
+
+      throw new BusinessException("Sessão não pertence à organization");
+    }
   }
 }
