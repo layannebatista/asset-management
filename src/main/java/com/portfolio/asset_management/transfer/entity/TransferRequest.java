@@ -15,39 +15,45 @@ public class TransferRequest {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @ManyToOne(optional = false)
+  @ManyToOne(optional = false, fetch = FetchType.LAZY)
+  @JoinColumn(name = "asset_id", nullable = false)
   private Asset asset;
 
-  @ManyToOne(optional = false)
-  @JoinColumn(name = "from_unit_id")
+  @ManyToOne(optional = false, fetch = FetchType.LAZY)
+  @JoinColumn(name = "from_unit_id", nullable = false)
   private Unit fromUnit;
 
-  @ManyToOne(optional = false)
-  @JoinColumn(name = "to_unit_id")
+  @ManyToOne(optional = false, fetch = FetchType.LAZY)
+  @JoinColumn(name = "to_unit_id", nullable = false)
   private Unit toUnit;
 
-  @ManyToOne(optional = false)
-  @JoinColumn(name = "requested_by")
+  @ManyToOne(optional = false, fetch = FetchType.LAZY)
+  @JoinColumn(name = "requested_by", nullable = false)
   private User requestedBy;
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "approved_by")
   private User approvedBy;
 
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
+  @Column(nullable = false, length = 30)
   private TransferStatus status;
 
   @Column(nullable = false, length = 500)
   private String reason;
 
+  @Column(nullable = false)
   private LocalDateTime requestedAt;
+
   private LocalDateTime approvedAt;
+
   private LocalDateTime completedAt;
 
   protected TransferRequest() {}
 
   public TransferRequest(Asset asset, Unit fromUnit, Unit toUnit, User requestedBy, String reason) {
+
+    validateConstructor(asset, fromUnit, toUnit, requestedBy, reason);
 
     this.asset = asset;
     this.fromUnit = fromUnit;
@@ -57,6 +63,34 @@ public class TransferRequest {
 
     this.status = TransferStatus.PENDING;
     this.requestedAt = LocalDateTime.now();
+  }
+
+  private void validateConstructor(
+      Asset asset, Unit fromUnit, Unit toUnit, User requestedBy, String reason) {
+
+    if (asset == null) {
+      throw new IllegalArgumentException("asset é obrigatório");
+    }
+
+    if (fromUnit == null) {
+      throw new IllegalArgumentException("fromUnit é obrigatório");
+    }
+
+    if (toUnit == null) {
+      throw new IllegalArgumentException("toUnit é obrigatório");
+    }
+
+    if (requestedBy == null) {
+      throw new IllegalArgumentException("requestedBy é obrigatório");
+    }
+
+    if (reason == null || reason.isBlank()) {
+      throw new IllegalArgumentException("reason é obrigatório");
+    }
+
+    if (fromUnit.getId().equals(toUnit.getId())) {
+      throw new IllegalArgumentException("Transferência para mesma unidade não é permitida");
+    }
   }
 
   public Long getId() {
@@ -91,19 +125,59 @@ public class TransferRequest {
     return reason;
   }
 
+  public LocalDateTime getRequestedAt() {
+    return requestedAt;
+  }
+
+  public LocalDateTime getApprovedAt() {
+    return approvedAt;
+  }
+
+  public LocalDateTime getCompletedAt() {
+    return completedAt;
+  }
+
   public void approve(User approver) {
+
+    if (status != TransferStatus.PENDING) {
+
+      throw new IllegalStateException("Apenas transferências PENDING podem ser aprovadas");
+    }
+
+    if (approver == null) {
+
+      throw new IllegalArgumentException("approver é obrigatório");
+    }
+
     this.status = TransferStatus.APPROVED;
     this.approvedBy = approver;
     this.approvedAt = LocalDateTime.now();
   }
 
   public void reject(User approver) {
+
+    if (status != TransferStatus.PENDING) {
+
+      throw new IllegalStateException("Apenas transferências PENDING podem ser rejeitadas");
+    }
+
+    if (approver == null) {
+
+      throw new IllegalArgumentException("approver é obrigatório");
+    }
+
     this.status = TransferStatus.REJECTED;
     this.approvedBy = approver;
     this.approvedAt = LocalDateTime.now();
   }
 
   public void complete() {
+
+    if (status != TransferStatus.APPROVED) {
+
+      throw new IllegalStateException("Apenas transferências APPROVED podem ser concluídas");
+    }
+
     this.status = TransferStatus.COMPLETED;
     this.completedAt = LocalDateTime.now();
   }
