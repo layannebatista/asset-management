@@ -6,17 +6,24 @@ import com.portfolio.asset_management.asset.repository.AssetRepository;
 import com.portfolio.asset_management.audit.enums.AuditEventType;
 import com.portfolio.asset_management.audit.service.AuditService;
 import com.portfolio.asset_management.maintenance.entity.MaintenanceRecord;
-import com.portfolio.asset_management.maintenance.enums.MaintenanceStatus;
 import com.portfolio.asset_management.maintenance.repository.MaintenanceRepository;
 import com.portfolio.asset_management.security.context.LoggedUserContext;
-import com.portfolio.asset_management.shared.exception.ForbiddenException;
 import com.portfolio.asset_management.shared.exception.NotFoundException;
-import com.portfolio.asset_management.shared.exception.ValidationException;
 import java.util.List;
-import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Service responsável pelo lifecycle completo de Maintenance.
+ *
+ * <p>Integrado com:
+ *
+ * <p>- ValidationService - LockService - AuditService
+ *
+ * <p>Garantias:
+ *
+ * <p>- integridade de estado - concorrência segura - isolamento multi-tenant
+ */
 @Service
 public class MaintenanceService {
 
@@ -26,20 +33,29 @@ public class MaintenanceService {
 
   private final AuditService auditService;
 
-  private final LoggedUserContext loggedUserContext;
+  private final LoggedUserContext loggedUser;
+
+  private final MaintenanceValidationService validationService;
+
+  private final MaintenanceLockService lockService;
 
   public MaintenanceService(
       MaintenanceRepository maintenanceRepository,
       AssetRepository assetRepository,
       AuditService auditService,
-      LoggedUserContext loggedUserContext) {
+      LoggedUserContext loggedUser,
+      MaintenanceValidationService validationService,
+      MaintenanceLockService lockService) {
 
     this.maintenanceRepository = maintenanceRepository;
     this.assetRepository = assetRepository;
     this.auditService = auditService;
-    this.loggedUserContext = loggedUserContext;
+    this.loggedUser = loggedUser;
+    this.validationService = validationService;
+    this.lockService = lockService;
   }
 
+  /** Cria manutenção. */
   @Transactional
   public MaintenanceRecord create(Long assetId, String description) {
 
@@ -48,42 +64,25 @@ public class MaintenanceService {
             .findById(assetId)
             .orElseThrow(() -> new NotFoundException("Ativo não encontrado"));
 
-    Long organizationId = loggedUserContext.getOrganizationId();
+    // lock concorrência
+    lockService.lockAssetForMaintenance(assetId);
 
-    if (!asset.getOrganization().getId().equals(organizationId)) {
-
-      throw new ForbiddenException("Você não tem permissão para este ativo");
-    }
-
-    if (asset.getStatus() == AssetStatus.RETIRED
-        || asset.getStatus() == AssetStatus.IN_TRANSFER
-        || asset.getStatus() == AssetStatus.IN_MAINTENANCE) {
-
-      throw new ValidationException("Este ativo não pode entrar em manutenção");
-    }
-
-    Optional<MaintenanceRecord> active =
-        maintenanceRepository.findByAssetIdAndStatusIn(
-            assetId, List.of(MaintenanceStatus.REQUESTED, MaintenanceStatus.IN_PROGRESS));
-
-    if (active.isPresent()) {
-
-      throw new ValidationException("Já existe manutenção ativa para este ativo");
-    }
+    // validação enterprise
+    validationService.validateCreate(asset, description);
 
     MaintenanceRecord record =
         new MaintenanceRecord(
             asset,
             asset.getOrganization().getId(),
             asset.getUnit().getId(),
-            loggedUserContext.getUserId(),
+            loggedUser.getUserId(),
             description);
 
     MaintenanceRecord saved = maintenanceRepository.save(record);
 
     auditService.registerEvent(
         AuditEventType.ASSET_STATUS_CHANGED,
-        loggedUserContext.getUserId(),
+        loggedUser.getUserId(),
         asset.getOrganization().getId(),
         asset.getUnit().getId(),
         asset.getId(),
@@ -92,20 +91,20 @@ public class MaintenanceService {
     return saved;
   }
 
+  /** Inicia manutenção. */
   @Transactional
   public MaintenanceRecord start(Long maintenanceId) {
+
+    lockService.lockMaintenance(maintenanceId);
 
     MaintenanceRecord record =
         maintenanceRepository
             .findById(maintenanceId)
             .orElseThrow(() -> new NotFoundException("Manutenção não encontrada"));
 
-    if (record.getStatus() != MaintenanceStatus.REQUESTED) {
+    validationService.validateStart(record);
 
-      throw new ValidationException("Manutenção não pode ser iniciada neste estado");
-    }
-
-    record.start(loggedUserContext.getUserId());
+    record.start(loggedUser.getUserId());
 
     Asset asset = record.getAsset();
 
@@ -113,7 +112,7 @@ public class MaintenanceService {
 
     auditService.registerEvent(
         AuditEventType.ASSET_STATUS_CHANGED,
-        loggedUserContext.getUserId(),
+        loggedUser.getUserId(),
         asset.getOrganization().getId(),
         asset.getUnit().getId(),
         asset.getId(),
@@ -122,20 +121,20 @@ public class MaintenanceService {
     return record;
   }
 
+  /** Conclui manutenção. */
   @Transactional
   public MaintenanceRecord complete(Long maintenanceId, String resolution) {
+
+    lockService.lockMaintenance(maintenanceId);
 
     MaintenanceRecord record =
         maintenanceRepository
             .findById(maintenanceId)
             .orElseThrow(() -> new NotFoundException("Manutenção não encontrada"));
 
-    if (record.getStatus() != MaintenanceStatus.IN_PROGRESS) {
+    validationService.validateComplete(record, resolution);
 
-      throw new ValidationException("Manutenção não pode ser concluída neste estado");
-    }
-
-    record.complete(loggedUserContext.getUserId(), resolution);
+    record.complete(loggedUser.getUserId(), resolution);
 
     Asset asset = record.getAsset();
 
@@ -150,7 +149,7 @@ public class MaintenanceService {
 
     auditService.registerEvent(
         AuditEventType.ASSET_STATUS_CHANGED,
-        loggedUserContext.getUserId(),
+        loggedUser.getUserId(),
         asset.getOrganization().getId(),
         asset.getUnit().getId(),
         asset.getId(),
@@ -159,13 +158,18 @@ public class MaintenanceService {
     return record;
   }
 
+  /** Cancela manutenção. */
   @Transactional
   public MaintenanceRecord cancel(Long maintenanceId) {
+
+    lockService.lockMaintenance(maintenanceId);
 
     MaintenanceRecord record =
         maintenanceRepository
             .findById(maintenanceId)
             .orElseThrow(() -> new NotFoundException("Manutenção não encontrada"));
+
+    validationService.validateCancel(record);
 
     record.cancel();
 
@@ -182,12 +186,25 @@ public class MaintenanceService {
 
     auditService.registerEvent(
         AuditEventType.ASSET_STATUS_CHANGED,
-        loggedUserContext.getUserId(),
+        loggedUser.getUserId(),
         asset.getOrganization().getId(),
         asset.getUnit().getId(),
         asset.getId(),
         "Manutenção cancelada");
 
     return record;
+  }
+
+  /** Lista histórico por asset. */
+  public List<MaintenanceRecord> findByAsset(Long assetId) {
+
+    return maintenanceRepository.findByAssetIdOrderByCreatedAtDesc(assetId);
+  }
+
+  /** Lista histórico da organização. */
+  public List<MaintenanceRecord> findByOrganization() {
+
+    return maintenanceRepository.findByOrganizationIdOrderByCreatedAtDesc(
+        loggedUser.getOrganizationId());
   }
 }
