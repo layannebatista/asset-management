@@ -2,7 +2,6 @@ package com.portfolio.asset_management.inventory.service;
 
 import com.portfolio.asset_management.inventory.dto.InventoryResponseDTO;
 import com.portfolio.asset_management.inventory.entity.InventorySession;
-import com.portfolio.asset_management.inventory.enums.InventoryStatus;
 import com.portfolio.asset_management.inventory.repository.InventorySessionRepository;
 import com.portfolio.asset_management.security.context.LoggedUserContext;
 import com.portfolio.asset_management.shared.exception.NotFoundException;
@@ -19,25 +18,32 @@ public class InventoryService {
   private final InventorySessionRepository repository;
   private final UnitService unitService;
   private final LoggedUserContext loggedUser;
+  private final InventoryValidationService validationService;
+  private final InventoryLockService lockService;
 
   public InventoryService(
       InventorySessionRepository repository,
       UnitService unitService,
-      LoggedUserContext loggedUser) {
+      LoggedUserContext loggedUser,
+      InventoryValidationService validationService,
+      InventoryLockService lockService) {
 
     this.repository = repository;
     this.unitService = unitService;
     this.loggedUser = loggedUser;
+    this.validationService = validationService;
+    this.lockService = lockService;
   }
 
+  /** Cria nova sessão de inventário. */
   @Transactional
   public InventoryResponseDTO create(Long unitId) {
 
     Unit unit = unitService.findById(unitId);
 
-    if (!unit.getOrganization().getId().equals(loggedUser.getOrganizationId())) {
-      throw new IllegalStateException("Cannot create inventory for another organization");
-    }
+    validationService.validateUnitOwnership(unit, loggedUser.getOrganizationId());
+
+    validationService.validateNoActiveSession(unit.getId());
 
     InventorySession session =
         new InventorySession(unit.getOrganization(), unit, loggedUser.getUser());
@@ -47,6 +53,7 @@ public class InventoryService {
     return map(saved);
   }
 
+  /** Busca sessão por ID. */
   public InventoryResponseDTO findById(Long id) {
 
     InventorySession session =
@@ -54,11 +61,12 @@ public class InventoryService {
             .findById(id)
             .orElseThrow(() -> new NotFoundException("Inventory session not found"));
 
-    validateOwnership(session);
+    validationService.validateOwnership(session, loggedUser.getOrganizationId());
 
     return map(session);
   }
 
+  /** Lista sessões da organization. */
   public List<InventoryResponseDTO> list() {
 
     return repository.findByOrganization_Id(loggedUser.getOrganizationId()).stream()
@@ -66,58 +74,70 @@ public class InventoryService {
         .collect(Collectors.toList());
   }
 
+  /** Inicia sessão. */
   @Transactional
   public void start(Long id) {
 
-    InventorySession session =
-        repository
-            .findById(id)
-            .orElseThrow(() -> new NotFoundException("Inventory session not found"));
+    lockService.executeWithSessionLock(
+        id,
+        () -> {
+          InventorySession session =
+              repository
+                  .findById(id)
+                  .orElseThrow(() -> new NotFoundException("Inventory session not found"));
 
-    validateOwnership(session);
+          validationService.validateOwnership(session, loggedUser.getOrganizationId());
 
-    if (session.getStatus() != InventoryStatus.OPEN) {
-      throw new IllegalStateException("Inventory session cannot be started");
-    }
+          validationService.validateCanStart(session);
 
-    session.start();
+          session.start();
+
+          return null;
+        });
   }
 
+  /** Fecha sessão. */
   @Transactional
   public void close(Long id) {
 
-    InventorySession session =
-        repository
-            .findById(id)
-            .orElseThrow(() -> new NotFoundException("Inventory session not found"));
+    lockService.executeWithSessionLock(
+        id,
+        () -> {
+          InventorySession session =
+              repository
+                  .findById(id)
+                  .orElseThrow(() -> new NotFoundException("Inventory session not found"));
 
-    validateOwnership(session);
+          validationService.validateOwnership(session, loggedUser.getOrganizationId());
 
-    if (session.getStatus() != InventoryStatus.IN_PROGRESS) {
-      throw new IllegalStateException("Inventory session cannot be closed");
-    }
+          validationService.validateCanClose(session);
 
-    session.close();
+          session.close();
+
+          return null;
+        });
   }
 
+  /** Cancela sessão. */
   @Transactional
   public void cancel(Long id) {
 
-    InventorySession session =
-        repository
-            .findById(id)
-            .orElseThrow(() -> new NotFoundException("Inventory session not found"));
+    lockService.executeWithSessionLock(
+        id,
+        () -> {
+          InventorySession session =
+              repository
+                  .findById(id)
+                  .orElseThrow(() -> new NotFoundException("Inventory session not found"));
 
-    validateOwnership(session);
+          validationService.validateOwnership(session, loggedUser.getOrganizationId());
 
-    session.cancel();
-  }
+          validationService.validateCanCancel(session);
 
-  private void validateOwnership(InventorySession session) {
+          session.cancel();
 
-    if (!session.getOrganization().getId().equals(loggedUser.getOrganizationId())) {
-      throw new IllegalStateException("Access denied");
-    }
+          return null;
+        });
   }
 
   private InventoryResponseDTO map(InventorySession session) {
