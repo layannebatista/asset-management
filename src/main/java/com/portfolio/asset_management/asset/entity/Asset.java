@@ -15,6 +15,16 @@ public class Asset {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  /**
+   * Controle de concorrência otimista.
+   *
+   * <p>Impede que duas transações modifiquem o mesmo ativo simultaneamente. Hibernate usa este
+   * campo automaticamente.
+   */
+  @Version
+  @Column(nullable = false)
+  private Long version;
+
   @Column(nullable = false, unique = true)
   private String assetTag;
 
@@ -76,6 +86,11 @@ public class Asset {
 
   public Long getId() {
     return id;
+  }
+
+  /** Versão usada pelo Hibernate para optimistic locking. */
+  public Long getVersion() {
+    return version;
   }
 
   public String getAssetTag() {

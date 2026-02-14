@@ -22,6 +22,18 @@ public class InventorySession {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  /**
+   * Controle de concorrência otimista.
+   *
+   * <p>Evita:
+   *
+   * <p>- dois usuários iniciarem ao mesmo tempo - dois usuários fecharem ao mesmo tempo -
+   * cancelamento concorrente
+   */
+  @Version
+  @Column(nullable = false)
+  private Long version;
+
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "organization_id", nullable = false, updatable = false)
   private Organization organization;
@@ -78,6 +90,11 @@ public class InventorySession {
 
   public Long getId() {
     return id;
+  }
+
+  /** Usado automaticamente pelo Hibernate para controle de concorrência. */
+  public Long getVersion() {
+    return version;
   }
 
   public Organization getOrganization() {

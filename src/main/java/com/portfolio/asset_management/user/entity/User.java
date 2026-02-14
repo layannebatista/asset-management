@@ -15,6 +15,15 @@ public class User {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  /**
+   * Controle de concorrência otimista.
+   *
+   * <p>Protege contra alterações simultâneas concorrentes.
+   */
+  @Version
+  @Column(nullable = false)
+  private Long version;
+
   @Column(nullable = false, length = 255)
   private String name;
 
@@ -79,6 +88,11 @@ public class User {
 
   public Long getId() {
     return id;
+  }
+
+  /** Usado automaticamente pelo Hibernate para optimistic locking. */
+  public Long getVersion() {
+    return version;
   }
 
   public String getName() {
