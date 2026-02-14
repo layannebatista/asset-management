@@ -1,4 +1,4 @@
-name: CI - Build, Test and Docker
+name: CI - Build, Test, Quality, Security and Docker
 
 on:
   push:
@@ -23,6 +23,27 @@ jobs:
 
       - name: Build and test with Maven
         run: mvn clean verify
+
+      - name: Run Spotless
+        run: mvn spotless:check
+
+      - name: Run Checkstyle
+        run: mvn checkstyle:check
+
+      - name: Run PMD
+        run: mvn pmd:check
+
+      - name: Run OWASP Dependency Check
+        run: mvn dependency-check:check
+
+      - name: Run JaCoCo Coverage
+        run: mvn verify
+
+      - name: Upload JaCoCo report
+        uses: actions/upload-artifact@v3
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/index.html
 
       - name: Build Docker image
         run: docker build -t asset-management:ci .
