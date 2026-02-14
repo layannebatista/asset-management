@@ -20,6 +20,18 @@ public class MaintenanceRecord {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  /**
+   * Controle de concorrência otimista.
+   *
+   * <p>Evita:
+   *
+   * <p>- dois técnicos iniciarem ao mesmo tempo - duas conclusões simultâneas - cancelamento
+   * concorrente
+   */
+  @Version
+  @Column(nullable = false)
+  private Long version;
+
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "asset_id", nullable = false, updatable = false)
   private Asset asset;
@@ -104,6 +116,11 @@ public class MaintenanceRecord {
 
   public Long getId() {
     return id;
+  }
+
+  /** Usado automaticamente pelo Hibernate para controle de concorrência. */
+  public Long getVersion() {
+    return version;
   }
 
   public Asset getAsset() {

@@ -15,6 +15,15 @@ public class TransferRequest {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  /**
+   * Controle de concorrência otimista.
+   *
+   * <p>Impede aprovações simultâneas, completes simultâneos e race conditions.
+   */
+  @Version
+  @Column(nullable = false)
+  private Long version;
+
   @ManyToOne(optional = false, fetch = FetchType.LAZY)
   @JoinColumn(name = "asset_id", nullable = false)
   private Asset asset;
@@ -97,6 +106,11 @@ public class TransferRequest {
     return id;
   }
 
+  /** Usado automaticamente pelo Hibernate para controle de concorrência. */
+  public Long getVersion() {
+    return version;
+  }
+
   public Asset getAsset() {
     return asset;
   }
@@ -137,15 +151,29 @@ public class TransferRequest {
     return completedAt;
   }
 
+  public boolean isPending() {
+    return status == TransferStatus.PENDING;
+  }
+
+  public boolean isApproved() {
+    return status == TransferStatus.APPROVED;
+  }
+
+  public boolean isCompleted() {
+    return status == TransferStatus.COMPLETED;
+  }
+
+  public boolean isRejected() {
+    return status == TransferStatus.REJECTED;
+  }
+
   public void approve(User approver) {
 
     if (status != TransferStatus.PENDING) {
-
       throw new IllegalStateException("Apenas transferências PENDING podem ser aprovadas");
     }
 
     if (approver == null) {
-
       throw new IllegalArgumentException("approver é obrigatório");
     }
 
@@ -157,12 +185,10 @@ public class TransferRequest {
   public void reject(User approver) {
 
     if (status != TransferStatus.PENDING) {
-
       throw new IllegalStateException("Apenas transferências PENDING podem ser rejeitadas");
     }
 
     if (approver == null) {
-
       throw new IllegalArgumentException("approver é obrigatório");
     }
 
@@ -174,7 +200,6 @@ public class TransferRequest {
   public void complete() {
 
     if (status != TransferStatus.APPROVED) {
-
       throw new IllegalStateException("Apenas transferências APPROVED podem ser concluídas");
     }
 
