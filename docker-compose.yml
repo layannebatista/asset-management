@@ -1,8 +1,38 @@
 services:
+
+  postgres:
+    image: postgres:16
+    container_name: asset-management-db
+
+    environment:
+      POSTGRES_DB: asset_management
+      POSTGRES_USER: asset_user
+      POSTGRES_PASSWORD: asset123
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    restart: unless-stopped
+
+
   asset-management:
     build: .
     container_name: asset-management-api
+
     ports:
       - "8080:8080"
+
+    depends_on:
+      - postgres
+
     environment:
       SPRING_PROFILES_ACTIVE: docker
+
+    restart: unless-stopped
+
+
+volumes:
+  postgres_data:

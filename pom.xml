@@ -55,18 +55,29 @@
             <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
 
+
         <!-- Database -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
+            <version>42.7.3</version>
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Flyway core -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
-            <version>11.8.0</version>
+            <version>10.17.1</version>
         </dependency>
+
+        <!-- Flyway PostgreSQL support (OBRIGATÓRIO no Flyway 10+) -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+            <version>10.17.1</version>
+        </dependency>
+
 
         <!-- JSON -->
         <dependency>
@@ -121,6 +132,22 @@
             <version>5.11.0</version>
             <scope>test</scope>
         </dependency>
+
+        <!-- OPENAPI -->
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <version>5.4.0</version>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- SWAGGER -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.6.0</version>
+        </dependency>
+
 
     </dependencies>
 
@@ -198,7 +225,18 @@
                 </executions>
             </plugin>
 
+            <!-- FLYWAYBD -->
 
+            <plugin>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-maven-plugin</artifactId>
+                <version>10.17.1</version>
+                <configuration>
+                    <url>jdbc:postgresql://localhost:5433/asset_management</url>
+                    <user>asset_user</user>
+                    <password>asset123</password>
+                </configuration>
+            </plugin>
 
             <!-- JaCoCo -->
             <plugin>
