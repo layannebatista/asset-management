@@ -1,0 +1,144 @@
+{
+  "info": {
+    "name": "Enterprise Asset Management API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "auth/login",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "auth",
+            "login"
+          ]
+        }
+      }
+    },
+    {
+      "name": "organizations",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/organizations",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "organizations"
+          ]
+        }
+      }
+    },
+    {
+      "name": "units",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/units",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "units"
+          ]
+        }
+      }
+    },
+    {
+      "name": "users",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/users",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "users"
+          ]
+        }
+      }
+    },
+    {
+      "name": "assets",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/assets",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "assets"
+          ]
+        }
+      }
+    },
+    {
+      "name": "transfers",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/transfers",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "transfers"
+          ]
+        }
+      }
+    },
+    {
+      "name": "inventory",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/inventory",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "inventory"
+          ]
+        }
+      }
+    },
+    {
+      "name": "maintenance",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/maintenance",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "maintenance"
+          ]
+        }
+      }
+    },
+    {
+      "name": "audit",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{baseUrl}}/audit",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "audit"
+          ]
+        }
+      }
+    }
+  ]
+}
