@@ -1,8 +1,8 @@
 package com.portfolio.assetmanagement.security.context;
 
-import com.portfolio.assetmanagement.shared.exception.UnauthorizedException;
 import com.portfolio.assetmanagement.domain.user.entity.User;
 import com.portfolio.assetmanagement.infrastructure.persistence.user.repository.UserRepository;
+import com.portfolio.assetmanagement.shared.exception.UnauthorizedException;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;

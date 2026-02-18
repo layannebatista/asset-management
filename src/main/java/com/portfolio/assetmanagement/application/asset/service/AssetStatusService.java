@@ -2,9 +2,9 @@ package com.portfolio.assetmanagement.application.asset.service;
 
 import com.portfolio.assetmanagement.domain.asset.entity.Asset;
 import com.portfolio.assetmanagement.domain.asset.enums.AssetStatus;
-import com.portfolio.assetmanagement.shared.exception.BusinessException;
 import com.portfolio.assetmanagement.domain.unit.entity.Unit;
 import com.portfolio.assetmanagement.domain.user.entity.User;
+import com.portfolio.assetmanagement.shared.exception.BusinessException;
 import org.springframework.stereotype.Service;
 
 /** Serviço responsável por controlar transições de status do Asset. */

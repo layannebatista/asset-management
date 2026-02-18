@@ -1,12 +1,12 @@
 package com.portfolio.assetmanagement.application.user.service;
 
-import com.portfolio.assetmanagement.domain.organization.entity.Organization;
-import com.portfolio.assetmanagement.shared.exception.BusinessException;
-import com.portfolio.assetmanagement.shared.exception.NotFoundException;
-import com.portfolio.assetmanagement.domain.unit.entity.Unit;
 import com.portfolio.assetmanagement.application.unit.service.UnitValidationService;
+import com.portfolio.assetmanagement.domain.organization.entity.Organization;
+import com.portfolio.assetmanagement.domain.unit.entity.Unit;
 import com.portfolio.assetmanagement.domain.user.entity.User;
 import com.portfolio.assetmanagement.infrastructure.persistence.user.repository.UserRepository;
+import com.portfolio.assetmanagement.shared.exception.BusinessException;
+import com.portfolio.assetmanagement.shared.exception.NotFoundException;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import org.springframework.stereotype.Service;

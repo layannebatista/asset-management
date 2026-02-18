@@ -1,9 +1,9 @@
 package com.portfolio.assetmanagement.domain.user.entity;
 
 import com.portfolio.assetmanagement.domain.organization.entity.Organization;
-import com.portfolio.assetmanagement.security.enums.UserRole;
 import com.portfolio.assetmanagement.domain.unit.entity.Unit;
 import com.portfolio.assetmanagement.domain.user.enums.UserStatus;
+import com.portfolio.assetmanagement.security.enums.UserRole;
 import jakarta.persistence.*;
 import java.util.Objects;
 

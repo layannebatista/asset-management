@@ -2,9 +2,9 @@ package com.portfolio.assetmanagement.domain.inventory.entity;
 
 import com.portfolio.assetmanagement.domain.inventory.enums.InventoryStatus;
 import com.portfolio.assetmanagement.domain.organization.entity.Organization;
-import com.portfolio.assetmanagement.shared.exception.BusinessException;
 import com.portfolio.assetmanagement.domain.unit.entity.Unit;
 import com.portfolio.assetmanagement.domain.user.entity.User;
+import com.portfolio.assetmanagement.shared.exception.BusinessException;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 

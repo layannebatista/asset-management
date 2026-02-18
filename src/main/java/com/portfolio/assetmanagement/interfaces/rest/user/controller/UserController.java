@@ -1,12 +1,12 @@
 package com.portfolio.assetmanagement.interfaces.rest.user.controller;
 
-import com.portfolio.assetmanagement.domain.organization.entity.Organization;
 import com.portfolio.assetmanagement.application.organization.service.OrganizationService;
-import com.portfolio.assetmanagement.security.enums.UserRole;
-import com.portfolio.assetmanagement.domain.unit.entity.Unit;
 import com.portfolio.assetmanagement.application.unit.service.UnitService;
-import com.portfolio.assetmanagement.domain.user.entity.User;
 import com.portfolio.assetmanagement.application.user.service.UserService;
+import com.portfolio.assetmanagement.domain.organization.entity.Organization;
+import com.portfolio.assetmanagement.domain.unit.entity.Unit;
+import com.portfolio.assetmanagement.domain.user.entity.User;
+import com.portfolio.assetmanagement.security.enums.UserRole;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 

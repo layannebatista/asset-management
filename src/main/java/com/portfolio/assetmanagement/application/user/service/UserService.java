@@ -1,14 +1,14 @@
 package com.portfolio.assetmanagement.application.user.service;
 
-import com.portfolio.assetmanagement.domain.audit.enums.AuditEventType;
 import com.portfolio.assetmanagement.application.audit.service.AuditService;
+import com.portfolio.assetmanagement.domain.audit.enums.AuditEventType;
 import com.portfolio.assetmanagement.domain.organization.entity.Organization;
-import com.portfolio.assetmanagement.security.enums.UserRole;
-import com.portfolio.assetmanagement.shared.exception.BusinessException;
 import com.portfolio.assetmanagement.domain.unit.entity.Unit;
 import com.portfolio.assetmanagement.domain.user.entity.User;
 import com.portfolio.assetmanagement.domain.user.enums.UserStatus;
 import com.portfolio.assetmanagement.infrastructure.persistence.user.repository.UserRepository;
+import com.portfolio.assetmanagement.security.enums.UserRole;
+import com.portfolio.assetmanagement.shared.exception.BusinessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
