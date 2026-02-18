@@ -3,10 +3,13 @@ package com.portfolio.assetmanagement;
 import io.restassured.RestAssured;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test") // <-- ESTA LINHA RESOLVE SEU ERRO
 class AssetIntegrationTest {
 
     @LocalServerPort
@@ -19,11 +22,13 @@ class AssetIntegrationTest {
 
     @Test
     void healthCheck() {
+
         RestAssured
             .given()
-            .when()
-            .get("/actuator/health")
-            .then()
+            .basePath("/actuator")
+        .when()
+            .get("/health")
+        .then()
             .statusCode(200);
     }
 }
