@@ -1,0 +1,23 @@
+spring:
+
+  datasource:
+    url: jdbc:postgresql://postgres:5432/asset_management
+    username: asset_user
+    password: asset123
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+
+    hibernate:
+      ddl-auto: create
+
+    properties:
+
+      jakarta.persistence.schema-generation.scripts.action: create
+      jakarta.persistence.schema-generation.scripts.create-target: /tmp/schema.sql
+      jakarta.persistence.schema-generation.create-source: metadata
+
+      hibernate.format_sql: true
+
+  flyway:
+    enabled: false
