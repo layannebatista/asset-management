@@ -64,20 +64,6 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Flyway core -->
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
-            <version>10.17.1</version>
-        </dependency>
-
-        <!-- Flyway PostgreSQL support (OBRIGATÓRIO no Flyway 10+) -->
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-database-postgresql</artifactId>
-            <version>10.17.1</version>
-        </dependency>
-
 
         <!-- JSON -->
         <dependency>
