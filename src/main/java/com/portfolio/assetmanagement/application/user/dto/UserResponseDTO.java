@@ -1,7 +1,7 @@
 package com.portfolio.assetmanagement.application.user.dto;
 
-import com.portfolio.assetmanagement.security.enums.UserRole;
 import com.portfolio.assetmanagement.domain.user.enums.UserStatus;
+import com.portfolio.assetmanagement.security.enums.UserRole;
 
 /**
  * DTO responsável por representar a resposta da API para um usuário.

@@ -2,8 +2,8 @@ package com.portfolio.assetmanagement.interfaces.rest.transfer.controller;
 
 import com.portfolio.assetmanagement.application.transfer.dto.TransferApproveDTO;
 import com.portfolio.assetmanagement.application.transfer.dto.TransferCreateDTO;
-import com.portfolio.assetmanagement.domain.transfer.entity.TransferRequest;
 import com.portfolio.assetmanagement.application.transfer.service.TransferService;
+import com.portfolio.assetmanagement.domain.transfer.entity.TransferRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;

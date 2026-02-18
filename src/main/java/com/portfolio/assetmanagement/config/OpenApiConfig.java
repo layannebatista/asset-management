@@ -1,4 +1,3 @@
-
 package com.portfolio.assetmanagement.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
@@ -9,12 +8,14 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
-    @Bean
-    public OpenAPI assetManagementAPI() {
-        return new OpenAPI()
-            .info(new Info()
+  @Bean
+  public OpenAPI assetManagementAPI() {
+    return new OpenAPI()
+        .info(
+            new Info()
                 .title("Asset Management Enterprise API")
                 .version("1.0.0")
-                .description("Enterprise Asset, Inventory, Maintenance and Transfer Management API"));
-    }
+                .description(
+                    "Enterprise Asset, Inventory, Maintenance and Transfer Management API"));
+  }
 }

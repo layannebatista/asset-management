@@ -2,14 +2,14 @@ package com.portfolio.assetmanagement.application.asset.service;
 
 import com.portfolio.assetmanagement.domain.asset.entity.Asset;
 import com.portfolio.assetmanagement.domain.asset.enums.AssetType;
-import com.portfolio.assetmanagement.infrastructure.persistence.asset.repository.AssetRepository;
 import com.portfolio.assetmanagement.domain.organization.entity.Organization;
+import com.portfolio.assetmanagement.domain.unit.entity.Unit;
+import com.portfolio.assetmanagement.domain.user.entity.User;
+import com.portfolio.assetmanagement.infrastructure.persistence.asset.repository.AssetRepository;
+import com.portfolio.assetmanagement.infrastructure.persistence.user.repository.UserRepository;
 import com.portfolio.assetmanagement.security.context.LoggedUserContext;
 import com.portfolio.assetmanagement.shared.exception.ForbiddenException;
 import com.portfolio.assetmanagement.shared.exception.NotFoundException;
-import com.portfolio.assetmanagement.domain.unit.entity.Unit;
-import com.portfolio.assetmanagement.domain.user.entity.User;
-import com.portfolio.assetmanagement.infrastructure.persistence.user.repository.UserRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

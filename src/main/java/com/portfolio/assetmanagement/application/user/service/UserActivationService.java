@@ -1,9 +1,7 @@
 package com.portfolio.assetmanagement.application.user.service;
 
-import com.portfolio.assetmanagement.domain.audit.enums.AuditEventType;
 import com.portfolio.assetmanagement.application.audit.service.AuditService;
-import com.portfolio.assetmanagement.shared.exception.BusinessException;
-import com.portfolio.assetmanagement.shared.exception.NotFoundException;
+import com.portfolio.assetmanagement.domain.audit.enums.AuditEventType;
 import com.portfolio.assetmanagement.domain.user.entity.User;
 import com.portfolio.assetmanagement.domain.user.entity.UserActivationToken;
 import com.portfolio.assetmanagement.domain.user.entity.UserConsent;
@@ -11,6 +9,8 @@ import com.portfolio.assetmanagement.domain.user.enums.UserStatus;
 import com.portfolio.assetmanagement.infrastructure.persistence.user.repository.UserActivationTokenRepository;
 import com.portfolio.assetmanagement.infrastructure.persistence.user.repository.UserConsentRepository;
 import com.portfolio.assetmanagement.infrastructure.persistence.user.repository.UserRepository;
+import com.portfolio.assetmanagement.shared.exception.BusinessException;
+import com.portfolio.assetmanagement.shared.exception.NotFoundException;
 import java.time.Instant;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
