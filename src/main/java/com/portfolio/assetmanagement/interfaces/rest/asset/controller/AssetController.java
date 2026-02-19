@@ -6,11 +6,13 @@ import com.portfolio.assetmanagement.application.asset.service.AssetService;
 import com.portfolio.assetmanagement.application.organization.service.OrganizationService;
 import com.portfolio.assetmanagement.application.unit.service.UnitService;
 import com.portfolio.assetmanagement.domain.asset.entity.Asset;
+import com.portfolio.assetmanagement.domain.asset.enums.AssetStatus;
+import com.portfolio.assetmanagement.domain.asset.enums.AssetType;
 import com.portfolio.assetmanagement.domain.organization.entity.Organization;
 import com.portfolio.assetmanagement.domain.unit.entity.Unit;
+import com.portfolio.assetmanagement.shared.pagination.PageResponse;
 import jakarta.validation.Valid;
-import java.util.List;
-import java.util.stream.Collectors;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,9 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class AssetController {
 
   private final AssetService assetService;
-
   private final OrganizationService organizationService;
-
   private final UnitService unitService;
 
   public AssetController(
@@ -32,12 +32,28 @@ public class AssetController {
     this.unitService = unitService;
   }
 
+  /* ============================================================
+   *  LISTAGEM ENTERPRISE COM PAGINAÇÃO + FILTROS
+   * ============================================================ */
+
   @PreAuthorize("hasAnyRole('ADMIN','MANAGER','OPERATOR')")
   @GetMapping
-  public List<AssetResponseDTO> list() {
+  public PageResponse<AssetResponseDTO> list(
+      @RequestParam(required = false) AssetStatus status,
+      @RequestParam(required = false) AssetType type,
+      @RequestParam(required = false) Long unitId,
+      @RequestParam(required = false) Long assignedUserId,
+      @RequestParam(required = false) String assetTag,
+      @RequestParam(required = false) String model,
+      Pageable pageable) {
 
-    return assetService.findVisibleAssets().stream().map(this::map).collect(Collectors.toList());
+    return assetService.searchAssets(
+        status, type, unitId, assignedUserId, assetTag, model, pageable);
   }
+
+  /* ============================================================
+   *  BUSCA POR ID
+   * ============================================================ */
 
   @PreAuthorize("hasAnyRole('ADMIN','MANAGER','OPERATOR')")
   @GetMapping("/{id}")
@@ -46,14 +62,16 @@ public class AssetController {
     return map(assetService.findById(id));
   }
 
-  /** Criação com assetTag manual. */
+  /* ============================================================
+   *  CRIAÇÃO MANUAL
+   * ============================================================ */
+
   @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
   @PostMapping("/{organizationId}")
   public AssetResponseDTO create(
       @PathVariable Long organizationId, @RequestBody @Valid AssetCreateDTO dto) {
 
     Organization organization = organizationService.findById(organizationId);
-
     Unit unit = unitService.findById(dto.getUnitId());
 
     Asset asset =
@@ -63,14 +81,16 @@ public class AssetController {
     return map(asset);
   }
 
-  /** Criação com assetTag automático. */
+  /* ============================================================
+   *  CRIAÇÃO AUTOMÁTICA
+   * ============================================================ */
+
   @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
   @PostMapping("/{organizationId}/auto")
   public AssetResponseDTO createAutoTag(
       @PathVariable Long organizationId, @RequestBody @Valid AssetCreateDTO dto) {
 
     Organization organization = organizationService.findById(organizationId);
-
     Unit unit = unitService.findById(dto.getUnitId());
 
     Asset asset =
@@ -79,12 +99,20 @@ public class AssetController {
     return map(asset);
   }
 
+  /* ============================================================
+   *  RETIRE
+   * ============================================================ */
+
   @PreAuthorize("hasRole('ADMIN')")
   @PatchMapping("/{id}/retire")
   public void retire(@PathVariable Long id) {
 
     assetService.retireAsset(id);
   }
+
+  /* ============================================================
+   *  ASSIGN
+   * ============================================================ */
 
   @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
   @PatchMapping("/{assetId}/assign/{userId}")
@@ -93,12 +121,20 @@ public class AssetController {
     assetService.assignAsset(assetId, userId);
   }
 
+  /* ============================================================
+   *  UNASSIGN
+   * ============================================================ */
+
   @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
   @PatchMapping("/{assetId}/unassign")
   public void unassign(@PathVariable Long assetId) {
 
     assetService.unassignAsset(assetId);
   }
+
+  /* ============================================================
+   *  MAPPER
+   * ============================================================ */
 
   private AssetResponseDTO map(Asset asset) {
 

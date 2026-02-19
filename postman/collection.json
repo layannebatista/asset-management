@@ -1,144 +1,118 @@
 {
   "info": {
     "name": "Enterprise Asset Management API",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "_postman_id": "enterprise-asset-management-full",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Collection completa gerada a partir do Swagger oficial."
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api/v1" },
+    { "key": "token", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      { "key": "token", "value": "{{token}}", "type": "string" }
+    ]
   },
   "item": [
+
     {
-      "name": "auth/login",
-      "request": {
-        "method": "GET",
-        "url": {
-          "raw": "{{baseUrl}}/auth/login",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "auth",
-            "login"
-          ]
-        }
-      }
+      "name": "Assets",
+      "item": [
+        { "name": "Get Asset by ID", "request": { "method": "GET", "url": "{{baseUrl}}/assets/{{id}}" } },
+        { "name": "Create Asset Manual", "request": { "method": "POST", "url": "{{baseUrl}}/assets/{{organizationId}}" } },
+        { "name": "Create Asset Auto", "request": { "method": "POST", "url": "{{baseUrl}}/assets/{{organizationId}}/auto" } },
+        { "name": "Retire Asset", "request": { "method": "PATCH", "url": "{{baseUrl}}/assets/{{id}}/retire" } },
+        { "name": "Assign Asset", "request": { "method": "PATCH", "url": "{{baseUrl}}/assets/{{assetId}}/assign/{{userId}}" } },
+        { "name": "Unassign Asset", "request": { "method": "PATCH", "url": "{{baseUrl}}/assets/{{assetId}}/unassign" } }
+      ]
     },
+
     {
-      "name": "organizations",
-      "request": {
-        "method": "GET",
-        "url": {
-          "raw": "{{baseUrl}}/organizations",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "organizations"
-          ]
-        }
-      }
+      "name": "Asset History",
+      "item": [
+        { "name": "Status History", "request": { "method": "GET", "url": "{{baseUrl}}/assets/{{assetId}}/history/status" } },
+        { "name": "Assignment History", "request": { "method": "GET", "url": "{{baseUrl}}/assets/{{assetId}}/history/assignment" } }
+      ]
     },
+
     {
-      "name": "units",
-      "request": {
-        "method": "GET",
-        "url": {
-          "raw": "{{baseUrl}}/units",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "units"
-          ]
-        }
-      }
+      "name": "Audit",
+      "item": [
+        { "name": "Audit by User", "request": { "method": "GET", "url": "{{baseUrl}}/audit/user/{{userId}}" } },
+        { "name": "Audit by Type", "request": { "method": "GET", "url": "{{baseUrl}}/audit/type/{{type}}" } },
+        { "name": "Audit by Target", "request": { "method": "GET", "url": "{{baseUrl}}/audit/target" } },
+        { "name": "Audit by Period", "request": { "method": "GET", "url": "{{baseUrl}}/audit/period" } },
+        { "name": "Last Audit by Target", "request": { "method": "GET", "url": "{{baseUrl}}/audit/target/last" } }
+      ]
     },
+
     {
-      "name": "users",
-      "request": {
-        "method": "GET",
-        "url": {
-          "raw": "{{baseUrl}}/users",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "users"
-          ]
-        }
-      }
+      "name": "Inventory",
+      "item": [
+        { "name": "Get Inventory", "request": { "method": "GET", "url": "{{baseUrl}}/inventory/{{id}}" } },
+        { "name": "Start Inventory", "request": { "method": "PATCH", "url": "{{baseUrl}}/inventory/{{id}}/start" } },
+        { "name": "Close Inventory", "request": { "method": "PATCH", "url": "{{baseUrl}}/inventory/{{id}}/close" } },
+        { "name": "Cancel Inventory", "request": { "method": "PATCH", "url": "{{baseUrl}}/inventory/{{id}}/cancel" } }
+      ]
     },
+
     {
-      "name": "assets",
-      "request": {
-        "method": "GET",
-        "url": {
-          "raw": "{{baseUrl}}/assets",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "assets"
-          ]
-        }
-      }
+      "name": "Maintenance",
+      "item": [
+        { "name": "Start Maintenance", "request": { "method": "POST", "url": "{{baseUrl}}/maintenance/{{id}}/start" } },
+        { "name": "Complete Maintenance", "request": { "method": "POST", "url": "{{baseUrl}}/maintenance/{{id}}/complete" } },
+        { "name": "Cancel Maintenance", "request": { "method": "POST", "url": "{{baseUrl}}/maintenance/{{id}}/cancel" } }
+      ]
     },
+
     {
-      "name": "transfers",
-      "request": {
-        "method": "GET",
-        "url": {
-          "raw": "{{baseUrl}}/transfers",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "transfers"
-          ]
-        }
-      }
+      "name": "Organizations",
+      "item": [
+        { "name": "Get Organization", "request": { "method": "GET", "url": "{{baseUrl}}/organizations/{{id}}" } },
+        { "name": "Activate Organization", "request": { "method": "PATCH", "url": "{{baseUrl}}/organizations/{{id}}/activate" } },
+        { "name": "Inactivate Organization", "request": { "method": "PATCH", "url": "{{baseUrl}}/organizations/{{id}}/inactivate" } }
+      ]
     },
+
     {
-      "name": "inventory",
-      "request": {
-        "method": "GET",
-        "url": {
-          "raw": "{{baseUrl}}/inventory",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "inventory"
-          ]
-        }
-      }
+      "name": "Transfers",
+      "item": [
+        { "name": "Approve Transfer", "request": { "method": "PATCH", "url": "{{baseUrl}}/transfers/{{id}}/approve" } },
+        { "name": "Reject Transfer", "request": { "method": "PATCH", "url": "{{baseUrl}}/transfers/{{id}}/reject" } },
+        { "name": "Complete Transfer", "request": { "method": "PATCH", "url": "{{baseUrl}}/transfers/{{id}}/complete" } }
+      ]
     },
+
     {
-      "name": "maintenance",
-      "request": {
-        "method": "GET",
-        "url": {
-          "raw": "{{baseUrl}}/maintenance",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "maintenance"
-          ]
-        }
-      }
+      "name": "Units",
+      "item": [
+        { "name": "Create Unit", "request": { "method": "POST", "url": "{{baseUrl}}/units/{{organizationId}}" } },
+        { "name": "List Units", "request": { "method": "GET", "url": "{{baseUrl}}/units/{{organizationId}}" } },
+        { "name": "Get Unit by ID", "request": { "method": "GET", "url": "{{baseUrl}}/units/unit/{{id}}" } },
+        { "name": "Activate Unit", "request": { "method": "PATCH", "url": "{{baseUrl}}/units/{{id}}/activate" } },
+        { "name": "Inactivate Unit", "request": { "method": "PATCH", "url": "{{baseUrl}}/units/{{id}}/inactivate" } }
+      ]
     },
+
     {
-      "name": "audit",
-      "request": {
-        "method": "GET",
-        "url": {
-          "raw": "{{baseUrl}}/audit",
-          "host": [
-            "{{baseUrl}}"
-          ],
-          "path": [
-            "audit"
-          ]
-        }
-      }
+      "name": "User Activation",
+      "item": [
+        { "name": "Generate Activation Token", "request": { "method": "POST", "url": "{{baseUrl}}/users/activation/token/{{userId}}" } },
+        { "name": "Activate User", "request": { "method": "POST", "url": "{{baseUrl}}/users/activation/activate" } }
+      ]
+    },
+
+    {
+      "name": "Users",
+      "item": [
+        { "name": "Get User", "request": { "method": "GET", "url": "{{baseUrl}}/users/{{id}}" } },
+        { "name": "Block User", "request": { "method": "PATCH", "url": "{{baseUrl}}/users/{{id}}/block" } },
+        { "name": "Activate User", "request": { "method": "PATCH", "url": "{{baseUrl}}/users/{{id}}/activate" } },
+        { "name": "Inactivate User", "request": { "method": "PATCH", "url": "{{baseUrl}}/users/{{id}}/inactivate" } }
+      ]
     }
+
   ]
 }

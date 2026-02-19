@@ -1,6 +1,8 @@
 package com.portfolio.assetmanagement.application.asset.service;
 
+import com.portfolio.assetmanagement.application.asset.dto.AssetResponseDTO;
 import com.portfolio.assetmanagement.domain.asset.entity.Asset;
+import com.portfolio.assetmanagement.domain.asset.enums.AssetStatus;
 import com.portfolio.assetmanagement.domain.asset.enums.AssetType;
 import com.portfolio.assetmanagement.domain.organization.entity.Organization;
 import com.portfolio.assetmanagement.domain.unit.entity.Unit;
@@ -10,7 +12,12 @@ import com.portfolio.assetmanagement.infrastructure.persistence.user.repository.
 import com.portfolio.assetmanagement.security.context.LoggedUserContext;
 import com.portfolio.assetmanagement.shared.exception.ForbiddenException;
 import com.portfolio.assetmanagement.shared.exception.NotFoundException;
+import com.portfolio.assetmanagement.shared.pagination.PageResponse;
+import com.portfolio.assetmanagement.shared.specification.SpecificationBuilder;
 import java.util.List;
+import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,17 +25,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class AssetService {
 
   private final AssetRepository repository;
-
   private final LoggedUserContext loggedUser;
-
   private final AssetAssignmentHistoryService assignmentHistoryService;
-
   private final UserRepository userRepository;
-
   private final AssetValidationService validationService;
-
   private final AssetStatusService statusService;
-
   private final AssetNumberGeneratorService numberGeneratorService;
 
   public AssetService(
@@ -52,7 +53,6 @@ public class AssetService {
   public List<Asset> findVisibleAssets() {
 
     if (loggedUser.isAdmin()) {
-
       return repository.findAll();
     }
 
@@ -76,9 +76,56 @@ public class AssetService {
     }
 
     if (!asset.getOrganization().getId().equals(loggedUser.getOrganizationId())) {
-
       throw new ForbiddenException("Access denied");
     }
+  }
+
+  /* ============================================================
+   *  NOVO MÉTODO ENTERPRISE — BUSCA PAGINADA + FILTRO DINÂMICO
+   * ============================================================ */
+
+  public PageResponse<AssetResponseDTO> searchAssets(
+      AssetStatus status,
+      AssetType type,
+      Long unitId,
+      Long assignedUserId,
+      String assetTag,
+      String model,
+      Pageable pageable) {
+
+    SpecificationBuilder<Asset> builder = new SpecificationBuilder<>();
+
+    builder
+        .with("status", status)
+        .with("type", type)
+        .with("unitId", unitId)
+        .with("assignedUserId", assignedUserId)
+        .with("assetTag", assetTag)
+        .with("model", model);
+
+    if (!loggedUser.isAdmin()) {
+      builder.with("organizationId", loggedUser.getOrganizationId());
+    }
+
+    Page<Asset> page = repository.findAll(builder.build(), pageable);
+
+    List<AssetResponseDTO> content =
+        page.getContent().stream().map(this::toDTO).collect(Collectors.toList());
+
+    return PageResponse.from(page, content);
+  }
+
+  private AssetResponseDTO toDTO(Asset asset) {
+
+    return new AssetResponseDTO(
+        asset.getId(),
+        asset.getAssetTag(),
+        asset.getType(),
+        asset.getModel(),
+        asset.getStatus(),
+        asset.getOrganization().getId(),
+        asset.getUnit().getId(),
+        asset.getAssignedUser() != null ? asset.getAssignedUser().getId() : null);
   }
 
   @Transactional
@@ -86,17 +133,13 @@ public class AssetService {
       String assetTag, AssetType type, String model, Organization organization, Unit unit) {
 
     validationService.validateAssetTag(assetTag);
-
     validationService.validateAssetTagUniqueness(assetTag);
-
     validationService.validateOrganizationUnitIntegrity(organization, unit);
 
     Asset asset = new Asset(assetTag, type, model, organization, unit);
-
     return repository.save(asset);
   }
 
-  /** Criação com assetTag automático. */
   @Transactional
   public Asset createAssetAutoTag(
       AssetType type, String model, Organization organization, Unit unit) {
@@ -114,7 +157,6 @@ public class AssetService {
   public void retireAsset(Long id) {
 
     Asset asset = findById(id);
-
     statusService.retire(asset);
   }
 
@@ -133,7 +175,6 @@ public class AssetService {
     Long previousUserId = asset.getAssignedUser() != null ? asset.getAssignedUser().getId() : null;
 
     statusService.assign(asset, user);
-
     assignmentHistoryService.registerAssignmentChange(asset, previousUserId, userId);
   }
 
@@ -145,7 +186,6 @@ public class AssetService {
     Long previousUserId = asset.getAssignedUser() != null ? asset.getAssignedUser().getId() : null;
 
     statusService.unassign(asset);
-
     assignmentHistoryService.registerAssignmentChange(asset, previousUserId, null);
   }
 }
