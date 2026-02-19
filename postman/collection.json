@@ -112,7 +112,15 @@
         { "name": "Activate User", "request": { "method": "PATCH", "url": "{{baseUrl}}/users/{{id}}/activate" } },
         { "name": "Inactivate User", "request": { "method": "PATCH", "url": "{{baseUrl}}/users/{{id}}/inactivate" } }
       ]
-    }
+    },
 
+    {
+      "name": "Dashboard",
+      "item": [
+        { "name": "Executive Dashboard (ADMIN)", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/executive" } },
+        { "name": "Unit Dashboard (MANAGER)", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/unit" } },
+        { "name": "Personal Dashboard (OPERATOR)", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/personal" } }
+      ]
+    }
   ]
 }
