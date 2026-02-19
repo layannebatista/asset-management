@@ -1,41 +1,432 @@
 openapi: 3.0.3
+
 info:
   title: Enterprise Asset Management API
   version: 1.0.0
+  description: API oficial multi-tenant do sistema Enterprise Asset Management.
 
 servers:
-  - url: http://localhost:8080
+  - url: http://localhost:8080/api/v1
+    description: Development
+  - url: https://api.yourdomain.com/api/v1
+    description: Production
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Assets
+  - name: Asset History
+  - name: Audit
+  - name: Inventory
+  - name: Maintenance
+  - name: Organizations
+  - name: Transfers
+  - name: Units
+  - name: Users
+  - name: User Activation
 
 components:
+
   securitySchemes:
     bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
 
-security:
-  - bearerAuth: []
+  schemas:
+
+    ErrorResponse:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+              code:
+                type: string
+
+  parameters:
+
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+
+    AssetId:
+      name: assetId
+      in: path
+      required: true
+      schema:
+        type: integer
+
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: integer
+
+    OrganizationId:
+      name: organizationId
+      in: path
+      required: true
+      schema:
+        type: integer
 
 paths:
 
-  /auth/login:
-    post:
-      summary: Authenticate user
+  ########################################################
+  # ASSETS
+  ########################################################
 
-  /assets:
+  /assets/{id}:
     get:
-      summary: List assets
-    post:
-      summary: Create asset
+      tags: [Assets]
+      summary: Buscar ativo por ID
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        200: { description: OK }
+        404:
+          description: Não encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
-  /users:
-    get:
-      summary: List users
+  /assets/{organizationId}:
     post:
-      summary: Create user
+      tags: [Assets]
+      summary: Criar ativo manual
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        201: { description: Criado }
 
-  /organizations:
-    get:
-      summary: List organizations
+  /assets/{organizationId}/auto:
     post:
-      summary: Create organization
+      tags: [Assets]
+      summary: Criar ativo automaticamente
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        201: { description: Criado }
+
+  /assets/{id}/retire:
+    patch:
+      tags: [Assets]
+      summary: Aposentar ativo
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        200: { description: Atualizado }
+
+  /assets/{assetId}/assign/{userId}:
+    patch:
+      tags: [Assets]
+      summary: Atribuir ativo a usuário
+      parameters:
+        - $ref: '#/components/parameters/AssetId'
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        200: { description: Atualizado }
+
+  /assets/{assetId}/unassign:
+    patch:
+      tags: [Assets]
+      summary: Remover atribuição
+      parameters:
+        - $ref: '#/components/parameters/AssetId'
+      responses:
+        200: { description: Atualizado }
+
+  ########################################################
+  # ASSET HISTORY
+  ########################################################
+
+  /assets/{assetId}/history/status:
+    get:
+      tags: [Asset History]
+      summary: Histórico de status do ativo
+      parameters:
+        - $ref: '#/components/parameters/AssetId'
+      responses:
+        200: { description: OK }
+
+  /assets/{assetId}/history/assignment:
+    get:
+      tags: [Asset History]
+      summary: Histórico de atribuições do ativo
+      parameters:
+        - $ref: '#/components/parameters/AssetId'
+      responses:
+        200: { description: OK }
+
+  ########################################################
+  # AUDIT
+  ########################################################
+
+  /audit/user/{userId}:
+    get:
+      tags: [Audit]
+      summary: Auditoria por usuário
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        200: { description: OK }
+
+  /audit/type/{type}:
+    get:
+      tags: [Audit]
+      summary: Auditoria por tipo
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200: { description: OK }
+
+  /audit/target:
+    get:
+      tags: [Audit]
+      summary: Auditoria por alvo
+      responses:
+        200: { description: OK }
+
+  /audit/period:
+    get:
+      tags: [Audit]
+      summary: Auditoria por período
+      responses:
+        200: { description: OK }
+
+  /audit/target/last:
+    get:
+      tags: [Audit]
+      summary: Última ação por alvo
+      responses:
+        200: { description: OK }
+
+  ########################################################
+  # INVENTORY
+  ########################################################
+
+  /inventory/{id}:
+    get:
+      tags: [Inventory]
+      summary: Buscar inventário
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        200: { description: OK }
+
+  /inventory/{id}/start:
+    patch:
+      tags: [Inventory]
+      summary: Iniciar inventário
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        200: { description: Atualizado }
+
+  /inventory/{id}/close:
+    patch:
+      tags: [Inventory]
+      summary: Fechar inventário
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        200: { description: Atualizado }
+
+  /inventory/{id}/cancel:
+    patch:
+      tags: [Inventory]
+      summary: Cancelar inventário
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        200: { description: Atualizado }
+
+  ########################################################
+  # MAINTENANCE
+  ########################################################
+
+  /maintenance/{id}/start:
+    post:
+      tags: [Maintenance]
+      summary: Iniciar manutenção
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        200: { description: OK }
+
+  /maintenance/{id}/complete:
+    post:
+      tags: [Maintenance]
+      summary: Concluir manutenção
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        200: { description: OK }
+
+  /maintenance/{id}/cancel:
+    post:
+      tags: [Maintenance]
+      summary: Cancelar manutenção
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        200: { description: OK }
+
+  ########################################################
+  # ORGANIZATIONS
+  ########################################################
+
+  /organizations/{id}:
+    get:
+      tags: [Organizations]
+      summary: Buscar organização
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        200: { description: OK }
+
+  /organizations/{id}/activate:
+    patch:
+      tags: [Organizations]
+      summary: Ativar organização
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        200: { description: Atualizado }
+
+  /organizations/{id}/inactivate:
+    patch:
+      tags: [Organizations]
+      summary: Inativar organização
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        200: { description: Atualizado }
+
+  ########################################################
+  # TRANSFERS
+  ########################################################
+
+  /transfers/{id}/approve:
+    patch:
+      tags: [Transfers]
+      summary: Aprovar transferência
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        200: { description: Atualizado }
+
+  /transfers/{id}/reject:
+    patch:
+      tags: [Transfers]
+      summary: Rejeitar transferência
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        200: { description: Atualizado }
+
+  /transfers/{id}/complete:
+    patch:
+      tags: [Transfers]
+      summary: Completar transferência
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        200: { description: Atualizado }
+
+  ########################################################
+  # UNITS
+  ########################################################
+
+  /units/{organizationId}:
+    post:
+      tags: [Units]
+      summary: Criar unidade
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        201: { description: Criado }
+
+    get:
+      tags: [Units]
+      summary: Listar unidades da organização
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        200: { description: OK }
+
+  /units/unit/{id}:
+    get:
+      tags: [Units]
+      summary: Buscar unidade por ID
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        200: { description: OK }
+
+  /units/{id}/activate:
+    patch:
+      tags: [Units]
+      summary: Ativar unidade
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        200: { description: Atualizado }
+
+  /units/{id}/inactivate:
+    patch:
+      tags: [Units]
+      summary: Inativar unidade
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        200: { description: Atualizado }
+
+  ########################################################
+  # USER ACTIVATION
+  ########################################################
+
+  /users/activation/token/{userId}:
+    post:
+      tags: [User Activation]
+      summary: Gerar token de ativação
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        200: { description: OK }
+
+  /users/activation/activate:
+    post:
+      tags: [User Activation]
+      summary: Ativar usuário via token
+      responses:
+        200: { description: OK }
+
+  ########################################################
+  # USERS
+  ########################################################
+
+  /users/{id}/block:
+    patch:
+      tags: [Users]
+      summary: Bloquear usuário
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        200: { description: Atualizado }
