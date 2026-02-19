@@ -430,3 +430,54 @@ paths:
         - $ref: '#/components/parameters/Id'
       responses:
         200: { description: Atualizado }
+
+  ########################################################
+  # DASHBOARD - EXECUTIVE (ADMIN)
+  ########################################################
+
+  /dashboard/executive:
+    get:
+      tags: [Dashboard]
+      summary: Dashboard executivo (ADMIN)
+      description: Retorna dados consolidados da organização para perfil ADMIN
+      responses:
+        200:
+          description: OK
+        401:
+          description: Não autenticado
+        403:
+          description: Acesso negado
+
+  ########################################################
+  # DASHBOARD - UNIT (MANAGER)
+  ########################################################
+
+  /dashboard/unit:
+    get:
+      tags: [Dashboard]
+      summary: Dashboard da unidade (MANAGER)
+      description: Retorna dados consolidados da unidade do usuário logado
+      responses:
+        200:
+          description: OK
+        401:
+          description: Não autenticado
+        403:
+          description: Acesso negado
+
+  ########################################################
+  # DASHBOARD - PERSONAL (OPERATOR)
+  ########################################################
+
+  /dashboard/personal:
+    get:
+      tags: [Dashboard]
+      summary: Dashboard pessoal (OPERATOR)
+      description: Retorna dados pessoais do operador logado
+      responses:
+        200:
+          description: OK
+        401:
+          description: Não autenticado
+        403:
+          description: Acesso negado
