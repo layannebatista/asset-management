@@ -3,13 +3,13 @@ openapi: 3.0.3
 info:
   title: Enterprise Asset Management API
   version: 1.0.0
-  description: API oficial multi-tenant do sistema Enterprise Asset Management.
+  description: >
+    Enterprise-grade multi-tenant asset lifecycle management API.
+    Designed for backend architecture and automation practice.
 
 servers:
-  - url: http://localhost:8080/api/v1
-    description: Development
-  - url: https://api.yourdomain.com/api/v1
-    description: Production
+  - url: http://localhost:8080
+    description: Local Development
 
 security:
   - bearerAuth: []
@@ -17,7 +17,7 @@ security:
 tags:
   - name: Assets
   - name: Asset History
-  - name: Audit
+  - name: Categories
   - name: Inventory
   - name: Maintenance
   - name: Organizations
@@ -25,6 +25,8 @@ tags:
   - name: Units
   - name: Users
   - name: User Activation
+  - name: Audit
+  - name: Dashboard
 
 components:
 
@@ -36,65 +38,272 @@ components:
 
   schemas:
 
+    ############################################
+    # COMMON
+    ############################################
+
     ErrorResponse:
       type: object
       properties:
-        errors:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+
+    PageResponseAsset:
+      type: object
+      properties:
+        content:
           type: array
           items:
-            type: object
-            properties:
-              field:
-                type: string
-              message:
-                type: string
-              code:
-                type: string
+            $ref: '#/components/schemas/AssetResponse'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
 
-  parameters:
+    ############################################
+    # ENUMS
+    ############################################
 
-    Id:
-      name: id
-      in: path
-      required: true
-      schema:
-        type: integer
+    AssetStatus:
+      type: string
+      enum: [ACTIVE, RETIRED, IN_MAINTENANCE]
 
-    AssetId:
-      name: assetId
-      in: path
-      required: true
-      schema:
-        type: integer
+    AssetType:
+      type: string
+      enum: [EQUIPMENT, VEHICLE, FURNITURE, IT]
 
-    UserId:
-      name: userId
-      in: path
-      required: true
-      schema:
-        type: integer
+    UserRole:
+      type: string
+      enum: [ADMIN, MANAGER, OPERATOR]
 
-    OrganizationId:
-      name: organizationId
-      in: path
-      required: true
-      schema:
-        type: integer
+    ############################################
+    # ASSET
+    ############################################
+
+    AssetCreateRequest:
+      type: object
+      required: [type, model, unitId]
+      properties:
+        assetTag:
+          type: string
+        type:
+          $ref: '#/components/schemas/AssetType'
+        model:
+          type: string
+        unitId:
+          type: integer
+
+    AssetResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        assetTag:
+          type: string
+        type:
+          $ref: '#/components/schemas/AssetType'
+        model:
+          type: string
+        status:
+          $ref: '#/components/schemas/AssetStatus'
+        organizationId:
+          type: integer
+        unitId:
+          type: integer
+        assignedUserId:
+          type: integer
+          nullable: true
+
+    ############################################
+    # CATEGORY
+    ############################################
+
+    CategoryRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+
+    CategoryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        active:
+          type: boolean
+
+    ############################################
+    # INVENTORY
+    ############################################
+
+    InventoryResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        status:
+          type: string
+        unitId:
+          type: integer
+        startedAt:
+          type: string
+          format: date-time
+        closedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    ############################################
+    # TRANSFER
+    ############################################
+
+    TransferCreateRequest:
+      type: object
+      required: [assetId, toUnitId]
+      properties:
+        assetId:
+          type: integer
+        toUnitId:
+          type: integer
+        reason:
+          type: string
+
+    TransferResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        assetId:
+          type: integer
+        fromUnitId:
+          type: integer
+        toUnitId:
+          type: integer
+        status:
+          type: string
+        requestedAt:
+          type: string
+          format: date-time
+
+    ############################################
+    # USER
+    ############################################
+
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          $ref: '#/components/schemas/UserRole'
+        active:
+          type: boolean
+
+    ############################################
+    # ORGANIZATION
+    ############################################
+
+    OrganizationResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        status:
+          type: string
+
+    ############################################
+    # UNIT
+    ############################################
+
+    UnitResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        status:
+          type: string
+        mainUnit:
+          type: boolean
+
+    ############################################
+    # DASHBOARD
+    ############################################
+
+    ExecutiveDashboard:
+      type: object
+      properties:
+        totalAssets:
+          type: integer
+        activeAssets:
+          type: integer
+        maintenanceAssets:
+          type: integer
+        retiredAssets:
+          type: integer
 
 paths:
 
-  ########################################################
+  ############################################
   # ASSETS
-  ########################################################
+  ############################################
+
+  /assets:
+    get:
+      tags: [Assets]
+      summary: Listar ativos (com filtros e paginação)
+      responses:
+        200:
+          description: Lista paginada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageResponseAsset'
 
   /assets/{id}:
     get:
       tags: [Assets]
       summary: Buscar ativo por ID
       parameters:
-        - $ref: '#/components/parameters/Id'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
       responses:
-        200: { description: OK }
+        200:
+          description: Ativo encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetResponse'
         404:
           description: Não encontrado
           content:
@@ -102,382 +311,55 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /assets/{organizationId}:
+  ############################################
+  # CATEGORIES
+  ############################################
+
+  /categories:
     post:
-      tags: [Assets]
-      summary: Criar ativo manual
-      parameters:
-        - $ref: '#/components/parameters/OrganizationId'
+      tags: [Categories]
+      summary: Criar categoria
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
       responses:
-        201: { description: Criado }
-
-  /assets/{organizationId}/auto:
-    post:
-      tags: [Assets]
-      summary: Criar ativo automaticamente
-      parameters:
-        - $ref: '#/components/parameters/OrganizationId'
-      responses:
-        201: { description: Criado }
-
-  /assets/{id}/retire:
-    patch:
-      tags: [Assets]
-      summary: Aposentar ativo
-      parameters:
-        - $ref: '#/components/parameters/Id'
-      responses:
-        200: { description: Atualizado }
-
-  /assets/{assetId}/assign/{userId}:
-    patch:
-      tags: [Assets]
-      summary: Atribuir ativo a usuário
-      parameters:
-        - $ref: '#/components/parameters/AssetId'
-        - $ref: '#/components/parameters/UserId'
-      responses:
-        200: { description: Atualizado }
-
-  /assets/{assetId}/unassign:
-    patch:
-      tags: [Assets]
-      summary: Remover atribuição
-      parameters:
-        - $ref: '#/components/parameters/AssetId'
-      responses:
-        200: { description: Atualizado }
-
-  ########################################################
-  # ASSET HISTORY
-  ########################################################
-
-  /assets/{assetId}/history/status:
-    get:
-      tags: [Asset History]
-      summary: Histórico de status do ativo
-      parameters:
-        - $ref: '#/components/parameters/AssetId'
-      responses:
-        200: { description: OK }
-
-  /assets/{assetId}/history/assignment:
-    get:
-      tags: [Asset History]
-      summary: Histórico de atribuições do ativo
-      parameters:
-        - $ref: '#/components/parameters/AssetId'
-      responses:
-        200: { description: OK }
-
-  ########################################################
-  # AUDIT
-  ########################################################
-
-  /audit/user/{userId}:
-    get:
-      tags: [Audit]
-      summary: Auditoria por usuário
-      parameters:
-        - $ref: '#/components/parameters/UserId'
-      responses:
-        200: { description: OK }
-
-  /audit/type/{type}:
-    get:
-      tags: [Audit]
-      summary: Auditoria por tipo
-      parameters:
-        - name: type
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        200: { description: OK }
-
-  /audit/target:
-    get:
-      tags: [Audit]
-      summary: Auditoria por alvo
-      responses:
-        200: { description: OK }
-
-  /audit/period:
-    get:
-      tags: [Audit]
-      summary: Auditoria por período
-      responses:
-        200: { description: OK }
-
-  /audit/target/last:
-    get:
-      tags: [Audit]
-      summary: Última ação por alvo
-      responses:
-        200: { description: OK }
-
-  ########################################################
-  # INVENTORY
-  ########################################################
-
-  /inventory/{id}:
-    get:
-      tags: [Inventory]
-      summary: Buscar inventário
-      parameters:
-        - $ref: '#/components/parameters/Id'
-      responses:
-        200: { description: OK }
-
-  /inventory/{id}/start:
-    patch:
-      tags: [Inventory]
-      summary: Iniciar inventário
-      parameters:
-        - $ref: '#/components/parameters/Id'
-      responses:
-        200: { description: Atualizado }
-
-  /inventory/{id}/close:
-    patch:
-      tags: [Inventory]
-      summary: Fechar inventário
-      parameters:
-        - $ref: '#/components/parameters/Id'
-      responses:
-        200: { description: Atualizado }
-
-  /inventory/{id}/cancel:
-    patch:
-      tags: [Inventory]
-      summary: Cancelar inventário
-      parameters:
-        - $ref: '#/components/parameters/Id'
-      responses:
-        200: { description: Atualizado }
-
-  ########################################################
-  # MAINTENANCE
-  ########################################################
-
-  /maintenance/{id}/start:
-    post:
-      tags: [Maintenance]
-      summary: Iniciar manutenção
-      parameters:
-        - $ref: '#/components/parameters/Id'
-      responses:
-        200: { description: OK }
-
-  /maintenance/{id}/complete:
-    post:
-      tags: [Maintenance]
-      summary: Concluir manutenção
-      parameters:
-        - $ref: '#/components/parameters/Id'
-      responses:
-        200: { description: OK }
-
-  /maintenance/{id}/cancel:
-    post:
-      tags: [Maintenance]
-      summary: Cancelar manutenção
-      parameters:
-        - $ref: '#/components/parameters/Id'
-      responses:
-        200: { description: OK }
-
-  ########################################################
-  # ORGANIZATIONS
-  ########################################################
-
-  /organizations/{id}:
-    get:
-      tags: [Organizations]
-      summary: Buscar organização
-      parameters:
-        - $ref: '#/components/parameters/Id'
-      responses:
-        200: { description: OK }
-
-  /organizations/{id}/activate:
-    patch:
-      tags: [Organizations]
-      summary: Ativar organização
-      parameters:
-        - $ref: '#/components/parameters/Id'
-      responses:
-        200: { description: Atualizado }
-
-  /organizations/{id}/inactivate:
-    patch:
-      tags: [Organizations]
-      summary: Inativar organização
-      parameters:
-        - $ref: '#/components/parameters/Id'
-      responses:
-        200: { description: Atualizado }
-
-  ########################################################
-  # TRANSFERS
-  ########################################################
-
-  /transfers/{id}/approve:
-    patch:
-      tags: [Transfers]
-      summary: Aprovar transferência
-      parameters:
-        - $ref: '#/components/parameters/Id'
-      responses:
-        200: { description: Atualizado }
-
-  /transfers/{id}/reject:
-    patch:
-      tags: [Transfers]
-      summary: Rejeitar transferência
-      parameters:
-        - $ref: '#/components/parameters/Id'
-      responses:
-        200: { description: Atualizado }
-
-  /transfers/{id}/complete:
-    patch:
-      tags: [Transfers]
-      summary: Completar transferência
-      parameters:
-        - $ref: '#/components/parameters/Id'
-      responses:
-        200: { description: Atualizado }
-
-  ########################################################
-  # UNITS
-  ########################################################
-
-  /units/{organizationId}:
-    post:
-      tags: [Units]
-      summary: Criar unidade
-      parameters:
-        - $ref: '#/components/parameters/OrganizationId'
-      responses:
-        201: { description: Criado }
+        201:
+          description: Criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryResponse'
 
     get:
-      tags: [Units]
-      summary: Listar unidades da organização
-      parameters:
-        - $ref: '#/components/parameters/OrganizationId'
+      tags: [Categories]
+      summary: Listar categorias
       responses:
-        200: { description: OK }
+        200:
+          description: Lista
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CategoryResponse'
 
-  /units/unit/{id}:
-    get:
-      tags: [Units]
-      summary: Buscar unidade por ID
-      parameters:
-        - $ref: '#/components/parameters/Id'
-      responses:
-        200: { description: OK }
+  ############################################
+  # DASHBOARD
+  ############################################
 
-  /units/{id}/activate:
-    patch:
-      tags: [Units]
-      summary: Ativar unidade
-      parameters:
-        - $ref: '#/components/parameters/Id'
-      responses:
-        200: { description: Atualizado }
-
-  /units/{id}/inactivate:
-    patch:
-      tags: [Units]
-      summary: Inativar unidade
-      parameters:
-        - $ref: '#/components/parameters/Id'
-      responses:
-        200: { description: Atualizado }
-
-  ########################################################
-  # USER ACTIVATION
-  ########################################################
-
-  /users/activation/token/{userId}:
-    post:
-      tags: [User Activation]
-      summary: Gerar token de ativação
-      parameters:
-        - $ref: '#/components/parameters/UserId'
-      responses:
-        200: { description: OK }
-
-  /users/activation/activate:
-    post:
-      tags: [User Activation]
-      summary: Ativar usuário via token
-      responses:
-        200: { description: OK }
-
-  ########################################################
-  # USERS
-  ########################################################
-
-  /users/{id}/block:
-    patch:
-      tags: [Users]
-      summary: Bloquear usuário
-      parameters:
-        - $ref: '#/components/parameters/Id'
-      responses:
-        200: { description: Atualizado }
-
-  ########################################################
-  # DASHBOARD - EXECUTIVE (ADMIN)
-  ########################################################
-
-  /dashboard/executive:
+  /api/dashboard/executive:
     get:
       tags: [Dashboard]
       summary: Dashboard executivo (ADMIN)
-      description: Retorna dados consolidados da organização para perfil ADMIN
       responses:
         200:
-          description: OK
-        401:
-          description: Não autenticado
-        403:
-          description: Acesso negado
-
-  ########################################################
-  # DASHBOARD - UNIT (MANAGER)
-  ########################################################
-
-  /dashboard/unit:
-    get:
-      tags: [Dashboard]
-      summary: Dashboard da unidade (MANAGER)
-      description: Retorna dados consolidados da unidade do usuário logado
-      responses:
-        200:
-          description: OK
-        401:
-          description: Não autenticado
-        403:
-          description: Acesso negado
-
-  ########################################################
-  # DASHBOARD - PERSONAL (OPERATOR)
-  ########################################################
-
-  /dashboard/personal:
-    get:
-      tags: [Dashboard]
-      summary: Dashboard pessoal (OPERATOR)
-      description: Retorna dados pessoais do operador logado
-      responses:
-        200:
-          description: OK
-        401:
-          description: Não autenticado
+          description: Dados consolidados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecutiveDashboard'
         403:
           description: Acesso negado
