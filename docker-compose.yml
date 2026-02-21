@@ -19,7 +19,7 @@ services:
 
 
   asset-management:
-    build: .
+    build: ./backend
     container_name: asset-management-api
 
     ports:
