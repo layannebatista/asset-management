@@ -147,7 +147,7 @@ asset-management/
 │   ├── src/
 │   ├── pom.xml
 │
-├── patrimonio-frontend/
+├── frontend/
 │
 ├── docker-compose.yml
 ├── docs/
