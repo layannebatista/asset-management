@@ -8,7 +8,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@ActiveProfiles("test") // <-- ESTA LINHA RESOLVE SEU ERRO
+@ActiveProfiles("test") 
 class AssetIntegrationTest {
 
   @LocalServerPort private int port;
