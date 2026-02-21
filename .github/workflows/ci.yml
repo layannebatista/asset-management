@@ -22,25 +22,30 @@ jobs:
           cache: maven
 
       - name: Build and test with Maven
+        working-directory: backend
         run: mvn clean verify
 
       - name: Run Spotless
+        working-directory: backend
         run: mvn spotless:check
 
       - name: Run PMD
+        working-directory: backend
         run: mvn pmd:check
 
       - name: Run OWASP Dependency Check
+        working-directory: backend
         run: mvn dependency-check:check
 
       - name: Run JaCoCo Coverage
+        working-directory: backend
         run: mvn verify
 
       - name: Upload JaCoCo report
         uses: actions/upload-artifact@v4
         with:
           name: jacoco-report
-          path: target/site/jacoco/
+          path: backend/target/site/jacoco/
 
       - name: Build Docker image
-        run: docker build -t asset-management:ci .
+        run: docker build -t asset-management:ci ./backend
