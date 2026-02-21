@@ -224,6 +224,7 @@ Validar:
 - Regras de negócio
 - Cenários negativos
 
+NO FUTURO
 ### 2️⃣ Automação de UI (Cypress)
 
 Testes de comportamento do frontend.
