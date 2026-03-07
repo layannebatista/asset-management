@@ -14,7 +14,6 @@ import com.portfolio.assetmanagement.domain.user.enums.UserStatus;
 import com.portfolio.assetmanagement.shared.pagination.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.stream.Collectors;
