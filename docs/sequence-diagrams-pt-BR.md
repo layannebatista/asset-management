@@ -1,9 +1,3 @@
-# Diagramas de Sequência
-
-Gerado em: 2026-02-18 02:33:33.738327
-
----
-
 # 1. Visão Geral
 
 Este documento descreve os fluxos de sequência das principais operações no Sistema de Gestão de Ativos Enterprise.

@@ -1,59 +1,24 @@
 package com.portfolio.assetmanagement.shared.exception;
 
-import com.portfolio.assetmanagement.shared.constants.ErrorCodes;
 import java.util.List;
 
 /**
- * Exceção usada quando um recurso não é encontrado.
+ * B1: Agora estende NotFoundException. Mantida para retrocompatibilidade.
  *
- * <p>Exemplos: - Asset não encontrado - Usuário não encontrado - Organização não encontrada -
- * Unidade não encontrada
+ * @deprecated Use {@link NotFoundException} diretamente.
  */
-public class ResourceNotFoundException extends RuntimeException {
+@Deprecated(since = "1.1", forRemoval = true)
+public class ResourceNotFoundException extends NotFoundException {
 
-  private final String errorCode;
-
-  private final List<String> details;
-
-  /** Construtor padrão com mensagem. */
   public ResourceNotFoundException(String message) {
-
     super(message);
-
-    this.errorCode = ErrorCodes.RESOURCE_NOT_FOUND;
-
-    this.details = null;
   }
 
-  /** Construtor com código personalizado. */
   public ResourceNotFoundException(String errorCode, String message) {
-
-    super(message);
-
-    this.errorCode = errorCode;
-
-    this.details = null;
+    super(errorCode, message);
   }
 
-  /** Construtor com código e detalhes adicionais. */
   public ResourceNotFoundException(String errorCode, String message, List<String> details) {
-
-    super(message);
-
-    this.errorCode = errorCode;
-
-    this.details = details;
-  }
-
-  /** Retorna código do erro. */
-  public String getErrorCode() {
-
-    return errorCode;
-  }
-
-  /** Retorna detalhes adicionais. */
-  public List<String> getDetails() {
-
-    return details;
+    super(errorCode, message, details);
   }
 }

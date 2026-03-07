@@ -8,6 +8,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Serviço responsável pelo controle de SLA de manutenção.
@@ -36,7 +37,14 @@ public class SLAService {
     this.repository = repository;
   }
 
-  /** Retorna manutenções que violaram SLA. */
+  /**
+   * Retorna manutenções que violaram SLA.
+   *
+   * <p>D4: adicionado @Transactional(readOnly = true) — MaintenanceRecord tem lazy relation com
+   * asset; sem sessão JPA ativa, isSlaViolated() que chama getCreatedAt() pode disparar
+   * LazyInitializationException ao iterar o stream fora de contexto transacional.
+   */
+  @Transactional(readOnly = true)
   public List<MaintenanceRecord> findSlaViolations() {
 
     OffsetDateTime now = OffsetDateTime.now();
@@ -72,7 +80,13 @@ public class SLAService {
     return calculateMaintenanceDuration(record).compareTo(DEFAULT_SLA) > 0;
   }
 
-  /** Retorna duração média das manutenções concluídas. */
+  /**
+   * Retorna duração média das manutenções concluídas.
+   *
+   * <p>D4: adicionado @Transactional(readOnly = true) — mesma razão de findSlaViolations: stream
+   * sobre MaintenanceRecord com lazy relations precisa de sessão JPA aberta.
+   */
+  @Transactional(readOnly = true)
   public Duration calculateAverageResolutionTime(Long organizationId) {
 
     List<MaintenanceRecord> completed =

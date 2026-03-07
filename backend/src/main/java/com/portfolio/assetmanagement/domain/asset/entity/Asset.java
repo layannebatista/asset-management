@@ -2,10 +2,13 @@ package com.portfolio.assetmanagement.domain.asset.entity;
 
 import com.portfolio.assetmanagement.domain.asset.enums.AssetStatus;
 import com.portfolio.assetmanagement.domain.asset.enums.AssetType;
+import com.portfolio.assetmanagement.domain.depreciation.enums.DepreciationMethod;
 import com.portfolio.assetmanagement.domain.organization.entity.Organization;
 import com.portfolio.assetmanagement.domain.unit.entity.Unit;
 import com.portfolio.assetmanagement.domain.user.entity.User;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "assets")
@@ -144,7 +147,6 @@ public class Asset {
 
   /** Remove atribuição. */
   public void unassignUser() {
-
     this.assignedUser = null;
     this.status = AssetStatus.AVAILABLE;
   }
@@ -160,14 +162,145 @@ public class Asset {
     this.status = AssetStatus.IN_TRANSFER;
   }
 
+  /**
+   * Completa transferência de unidade de forma atômica.
+   *
+   * <p>Atualiza unidade e status em uma única operação, eliminando o estado intermediário
+   * IN_TRANSFER inconsistente.
+   */
+  public void completeTransfer(Unit newUnit) {
+
+    if (newUnit == null) {
+      throw new IllegalArgumentException("unit é obrigatório");
+    }
+
+    this.unit = newUnit;
+    this.status = AssetStatus.AVAILABLE;
+  }
+
   /** Aposenta ativo. */
   public void retire() {
 
     if (this.status == AssetStatus.RETIRED) {
-      return;
+      throw new IllegalArgumentException("Ativo já está aposentado");
     }
 
     this.assignedUser = null;
     this.status = AssetStatus.RETIRED;
+  }
+
+  @Column(name = "purchase_date")
+  private LocalDate purchaseDate;
+
+  @Column(name = "invoice_number", length = 100)
+  private String invoiceNumber;
+
+  @Column(name = "invoice_date")
+  private LocalDate invoiceDate;
+
+  @Column(length = 255)
+  private String supplier;
+
+  @Column(name = "warranty_expiry")
+  private LocalDate warrantyExpiry;
+
+  // ─── Depreciação (Financeiro) ────────────────────────────────
+
+  @Column(name = "purchase_value", precision = 15, scale = 2)
+  private BigDecimal purchaseValue;
+
+  @Column(name = "residual_value", precision = 15, scale = 2)
+  private BigDecimal residualValue;
+
+  @Column(name = "useful_life_months")
+  private Integer usefulLifeMonths;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "depreciation_method", length = 30)
+  private DepreciationMethod depreciationMethod;
+
+  // ─── Centro de Custo ────────────────────────────────────────
+
+  @Column(name = "cost_center_id")
+  private Long costCenterId;
+
+  public LocalDate getPurchaseDate() {
+    return purchaseDate;
+  }
+
+  public void setPurchaseDate(LocalDate v) {
+    this.purchaseDate = v;
+  }
+
+  public String getInvoiceNumber() {
+    return invoiceNumber;
+  }
+
+  public void setInvoiceNumber(String v) {
+    this.invoiceNumber = v;
+  }
+
+  public LocalDate getInvoiceDate() {
+    return invoiceDate;
+  }
+
+  public void setInvoiceDate(LocalDate v) {
+    this.invoiceDate = v;
+  }
+
+  public String getSupplier() {
+    return supplier;
+  }
+
+  public void setSupplier(String v) {
+    this.supplier = v;
+  }
+
+  public LocalDate getWarrantyExpiry() {
+    return warrantyExpiry;
+  }
+
+  public void setWarrantyExpiry(LocalDate v) {
+    this.warrantyExpiry = v;
+  }
+
+  public BigDecimal getPurchaseValue() {
+    return purchaseValue;
+  }
+
+  public void setPurchaseValue(BigDecimal v) {
+    this.purchaseValue = v;
+  }
+
+  public BigDecimal getResidualValue() {
+    return residualValue;
+  }
+
+  public void setResidualValue(BigDecimal v) {
+    this.residualValue = v;
+  }
+
+  public Integer getUsefulLifeMonths() {
+    return usefulLifeMonths;
+  }
+
+  public void setUsefulLifeMonths(Integer v) {
+    this.usefulLifeMonths = v;
+  }
+
+  public DepreciationMethod getDepreciationMethod() {
+    return depreciationMethod;
+  }
+
+  public void setDepreciationMethod(DepreciationMethod v) {
+    this.depreciationMethod = v;
+  }
+
+  public Long getCostCenterId() {
+    return costCenterId;
+  }
+
+  public void setCostCenterId(Long v) {
+    this.costCenterId = v;
   }
 }

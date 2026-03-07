@@ -1,0 +1,1 @@
+{"uuid":"7e3e8b7d-9c6d-4c93-8826-2449d3900c8f","name":"deve lançar BusinessException quando purchaseValue não está configurado","children":["21eb9cff-dabd-4328-adf3-e51957012e74"],"befores":[],"afters":[],"start":1772850061687,"stop":1772850064483}

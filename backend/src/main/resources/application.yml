@@ -2,22 +2,19 @@ server:
   port: 8080
 
 spring:
-
   application:
     name: asset-management
 
   datasource:
-    url: jdbc:postgresql://localhost:5433/asset_management
-    username: asset_user
-    password: asset123
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
     show-sql: false
-
     hibernate:
       ddl-auto: validate
-
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
@@ -30,18 +27,51 @@ spring:
     validate-on-migrate: true
     baseline-version: 0
 
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
 management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health
 
 security:
   jwt:
-    secret: 12345678901234567890123456789012345678901234567890
-    expiration: 86400000
+    secret: ${JWT_SECRET}
+    expiration: ${JWT_EXPIRATION:3600000}          # 1 hora (access token)
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800}  # 7 dias em segundos (refresh token)
+
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  mail:
+    from: ${MAIL_FROM:noreply@patrimonio360.com.br}
+    from-name: ${MAIL_FROM_NAME:Patrimônio 360}
+  frontend:
+    url: ${FRONTEND_URL:http://localhost:5173}
+  mfa:
+    expiration-seconds: ${MFA_EXPIRATION_SECONDS:300}
+    code-length: 6
 
 logging:
   level:
     org.hibernate.SQL: off
     org.hibernate.type.descriptor.sql.BasicBinder: off
+
+springdoc:
+  api-docs:
+    enabled: true

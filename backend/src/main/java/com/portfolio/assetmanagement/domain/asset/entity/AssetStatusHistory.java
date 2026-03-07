@@ -2,7 +2,7 @@ package com.portfolio.assetmanagement.domain.asset.entity;
 
 import com.portfolio.assetmanagement.domain.asset.enums.AssetStatus;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "asset_status_history")
@@ -24,7 +24,7 @@ public class AssetStatusHistory {
   private AssetStatus newStatus;
 
   @Column(nullable = false)
-  private LocalDateTime changedAt;
+  private OffsetDateTime changedAt;
 
   @Column(nullable = false)
   private Long changedByUserId;
@@ -38,7 +38,11 @@ public class AssetStatusHistory {
     this.previousStatus = previousStatus;
     this.newStatus = newStatus;
     this.changedByUserId = changedByUserId;
-    this.changedAt = LocalDateTime.now();
+    this.changedAt = OffsetDateTime.now();
+  }
+
+  public Long getId() {
+    return id;
   }
 
   public Long getAssetId() {
@@ -53,7 +57,7 @@ public class AssetStatusHistory {
     return newStatus;
   }
 
-  public LocalDateTime getChangedAt() {
+  public OffsetDateTime getChangedAt() {
     return changedAt;
   }
 

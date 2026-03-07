@@ -1,9 +1,3 @@
-# Guia de Deploy
-
-Gerado em: 2026-02-18 02:27:47.030946
-
----
-
 # 1. Visão Geral
 
 Este documento descreve como realizar o deploy do Sistema de Gestão de Ativos Enterprise nos ambientes de desenvolvimento, homologação (staging) e produção.

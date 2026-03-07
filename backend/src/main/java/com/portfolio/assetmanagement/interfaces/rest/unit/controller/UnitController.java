@@ -3,6 +3,7 @@ package com.portfolio.assetmanagement.interfaces.rest.unit.controller;
 import com.portfolio.assetmanagement.application.organization.service.OrganizationService;
 import com.portfolio.assetmanagement.application.unit.dto.UnitCreateDTO;
 import com.portfolio.assetmanagement.application.unit.dto.UnitResponseDTO;
+import com.portfolio.assetmanagement.application.unit.mapper.UnitMapper;
 import com.portfolio.assetmanagement.application.unit.service.UnitService;
 import com.portfolio.assetmanagement.domain.organization.entity.Organization;
 import com.portfolio.assetmanagement.domain.unit.entity.Unit;
@@ -12,6 +13,8 @@ import io.swagger.v3.oas.annotations.responses.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,10 +27,14 @@ public class UnitController {
 
   private final UnitService unitService;
   private final OrganizationService organizationService;
+  private final UnitMapper unitMapper;
 
-  public UnitController(UnitService unitService, OrganizationService organizationService) {
+  public UnitController(
+      UnitService unitService, OrganizationService organizationService, UnitMapper unitMapper) {
+
     this.unitService = unitService;
     this.organizationService = organizationService;
+    this.unitMapper = unitMapper;
   }
 
   /* ============================================================
@@ -43,16 +50,16 @@ public class UnitController {
           Regras:
           - A organização deve existir
           - A unidade será vinculada ao tenant informado
-          - Acesso: ADMIN ou MANAGER
+          - Acesso: ADMIN ou GESTOR
           """)
   @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Unidade criada com sucesso"),
+    @ApiResponse(responseCode = "201", description = "Unidade criada com sucesso"),
     @ApiResponse(responseCode = "404", description = "Organização não encontrada"),
     @ApiResponse(responseCode = "403", description = "Acesso negado")
   })
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR')")
   @PostMapping("/{organizationId}")
-  public UnitResponseDTO create(
+  public ResponseEntity<UnitResponseDTO> create(
       @Parameter(description = "ID da organização", example = "1") @PathVariable
           Long organizationId,
       @RequestBody @Valid UnitCreateDTO dto) {
@@ -61,7 +68,7 @@ public class UnitController {
 
     Unit unit = unitService.createUnit(dto.getName(), organization);
 
-    return toResponse(unit);
+    return ResponseEntity.status(HttpStatus.CREATED).body(unitMapper.toResponseDTO(unit));
   }
 
   /* ============================================================
@@ -76,7 +83,7 @@ public class UnitController {
 
           Multi-tenant safe.
           """)
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR')")
   @GetMapping("/{organizationId}")
   public List<UnitResponseDTO> listByOrganization(
       @Parameter(description = "ID da organização", example = "1") @PathVariable
@@ -84,7 +91,9 @@ public class UnitController {
 
     Organization organization = organizationService.findById(organizationId);
 
-    return unitService.findByOrganization(organization).stream().map(this::toResponse).toList();
+    return unitService.findByOrganization(organization).stream()
+        .map(unitMapper::toResponseDTO)
+        .toList();
   }
 
   /* ============================================================
@@ -98,14 +107,12 @@ public class UnitController {
     @ApiResponse(responseCode = "200", description = "Unidade encontrada"),
     @ApiResponse(responseCode = "404", description = "Unidade não encontrada")
   })
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR')")
   @GetMapping("/unit/{id}")
   public UnitResponseDTO findById(
       @Parameter(description = "ID da unidade", example = "10") @PathVariable Long id) {
 
-    Unit unit = unitService.findById(id);
-
-    return toResponse(unit);
+    return unitMapper.toResponseDTO(unitService.findById(id));
   }
 
   /* ============================================================
@@ -120,7 +127,7 @@ public class UnitController {
 
           Unidades ativas podem receber ativos e participar de transferências.
           """)
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR')")
   @PatchMapping("/{id}/activate")
   public void activate(
       @Parameter(description = "ID da unidade", example = "10") @PathVariable Long id) {
@@ -140,20 +147,11 @@ public class UnitController {
 
           Unidades inativas não devem receber novos ativos.
           """)
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR')")
   @PatchMapping("/{id}/inactivate")
   public void inactivate(
       @Parameter(description = "ID da unidade", example = "10") @PathVariable Long id) {
 
     unitService.inactivateUnit(id);
-  }
-
-  /* ============================================================
-   *  MAPPER
-   * ============================================================ */
-
-  private UnitResponseDTO toResponse(Unit unit) {
-
-    return new UnitResponseDTO(unit.getId(), unit.getName(), unit.getStatus(), unit.isMainUnit());
   }
 }

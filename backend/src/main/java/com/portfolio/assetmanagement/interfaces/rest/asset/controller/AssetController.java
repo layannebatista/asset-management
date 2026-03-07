@@ -1,11 +1,12 @@
 package com.portfolio.assetmanagement.interfaces.rest.asset.controller;
 
+import com.portfolio.assetmanagement.application.asset.dto.AssetAutoCreateDTO;
 import com.portfolio.assetmanagement.application.asset.dto.AssetCreateDTO;
 import com.portfolio.assetmanagement.application.asset.dto.AssetResponseDTO;
+import com.portfolio.assetmanagement.application.asset.mapper.AssetMapper;
 import com.portfolio.assetmanagement.application.asset.service.AssetService;
 import com.portfolio.assetmanagement.application.organization.service.OrganizationService;
 import com.portfolio.assetmanagement.application.unit.service.UnitService;
-import com.portfolio.assetmanagement.domain.asset.entity.Asset;
 import com.portfolio.assetmanagement.domain.asset.enums.AssetStatus;
 import com.portfolio.assetmanagement.domain.asset.enums.AssetType;
 import com.portfolio.assetmanagement.domain.organization.entity.Organization;
@@ -18,6 +19,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,13 +34,18 @@ public class AssetController {
   private final AssetService assetService;
   private final OrganizationService organizationService;
   private final UnitService unitService;
+  private final AssetMapper assetMapper;
 
   public AssetController(
-      AssetService assetService, OrganizationService organizationService, UnitService unitService) {
+      AssetService assetService,
+      OrganizationService organizationService,
+      UnitService unitService,
+      AssetMapper assetMapper) {
 
     this.assetService = assetService;
     this.organizationService = organizationService;
     this.unitService = unitService;
+    this.assetMapper = assetMapper;
   }
 
   /* ============================================================
@@ -65,13 +73,14 @@ public class AssetController {
     @ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão")
   })
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER','OPERATOR')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR', 'OPERADOR')")
   @GetMapping
   public PageResponse<AssetResponseDTO> list(
       @Parameter(description = "Status do ativo", example = "AVAILABLE")
           @RequestParam(required = false)
           AssetStatus status,
-      @Parameter(description = "Tipo do ativo", example = "LAPTOP") @RequestParam(required = false)
+      @Parameter(description = "Tipo do ativo", example = "NOTEBOOK")
+          @RequestParam(required = false)
           AssetType type,
       @Parameter(description = "ID da unidade organizacional", example = "1")
           @RequestParam(required = false)
@@ -102,12 +111,12 @@ public class AssetController {
     @ApiResponse(responseCode = "401", description = "Não autenticado"),
     @ApiResponse(responseCode = "403", description = "Sem permissão")
   })
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER','OPERATOR')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR', 'OPERADOR')")
   @GetMapping("/{id}")
   public AssetResponseDTO findById(
       @Parameter(description = "ID do ativo", example = "1") @PathVariable Long id) {
 
-    return map(assetService.findById(id));
+    return assetMapper.toResponseDTO(assetService.findById(id));
   }
 
   /* ============================================================
@@ -118,13 +127,13 @@ public class AssetController {
       summary = "Criar ativo manualmente",
       description = "Cria um ativo informando explicitamente o assetTag.")
   @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Ativo criado com sucesso"),
+    @ApiResponse(responseCode = "201", description = "Ativo criado com sucesso"),
     @ApiResponse(responseCode = "400", description = "Dados inválidos"),
     @ApiResponse(responseCode = "409", description = "AssetTag já existente")
   })
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR')")
   @PostMapping("/{organizationId}")
-  public AssetResponseDTO create(
+  public ResponseEntity<AssetResponseDTO> create(
       @Parameter(description = "ID da organização", example = "1") @PathVariable
           Long organizationId,
       @RequestBody @Valid AssetCreateDTO dto) {
@@ -132,11 +141,12 @@ public class AssetController {
     Organization organization = organizationService.findById(organizationId);
     Unit unit = unitService.findById(dto.getUnitId());
 
-    Asset asset =
-        assetService.createAsset(
-            dto.getAssetTag(), dto.getType(), dto.getModel(), organization, unit);
+    AssetResponseDTO response =
+        assetMapper.toResponseDTO(
+            assetService.createAsset(
+                dto.getAssetTag(), dto.getType(), dto.getModel(), organization, unit));
 
-    return map(asset);
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
   /* ============================================================
@@ -146,18 +156,23 @@ public class AssetController {
   @Operation(
       summary = "Criar ativo com assetTag automático",
       description = "Gera automaticamente o assetTag baseado na regra de negócio.")
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @ApiResponses({
+    @ApiResponse(responseCode = "201", description = "Ativo criado com sucesso"),
+    @ApiResponse(responseCode = "400", description = "Dados inválidos")
+  })
+  @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR')")
   @PostMapping("/{organizationId}/auto")
-  public AssetResponseDTO createAutoTag(
-      @PathVariable Long organizationId, @RequestBody @Valid AssetCreateDTO dto) {
+  public ResponseEntity<AssetResponseDTO> createAutoTag(
+      @PathVariable Long organizationId, @RequestBody @Valid AssetAutoCreateDTO dto) {
 
     Organization organization = organizationService.findById(organizationId);
     Unit unit = unitService.findById(dto.getUnitId());
 
-    Asset asset =
-        assetService.createAssetAutoTag(dto.getType(), dto.getModel(), organization, unit);
+    AssetResponseDTO response =
+        assetMapper.toResponseDTO(
+            assetService.createAssetAutoTag(dto.getType(), dto.getModel(), organization, unit));
 
-    return map(asset);
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
   /* ============================================================
@@ -180,10 +195,9 @@ public class AssetController {
   @Operation(
       summary = "Atribuir ativo a usuário",
       description = "Altera o status para ASSIGNED e vincula o usuário ao ativo.")
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR')")
   @PatchMapping("/{assetId}/assign/{userId}")
   public void assign(@PathVariable Long assetId, @PathVariable Long userId) {
-
     assetService.assignAsset(assetId, userId);
   }
 
@@ -194,25 +208,9 @@ public class AssetController {
   @Operation(
       summary = "Remover atribuição de usuário",
       description = "Remove o usuário vinculado e retorna o ativo para AVAILABLE.")
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR')")
   @PatchMapping("/{assetId}/unassign")
   public void unassign(@PathVariable Long assetId) {
     assetService.unassignAsset(assetId);
-  }
-
-  /* ============================================================
-   *  MAPPER
-   * ============================================================ */
-
-  private AssetResponseDTO map(Asset asset) {
-    return new AssetResponseDTO(
-        asset.getId(),
-        asset.getAssetTag(),
-        asset.getType(),
-        asset.getModel(),
-        asset.getStatus(),
-        asset.getOrganization().getId(),
-        asset.getUnit().getId(),
-        asset.getAssignedUser() != null ? asset.getAssignedUser().getId() : null);
   }
 }

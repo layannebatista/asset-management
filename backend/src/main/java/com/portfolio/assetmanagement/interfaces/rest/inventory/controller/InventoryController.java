@@ -24,134 +24,66 @@ public class InventoryController {
     this.service = service;
   }
 
-  /* ============================================================
-   *  CRIAR INVENTÁRIO
-   * ============================================================ */
-
-  @Operation(
-      summary = "Criar nova sessão de inventário",
-      description =
-          """
-          Cria uma nova sessão de inventário vinculada a uma unidade organizacional.
-
-          A sessão inicia no status CREATED.
-          Requer perfil ADMIN ou MANAGER.
-          """)
+  @Operation(summary = "Criar nova sessão de inventário")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Inventário criado com sucesso"),
     @ApiResponse(responseCode = "400", description = "Dados inválidos"),
     @ApiResponse(responseCode = "401", description = "Não autenticado"),
     @ApiResponse(responseCode = "403", description = "Sem permissão")
   })
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
   @PostMapping
   public InventoryResponseDTO create(@RequestBody @Valid InventoryCreateDTO dto) {
-
-    if (dto.getUnitId() == null) {
-      throw new IllegalArgumentException("unitId é obrigatório");
-    }
-
+    // M7: removido if (dto.getUnitId() == null) — InventoryCreateDTO já tem @NotNull
+    // no campo unitId, e @Valid acima garante a validação antes de chegar aqui.
     return service.create(dto.getUnitId());
   }
 
-  /* ============================================================
-   *  BUSCAR POR ID
-   * ============================================================ */
-
-  @Operation(
-      summary = "Buscar sessão de inventário por ID",
-      description = "Retorna detalhes completos da sessão de inventário.")
+  @Operation(summary = "Buscar sessão de inventário por ID")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Inventário encontrado"),
     @ApiResponse(responseCode = "404", description = "Inventário não encontrado")
   })
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER','OPERATOR')")
+  @PreAuthorize("hasAnyRole('ADMIN','GESTOR','OPERADOR')")
   @GetMapping("/{id}")
   public InventoryResponseDTO findById(
       @Parameter(description = "ID da sessão de inventário", example = "1") @PathVariable @NotNull
           Long id) {
-
     return service.findById(id);
   }
 
-  /* ============================================================
-   *  LISTAR INVENTÁRIOS
-   * ============================================================ */
-
-  @Operation(
-      summary = "Listar sessões de inventário",
-      description =
-          """
-          Lista todas as sessões de inventário da organização atual.
-          Multi-tenant safe.
-          """)
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER','OPERATOR')")
+  @Operation(summary = "Listar sessões de inventário")
+  @PreAuthorize("hasAnyRole('ADMIN','GESTOR','OPERADOR')")
   @GetMapping
   public List<InventoryResponseDTO> list() {
     return service.list();
   }
 
-  /* ============================================================
-   *  INICIAR INVENTÁRIO
-   * ============================================================ */
-
-  @Operation(
-      summary = "Iniciar sessão de inventário",
-      description =
-          """
-          Move o inventário para o status IN_PROGRESS.
-
-          Só pode ser iniciado se estiver no status CREATED.
-          """)
+  @Operation(summary = "Iniciar sessão de inventário")
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Inventário iniciado com sucesso"),
     @ApiResponse(responseCode = "409", description = "Transição de status inválida")
   })
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
   @PatchMapping("/{id}/start")
   public void start(
       @Parameter(description = "ID da sessão", example = "1") @PathVariable @NotNull Long id) {
-
     service.start(id);
   }
 
-  /* ============================================================
-   *  FECHAR INVENTÁRIO
-   * ============================================================ */
-
-  @Operation(
-      summary = "Fechar sessão de inventário",
-      description =
-          """
-          Finaliza a sessão de inventário.
-
-          Só pode ser fechado se estiver no status IN_PROGRESS.
-          """)
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @Operation(summary = "Fechar sessão de inventário")
+  @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
   @PatchMapping("/{id}/close")
   public void close(
       @Parameter(description = "ID da sessão", example = "1") @PathVariable @NotNull Long id) {
-
     service.close(id);
   }
 
-  /* ============================================================
-   *  CANCELAR INVENTÁRIO
-   * ============================================================ */
-
-  @Operation(
-      summary = "Cancelar sessão de inventário",
-      description =
-          """
-          Cancela a sessão de inventário.
-
-          Não pode ser cancelado se já estiver fechado.
-          """)
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @Operation(summary = "Cancelar sessão de inventário")
+  @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
   @PatchMapping("/{id}/cancel")
   public void cancel(
       @Parameter(description = "ID da sessão", example = "1") @PathVariable @NotNull Long id) {
-
     service.cancel(id);
   }
 }

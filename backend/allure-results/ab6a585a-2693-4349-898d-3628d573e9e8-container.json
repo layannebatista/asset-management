@@ -1,0 +1,1 @@
+{"uuid":"ab6a585a-2693-4349-898d-3628d573e9e8","name":"deve lançar IllegalArgumentException quando resolution é blank","children":["3302b4a3-7eb4-4022-baac-7c99d0408a6a"],"befores":[],"afters":[],"start":1772838945239,"stop":1772838945252}

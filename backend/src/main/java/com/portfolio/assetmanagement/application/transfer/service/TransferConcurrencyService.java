@@ -1,56 +1,54 @@
 package com.portfolio.assetmanagement.application.transfer.service;
 
-import com.portfolio.assetmanagement.shared.exception.BusinessException;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantLock;
+import com.portfolio.assetmanagement.domain.asset.entity.Asset;
+import com.portfolio.assetmanagement.infrastructure.persistence.asset.repository.AssetRepository;
+import com.portfolio.assetmanagement.shared.exception.NotFoundException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Serviço responsável por proteger operações de transferência contra concorrência.
  *
- * <p>Garante que apenas uma transferência por asset seja processada por vez.
+ * <p>Utiliza lock pessimista no banco de dados (PESSIMISTIC_WRITE), garantindo proteção em
+ * ambientes com múltiplas instâncias (Kubernetes, load balancer).
  *
- * <p>Protege contra:
- *
- * <p>- race conditions - double transfer request - corrupção de estado do asset
+ * <p>A abordagem anterior com ConcurrentHashMap + ReentrantLock era local à JVM e completamente
+ * ineficaz em deployments horizontalmente escalados.
  */
 @Service
 public class TransferConcurrencyService {
 
-  /** Lock por assetId. */
-  private final Map<Long, ReentrantLock> locks = new ConcurrentHashMap<>();
+  private final AssetRepository assetRepository;
 
-  /** Executa operação com lock exclusivo por asset. */
+  @PersistenceContext private EntityManager entityManager;
+
+  public TransferConcurrencyService(AssetRepository assetRepository) {
+    this.assetRepository = assetRepository;
+  }
+
+  /**
+   * Executa operação com lock pessimista no banco para o asset.
+   *
+   * <p>O lock PESSIMISTIC_WRITE bloqueia o registro no banco até o fim da transação, serializando
+   * operações concorrentes em qualquer número de instâncias da aplicação.
+   */
+  @Transactional
   public void executeWithAssetLock(Long assetId, Runnable operation) {
 
     if (assetId == null) {
-
       throw new IllegalArgumentException("assetId é obrigatório");
     }
 
-    ReentrantLock lock = locks.computeIfAbsent(assetId, id -> new ReentrantLock());
+    Asset asset =
+        assetRepository
+            .findById(assetId)
+            .orElseThrow(() -> new NotFoundException("Ativo não encontrado"));
 
-    boolean acquired = lock.tryLock();
+    entityManager.lock(asset, LockModeType.PESSIMISTIC_WRITE);
 
-    if (!acquired) {
-
-      throw new BusinessException("Transferência já está sendo processada para este ativo");
-    }
-
-    try {
-
-      operation.run();
-
-    } finally {
-
-      lock.unlock();
-
-      /** Remove lock se não houver threads esperando. */
-      if (!lock.hasQueuedThreads()) {
-
-        locks.remove(assetId);
-      }
-    }
+    operation.run();
   }
 }

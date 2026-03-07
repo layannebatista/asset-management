@@ -5,30 +5,34 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface AssetRepository
     extends JpaRepository<Asset, Long>, JpaSpecificationExecutor<Asset> {
 
-  /** Busca asset por assetTag. */
   Optional<Asset> findByAssetTag(String assetTag);
 
-  /** Verifica existência por assetTag. */
   boolean existsByAssetTag(String assetTag);
 
-  /** Lista assets por organization. */
   List<Asset> findByOrganization_Id(Long organizationId);
 
-  /** Lista assets por unit. */
   List<Asset> findByUnit_Id(Long unitId);
 
-  /** Lista assets por user atribuído. */
   List<Asset> findByAssignedUser_Id(Long userId);
 
-  /** Verifica existência por id e organization. */
   boolean existsByIdAndOrganization_Id(Long id, Long organizationId);
 
-  /** Busca asset por id e organization. */
   Optional<Asset> findByIdAndOrganization_Id(Long id, Long organizationId);
+
+  /**
+   * Lista ativos com campos de depreciação preenchidos. Usado pelo DepreciationService para cálculo
+   * de portfólio.
+   */
+  @Query(
+      "SELECT a FROM Asset a WHERE a.organization.id = :orgId "
+          + "AND a.purchaseValue IS NOT NULL AND a.usefulLifeMonths IS NOT NULL")
+  List<Asset> findByOrganizationIdWithDepreciation(@Param("orgId") Long organizationId);
 }

@@ -1,0 +1,1 @@
+{"uuid":"118a0c7d-7821-44e3-b3e1-a3a203dbdc9b","name":"isActive() deve ser false para COMPLETED e CANCELLED","children":["e37631af-0cac-48cc-8379-383bbe5a5d7c"],"befores":[],"afters":[],"start":1772850472526,"stop":1772850472540}

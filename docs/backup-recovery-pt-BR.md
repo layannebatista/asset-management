@@ -1,9 +1,3 @@
-# Backup e Recuperação
-
-Gerado em: 2026-02-18 02:20:24.237699
-
----
-
 # 1. Visão Geral
 
 Este documento define a estratégia de backup e recuperação para o Sistema de Gestão de Ativos Enterprise.

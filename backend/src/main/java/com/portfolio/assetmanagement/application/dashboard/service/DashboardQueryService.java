@@ -3,6 +3,7 @@ package com.portfolio.assetmanagement.application.dashboard.service;
 import com.portfolio.assetmanagement.application.dashboard.dto.DashboardData;
 import com.portfolio.assetmanagement.infrastructure.persistence.dashboard.repository.DashboardQueryRepository;
 import com.portfolio.assetmanagement.security.context.LoggedUserContext;
+import com.portfolio.assetmanagement.shared.exception.BusinessException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -13,72 +14,57 @@ public class DashboardQueryService {
 
   public DashboardQueryService(
       DashboardQueryRepository repository, LoggedUserContext loggedUserContext) {
-
     this.repository = repository;
     this.loggedUserContext = loggedUserContext;
   }
 
   public DashboardData loadDashboardData() {
-
-    if (loggedUserContext.isAdmin()) {
-      return loadAdmin();
-    }
-
-    if (loggedUserContext.isManager()) {
-      return loadManager();
-    }
-
+    if (loggedUserContext.isAdmin()) return loadAdmin();
+    if (loggedUserContext.isManager()) return loadManager();
     return loadOperator();
   }
 
   private DashboardData loadAdmin() {
-
     Long orgId = loggedUserContext.getOrganizationId();
-
     DashboardData data = new DashboardData();
-
     data.setTotalAssets(repository.countAssetsByOrganization(orgId));
     data.setAssetsByStatus(repository.countAssetsByStatus(orgId));
     data.setAssetsByUnit(repository.countAssetsByUnit(orgId));
     data.setAssetsByType(repository.countAssetsByType(orgId));
-
     data.setTotalMaintenance(repository.countMaintenanceByOrganization(orgId));
     data.setMaintenanceByStatus(repository.countMaintenanceByStatus(orgId));
-
+    data.setMaintenanceByMonth(repository.countMaintenanceByMonth(orgId));
     data.setTransferByStatus(repository.countTransferByStatus(orgId));
-
-    data.setTotalUsers(repository.countUsersByUnit(orgId));
+    data.setTransferByMonth(repository.countTransferByMonth(orgId));
+    data.setTotalUsers(repository.countUsersByOrganization(orgId));
     data.setUsersByStatus(repository.countUsersByStatus(orgId));
-
+    data.setUsersByRole(repository.countUsersByRole(orgId));
     return data;
   }
 
+  /**
+   * M8: getUnitId() pode retornar null se o usuário não tiver unidade associada. Sem o null-check,
+   * propagava NPE silencioso nas queries do repositório.
+   */
   private DashboardData loadManager() {
-
     Long unitId = loggedUserContext.getUnitId();
+    if (unitId == null)
+      throw new BusinessException("Usuário não possui unidade associada. Contate o administrador.");
 
     DashboardData data = new DashboardData();
-
     data.setTotalAssets(repository.countAssetsByUnitScope(unitId));
     data.setAssetsByStatus(repository.countAssetsByStatusUnit(unitId));
-
     data.setTotalMaintenance(repository.countMaintenanceByUnit(unitId));
     data.setMaintenanceByStatus(repository.countMaintenanceByStatusUnit(unitId));
-
     data.setTotalUsers(repository.countUsersByUnit(unitId));
-
     return data;
   }
 
   private DashboardData loadOperator() {
-
     Long userId = loggedUserContext.getUserId();
-
     DashboardData data = new DashboardData();
-
     data.setTotalAssets(repository.countAssetsByUser(userId));
     data.setTotalMaintenance(repository.countMaintenanceByUser(userId));
-
     return data;
   }
 }

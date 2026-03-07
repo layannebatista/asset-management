@@ -4,6 +4,7 @@ import com.portfolio.assetmanagement.domain.asset.entity.Asset;
 import com.portfolio.assetmanagement.domain.maintenance.enums.MaintenanceStatus;
 import com.portfolio.assetmanagement.shared.exception.BusinessException;
 import jakarta.persistence.*;
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Entity
@@ -203,7 +204,7 @@ public class MaintenanceRecord {
     startedAt = OffsetDateTime.now();
   }
 
-  public void complete(Long userId, String resolution) {
+  public void complete(Long userId, String resolution, BigDecimal actualCost) {
 
     if (status != MaintenanceStatus.IN_PROGRESS) {
 
@@ -224,6 +225,7 @@ public class MaintenanceRecord {
     completedByUserId = userId;
     completedAt = OffsetDateTime.now();
     this.resolution = resolution;
+    this.actualCost = actualCost;
   }
 
   public void cancel() {
@@ -247,5 +249,42 @@ public class MaintenanceRecord {
 
       throw new BusinessException("Manutenção não pertence à organization");
     }
+  }
+
+  // ─── Custo de manutenção ────────────────────────────────────
+
+  @Column(name = "estimated_cost", precision = 15, scale = 2)
+  private BigDecimal estimatedCost;
+
+  @Column(name = "actual_cost", precision = 15, scale = 2)
+  private BigDecimal actualCost;
+
+  @Column(name = "cost_center_id")
+  private Long costCenterId;
+
+  // ─── Getters e Setters ──────────────────────────────────────
+
+  public BigDecimal getEstimatedCost() {
+    return estimatedCost;
+  }
+
+  public void setEstimatedCost(BigDecimal v) {
+    this.estimatedCost = v;
+  }
+
+  public BigDecimal getActualCost() {
+    return actualCost;
+  }
+
+  public void setActualCost(BigDecimal v) {
+    this.actualCost = v;
+  }
+
+  public Long getCostCenterId() {
+    return costCenterId;
+  }
+
+  public void setCostCenterId(Long v) {
+    this.costCenterId = v;
   }
 }

@@ -3,46 +3,100 @@ package com.portfolio.assetmanagement.security.dto;
 import com.portfolio.assetmanagement.security.enums.UserRole;
 
 /**
- * DTO responsável por representar a resposta de um login bem-sucedido.
+ * DTO de resposta do login — inclui access token, refresh token e suporte a MFA.
  *
- * <p>Expõe apenas as informações necessárias para identificação do usuário autenticado e controle
- * de acesso no cliente.
+ * <p>Cenários:
+ *
+ * <ul>
+ *   <li><b>Login direto</b>: {@code accessToken} + {@code refreshToken} preenchidos
+ *   <li><b>MFA challenge</b>: {@code mfaRequired=true} + {@code userId}, tokens nulos
+ *   <li><b>Refresh</b>: {@code accessToken} + {@code refreshToken} preenchidos, {@code role} nulo
+ * </ul>
  */
 public class LoginResponseDTO {
 
   private String accessToken;
+  private String refreshToken;
   private String tokenType;
   private UserRole role;
+  private boolean mfaRequired;
+  private Long userId;
 
   public LoginResponseDTO() {}
 
-  public LoginResponseDTO(String accessToken, String tokenType, UserRole role) {
+  /** Login completo sem MFA. */
+  public LoginResponseDTO(
+      String accessToken, String refreshToken, String tokenType, UserRole role) {
     this.accessToken = accessToken;
+    this.refreshToken = refreshToken;
     this.tokenType = tokenType;
     this.role = role;
+    this.mfaRequired = false;
+  }
+
+  /** Challenge MFA — tokens não emitidos ainda. */
+  public static LoginResponseDTO mfaChallenge(Long userId) {
+    LoginResponseDTO dto = new LoginResponseDTO();
+    dto.mfaRequired = true;
+    dto.userId = userId;
+    return dto;
+  }
+
+  /** Resposta de refresh — role não é retornada (cliente já sabe). */
+  public static LoginResponseDTO refreshed(String accessToken, String refreshToken) {
+    LoginResponseDTO dto = new LoginResponseDTO();
+    dto.accessToken = accessToken;
+    dto.refreshToken = refreshToken;
+    dto.tokenType = "Bearer";
+    dto.mfaRequired = false;
+    return dto;
   }
 
   public String getAccessToken() {
     return accessToken;
   }
 
-  public void setAccessToken(String accessToken) {
-    this.accessToken = accessToken;
+  public String getRefreshToken() {
+    return refreshToken;
   }
 
   public String getTokenType() {
     return tokenType;
   }
 
-  public void setTokenType(String tokenType) {
-    this.tokenType = tokenType;
-  }
-
   public UserRole getRole() {
     return role;
   }
 
-  public void setRole(UserRole role) {
-    this.role = role;
+  public boolean isMfaRequired() {
+    return mfaRequired;
+  }
+
+  public Long getUserId() {
+    return userId;
+  }
+
+  public void setAccessToken(String v) {
+    this.accessToken = v;
+  }
+
+  public void setRefreshToken(String v) {
+    this.refreshToken = v;
+  }
+
+  public void setTokenType(String v) {
+    this.tokenType = v;
+  }
+
+  public void setRole(UserRole v) {
+    this.role = v;
+  }
+
+  public void setMfaRequired(boolean v) {
+    this.mfaRequired = v;
+  }
+
+  public void setUserId(Long v) {
+    this.userId = v;
   }
 }

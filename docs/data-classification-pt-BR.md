@@ -1,9 +1,3 @@
-# Classificação de Dados
-
-Gerado em: 2026-02-18 02:23:54.247066
-
----
-
 # 1. Visão Geral
 
 Este documento define a política de classificação de dados para o Sistema de Gestão de Ativos Enterprise.

@@ -1,5 +1,9 @@
 package com.portfolio.assetmanagement.application.maintenance.dto;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 /**
  * DTO usado para criação de um registro de manutenção.
  *
@@ -7,8 +11,11 @@ package com.portfolio.assetmanagement.application.maintenance.dto;
  */
 public class MaintenanceCreateDTO {
 
+  @NotNull(message = "assetId é obrigatório")
   private Long assetId;
 
+  @NotBlank(message = "Descrição é obrigatória")
+  @Size(min = 10, max = 1000, message = "Descrição deve ter entre 10 e 1000 caracteres")
   private String description;
 
   public MaintenanceCreateDTO() {}
