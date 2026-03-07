@@ -1,6 +1,7 @@
 package com.portfolio.assetmanagement.application.user.service;
 
 import com.portfolio.assetmanagement.application.audit.service.AuditService;
+import com.portfolio.assetmanagement.application.whatsapp.service.WhatsAppService;
 import com.portfolio.assetmanagement.domain.audit.enums.AuditEventType;
 import com.portfolio.assetmanagement.domain.organization.entity.Organization;
 import com.portfolio.assetmanagement.domain.unit.entity.Unit;
@@ -18,15 +19,18 @@ public class UserService {
   private final UserRepository userRepository;
   private final AuditService auditService;
   private final UserValidationService userValidationService;
+  private final WhatsAppService whatsAppService;
 
   public UserService(
       UserRepository userRepository,
       AuditService auditService,
-      UserValidationService userValidationService) {
+      UserValidationService userValidationService,
+      WhatsAppService whatsAppService) {
 
     this.userRepository = userRepository;
     this.auditService = auditService;
     this.userValidationService = userValidationService;
+    this.whatsAppService = whatsAppService;
   }
 
   /** Cria novo usuário. */
@@ -38,15 +42,18 @@ public class UserService {
       UserRole role,
       Organization organization,
       Unit unit,
-      String documentNumber) {
+      String documentNumber,
+      String phoneNumber) {
 
     userValidationService.validateEmail(email);
-
     userValidationService.validateEmailUniqueness(email);
-
     userValidationService.validateOrganizationUnitIntegrity(organization, unit);
 
     User user = new User(name, email, passwordHash, role, organization, unit, documentNumber);
+
+    if (phoneNumber != null && !phoneNumber.isBlank()) {
+      user.updatePhoneNumber(phoneNumber);
+    }
 
     User saved = userRepository.save(user);
 
@@ -61,15 +68,13 @@ public class UserService {
     return saved;
   }
 
-  /** Busca usuário por ID. */
+  @Transactional(readOnly = true)
   public User findById(Long id) {
-
     return userValidationService.requireExisting(id);
   }
 
-  /** Busca usuário por email. */
+  @Transactional(readOnly = true)
   public User findByEmail(String email) {
-
     return userValidationService.requireExistingByEmail(email);
   }
 
@@ -78,7 +83,6 @@ public class UserService {
   public void acceptLgpd(Long userId) {
 
     User user = userValidationService.requireExisting(userId);
-
     user.acceptLgpd();
 
     auditService.registerEvent(
@@ -97,7 +101,6 @@ public class UserService {
     User user = userValidationService.requireExisting(userId);
 
     if (user.getStatus() == UserStatus.ACTIVE) {
-
       throw new BusinessException("Usuário já está ativo");
     }
 
@@ -112,14 +115,13 @@ public class UserService {
         "User activated");
   }
 
-  /** Bloqueia usuário. */
+  /** Bloqueia usuário e envia notificação via WhatsApp se tiver telefone cadastrado. */
   @Transactional
   public void blockUser(Long userId) {
 
     User user = userValidationService.requireExisting(userId);
 
     if (user.getStatus() == UserStatus.BLOCKED) {
-
       throw new BusinessException("Usuário já está bloqueado");
     }
 
@@ -132,6 +134,11 @@ public class UserService {
         user.getUnit().getId(),
         user.getId(),
         "User blocked");
+
+    // Notificação WhatsApp — assíncrona, não reverte a transação
+    if (user.getPhoneNumber() != null && !user.getPhoneNumber().isBlank()) {
+      whatsAppService.sendUserBlocked(user.getPhoneNumber(), user.getName());
+    }
   }
 
   /** Inativa usuário. */
@@ -141,7 +148,6 @@ public class UserService {
     User user = userValidationService.requireExisting(userId);
 
     if (user.getStatus() == UserStatus.INACTIVE) {
-
       throw new BusinessException("Usuário já está inativo");
     }
 

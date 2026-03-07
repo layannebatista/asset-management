@@ -23,23 +23,17 @@ public class UnitService {
     this.auditService = auditService;
   }
 
-  /** Cria unidade principal automaticamente. Usado pelo OrganizationService. */
   @Transactional
   public Unit createMainUnit(Organization organization) {
-
     validateOrganization(organization);
-
     unitRepository
         .findByOrganizationAndMainUnitTrue(organization)
         .ifPresent(
-            existing -> {
+            e -> {
               throw new BusinessException("A organização já possui uma unidade principal");
             });
-
     Unit mainUnit = new Unit("Unidade Principal", organization, true);
-
     Unit saved = unitRepository.save(mainUnit);
-
     auditService.registerEvent(
         AuditEventType.UNIT_CREATED,
         null,
@@ -47,22 +41,15 @@ public class UnitService {
         saved.getId(),
         saved.getId(),
         "Main unit created");
-
     return saved;
   }
 
-  /** Cria nova unidade. */
   @Transactional
   public Unit createUnit(String name, Organization organization) {
-
     validateOrganization(organization);
-
     validateUnitName(name);
-
     Unit unit = new Unit(name, organization, false);
-
     Unit saved = unitRepository.save(unit);
-
     auditService.registerEvent(
         AuditEventType.UNIT_CREATED,
         null,
@@ -70,49 +57,42 @@ public class UnitService {
         saved.getId(),
         saved.getId(),
         "Unit created");
-
     return saved;
   }
 
-  /** Lista unidades por organização. */
+  // D2: adicionado @Transactional(readOnly = true) — Unit tem lazy relation com organization;
+  // sem sessão ativa o acesso a organization em validações fora deste método lança
+  // LazyInitializationException.
+  @Transactional(readOnly = true)
   public List<Unit> findByOrganization(Organization organization) {
-
     validateOrganization(organization);
-
     return unitRepository.findByOrganization(organization);
   }
 
-  /** Busca unidade por id. */
+  // D2: mesmo motivo — findById é chamado por muitos outros services e controllers;
+  // garantir sessão aberta evita erros em qualquer acesso lazy subsequente.
+  @Transactional(readOnly = true)
   public Unit findById(Long id) {
-
-    if (id == null) {
-
-      throw new IllegalArgumentException("unitId não pode ser null");
-    }
-
+    if (id == null) throw new IllegalArgumentException("unitId não pode ser null");
     return unitRepository
         .findById(id)
         .orElseThrow(() -> new NotFoundException("Unidade não encontrada"));
   }
 
-  /** Inativa unidade. */
+  /**
+   * B6: A versão anterior chamava unit.setStatus() sem unitRepository.save(), confiando em JPA
+   * dirty checking — padrão inconsistente com OrganizationService que chama save() explicitamente.
+   * Adicionado save() explícito.
+   */
   @Transactional
   public void inactivateUnit(Long id) {
-
     Unit unit = findById(id);
-
-    if (unit.getStatus() == UnitStatus.INACTIVE) {
-
+    if (unit.getStatus() == UnitStatus.INACTIVE)
       throw new BusinessException("Unidade já está inativa");
-    }
-
-    if (unit.isMainUnit()) {
-
+    if (unit.isMainUnit())
       throw new BusinessException("Não é permitido inativar a unidade principal");
-    }
-
     unit.setStatus(UnitStatus.INACTIVE);
-
+    unitRepository.save(unit); // B6
     auditService.registerEvent(
         AuditEventType.UNIT_INACTIVATED,
         null,
@@ -122,19 +102,12 @@ public class UnitService {
         "Unit inactivated");
   }
 
-  /** Ativa unidade. */
   @Transactional
   public void activateUnit(Long id) {
-
     Unit unit = findById(id);
-
-    if (unit.getStatus() == UnitStatus.ACTIVE) {
-
-      throw new BusinessException("Unidade já está ativa");
-    }
-
+    if (unit.getStatus() == UnitStatus.ACTIVE) throw new BusinessException("Unidade já está ativa");
     unit.setStatus(UnitStatus.ACTIVE);
-
+    unitRepository.save(unit); // B6
     auditService.registerEvent(
         AuditEventType.UNIT_ACTIVATED,
         null,
@@ -144,26 +117,15 @@ public class UnitService {
         "Unit activated");
   }
 
-  /** Valida organização obrigatória. */
   private void validateOrganization(Organization organization) {
-
-    if (organization == null || organization.getId() == null) {
-
+    if (organization == null || organization.getId() == null)
       throw new IllegalArgumentException("organization é obrigatório");
-    }
   }
 
-  /** Valida nome da unidade. */
   private void validateUnitName(String name) {
-
-    if (name == null || name.isBlank()) {
-
+    if (name == null || name.isBlank())
       throw new BusinessException("Nome da unidade é obrigatório");
-    }
-
-    if (name.length() > 255) {
-
+    if (name.length() > 255)
       throw new BusinessException("Nome da unidade não pode exceder 255 caracteres");
-    }
   }
 }

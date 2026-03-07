@@ -1,9 +1,3 @@
-# Arquitetura de Segurança
-
-Gerado em: 2026-02-18 02:31:23.627554
-
----
-
 # 1. Visão Geral
 
 Este documento define a arquitetura de segurança do Sistema de Gestão de Ativos Enterprise.

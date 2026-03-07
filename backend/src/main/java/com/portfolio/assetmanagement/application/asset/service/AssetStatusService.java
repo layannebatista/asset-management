@@ -7,25 +7,30 @@ import com.portfolio.assetmanagement.domain.user.entity.User;
 import com.portfolio.assetmanagement.shared.exception.BusinessException;
 import org.springframework.stereotype.Service;
 
-/** Serviço responsável por controlar transições de status do Asset. */
 @Service
 public class AssetStatusService {
+
+  private final AssetStatusHistoryService historyService;
+
+  public AssetStatusService(AssetStatusHistoryService historyService) {
+    this.historyService = historyService;
+  }
 
   public void assign(Asset asset, User user) {
 
     requireAsset(asset);
 
     if (asset.getStatus() == AssetStatus.RETIRED) {
-
       throw new BusinessException("Ativo aposentado não pode ser atribuído");
     }
 
     if (asset.getAssignedUser() != null) {
-
       throw new BusinessException("Ativo já está atribuído");
     }
 
+    AssetStatus previous = asset.getStatus();
     asset.assignToUser(user);
+    historyService.registerStatusChange(asset, previous, AssetStatus.ASSIGNED);
   }
 
   public void unassign(Asset asset) {
@@ -33,29 +38,29 @@ public class AssetStatusService {
     requireAsset(asset);
 
     if (asset.getAssignedUser() == null) {
-
       throw new BusinessException("Ativo não está atribuído");
     }
 
+    AssetStatus previous = asset.getStatus();
     asset.unassignUser();
+    historyService.registerStatusChange(asset, previous, AssetStatus.AVAILABLE);
   }
 
-  /** Transferência de unidade. */
   public void transfer(Asset asset, Unit targetUnit) {
 
     requireAsset(asset);
 
     if (asset.getStatus() == AssetStatus.RETIRED) {
-
       throw new BusinessException("Ativo aposentado não pode ser transferido");
     }
 
     if (asset.getAssignedUser() != null) {
-
       asset.unassignUser();
     }
 
-    asset.changeUnit(targetUnit);
+    AssetStatus previous = asset.getStatus();
+    asset.completeTransfer(targetUnit);
+    historyService.registerStatusChange(asset, previous, AssetStatus.AVAILABLE);
   }
 
   public void retire(Asset asset) {
@@ -63,28 +68,27 @@ public class AssetStatusService {
     requireAsset(asset);
 
     if (asset.getStatus() == AssetStatus.RETIRED) {
-
       throw new BusinessException("Ativo já está aposentado");
     }
 
+    AssetStatus previous = asset.getStatus();
     asset.retire();
+    historyService.registerStatusChange(asset, previous, AssetStatus.RETIRED);
   }
 
-  /** Marca como disponível (via unassign seguro). */
   public void markAvailable(Asset asset) {
 
     requireAsset(asset);
 
     if (asset.getAssignedUser() != null) {
-
+      AssetStatus previous = asset.getStatus();
       asset.unassignUser();
+      historyService.registerStatusChange(asset, previous, AssetStatus.AVAILABLE);
     }
   }
 
   private void requireAsset(Asset asset) {
-
     if (asset == null) {
-
       throw new IllegalArgumentException("asset é obrigatório");
     }
   }

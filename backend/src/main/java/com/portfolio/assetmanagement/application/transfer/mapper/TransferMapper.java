@@ -18,12 +18,16 @@ public class TransferMapper {
       return null;
     }
 
+    // D1: adicionados requestedAt, approvedAt, completedAt
     return new TransferResponseDTO(
         transfer.getId(),
         transfer.getAsset().getId(),
         transfer.getFromUnit().getId(),
         transfer.getToUnit().getId(),
         transfer.getStatus(),
-        transfer.getReason());
+        transfer.getReason(),
+        transfer.getRequestedAt(), // D1
+        transfer.getApprovedAt(), // D1
+        transfer.getCompletedAt()); // D1
   }
 }

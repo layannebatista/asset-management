@@ -1,0 +1,1 @@
+{"uuid":"fc53aad4-96c7-4374-afef-07fba8d2c4aa","name":"deve lançar IllegalArgumentException quando userId é null","children":["2c59944a-a48e-44c1-8f73-b8d0e9877e3a"],"befores":[],"afters":[],"start":1772851055454,"stop":1772851055472}

@@ -2,15 +2,26 @@ package com.portfolio.assetmanagement.interfaces.rest.user.controller;
 
 import com.portfolio.assetmanagement.application.organization.service.OrganizationService;
 import com.portfolio.assetmanagement.application.unit.service.UnitService;
+import com.portfolio.assetmanagement.application.user.dto.UserCreateDTO;
+import com.portfolio.assetmanagement.application.user.dto.UserResponseDTO;
+import com.portfolio.assetmanagement.application.user.mapper.UserMapper;
+import com.portfolio.assetmanagement.application.user.service.UserQueryService;
 import com.portfolio.assetmanagement.application.user.service.UserService;
 import com.portfolio.assetmanagement.domain.organization.entity.Organization;
 import com.portfolio.assetmanagement.domain.unit.entity.Unit;
 import com.portfolio.assetmanagement.domain.user.entity.User;
-import com.portfolio.assetmanagement.security.enums.UserRole;
+import com.portfolio.assetmanagement.domain.user.enums.UserStatus;
+import com.portfolio.assetmanagement.shared.pagination.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import java.util.stream.Collectors;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,126 +31,94 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
   private final UserService userService;
+  private final UserQueryService userQueryService;
   private final OrganizationService organizationService;
   private final UnitService unitService;
+  private final UserMapper userMapper;
 
   public UserController(
-      UserService userService, OrganizationService organizationService, UnitService unitService) {
-
+      UserService userService,
+      UserQueryService userQueryService,
+      OrganizationService organizationService,
+      UnitService unitService,
+      UserMapper userMapper) {
     this.userService = userService;
+    this.userQueryService = userQueryService;
     this.organizationService = organizationService;
     this.unitService = unitService;
+    this.userMapper = userMapper;
   }
 
-  /* ============================================================
-   *  CRIAR USUÁRIO
-   * ============================================================ */
-
   @Operation(
-      summary = "Criar novo usuário",
+      summary = "Listar usuários",
       description =
           """
-          Cria um novo usuário no sistema.
+      Lista usuários da organização com filtros opcionais e paginação.
+      Filtros: status, unitId, includeInactive.
+      Ordenação padrão: name ASC.
+      """)
+  @GetMapping
+  @PreAuthorize("hasRole('ADMIN')")
+  public PageResponse<UserResponseDTO> list(
+      @Parameter(description = "Filtrar por status") @RequestParam(required = false)
+          UserStatus status,
+      @Parameter(description = "Filtrar por unidade") @RequestParam(required = false) Long unitId,
+      @Parameter(description = "Incluir usuários inativos (padrão: false)")
+          @RequestParam(defaultValue = "false")
+          boolean includeInactive,
+      @ParameterObject Pageable pageable) {
 
-          Regras:
-          - Apenas ADMIN pode executar
-          - Usuário deve estar vinculado a uma organização válida
-          - Usuário deve estar vinculado a uma unidade válida
-          - Define o papel (ADMIN, MANAGER, OPERATOR)
+    Page<User> page = userQueryService.list(status, unitId, includeInactive, pageable);
 
-          Multi-tenant safe.
-          """)
-  @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Usuário criado com sucesso"),
-    @ApiResponse(responseCode = "400", description = "Dados inválidos"),
-    @ApiResponse(responseCode = "404", description = "Organização ou unidade não encontrada"),
-    @ApiResponse(responseCode = "403", description = "Acesso negado")
-  })
+    return PageResponse.from(
+        page,
+        page.getContent().stream().map(userMapper::toResponseDTO).collect(Collectors.toList()));
+  }
+
+  @Operation(summary = "Criar novo usuário")
   @PreAuthorize("hasRole('ADMIN')")
   @PostMapping
-  public User createUser(
-      @Parameter(description = "Nome do usuário", example = "Maria Silva") @RequestParam
-          String name,
-      @Parameter(description = "Email do usuário", example = "maria@empresa.com") @RequestParam
-          String email,
-      @Parameter(description = "Senha inicial", example = "Password@123") @RequestParam
-          String password,
-      @Parameter(description = "Perfil do usuário", example = "MANAGER") @RequestParam
-          UserRole role,
-      @Parameter(description = "ID da organização", example = "1") @RequestParam
-          Long organizationId,
-      @Parameter(description = "ID da unidade", example = "10") @RequestParam Long unitId,
-      @Parameter(description = "Documento (CPF/CNPJ)", example = "12345678900") @RequestParam
-          String documentNumber) {
-
-    Organization organization = organizationService.findById(organizationId);
-    Unit unit = unitService.findById(unitId);
-
-    return userService.createUser(name, email, password, role, organization, unit, documentNumber);
+  public ResponseEntity<UserResponseDTO> createUser(@RequestBody @Valid UserCreateDTO dto) {
+    Organization organization = organizationService.findById(dto.getOrganizationId());
+    Unit unit = unitService.findById(dto.getUnitId());
+    User user =
+        userService.createUser(
+            dto.getName(),
+            dto.getEmail(),
+            null,
+            dto.getRole(),
+            organization,
+            unit,
+            dto.getDocumentNumber(),
+            dto.getPhoneNumber());
+    return ResponseEntity.status(HttpStatus.CREATED).body(userMapper.toResponseDTO(user));
   }
 
-  /* ============================================================
-   *  BUSCAR USUÁRIO
-   * ============================================================ */
-
-  @Operation(
-      summary = "Buscar usuário por ID",
-      description = "Retorna os dados completos do usuário.")
-  @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
-    @ApiResponse(responseCode = "404", description = "Usuário não encontrado")
-  })
+  @Operation(summary = "Buscar usuário por ID")
   @PreAuthorize("hasRole('ADMIN')")
   @GetMapping("/{id}")
-  public User findById(
-      @Parameter(description = "ID do usuário", example = "5") @PathVariable Long id) {
-
-    return userService.findById(id);
+  public UserResponseDTO findById(@PathVariable Long id) {
+    return userMapper.toResponseDTO(userService.findById(id));
   }
 
-  /* ============================================================
-   *  BLOQUEAR USUÁRIO
-   * ============================================================ */
-
-  @Operation(
-      summary = "Bloquear usuário",
-      description =
-          """
-          Bloqueia o usuário.
-
-          Usuário bloqueado não consegue autenticar.
-          """)
+  @Operation(summary = "Bloquear usuário")
   @PreAuthorize("hasRole('ADMIN')")
   @PatchMapping("/{id}/block")
-  public void blockUser(
-      @Parameter(description = "ID do usuário", example = "5") @PathVariable Long id) {
-
+  public void blockUser(@PathVariable Long id) {
     userService.blockUser(id);
   }
 
-  /* ============================================================
-   *  ATIVAR USUÁRIO
-   * ============================================================ */
-
-  @Operation(summary = "Ativar usuário", description = "Move o usuário para status ACTIVE.")
+  @Operation(summary = "Ativar usuário")
   @PreAuthorize("hasRole('ADMIN')")
   @PatchMapping("/{id}/activate")
-  public void activateUser(
-      @Parameter(description = "ID do usuário", example = "5") @PathVariable Long id) {
-
+  public void activateUser(@PathVariable Long id) {
     userService.activateUser(id);
   }
 
-  /* ============================================================
-   *  INATIVAR USUÁRIO
-   * ============================================================ */
-
-  @Operation(summary = "Inativar usuário", description = "Move o usuário para status INACTIVE.")
+  @Operation(summary = "Inativar usuário")
   @PreAuthorize("hasRole('ADMIN')")
   @PatchMapping("/{id}/inactivate")
-  public void inactivateUser(
-      @Parameter(description = "ID do usuário", example = "5") @PathVariable Long id) {
-
+  public void inactivateUser(@PathVariable Long id) {
     userService.inactivateUser(id);
   }
 }

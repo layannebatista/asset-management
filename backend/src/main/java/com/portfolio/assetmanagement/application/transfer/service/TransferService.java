@@ -9,31 +9,19 @@ import com.portfolio.assetmanagement.domain.unit.entity.Unit;
 import com.portfolio.assetmanagement.infrastructure.persistence.transfer.repository.TransferRepository;
 import com.portfolio.assetmanagement.security.context.LoggedUserContext;
 import com.portfolio.assetmanagement.shared.exception.NotFoundException;
-import jakarta.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Service responsável por TODAS as regras de negócio do fluxo de transferências.
- *
- * <p>Implementação enterprise com:
- *
- * <p>- validação centralizada - proteção contra concorrência - multi-tenant enforcement - lifecycle
- * seguro
- */
 @Service
 public class TransferService {
 
   private final TransferRepository repository;
-
   private final AssetService assetService;
-
   private final UnitService unitService;
-
   private final LoggedUserContext loggedUser;
-
   private final TransferValidationService validationService;
-
   private final TransferConcurrencyService concurrencyService;
 
   public TransferService(
@@ -43,7 +31,6 @@ public class TransferService {
       LoggedUserContext loggedUser,
       TransferValidationService validationService,
       TransferConcurrencyService concurrencyService) {
-
     this.repository = repository;
     this.assetService = assetService;
     this.unitService = unitService;
@@ -52,94 +39,89 @@ public class TransferService {
     this.concurrencyService = concurrencyService;
   }
 
-  /** Solicita uma transferência. */
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public TransferRequest request(Long assetId, Long toUnitId, String reason) {
-
     Asset asset = assetService.findById(assetId);
-
     validationService.requireAssetExists(asset);
-
     validationService.validateOwnership(asset, loggedUser.getOrganizationId());
-
     validationService.validateAssetAvailableForTransfer(asset);
-
     Unit toUnit = unitService.findById(toUnitId);
-
     validationService.validateTargetUnit(asset.getUnit(), toUnit);
-
     validationService.validateNoActiveTransfer(asset);
-
     TransferRequest transfer =
         new TransferRequest(asset, asset.getUnit(), toUnit, loggedUser.getUser(), reason);
-
     asset.changeStatus(AssetStatus.IN_TRANSFER);
-
     return repository.save(transfer);
   }
 
-  /** Lista transferências da unidade do usuário. */
+  /**
+   * M2: A versão anterior usava apenas findByFromUnit_Id, tornando invisíveis as transferências
+   * onde a unidade do GESTOR é o destino. Agora combina origem + destino sem duplicatas.
+   *
+   * <p>D2: adicionado @Transactional(readOnly = true) — TransferRequest tem lazy relations (asset,
+   * fromUnit, toUnit) que podem ser acessadas pelo mapper após o retorno.
+   */
+  @Transactional(readOnly = true)
   public List<TransferRequest> list() {
+    Long unitId = loggedUser.getUnitId();
+    if (unitId == null) return List.of(); // ADMIN sem unidade
 
-    return repository.findByFromUnit_Id(loggedUser.getUnitId());
+    List<TransferRequest> outgoing = repository.findByFromUnit_Id(unitId);
+    List<TransferRequest> incoming = repository.findByToUnit_Id(unitId);
+
+    List<TransferRequest> all = new ArrayList<>(outgoing);
+    incoming.stream()
+        .filter(t -> all.stream().noneMatch(o -> o.getId().equals(t.getId())))
+        .forEach(all::add);
+
+    return all;
   }
 
-  /** Aprova transferência. */
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public void approve(Long transferId, String comment) {
-
     TransferRequest transfer =
         repository
             .findById(transferId)
             .orElseThrow(() -> new NotFoundException("Transferência não encontrada"));
-
     validationService.validateCanApprove(transfer);
-
     concurrencyService.executeWithAssetLock(
-        transfer.getAsset().getId(), () -> transfer.approve(loggedUser.getUser()));
+        transfer.getAsset().getId(),
+        () -> {
+          transfer.approve(loggedUser.getUser());
+          repository.save(transfer);
+        });
   }
 
-  /** Rejeita transferência. */
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public void reject(Long transferId, String comment) {
-
     TransferRequest transfer =
         repository
             .findById(transferId)
             .orElseThrow(() -> new NotFoundException("Transferência não encontrada"));
-
     validationService.validateCanReject(transfer);
-
     concurrencyService.executeWithAssetLock(
         transfer.getAsset().getId(),
         () -> {
           transfer.reject(loggedUser.getUser());
-
           transfer.getAsset().changeStatus(AssetStatus.AVAILABLE);
+          repository.save(transfer);
         });
   }
 
-  /** Completa transferência. */
-  @Transactional
+  @Transactional(rollbackFor = Exception.class)
   public void complete(Long transferId) {
-
     TransferRequest transfer =
         repository
             .findById(transferId)
             .orElseThrow(() -> new NotFoundException("Transferência não encontrada"));
-
     validationService.validateCanComplete(transfer);
-
     concurrencyService.executeWithAssetLock(
         transfer.getAsset().getId(),
         () -> {
           Asset asset = transfer.getAsset();
-
-          asset.changeUnit(transfer.getToUnit());
-
-          asset.changeStatus(AssetStatus.AVAILABLE);
-
+          asset.completeTransfer(transfer.getToUnit());
           transfer.complete();
+          repository.save(transfer);
         });
   }
 }

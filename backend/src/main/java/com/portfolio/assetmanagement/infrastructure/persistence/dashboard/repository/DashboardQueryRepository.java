@@ -145,6 +145,33 @@ public class DashboardQueryRepository {
         .getResultList();
   }
 
+  /**
+   * Conta transferências agrupadas por mês/ano.
+   *
+   * <p>Corrigido: método ausente que causava dashboard executivo sempre retornar transferByMonth
+   * vazio, independente dos dados reais.
+   */
+  public List<Object[]> countTransferByMonth(Long organizationId) {
+
+    String jpql =
+        """
+        SELECT FUNCTION('YEAR', t.requestedAt),
+               FUNCTION('MONTH', t.requestedAt),
+               COUNT(t)
+        FROM TransferRequest t
+        WHERE t.asset.organization.id = :organizationId
+        GROUP BY FUNCTION('YEAR', t.requestedAt),
+                 FUNCTION('MONTH', t.requestedAt)
+        ORDER BY FUNCTION('YEAR', t.requestedAt),
+                 FUNCTION('MONTH', t.requestedAt)
+        """;
+
+    return entityManager
+        .createQuery(jpql, Object[].class)
+        .setParameter("organizationId", organizationId)
+        .getResultList();
+  }
+
   public List<Object[]> countUsersByStatus(Long organizationId) {
 
     String jpql =
@@ -153,6 +180,28 @@ public class DashboardQueryRepository {
         FROM User u
         WHERE u.organization.id = :organizationId
         GROUP BY u.status
+        """;
+
+    return entityManager
+        .createQuery(jpql, Object[].class)
+        .setParameter("organizationId", organizationId)
+        .getResultList();
+  }
+
+  /**
+   * Conta usuários agrupados por role.
+   *
+   * <p>Corrigido: método ausente que causava dashboard executivo sempre retornar usersByRole vazio,
+   * independente dos dados reais.
+   */
+  public List<Object[]> countUsersByRole(Long organizationId) {
+
+    String jpql =
+        """
+        SELECT u.role, COUNT(u)
+        FROM User u
+        WHERE u.organization.id = :organizationId
+        GROUP BY u.role
         """;
 
     return entityManager
@@ -275,6 +324,21 @@ public class DashboardQueryRepository {
     return entityManager
         .createQuery(jpql, Long.class)
         .setParameter("userId", userId)
+        .getSingleResult();
+  }
+
+  public Long countUsersByOrganization(Long organizationId) {
+
+    String jpql =
+        """
+        SELECT COUNT(u)
+        FROM User u
+        WHERE u.organization.id = :organizationId
+        """;
+
+    return entityManager
+        .createQuery(jpql, Long.class)
+        .setParameter("organizationId", organizationId)
         .getSingleResult();
   }
 }

@@ -7,10 +7,10 @@ import com.portfolio.assetmanagement.domain.unit.entity.Unit;
 import com.portfolio.assetmanagement.infrastructure.persistence.inventory.repository.InventorySessionRepository;
 import com.portfolio.assetmanagement.security.context.LoggedUserContext;
 import com.portfolio.assetmanagement.shared.exception.NotFoundException;
-import jakarta.transaction.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class InventoryService {
@@ -53,7 +53,13 @@ public class InventoryService {
     return map(saved);
   }
 
-  /** Busca sessão por ID. */
+  /**
+   * Busca sessão por ID.
+   *
+   * <p>D2: adicionado @Transactional(readOnly = true) — InventorySession tem lazy relation com
+   * unit, que é acessada em map(). Sem sessão JPA ativa, lança LazyInitializationException.
+   */
+  @Transactional(readOnly = true)
   public InventoryResponseDTO findById(Long id) {
 
     InventorySession session =
@@ -66,7 +72,12 @@ public class InventoryService {
     return map(session);
   }
 
-  /** Lista sessões da organization. */
+  /**
+   * Lista sessões da organization.
+   *
+   * <p>D2: adicionado @Transactional(readOnly = true) — mesmo motivo do findById.
+   */
+  @Transactional(readOnly = true)
   public List<InventoryResponseDTO> list() {
 
     return repository.findByOrganization_Id(loggedUser.getOrganizationId()).stream()

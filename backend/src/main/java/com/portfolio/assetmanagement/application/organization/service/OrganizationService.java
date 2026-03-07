@@ -34,17 +34,13 @@ public class OrganizationService {
   public Organization createOrganization(String name) {
 
     validateOrganizationName(name);
-
     validateOrganizationNameUniqueness(name);
 
     Organization organization = new Organization(name);
-
     Organization saved = organizationRepository.save(organization);
 
-    // cria unidade principal automaticamente
     unitService.createMainUnit(saved);
 
-    // auditoria
     auditService.registerEvent(
         AuditEventType.ORGANIZATION_CREATED,
         null,
@@ -56,7 +52,14 @@ public class OrganizationService {
     return saved;
   }
 
-  /** Busca organização por ID. */
+  /**
+   * Busca organização por ID.
+   *
+   * <p>D3: adicionado @Transactional(readOnly = true) — padrão consistente com todos os outros
+   * services. Quando findById é chamado de inactivateOrganization/activateOrganization (que
+   * têm @Transactional de escrita), o Spring propaga a transação existente sem criar nova.
+   */
+  @Transactional(readOnly = true)
   public Organization findById(Long id) {
 
     if (id == null) {
@@ -75,10 +78,12 @@ public class OrganizationService {
     Organization organization = findById(id);
 
     if (organization.getStatus() == OrganizationStatus.INACTIVE) {
-      return;
+      throw new BusinessException("Organização já está inativa");
     }
 
     organization.setStatus(OrganizationStatus.INACTIVE);
+
+    organizationRepository.save(organization);
 
     auditService.registerEvent(
         AuditEventType.ORGANIZATION_INACTIVATED,
@@ -96,10 +101,12 @@ public class OrganizationService {
     Organization organization = findById(id);
 
     if (organization.getStatus() == OrganizationStatus.ACTIVE) {
-      return;
+      throw new BusinessException("Organização já está ativa");
     }
 
     organization.setStatus(OrganizationStatus.ACTIVE);
+
+    organizationRepository.save(organization);
 
     auditService.registerEvent(
         AuditEventType.ORGANIZATION_ACTIVATED,
@@ -114,12 +121,10 @@ public class OrganizationService {
   private void validateOrganizationName(String name) {
 
     if (name == null || name.isBlank()) {
-
       throw new BusinessException("Nome da organização é obrigatório");
     }
 
     if (name.length() > 255) {
-
       throw new BusinessException("Nome da organização não pode exceder 255 caracteres");
     }
   }
@@ -130,7 +135,6 @@ public class OrganizationService {
     Optional<Organization> existing = organizationRepository.findByName(name);
 
     if (existing.isPresent()) {
-
       throw new BusinessException("Já existe uma organização com este nome");
     }
   }

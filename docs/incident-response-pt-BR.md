@@ -1,9 +1,3 @@
-# Resposta a Incidentes
-
-Gerado em: 2026-02-18 02:30:00.531090
-
----
-
 # 1. Visão Geral
 
 Este documento define o plano de resposta a incidentes para o Sistema de Gestão de Ativos Enterprise.

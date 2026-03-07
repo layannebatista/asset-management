@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Categories", description = "Gerenciamento de categorias de ativos")
@@ -22,6 +23,7 @@ public class AssetCategoryController {
 
   @Operation(summary = "Criar categoria")
   @PostMapping
+  @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR')")
   public CategoryResponseDTO create(@RequestBody @Valid CategoryRequestDTO dto) {
 
     AssetCategory category = service.create(dto.getName(), dto.getDescription());
@@ -31,18 +33,23 @@ public class AssetCategoryController {
 
   @Operation(summary = "Listar categorias")
   @GetMapping
+  @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR', 'OPERADOR')")
   public List<CategoryResponseDTO> list() {
+
     return service.findAll().stream().map(this::map).toList();
   }
 
   @Operation(summary = "Buscar categoria por ID")
   @GetMapping("/{id}")
+  @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR', 'OPERADOR')")
   public CategoryResponseDTO findById(@PathVariable Long id) {
+
     return map(service.findById(id));
   }
 
   @Operation(summary = "Atualizar categoria (PUT completo)")
   @PutMapping("/{id}")
+  @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR')")
   public CategoryResponseDTO update(
       @PathVariable Long id, @RequestBody @Valid CategoryRequestDTO dto) {
 
@@ -51,11 +58,14 @@ public class AssetCategoryController {
 
   @Operation(summary = "Desativar categoria (DELETE lógico)")
   @DeleteMapping("/{id}")
+  @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR')")
   public void delete(@PathVariable Long id) {
+
     service.delete(id);
   }
 
   private CategoryResponseDTO map(AssetCategory category) {
+
     return new CategoryResponseDTO(
         category.getId(), category.getName(), category.getDescription(), category.isActive());
   }

@@ -15,11 +15,6 @@ public class User {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  /**
-   * Controle de concorrência otimista.
-   *
-   * <p>Protege contra alterações simultâneas concorrentes.
-   */
   @Version
   @Column(nullable = false)
   private Long version;
@@ -30,7 +25,8 @@ public class User {
   @Column(nullable = false, unique = true, length = 255)
   private String email;
 
-  @Column(name = "password_hash", nullable = false, length = 255)
+  // Nullable — senha definida na ativação via UserActivationService
+  @Column(name = "password_hash", nullable = true, length = 255)
   private String passwordHash;
 
   @Enumerated(EnumType.STRING)
@@ -55,6 +51,15 @@ public class User {
   @Column(name = "lgpd_accepted", nullable = false)
   private boolean lgpdAccepted;
 
+  /**
+   * Número de telefone no formato E.164 sem '+' (ex: 5511999998888).
+   *
+   * <p>Nullable — quando preenchido, habilita MFA via WhatsApp no login e notificações de eventos
+   * do sistema.
+   */
+  @Column(name = "phone_number", nullable = true, length = 20)
+  private String phoneNumber;
+
   protected User() {}
 
   public User(
@@ -68,7 +73,6 @@ public class User {
 
     validateName(name);
     validateEmail(email);
-    validatePassword(passwordHash);
     validateRole(role);
     validateOrganization(organization);
     validateUnit(unit, organization);
@@ -80,17 +84,93 @@ public class User {
     this.role = role;
     this.organization = organization;
     this.unit = unit;
-    this.documentNumber = documentNumber.trim();
-
+    this.documentNumber = documentNumber;
     this.status = UserStatus.PENDING_ACTIVATION;
     this.lgpdAccepted = false;
   }
+
+  // ─────────────────────────────────────────────
+  //  Business methods
+  // ─────────────────────────────────────────────
+
+  public void changePassword(String encodedPassword) {
+    if (encodedPassword == null || encodedPassword.isBlank()) {
+      throw new IllegalArgumentException("Senha codificada não pode ser nula ou vazia");
+    }
+    this.passwordHash = encodedPassword;
+  }
+
+  public void activate() {
+    this.status = UserStatus.ACTIVE;
+  }
+
+  public void block() {
+    this.status = UserStatus.BLOCKED;
+  }
+
+  public void inactivate() {
+    this.status = UserStatus.INACTIVE;
+  }
+
+  public void acceptLgpd() {
+    this.lgpdAccepted = true;
+  }
+
+  public void updatePhoneNumber(String phoneNumber) {
+    this.phoneNumber = phoneNumber;
+  }
+
+  // ─────────────────────────────────────────────
+  //  Validations
+  // ─────────────────────────────────────────────
+
+  private void validateName(String name) {
+    if (name == null || name.trim().isEmpty()) {
+      throw new IllegalArgumentException("Nome é obrigatório");
+    }
+  }
+
+  private void validateEmail(String email) {
+    if (email == null || email.trim().isEmpty()) {
+      throw new IllegalArgumentException("Email é obrigatório");
+    }
+  }
+
+  private void validateRole(UserRole role) {
+    if (role == null) {
+      throw new IllegalArgumentException("Perfil é obrigatório");
+    }
+  }
+
+  private void validateOrganization(Organization organization) {
+    if (organization == null) {
+      throw new IllegalArgumentException("Organização é obrigatória");
+    }
+  }
+
+  private void validateUnit(Unit unit, Organization organization) {
+    if (unit == null) {
+      throw new IllegalArgumentException("Unidade é obrigatória");
+    }
+    if (!unit.getOrganization().getId().equals(organization.getId())) {
+      throw new IllegalArgumentException("Unidade não pertence à organização informada");
+    }
+  }
+
+  private void validateDocument(String documentNumber) {
+    if (documentNumber == null || documentNumber.trim().isEmpty()) {
+      throw new IllegalArgumentException("Documento é obrigatório");
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  //  Getters
+  // ─────────────────────────────────────────────
 
   public Long getId() {
     return id;
   }
 
-  /** Usado automaticamente pelo Hibernate para optimistic locking. */
   public Long getVersion() {
     return version;
   }
@@ -131,110 +211,15 @@ public class User {
     return lgpdAccepted;
   }
 
-  public boolean isActive() {
-    return status == UserStatus.ACTIVE;
-  }
-
-  public boolean isBlocked() {
-    return status == UserStatus.BLOCKED;
-  }
-
-  public boolean isInactive() {
-    return status == UserStatus.INACTIVE;
-  }
-
-  public boolean isPendingActivation() {
-    return status == UserStatus.PENDING_ACTIVATION;
-  }
-
-  public void activate() {
-    this.status = UserStatus.ACTIVE;
-  }
-
-  public void block() {
-    this.status = UserStatus.BLOCKED;
-  }
-
-  public void inactivate() {
-    this.status = UserStatus.INACTIVE;
-  }
-
-  public void acceptLgpd() {
-    this.lgpdAccepted = true;
-  }
-
-  public void changePassword(String passwordHash) {
-
-    validatePassword(passwordHash);
-
-    this.passwordHash = passwordHash;
-  }
-
-  private void validateName(String name) {
-
-    if (name == null || name.isBlank()) {
-      throw new IllegalArgumentException("Nome é obrigatório");
-    }
-  }
-
-  private void validateEmail(String email) {
-
-    if (email == null || email.isBlank()) {
-      throw new IllegalArgumentException("Email é obrigatório");
-    }
-
-    if (email.length() > 255) {
-      throw new IllegalArgumentException("Email inválido");
-    }
-  }
-
-  private void validatePassword(String passwordHash) {
-
-    if (passwordHash == null || passwordHash.isBlank()) {
-      throw new IllegalArgumentException("Password hash é obrigatório");
-    }
-  }
-
-  private void validateRole(UserRole role) {
-
-    if (role == null) {
-      throw new IllegalArgumentException("Role é obrigatório");
-    }
-  }
-
-  private void validateOrganization(Organization organization) {
-
-    if (organization == null || organization.getId() == null) {
-      throw new IllegalArgumentException("Organization é obrigatória");
-    }
-  }
-
-  private void validateUnit(Unit unit, Organization organization) {
-
-    if (unit == null || unit.getId() == null) {
-      throw new IllegalArgumentException("Unit é obrigatória");
-    }
-
-    if (!unit.getOrganization().getId().equals(organization.getId())) {
-      throw new IllegalArgumentException("Unit não pertence à Organization");
-    }
-  }
-
-  private void validateDocument(String document) {
-
-    if (document == null || document.isBlank()) {
-      throw new IllegalArgumentException("Documento é obrigatório");
-    }
+  public String getPhoneNumber() {
+    return phoneNumber;
   }
 
   @Override
   public boolean equals(Object o) {
-
     if (this == o) return true;
-
-    if (!(o instanceof User user)) return false;
-
-    return id != null && id.equals(user.id);
+    if (!(o instanceof User that)) return false;
+    return id != null && id.equals(that.id);
   }
 
   @Override

@@ -1,0 +1,1 @@
+{"uuid":"a02c7472-af6b-452a-b798-9a62b3ded34c","name":"deve lançar BusinessException quando status não é IN_PROGRESS","children":["e065e9e7-4ce1-4d35-8495-9d5bc74da2a4"],"befores":[],"afters":[],"start":1772851308463,"stop":1772851308491}

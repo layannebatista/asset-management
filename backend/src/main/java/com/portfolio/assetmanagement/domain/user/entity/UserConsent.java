@@ -1,7 +1,7 @@
 package com.portfolio.assetmanagement.domain.user.entity;
 
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "user_consents")
@@ -18,14 +18,19 @@ public class UserConsent {
   private boolean lgpdAccepted;
 
   @Column(nullable = false)
-  private LocalDateTime acceptedAt;
+  private OffsetDateTime acceptedAt;
 
   protected UserConsent() {}
 
   public UserConsent(Long userId) {
+
     this.userId = userId;
     this.lgpdAccepted = true;
-    this.acceptedAt = LocalDateTime.now();
+    this.acceptedAt = OffsetDateTime.now();
+  }
+
+  public Long getId() {
+    return id;
   }
 
   public Long getUserId() {
@@ -36,7 +41,7 @@ public class UserConsent {
     return lgpdAccepted;
   }
 
-  public LocalDateTime getAcceptedAt() {
+  public OffsetDateTime getAcceptedAt() {
     return acceptedAt;
   }
 }

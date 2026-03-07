@@ -1,9 +1,3 @@
-# Diagrama de Componentes
-
-Gerado em: 2026-02-18 02:22:52.131476
-
----
-
 # 1. Visão Geral
 
 Este documento descreve a arquitetura em nível de componentes do Sistema de Gestão de Ativos Enterprise.

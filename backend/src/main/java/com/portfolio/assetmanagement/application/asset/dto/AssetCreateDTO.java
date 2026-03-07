@@ -5,9 +5,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * DTO responsável por representar a requisição de criação de um ativo.
+ * DTO para criação manual de ativo com assetTag explícito.
  *
- * <p>Utilizado para cadastro inicial de ativos no sistema.
+ * <p>Utilizado exclusivamente no endpoint POST /{organizationId}.
  */
 public class AssetCreateDTO {
 

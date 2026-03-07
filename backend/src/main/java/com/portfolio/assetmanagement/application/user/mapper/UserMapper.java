@@ -4,19 +4,15 @@ import com.portfolio.assetmanagement.application.user.dto.UserResponseDTO;
 import com.portfolio.assetmanagement.domain.user.entity.User;
 import org.springframework.stereotype.Component;
 
-/**
- * Mapper responsável pela conversão entre User e DTOs.
- *
- * <p>Centraliza a transformação e evita vazamento de dados sensíveis.
- */
 @Component
 public class UserMapper {
 
   public UserResponseDTO toResponseDTO(User user) {
 
-    if (user == null) {
-      return null;
-    }
+    if (user == null) return null;
+
+    // Nunca expõe o phoneNumber na resposta — apenas indica se MFA está habilitado
+    boolean mfaEnabled = user.getPhoneNumber() != null && !user.getPhoneNumber().isBlank();
 
     return new UserResponseDTO(
         user.getId(),
@@ -26,6 +22,7 @@ public class UserMapper {
         user.getStatus(),
         user.getOrganization().getId(),
         user.getUnit().getId(),
-        user.isLgpdAccepted());
+        user.isLgpdAccepted(),
+        mfaEnabled);
   }
 }

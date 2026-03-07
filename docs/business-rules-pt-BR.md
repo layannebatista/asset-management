@@ -1,7 +1,5 @@
 # Regras de Negócio
 
-Gerado em: 2026-02-18 02:21:42.348591
-
 ---
 
 # 1. Visão Geral
@@ -35,8 +33,8 @@ A violação do isolamento entre tenants é considerada uma falha crítica de se
 Regras:
 
 - A organização deve possuir um identificador único
-- A organização deve possuir um nome
-- A organização pode estar ativa ou inativa
+- A organização deve possuir um nome único no sistema
+- A organização pode estar nos status `ACTIVE` ou `INACTIVE`
 - Organizações inativas não podem executar operações
 
 ---
@@ -46,9 +44,10 @@ Regras:
 Regras:
 
 - A unidade deve pertencer exatamente a uma organização
-- A unidade deve possuir um nome único dentro da organização
-- A unidade pode estar ativa ou inativa
+- A unidade deve possuir um nome
+- A unidade pode estar nos status `ACTIVE` ou `INACTIVE`
 - Unidades não podem existir sem uma organização
+- Uma unidade pode ser marcada como unidade principal (`is_main`)
 
 ---
 
@@ -58,94 +57,189 @@ Regras:
 
 - O usuário deve pertencer exatamente a uma organização
 - O usuário deve pertencer exatamente a uma unidade
-- O e-mail do usuário deve ser único dentro da organização
-- O usuário deve possuir uma role válida
-- O usuário pode estar ativo, inativo ou bloqueado
-- Usuários inativos ou bloqueados não podem se autenticar
-- As credenciais do usuário devem ser armazenadas de forma segura
+- A unidade do usuário deve pertencer à mesma organização do usuário
+- O e-mail do usuário deve ser único no sistema
+- O usuário deve possuir uma role válida: `ADMIN`, `GESTOR` ou `OPERADOR`
+- O usuário é criado sempre com o status `PENDING_ACTIVATION`
+- A senha **não** é definida no momento da criação — ela é definida pelo próprio usuário no fluxo de ativação
+- Usuários com status `BLOCKED` ou `INACTIVE` não podem se autenticar
+- As credenciais do usuário são armazenadas como hash BCrypt
+
+Ciclo de vida do usuário:
+
+```
+PENDING_ACTIVATION → ACTIVE → BLOCKED
+                            → INACTIVE
+```
 
 ---
 
-# 6. Regras de Autenticação
+# 6. Regras de Ativação de Conta
 
 Regras:
 
-- A autenticação requer credenciais válidas
+- Ao criar um usuário, o sistema gera um token de ativação com prazo de expiração
+- O token é enviado ao usuário por mecanismo externo (e-mail)
+- O usuário utiliza o token para definir sua senha e ativar a conta
+- O token de ativação é de uso único — após utilizado, é marcado como usado
+- Tokens expirados não são aceitos
+- O endpoint de ativação é **público** (não requer JWT)
+
+---
+
+# 7. Regras de Autenticação
+
+Regras:
+
+- A autenticação requer e-mail e senha válidos
+- Apenas usuários com status `ACTIVE` podem autenticar
 - Um token JWT deve ser emitido após autenticação bem-sucedida
-- O token JWT deve incluir a identidade do usuário e seu escopo
-- O token JWT deve expirar após o tempo configurado
+- O token JWT deve incluir a identidade do usuário, sua role e sua organização
+- O token JWT deve expirar após o tempo configurado (padrão: 86400000ms / 24h)
 - Todos os endpoints protegidos exigem um token JWT válido
 
 ---
 
-# 7. Regras de Ativo
+# 8. Regras de Ativo
 
 Regras:
 
 - O ativo deve pertencer exatamente a uma organização
 - O ativo deve pertencer exatamente a uma unidade
-- O número do ativo deve ser único dentro da organização
-- O número do ativo deve ser imutável após a criação
-- O ativo não pode ser excluído permanentemente
-- O ativo pode estar ativo ou inativo
-- O ciclo de vida do ativo deve ser rastreado
+- O `assetTag` do ativo deve ser único no sistema
+- O `assetTag` é imutável após a criação
+- O ativo não pode ser excluído permanentemente (apenas aposentado)
+- O ativo possui um `type` (tipo): `MOBILE_PHONE`, `NOTEBOOK`, `TABLET`, `DESKTOP`, `VEHICLE` ou `OTHER`
+
+Status possíveis do ativo:
+
+| Status | Descrição |
+|--------|-----------|
+| `AVAILABLE` | Ativo disponível, sem vínculo com usuário |
+| `ASSIGNED` | Ativo vinculado a um usuário |
+| `IN_TRANSFER` | Ativo em processo de transferência entre unidades |
+| `IN_MAINTENANCE` | Ativo em manutenção |
+| `UNAVAILABLE` | Ativo temporariamente indisponível |
+| `RETIRED` | Ativo baixado/desativado definitivamente |
+
+Transições válidas de status:
+
+```
+AVAILABLE   → ASSIGNED       (atribuição a usuário)
+ASSIGNED    → AVAILABLE      (remoção de atribuição)
+AVAILABLE   → IN_TRANSFER    (solicitação de transferência)
+ASSIGNED    → IN_TRANSFER    (solicitação de transferência)
+IN_TRANSFER → AVAILABLE      (transferência concluída ou rejeitada)
+AVAILABLE   → IN_MAINTENANCE (abertura de manutenção)
+ASSIGNED    → IN_MAINTENANCE (abertura de manutenção)
+IN_MAINTENANCE → AVAILABLE   (manutenção concluída/cancelada, sem usuário)
+IN_MAINTENANCE → ASSIGNED    (manutenção concluída/cancelada, com usuário atribuído)
+qualquer    → RETIRED        (aposentadoria do ativo)
+```
 
 A exclusão de ativos não é permitida para preservar o histórico de auditoria.
 
 ---
 
-# 8. Regras de Transferência
+# 9. Regras de Transferência
 
 Regras:
 
 - A transferência deve referenciar um ativo válido
 - A transferência deve especificar a unidade de origem e a unidade de destino
-- A transferência deve ser aprovada antes da execução
-- Apenas uma transferência ativa pode existir por ativo
+- A unidade de origem e destino não podem ser a mesma
+- O ativo não pode estar `RETIRED` para ser transferido
+- Apenas uma transferência ativa (`PENDING` ou `APPROVED`) pode existir por ativo por vez
+- O ativo passa imediatamente para `IN_TRANSFER` ao criar a solicitação
+- A transferência deve ser aprovada antes de ser concluída
 - A transferência deve ser registrada nos logs de auditoria
+- O campo `reason` (motivo) é obrigatório na criação
+
+Status possíveis da transferência:
+
+| Status | Descrição |
+|--------|-----------|
+| `PENDING` | Aguardando aprovação |
+| `APPROVED` | Aprovada, aguardando conclusão |
+| `REJECTED` | Rejeitada — ativo retorna para `AVAILABLE` |
+| `COMPLETED` | Concluída — unidade do ativo atualizada |
+| `CANCELLED` | Cancelada |
 
 As transferências garantem a rastreabilidade da movimentação dos ativos.
 
 ---
 
-# 9. Regras de Inventário
+# 10. Regras de Inventário
 
 Regras:
 
 - O inventário deve pertencer a uma organização
-- O inventário deve pertencer a uma unidade
-- Apenas um ciclo de inventário ativo é permitido por unidade
-- O inventário deve registrar a verificação dos ativos
-- O inventário pode bloquear a movimentação de ativos
+- O inventário deve pertencer a uma unidade, que deve ser da mesma organização
+- Apenas um ciclo de inventário ativo (`OPEN` ou `IN_PROGRESS`) é permitido por unidade
+- O inventário deve registrar a verificação de presença dos ativos
+- O usuário criador deve pertencer à mesma organização
+
+Status possíveis do inventário:
+
+| Status | Descrição |
+|--------|-----------|
+| `OPEN` | Sessão criada, aguardando início |
+| `IN_PROGRESS` | Verificação em andamento |
+| `CLOSED` | Inventário concluído |
+| `CANCELLED` | Inventário cancelado |
 
 O inventário garante a precisão dos ativos.
 
 ---
 
-# 10. Regras de Manutenção
+# 11. Regras de Manutenção
 
 Regras:
 
 - A manutenção deve referenciar um ativo existente
-- A manutenção deve registrar início e conclusão
-- Ativos em manutenção podem ter operações restritas
+- O ativo é imediatamente movido para `IN_MAINTENANCE` ao criar a solicitação de manutenção
+- O campo `description` (descrição do problema) é obrigatório na criação
+- O campo `resolution` (resolução) é obrigatório para concluir a manutenção
+- Apenas `ADMIN` e `GESTOR` podem criar e cancelar manutenções
+- `ADMIN`, `GESTOR` e `OPERADOR` podem iniciar e concluir manutenções
+- A manutenção concluída (`COMPLETED`) não pode ser cancelada
 - O histórico de manutenção deve ser preservado
 - As operações de manutenção devem gerar logs de auditoria
+
+Status possíveis da manutenção:
+
+| Status | Descrição |
+|--------|-----------|
+| `REQUESTED` | Solicitação criada, aguardando início |
+| `IN_PROGRESS` | Manutenção em execução |
+| `COMPLETED` | Concluída com sucesso (estado final) |
+| `CANCELLED` | Cancelada (estado final) |
+
+Transições válidas:
+
+```
+REQUESTED   → IN_PROGRESS  (início da execução)
+IN_PROGRESS → COMPLETED    (conclusão, com resolution obrigatória)
+REQUESTED   → CANCELLED    (cancelamento)
+IN_PROGRESS → CANCELLED    (cancelamento)
+```
 
 A manutenção garante a integridade operacional dos ativos.
 
 ---
 
-# 11. Regras de Auditoria
+# 12. Regras de Auditoria
 
 Regras:
 
 - Todas as operações críticas devem gerar logs de auditoria
 - Os logs de auditoria devem incluir:
-  - Usuário
-  - Timestamp
-  - Operação
-  - Entidade afetada
+  - Usuário responsável (`actor_user_id`)
+  - Timestamp da operação
+  - Tipo de evento
+  - Entidade afetada (`target_id`, `target_type`)
+  - Organização e unidade envolvidas
+  - Detalhes descritivos da operação
 - Os logs de auditoria são imutáveis
 - Os logs de auditoria não podem ser excluídos
 - Os logs de auditoria garantem rastreabilidade completa
@@ -154,20 +248,22 @@ Os logs de auditoria são necessários para conformidade e monitoramento de segu
 
 ---
 
-# 12. Regras de Autorização
+# 13. Regras de Autorização
 
 Regras:
 
-- O acesso deve ser restrito com base na role do usuário
-- O acesso deve ser restrito com base na organização
-- O acesso deve ser restrito com base no escopo
-- O acesso não autorizado deve ser rejeitado
+- O acesso deve ser restrito com base na role do usuário (`ADMIN`, `GESTOR`, `OPERADOR`)
+- O acesso deve ser restrito com base na organização do usuário (tenant)
+- O acesso não autorizado deve ser rejeitado com `403 Forbidden`
+- Apenas `ADMIN` pode gerenciar usuários, organizações e aposentar ativos
+- `ADMIN` e `GESTOR` podem criar e gerenciar ativos, transferências e manutenções
+- `OPERADOR` tem acesso de leitura e pode executar operações de manutenção
 
 A autorização garante a segurança do sistema.
 
 ---
 
-# 13. Regras de Integridade de Dados
+# 14. Regras de Integridade de Dados
 
 Regras:
 
@@ -175,27 +271,39 @@ Regras:
 - Todos os campos obrigatórios devem estar presentes
 - Dados inválidos devem ser rejeitados
 - As constraints de integridade do banco de dados devem ser aplicadas
+- O controle de concorrência otimista (`@Version`) é aplicado nas entidades principais para evitar atualizações concorrentes inconsistentes
 
 ---
 
-# 14. Regras de Ciclo de Vida
+# 15. Regras de Ciclo de Vida
 
 Regras:
 
 - As entidades devem seguir estados de ciclo de vida definidos
-- As transições de estado devem ser controladas
-- Transições inválidas devem ser impedidas
+- As transições de estado devem ser controladas e validadas
+- Transições inválidas devem lançar exceção de negócio
+- Estados terminais (`RETIRED`, `COMPLETED`, `CANCELLED`) não permitem reversão
 
 ---
 
-# 15. Resumo
+# 16. Regras de LGPD
+
+Regras:
+
+- O aceite dos termos LGPD é registrado por usuário na tabela `user_consents`
+- O campo `lgpd_accepted` no usuário indica se o aceite foi realizado
+- O aceite é registrado com timestamp
+
+---
+
+# 17. Resumo
 
 Essas regras de negócio garantem:
 
 - Isolamento multi-tenant
-- Controle de acesso seguro
-- Integridade dos dados
-- Rastreabilidade completa
-- Gerenciamento adequado do ciclo de vida
+- Controle de acesso seguro por roles
+- Integridade dos dados em todas as camadas
+- Rastreabilidade completa via auditoria
+- Gerenciamento adequado do ciclo de vida de ativos, transferências, inventários e manutenções
 
 Essas regras são aplicadas em todo o sistema.

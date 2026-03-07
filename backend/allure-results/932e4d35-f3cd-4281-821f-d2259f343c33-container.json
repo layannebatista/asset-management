@@ -1,0 +1,1 @@
+{"uuid":"932e4d35-f3cd-4281-821f-d2259f343c33","name":"deve transitar para IN_PROGRESS e preencher startedAt e startedByUserId","children":["44fb75c2-0f3b-41bc-8b02-cca0af6672dc"],"befores":[],"afters":[],"start":1772852022096,"stop":1772852022109}

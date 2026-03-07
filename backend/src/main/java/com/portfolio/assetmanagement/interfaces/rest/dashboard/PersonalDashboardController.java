@@ -4,12 +4,11 @@ import com.portfolio.assetmanagement.application.dashboard.dto.DashboardData;
 import com.portfolio.assetmanagement.application.dashboard.dto.PersonalDashboardDTO;
 import com.portfolio.assetmanagement.application.dashboard.service.DashboardQueryService;
 import com.portfolio.assetmanagement.application.dashboard.service.PersonalDashboardAssembler;
-import com.portfolio.assetmanagement.security.context.LoggedUserContext;
-import com.portfolio.assetmanagement.shared.exception.UnauthorizedException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Dashboard - Personal", description = "Dashboard operacional individual do usuário")
@@ -19,16 +18,13 @@ public class PersonalDashboardController {
 
   private final DashboardQueryService dashboardQueryService;
   private final PersonalDashboardAssembler assembler;
-  private final LoggedUserContext loggedUserContext;
 
+  // CORRIGIDO: LoggedUserContext removido — não é mais necessário após migrar para @PreAuthorize.
   public PersonalDashboardController(
-      DashboardQueryService dashboardQueryService,
-      PersonalDashboardAssembler assembler,
-      LoggedUserContext loggedUserContext) {
+      DashboardQueryService dashboardQueryService, PersonalDashboardAssembler assembler) {
 
     this.dashboardQueryService = dashboardQueryService;
     this.assembler = assembler;
-    this.loggedUserContext = loggedUserContext;
   }
 
   @Operation(
@@ -42,7 +38,7 @@ public class PersonalDashboardController {
           - Status atuais
           - Indicadores operacionais pessoais
 
-          Acesso exclusivo para perfil OPERATOR.
+          Acesso exclusivo para perfil OPERADOR.
           """)
   @ApiResponses({
     @ApiResponse(responseCode = "200", description = "Dashboard retornado com sucesso"),
@@ -50,12 +46,11 @@ public class PersonalDashboardController {
     @ApiResponse(responseCode = "403", description = "Usuário sem permissão"),
     @ApiResponse(responseCode = "500", description = "Erro interno ao gerar dashboard")
   })
+  // CORRIGIDO: era verificação manual com if/throw UnauthorizedException (HTTP 401).
+  // @PreAuthorize retorna HTTP 403, que é o código semanticamente correto para acesso negado.
+  @PreAuthorize("hasRole('OPERADOR')")
   @GetMapping
   public ResponseEntity<PersonalDashboardDTO> getPersonalDashboard() {
-
-    if (!loggedUserContext.isOperator()) {
-      throw new UnauthorizedException("Acesso restrito ao perfil OPERATOR");
-    }
 
     DashboardData data = dashboardQueryService.loadDashboardData();
 

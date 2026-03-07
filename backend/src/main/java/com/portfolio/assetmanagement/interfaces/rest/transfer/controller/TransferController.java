@@ -2,186 +2,107 @@ package com.portfolio.assetmanagement.interfaces.rest.transfer.controller;
 
 import com.portfolio.assetmanagement.application.transfer.dto.TransferApproveDTO;
 import com.portfolio.assetmanagement.application.transfer.dto.TransferCreateDTO;
+import com.portfolio.assetmanagement.application.transfer.dto.TransferResponseDTO;
+import com.portfolio.assetmanagement.application.transfer.mapper.TransferMapper;
+import com.portfolio.assetmanagement.application.transfer.service.TransferQueryService;
 import com.portfolio.assetmanagement.application.transfer.service.TransferService;
 import com.portfolio.assetmanagement.domain.transfer.entity.TransferRequest;
+import com.portfolio.assetmanagement.domain.transfer.enums.TransferStatus;
+import com.portfolio.assetmanagement.shared.pagination.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotNull;
-import java.util.List;
+import java.time.LocalDate;
+import java.util.stream.Collectors;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(
-    name = "Transfers",
-    description = "Fluxo completo de solicitações e aprovações de transferência de ativos")
+@Tag(name = "Transfers", description = "Transferências de ativos entre unidades")
 @RestController
 @RequestMapping("/transfers")
 public class TransferController {
 
-  private final TransferService service;
+  private final TransferService transferService;
+  private final TransferQueryService queryService;
+  private final TransferMapper transferMapper;
 
-  public TransferController(TransferService service) {
-    this.service = service;
+  public TransferController(
+      TransferService transferService,
+      TransferQueryService queryService,
+      TransferMapper transferMapper) {
+    this.transferService = transferService;
+    this.queryService = queryService;
+    this.transferMapper = transferMapper;
   }
 
-  /* ============================================================
-   *  SOLICITAR TRANSFERÊNCIA
-   * ============================================================ */
-
   @Operation(
-      summary = "Solicitar transferência de ativo",
+      summary = "Listar transferências",
       description =
           """
-          Cria uma nova solicitação de transferência de ativo entre unidades.
-
-          Regras:
-          - O ativo deve existir
-          - A unidade de destino deve existir
-          - O ativo não pode estar aposentado
-          - A solicitação inicia no status PENDING
-
-          Acesso: ADMIN ou MANAGER.
-          """)
-  @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Solicitação criada com sucesso"),
-    @ApiResponse(responseCode = "400", description = "Dados inválidos"),
-    @ApiResponse(responseCode = "404", description = "Ativo ou unidade não encontrada"),
-    @ApiResponse(responseCode = "409", description = "Estado inválido do ativo")
-  })
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-  @PostMapping
-  public TransferRequest create(@RequestBody @Valid TransferCreateDTO dto) {
-
-    validateCreateDTO(dto);
-
-    return service.request(dto.getAssetId(), dto.getToUnitId(), dto.getReason());
-  }
-
-  /* ============================================================
-   *  LISTAR TRANSFERÊNCIAS
-   * ============================================================ */
-
-  @Operation(
-      summary = "Listar transferências visíveis ao usuário",
-      description =
-          """
-          Retorna as solicitações de transferência visíveis ao usuário autenticado.
-
-          Multi-tenant safe.
-          """)
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER','OPERATOR')")
+      Lista transferências com filtros opcionais e paginação.
+      Filtros: status, assetId, startDate, endDate.
+      ADMIN vê todas; GESTOR vê as da sua unidade (origem + destino).
+      """)
   @GetMapping
-  public List<TransferRequest> list() {
-    return service.list();
+  public PageResponse<TransferResponseDTO> list(
+      @Parameter(description = "Status da transferência") @RequestParam(required = false)
+          TransferStatus status,
+      @Parameter(description = "ID do ativo") @RequestParam(required = false) Long assetId,
+      @Parameter(description = "Data início (yyyy-MM-dd)")
+          @RequestParam(required = false)
+          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+          LocalDate startDate,
+      @Parameter(description = "Data fim (yyyy-MM-dd)")
+          @RequestParam(required = false)
+          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+          LocalDate endDate,
+      @ParameterObject Pageable pageable) {
+
+    Page<TransferRequest> page = queryService.list(status, assetId, startDate, endDate, pageable);
+
+    return PageResponse.from(
+        page,
+        page.getContent().stream().map(transferMapper::toResponseDTO).collect(Collectors.toList()));
   }
 
-  /* ============================================================
-   *  APROVAR TRANSFERÊNCIA
-   * ============================================================ */
+  @Operation(summary = "Solicitar transferência")
+  @PostMapping
+  public ResponseEntity<TransferResponseDTO> request(@RequestBody @Valid TransferCreateDTO dto) {
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(
+            transferMapper.toResponseDTO(
+                transferService.request(dto.getAssetId(), dto.getToUnitId(), dto.getReason())));
+  }
 
-  @Operation(
-      summary = "Aprovar transferência",
-      description =
-          """
-          Aprova uma solicitação de transferência.
-
-          Regras:
-          - Deve estar no status PENDING
-          - Pode registrar comentário
-          - Move para status APPROVED
-          """)
-  @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Transferência aprovada"),
-    @ApiResponse(responseCode = "404", description = "Transferência não encontrada"),
-    @ApiResponse(responseCode = "409", description = "Transição de status inválida")
-  })
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @Operation(summary = "Aprovar transferência")
+  @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
   @PatchMapping("/{id}/approve")
-  public void approve(
-      @Parameter(description = "ID da transferência", example = "1") @PathVariable @NotNull Long id,
-      @RequestBody @Valid TransferApproveDTO dto) {
-
-    validateApproveDTO(dto);
-
-    service.approve(id, dto.getComment());
+  public ResponseEntity<Void> approve(
+      @PathVariable Long id, @RequestBody @Valid TransferApproveDTO dto) {
+    transferService.approve(id, dto.getComment());
+    return ResponseEntity.noContent().build();
   }
 
-  /* ============================================================
-   *  REJEITAR TRANSFERÊNCIA
-   * ============================================================ */
-
-  @Operation(
-      summary = "Rejeitar transferência",
-      description =
-          """
-          Rejeita uma solicitação de transferência.
-
-          Regras:
-          - Deve estar no status PENDING
-          - Pode registrar comentário
-          - Move para status REJECTED
-          """)
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @Operation(summary = "Rejeitar transferência")
+  @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
   @PatchMapping("/{id}/reject")
-  public void reject(
-      @Parameter(description = "ID da transferência", example = "1") @PathVariable @NotNull Long id,
-      @RequestBody @Valid TransferApproveDTO dto) {
-
-    validateApproveDTO(dto);
-
-    service.reject(id, dto.getComment());
+  public ResponseEntity<Void> reject(
+      @PathVariable Long id, @RequestBody @Valid TransferApproveDTO dto) {
+    transferService.reject(id, dto.getComment());
+    return ResponseEntity.noContent().build();
   }
 
-  /* ============================================================
-   *  COMPLETAR TRANSFERÊNCIA
-   * ============================================================ */
-
-  @Operation(
-      summary = "Completar transferência",
-      description =
-          """
-          Finaliza a transferência aprovada.
-
-          Regras:
-          - Deve estar no status APPROVED
-          - Atualiza unidade do ativo
-          - Move para status COMPLETED
-          """)
-  @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Transferência concluída"),
-    @ApiResponse(responseCode = "409", description = "Estado inválido para conclusão")
-  })
-  @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
+  @Operation(summary = "Concluir transferência")
   @PatchMapping("/{id}/complete")
-  public void complete(
-      @Parameter(description = "ID da transferência", example = "1") @PathVariable @NotNull
-          Long id) {
-
-    service.complete(id);
-  }
-
-  /* ============================================================
-   *  VALIDAÇÕES DEFENSIVAS
-   * ============================================================ */
-
-  private void validateCreateDTO(TransferCreateDTO dto) {
-
-    if (dto.getAssetId() == null) {
-      throw new IllegalArgumentException("assetId é obrigatório");
-    }
-
-    if (dto.getToUnitId() == null) {
-      throw new IllegalArgumentException("toUnitId é obrigatório");
-    }
-  }
-
-  private void validateApproveDTO(TransferApproveDTO dto) {
-
-    if (dto == null) {
-      throw new IllegalArgumentException("DTO é obrigatório");
-    }
+  public ResponseEntity<Void> complete(@PathVariable Long id) {
+    transferService.complete(id);
+    return ResponseEntity.noContent().build();
   }
 }

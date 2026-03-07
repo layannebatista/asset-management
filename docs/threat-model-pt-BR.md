@@ -1,9 +1,3 @@
-# Modelo de Ameaças
-
-Gerado em: 2026-02-18 02:34:42.458930
-
----
-
 # 1. Visão Geral
 
 Este documento define o modelo de ameaças para o Sistema de Gestão de Ativos Enterprise.

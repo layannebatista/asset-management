@@ -1,0 +1,1 @@
+{"uuid":"2001c304-c365-4b3c-8b91-aa6ea95c4a6e","name":"deve lançar IllegalArgumentException quando asset é null","children":["74f7f77f-c8a4-40b5-99f9-25b08469aa8e"],"befores":[],"afters":[],"start":1772838945391,"stop":1772838945399}

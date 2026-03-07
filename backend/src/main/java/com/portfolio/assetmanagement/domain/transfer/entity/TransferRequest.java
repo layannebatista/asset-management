@@ -5,7 +5,7 @@ import com.portfolio.assetmanagement.domain.transfer.enums.TransferStatus;
 import com.portfolio.assetmanagement.domain.unit.entity.Unit;
 import com.portfolio.assetmanagement.domain.user.entity.User;
 import jakarta.persistence.*;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime; // C2: era LocalDateTime
 
 @Entity
 @Table(name = "transfer_requests")
@@ -15,11 +15,6 @@ public class TransferRequest {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  /**
-   * Controle de concorrência otimista.
-   *
-   * <p>Impede aprovações simultâneas, completes simultâneos e race conditions.
-   */
   @Version
   @Column(nullable = false)
   private Long version;
@@ -52,61 +47,37 @@ public class TransferRequest {
   private String reason;
 
   @Column(nullable = false)
-  private LocalDateTime requestedAt;
+  private OffsetDateTime requestedAt; // C2
 
-  private LocalDateTime approvedAt;
+  private OffsetDateTime approvedAt; // C2
 
-  private LocalDateTime completedAt;
+  private OffsetDateTime completedAt; // C2
 
   protected TransferRequest() {}
 
   public TransferRequest(Asset asset, Unit fromUnit, Unit toUnit, User requestedBy, String reason) {
-
-    validateConstructor(asset, fromUnit, toUnit, requestedBy, reason);
+    if (asset == null) throw new IllegalArgumentException("asset é obrigatório");
+    if (fromUnit == null) throw new IllegalArgumentException("fromUnit é obrigatório");
+    if (toUnit == null) throw new IllegalArgumentException("toUnit é obrigatório");
+    if (requestedBy == null) throw new IllegalArgumentException("requestedBy é obrigatório");
+    if (reason == null || reason.isBlank())
+      throw new IllegalArgumentException("reason é obrigatório");
+    if (fromUnit.getId().equals(toUnit.getId()))
+      throw new IllegalArgumentException("Transferência para mesma unidade não é permitida");
 
     this.asset = asset;
     this.fromUnit = fromUnit;
     this.toUnit = toUnit;
     this.requestedBy = requestedBy;
     this.reason = reason;
-
     this.status = TransferStatus.PENDING;
-    this.requestedAt = LocalDateTime.now();
-  }
-
-  private void validateConstructor(
-      Asset asset, Unit fromUnit, Unit toUnit, User requestedBy, String reason) {
-
-    if (asset == null) {
-      throw new IllegalArgumentException("asset é obrigatório");
-    }
-
-    if (fromUnit == null) {
-      throw new IllegalArgumentException("fromUnit é obrigatório");
-    }
-
-    if (toUnit == null) {
-      throw new IllegalArgumentException("toUnit é obrigatório");
-    }
-
-    if (requestedBy == null) {
-      throw new IllegalArgumentException("requestedBy é obrigatório");
-    }
-
-    if (reason == null || reason.isBlank()) {
-      throw new IllegalArgumentException("reason é obrigatório");
-    }
-
-    if (fromUnit.getId().equals(toUnit.getId())) {
-      throw new IllegalArgumentException("Transferência para mesma unidade não é permitida");
-    }
+    this.requestedAt = OffsetDateTime.now(); // C2
   }
 
   public Long getId() {
     return id;
   }
 
-  /** Usado automaticamente pelo Hibernate para controle de concorrência. */
   public Long getVersion() {
     return version;
   }
@@ -139,17 +110,17 @@ public class TransferRequest {
     return reason;
   }
 
-  public LocalDateTime getRequestedAt() {
+  public OffsetDateTime getRequestedAt() {
     return requestedAt;
-  }
+  } // C2
 
-  public LocalDateTime getApprovedAt() {
+  public OffsetDateTime getApprovedAt() {
     return approvedAt;
-  }
+  } // C2
 
-  public LocalDateTime getCompletedAt() {
+  public OffsetDateTime getCompletedAt() {
     return completedAt;
-  }
+  } // C2
 
   public boolean isPending() {
     return status == TransferStatus.PENDING;
@@ -168,42 +139,27 @@ public class TransferRequest {
   }
 
   public void approve(User approver) {
-
-    if (status != TransferStatus.PENDING) {
+    if (status != TransferStatus.PENDING)
       throw new IllegalStateException("Apenas transferências PENDING podem ser aprovadas");
-    }
-
-    if (approver == null) {
-      throw new IllegalArgumentException("approver é obrigatório");
-    }
-
+    if (approver == null) throw new IllegalArgumentException("approver é obrigatório");
     this.status = TransferStatus.APPROVED;
     this.approvedBy = approver;
-    this.approvedAt = LocalDateTime.now();
+    this.approvedAt = OffsetDateTime.now(); // C2
   }
 
   public void reject(User approver) {
-
-    if (status != TransferStatus.PENDING) {
+    if (status != TransferStatus.PENDING)
       throw new IllegalStateException("Apenas transferências PENDING podem ser rejeitadas");
-    }
-
-    if (approver == null) {
-      throw new IllegalArgumentException("approver é obrigatório");
-    }
-
+    if (approver == null) throw new IllegalArgumentException("approver é obrigatório");
     this.status = TransferStatus.REJECTED;
     this.approvedBy = approver;
-    this.approvedAt = LocalDateTime.now();
+    this.approvedAt = OffsetDateTime.now(); // C2
   }
 
   public void complete() {
-
-    if (status != TransferStatus.APPROVED) {
+    if (status != TransferStatus.APPROVED)
       throw new IllegalStateException("Apenas transferências APPROVED podem ser concluídas");
-    }
-
     this.status = TransferStatus.COMPLETED;
-    this.completedAt = LocalDateTime.now();
+    this.completedAt = OffsetDateTime.now(); // C2
   }
 }

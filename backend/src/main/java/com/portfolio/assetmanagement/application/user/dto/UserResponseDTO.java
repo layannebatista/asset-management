@@ -3,11 +3,6 @@ package com.portfolio.assetmanagement.application.user.dto;
 import com.portfolio.assetmanagement.domain.user.enums.UserStatus;
 import com.portfolio.assetmanagement.security.enums.UserRole;
 
-/**
- * DTO responsável por representar a resposta da API para um usuário.
- *
- * <p>Define os dados públicos e seguros do usuário, evitando o vazamento de informações sensíveis.
- */
 public class UserResponseDTO {
 
   private Long id;
@@ -18,6 +13,7 @@ public class UserResponseDTO {
   private Long organizationId;
   private Long unitId;
   private boolean lgpdAccepted;
+  private boolean mfaEnabled; // true se phoneNumber está preenchido
 
   public UserResponseDTO() {}
 
@@ -29,7 +25,8 @@ public class UserResponseDTO {
       UserStatus status,
       Long organizationId,
       Long unitId,
-      boolean lgpdAccepted) {
+      boolean lgpdAccepted,
+      boolean mfaEnabled) {
 
     this.id = id;
     this.name = name;
@@ -39,6 +36,7 @@ public class UserResponseDTO {
     this.organizationId = organizationId;
     this.unitId = unitId;
     this.lgpdAccepted = lgpdAccepted;
+    this.mfaEnabled = mfaEnabled;
   }
 
   public Long getId() {
@@ -71,5 +69,9 @@ public class UserResponseDTO {
 
   public boolean isLgpdAccepted() {
     return lgpdAccepted;
+  }
+
+  public boolean isMfaEnabled() {
+    return mfaEnabled;
   }
 }

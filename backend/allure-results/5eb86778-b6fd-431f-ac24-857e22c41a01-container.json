@@ -1,0 +1,1 @@
+{"uuid":"5eb86778-b6fd-431f-ac24-857e22c41a01","name":"deve lançar IllegalArgumentException quando description é blank","children":["6857fbc3-5e0a-4b86-90e3-f9cdb5fbba41"],"befores":[],"afters":[],"start":1772851308667,"stop":1772851308676}

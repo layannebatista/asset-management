@@ -2,8 +2,8 @@ package com.portfolio.assetmanagement.interfaces.rest.organization.controller;
 
 import com.portfolio.assetmanagement.application.organization.dto.OrganizationCreateDTO;
 import com.portfolio.assetmanagement.application.organization.dto.OrganizationResponseDTO;
+import com.portfolio.assetmanagement.application.organization.mapper.OrganizationMapper;
 import com.portfolio.assetmanagement.application.organization.service.OrganizationService;
-import com.portfolio.assetmanagement.domain.organization.entity.Organization;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.*;
@@ -20,9 +20,13 @@ import org.springframework.web.bind.annotation.*;
 public class OrganizationController {
 
   private final OrganizationService organizationService;
+  private final OrganizationMapper organizationMapper;
 
-  public OrganizationController(OrganizationService organizationService) {
+  public OrganizationController(
+      OrganizationService organizationService, OrganizationMapper organizationMapper) {
+
     this.organizationService = organizationService;
+    this.organizationMapper = organizationMapper;
   }
 
   /* ============================================================
@@ -48,9 +52,7 @@ public class OrganizationController {
   @PostMapping
   public OrganizationResponseDTO create(@RequestBody @Valid OrganizationCreateDTO dto) {
 
-    Organization organization = organizationService.createOrganization(dto.getName());
-
-    return toResponse(organization);
+    return organizationMapper.toResponseDTO(organizationService.createOrganization(dto.getName()));
   }
 
   /* ============================================================
@@ -70,9 +72,7 @@ public class OrganizationController {
   public OrganizationResponseDTO findById(
       @Parameter(description = "ID da organização", example = "1") @PathVariable Long id) {
 
-    Organization organization = organizationService.findById(id);
-
-    return toResponse(organization);
+    return organizationMapper.toResponseDTO(organizationService.findById(id));
   }
 
   /* ============================================================
@@ -122,15 +122,5 @@ public class OrganizationController {
       @Parameter(description = "ID da organização", example = "1") @PathVariable Long id) {
 
     organizationService.inactivateOrganization(id);
-  }
-
-  /* ============================================================
-   *  MAPPER
-   * ============================================================ */
-
-  private OrganizationResponseDTO toResponse(Organization organization) {
-
-    return new OrganizationResponseDTO(
-        organization.getId(), organization.getName(), organization.getStatus());
   }
 }
