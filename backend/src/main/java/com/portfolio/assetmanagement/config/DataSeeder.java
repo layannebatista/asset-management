@@ -11,14 +11,11 @@ import org.springframework.stereotype.Component;
 /**
  * Inicializa os hashes de senha dos usuários de demonstração.
  *
- * <p>O Flyway insere os usuários demo com um placeholder no campo password_hash.
- * Este componente substitui o placeholder pelo hash BCrypt real gerado pelo
- * PasswordEncoder configurado na aplicação, garantindo que o login funcione
- * independente do ambiente.
+ * <p>O Flyway insere os usuários demo com um placeholder no campo password_hash. Este componente
+ * substitui o placeholder pelo hash BCrypt real gerado pelo PasswordEncoder configurado na
+ * aplicação, garantindo que o login funcione independente do ambiente.
  *
- * <p>Credenciais de demonstração:
- * - admin@empresa.com    / Admin@123
- * - gestor@empresa.com   / Gestor@123
+ * <p>Credenciais de demonstração: - admin@empresa.com / Admin@123 - gestor@empresa.com / Gestor@123
  * - operador@empresa.com / Op@12345
  */
 @Component
@@ -51,12 +48,14 @@ public class DataSeeder implements ApplicationRunner {
 
       if (currentHash == null || currentHash.equals(SEED_PLACEHOLDER)) {
         String hash = passwordEncoder.encode(rawPassword);
-        jdbcTemplate.update(
-            "UPDATE users SET password_hash = ? WHERE email = ?", hash, email);
+        jdbcTemplate.update("UPDATE users SET password_hash = ? WHERE email = ?", hash, email);
         log.info("DataSeeder: hash atualizado para {}", email);
       }
     } catch (Exception e) {
-      log.warn("DataSeeder: usuário {} não encontrado ou erro ao atualizar hash: {}", email, e.getMessage());
+      log.warn(
+          "DataSeeder: usuário {} não encontrado ou erro ao atualizar hash: {}",
+          email,
+          e.getMessage());
     }
   }
 }
