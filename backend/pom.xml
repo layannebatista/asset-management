@@ -69,6 +69,18 @@
             <optional>true</optional>
         </dependency>
 
+
+        <!-- ================= FLYWAY ================= -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+            <version>10.10.0</version>
+        </dependency>
         <!-- ================= LOMBOK ================= -->
 
         <dependency>

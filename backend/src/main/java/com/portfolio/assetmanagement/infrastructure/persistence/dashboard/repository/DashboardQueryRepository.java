@@ -112,15 +112,15 @@ public class DashboardQueryRepository {
 
     String jpql =
         """
-        SELECT FUNCTION('YEAR', m.createdAt),
-               FUNCTION('MONTH', m.createdAt),
+        SELECT EXTRACT(YEAR FROM m.createdAt),
+               EXTRACT(MONTH FROM m.createdAt),
                COUNT(m)
         FROM MaintenanceRecord m
         WHERE m.organizationId = :organizationId
-        GROUP BY FUNCTION('YEAR', m.createdAt),
-                 FUNCTION('MONTH', m.createdAt)
-        ORDER BY FUNCTION('YEAR', m.createdAt),
-                 FUNCTION('MONTH', m.createdAt)
+        GROUP BY EXTRACT(YEAR FROM m.createdAt),
+                 EXTRACT(MONTH FROM m.createdAt)
+        ORDER BY EXTRACT(YEAR FROM m.createdAt),
+                 EXTRACT(MONTH FROM m.createdAt)
         """;
 
     return entityManager
@@ -155,15 +155,15 @@ public class DashboardQueryRepository {
 
     String jpql =
         """
-        SELECT FUNCTION('YEAR', t.requestedAt),
-               FUNCTION('MONTH', t.requestedAt),
+        SELECT EXTRACT(YEAR FROM t.requestedAt),
+               EXTRACT(MONTH FROM t.requestedAt),
                COUNT(t)
         FROM TransferRequest t
         WHERE t.asset.organization.id = :organizationId
-        GROUP BY FUNCTION('YEAR', t.requestedAt),
-                 FUNCTION('MONTH', t.requestedAt)
-        ORDER BY FUNCTION('YEAR', t.requestedAt),
-                 FUNCTION('MONTH', t.requestedAt)
+        GROUP BY EXTRACT(YEAR FROM t.requestedAt),
+                 EXTRACT(MONTH FROM t.requestedAt)
+        ORDER BY EXTRACT(YEAR FROM t.requestedAt),
+                 EXTRACT(MONTH FROM t.requestedAt)
         """;
 
     return entityManager
