@@ -53,13 +53,6 @@ services:
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
 
-      MAIL_HOST: smtp-relay.brevo.com
-      MAIL_PORT: 587
-      MAIL_USERNAME: apikey
-      MAIL_PASSWORD: xsmtpsib-cb2eb57db6e9b4ade657cf6f4687e06a53c21b6180770ee85190bd5d7d322392-FMggUTLNk8z3MDci
-      MAIL_FROM: contato.layanne.batista@gmail.com
-      MAIL_FROM_NAME: Patrimônio 360
-
     ports:
       - "8080:8080"
     depends_on:
