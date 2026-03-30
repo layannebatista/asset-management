@@ -1,0 +1,102 @@
+groups:
+
+  # ─── Disponibilidade ────────────────────────────────────────────────────────
+  - name: disponibilidade
+    rules:
+      - alert: BackendIndisponivel
+        expr: up{job="asset-management-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend fora do ar"
+          description: "O serviço asset-management está sem responder há mais de 1 minuto."
+
+  # ─── HTTP ────────────────────────────────────────────────────────────────────
+  - name: http
+    rules:
+      - alert: AltaTaxaDeErros5xx
+        expr: |
+          sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m]))
+          /
+          sum(rate(http_server_requests_seconds_count[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Taxa de erros 5xx acima de 5%"
+          description: "{{ $value | humanizePercentage }} das requisições estão retornando 5xx nos últimos 5 minutos."
+
+      - alert: AltaLatenciaP99
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(http_server_requests_seconds_bucket[5m])) by (le)
+          ) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Latência P99 acima de 2 segundos"
+          description: "99% das requisições estão levando mais de {{ $value | humanizeDuration }} para responder."
+
+  # ─── JVM ─────────────────────────────────────────────────────────────────────
+  - name: jvm
+    rules:
+      - alert: HeapMemoriaAlta
+        expr: |
+          jvm_memory_used_bytes{area="heap"}
+          /
+          jvm_memory_max_bytes{area="heap"} > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Heap JVM acima de 85%"
+          description: "O uso do Heap está em {{ $value | humanizePercentage }}. Risco de OutOfMemoryError."
+
+      - alert: HeapMemoriaCritica
+        expr: |
+          jvm_memory_used_bytes{area="heap"}
+          /
+          jvm_memory_max_bytes{area="heap"} > 0.95
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Heap JVM acima de 95% — CRÍTICO"
+          description: "O uso do Heap está em {{ $value | humanizePercentage }}. OutOfMemoryError iminente."
+
+      - alert: AltoPauseGC
+        expr: |
+          rate(jvm_gc_pause_seconds_sum[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "GC pausando JVM por mais de 100ms/s"
+          description: "Pausas de GC estão consumindo {{ $value | humanizeDuration }} por segundo."
+
+  # ─── Banco de Dados (HikariCP) ───────────────────────────────────────────────
+  - name: banco_de_dados
+    rules:
+      - alert: PoolConexoesEsgotado
+        expr: |
+          hikaricp_connections_pending{pool="AssetHikariPool"} > 5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Pool HikariCP com {{ $value }} conexões aguardando"
+          description: "Há {{ $value }} threads aguardando conexão ao banco. Considere aumentar maximum-pool-size."
+
+      - alert: PoolConexoesAtivoCritico
+        expr: |
+          hikaricp_connections_active{pool="AssetHikariPool"}
+          /
+          hikaricp_connections_max{pool="AssetHikariPool"} > 0.90
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Pool HikariCP acima de 90% de utilização"
+          description: "{{ $value | humanizePercentage }} das conexões do pool estão em uso."

@@ -58,7 +58,8 @@ public class UserController {
       Ordenação padrão: name ASC.
       """)
   @GetMapping
-  @PreAuthorize("hasRole('ADMIN')")
+  // 🔥 CORREÇÃO: permitir todos os papéis (filtro é feito no service)
+  @PreAuthorize("hasAnyRole('ADMIN','GESTOR','OPERADOR')")
   public PageResponse<UserResponseDTO> list(
       @Parameter(description = "Filtrar por status") @RequestParam(required = false)
           UserStatus status,

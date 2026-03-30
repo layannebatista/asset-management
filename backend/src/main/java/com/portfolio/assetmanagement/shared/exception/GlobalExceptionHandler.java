@@ -17,6 +17,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -134,6 +135,13 @@ public class GlobalExceptionHandler {
             ApiResponse.error(
                 new ErrorResponse(
                     ErrorCodes.BUSINESS_RULE_VIOLATION, "Database integrity violation")));
+  }
+
+  @ExceptionHandler(NoResourceFoundException.class)
+  public ResponseEntity<ApiResponse<Void>> handleNoResourceFound(
+      NoResourceFoundException ex, HttpServletRequest request) {
+    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+        .body(ApiResponse.error(new ErrorResponse(ErrorCodes.RESOURCE_NOT_FOUND, ex.getMessage())));
   }
 
   @ExceptionHandler(Exception.class)

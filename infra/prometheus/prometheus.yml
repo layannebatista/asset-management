@@ -1,0 +1,33 @@
+global:
+  # 15s é o padrão recomendado; 5s era desnecessariamente agressivo
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  evaluation_interval: 15s
+  # Label global adicionado a todas as séries coletadas
+  external_labels:
+    monitor: "asset-management"
+    environment: "docker"
+
+# ─── Regras de alertas ────────────────────────────────────────────────────────
+rule_files:
+  - "alerts.yml"
+
+# ─── Alvos de coleta ──────────────────────────────────────────────────────────
+scrape_configs:
+
+  # Backend Spring Boot – métricas do Actuator
+  - job_name: "asset-management-backend"
+    metrics_path: "/actuator/prometheus"
+    scrape_interval: 15s
+    static_configs:
+      - targets: ["asset-management:8080"]
+        labels:
+          service: "backend"
+          language: "java"
+
+  # Self-monitoring do Prometheus
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+        labels:
+          service: "prometheus"

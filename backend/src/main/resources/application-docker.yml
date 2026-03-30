@@ -1,16 +1,50 @@
+# Perfil ativo no Docker Compose (SPRING_PROFILES_ACTIVE=docker).
+# Complementa application.yml – apenas sobreposições específicas para container.
+
 spring:
   datasource:
-    url: ${DB_URL:jdbc:postgresql://postgres:5432/asset_management}
+    url: ${DB_URL:jdbc:postgresql://postgres:5432/asset_management?currentSchema=public}
     username: ${DB_USERNAME:asset_user}
     password: ${DB_PASSWORD:asset123}
     driver-class-name: org.postgresql.Driver
+    hikari:
+      # Pool menor no Docker para não sobrecarregar a instância única do PG
+      maximum-pool-size: 15
+      minimum-idle: 3
+
   jpa:
+    show-sql: false
     hibernate:
       ddl-auto: none
     properties:
-      hibernate.format_sql: true
+      hibernate.format_sql: false
+
   flyway:
     enabled: true
     locations: classpath:db/migration
     validate-on-migrate: true
+    baseline-on-migrate: false
     default-schema: public
+
+# ─── Actuator em produção: detalhes apenas para requisições autenticadas ──────
+management:
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# ─── Swagger habilitado no Docker (desabilitar em produção real) ──────────────
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+# ─── Logging estruturado para produção ────────────────────────────────────────
+logging:
+  level:
+    root: WARN
+    com.portfolio.assetmanagement: INFO
+    org.flywaydb: INFO
+  pattern:
+    # Formato linha única facilita coleta pelo Prometheus/Loki/ELK
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSSZ} %-5level [%thread] %logger{40} : %msg%n"

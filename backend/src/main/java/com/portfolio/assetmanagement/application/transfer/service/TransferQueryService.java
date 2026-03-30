@@ -28,6 +28,7 @@ public class TransferQueryService {
   public Page<TransferRequest> list(
       TransferStatus status,
       Long assetId,
+      Long unitId,
       LocalDate startDate,
       LocalDate endDate,
       Pageable pageable) {
@@ -36,35 +37,44 @@ public class TransferQueryService {
 
     // GESTOR: vê apenas transfers da sua unidade (origem OU destino)
     if (loggedUser.isManager()) {
-      Long unitId = loggedUser.getUnitId();
-      if (unitId != null) {
-        spec =
-            spec.and(
-                (root, q, cb) ->
-                    cb.or(
-                        cb.equal(root.join("fromUnit").get("id"), unitId),
-                        cb.equal(root.join("toUnit").get("id"), unitId)));
+      Long managerUnitId = loggedUser.getUnitId();
+      if (managerUnitId != null) {
+        spec = spec.and((root, q, cb) ->
+            cb.or(
+                cb.equal(root.join("fromUnit").get("id"), managerUnitId),
+                cb.equal(root.join("toUnit").get("id"), managerUnitId)));
       }
+    } else if (unitId != null) {
+      // ADMIN com filtro explícito de unidade
+      final Long fUnitId = unitId;
+      spec = spec.and((root, q, cb) ->
+          cb.or(
+              cb.equal(root.join("fromUnit").get("id"), fUnitId),
+              cb.equal(root.join("toUnit").get("id"), fUnitId)));
     }
 
     if (status != null) {
       spec = spec.and((root, q, cb) -> cb.equal(root.get("status"), status));
     }
-
     if (assetId != null) {
       spec = spec.and((root, q, cb) -> cb.equal(root.join("asset").get("id"), assetId));
     }
-
     if (startDate != null) {
       OffsetDateTime start = startDate.atStartOfDay().atOffset(ZoneOffset.UTC);
       spec = spec.and((root, q, cb) -> cb.greaterThanOrEqualTo(root.get("requestedAt"), start));
     }
-
     if (endDate != null) {
       OffsetDateTime end = endDate.plusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC);
       spec = spec.and((root, q, cb) -> cb.lessThan(root.get("requestedAt"), end));
     }
 
     return repository.findAll(spec, pageable);
+  }
+
+  /** Retrocompatível sem unitId. */
+  @Transactional(readOnly = true)
+  public Page<TransferRequest> list(
+      TransferStatus status, Long assetId, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+    return list(status, assetId, null, startDate, endDate, pageable);
   }
 }

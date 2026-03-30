@@ -41,16 +41,11 @@ public class AssetController {
       OrganizationService organizationService,
       UnitService unitService,
       AssetMapper assetMapper) {
-
     this.assetService = assetService;
     this.organizationService = organizationService;
     this.unitService = unitService;
     this.assetMapper = assetMapper;
   }
-
-  /* ============================================================
-   *  LISTAGEM COM PAGINAÇÃO + FILTROS
-   * ============================================================ */
 
   @Operation(
       summary = "Listar ativos",
@@ -65,6 +60,7 @@ public class AssetController {
           - usuário atribuído
           - assetTag
           - modelo
+          - search (busca simultânea em assetTag e modelo)
 
           Requer autenticação JWT.
           """)
@@ -77,32 +73,24 @@ public class AssetController {
   @GetMapping
   public PageResponse<AssetResponseDTO> list(
       @Parameter(description = "Status do ativo", example = "AVAILABLE")
-          @RequestParam(required = false)
-          AssetStatus status,
+          @RequestParam(required = false) AssetStatus status,
       @Parameter(description = "Tipo do ativo", example = "NOTEBOOK")
-          @RequestParam(required = false)
-          AssetType type,
+          @RequestParam(required = false) AssetType type,
       @Parameter(description = "ID da unidade organizacional", example = "1")
-          @RequestParam(required = false)
-          Long unitId,
+          @RequestParam(required = false) Long unitId,
       @Parameter(description = "ID do usuário atribuído", example = "10")
-          @RequestParam(required = false)
-          Long assignedUserId,
+          @RequestParam(required = false) Long assignedUserId,
       @Parameter(description = "Filtro por assetTag", example = "ASSET-001")
-          @RequestParam(required = false)
-          String assetTag,
+          @RequestParam(required = false) String assetTag,
       @Parameter(description = "Filtro por modelo", example = "Dell Latitude 5430")
-          @RequestParam(required = false)
-          String model,
+          @RequestParam(required = false) String model,
+      @Parameter(description = "Busca simultânea em assetTag e modelo", example = "Dell")
+          @RequestParam(required = false) String search,
       @ParameterObject Pageable pageable) {
 
     return assetService.searchAssets(
-        status, type, unitId, assignedUserId, assetTag, model, pageable);
+        status, type, unitId, assignedUserId, assetTag, model, search, pageable);
   }
-
-  /* ============================================================
-   *  BUSCA POR ID
-   * ============================================================ */
 
   @Operation(summary = "Buscar ativo por ID")
   @ApiResponses({
@@ -115,17 +103,10 @@ public class AssetController {
   @GetMapping("/{id}")
   public AssetResponseDTO findById(
       @Parameter(description = "ID do ativo", example = "1") @PathVariable Long id) {
-
     return assetMapper.toResponseDTO(assetService.findById(id));
   }
 
-  /* ============================================================
-   *  CRIAÇÃO MANUAL
-   * ============================================================ */
-
-  @Operation(
-      summary = "Criar ativo manualmente",
-      description = "Cria um ativo informando explicitamente o assetTag.")
+  @Operation(summary = "Criar ativo manualmente")
   @ApiResponses({
     @ApiResponse(responseCode = "201", description = "Ativo criado com sucesso"),
     @ApiResponse(responseCode = "400", description = "Dados inválidos"),
@@ -134,8 +115,7 @@ public class AssetController {
   @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR')")
   @PostMapping("/{organizationId}")
   public ResponseEntity<AssetResponseDTO> create(
-      @Parameter(description = "ID da organização", example = "1") @PathVariable
-          Long organizationId,
+      @Parameter(description = "ID da organização", example = "1") @PathVariable Long organizationId,
       @RequestBody @Valid AssetCreateDTO dto) {
 
     Organization organization = organizationService.findById(organizationId);
@@ -149,13 +129,7 @@ public class AssetController {
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
-  /* ============================================================
-   *  CRIAÇÃO AUTOMÁTICA
-   * ============================================================ */
-
-  @Operation(
-      summary = "Criar ativo com assetTag automático",
-      description = "Gera automaticamente o assetTag baseado na regra de negócio.")
+  @Operation(summary = "Criar ativo com assetTag automático")
   @ApiResponses({
     @ApiResponse(responseCode = "201", description = "Ativo criado com sucesso"),
     @ApiResponse(responseCode = "400", description = "Dados inválidos")
@@ -175,39 +149,30 @@ public class AssetController {
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
-  /* ============================================================
-   *  RETIRE
-   * ============================================================ */
-
-  @Operation(
-      summary = "Aposentar ativo",
-      description = "Move o ativo para o status RETIRED. Apenas ADMIN pode executar.")
+  @Operation(summary = "Aposentar ativo")
   @PreAuthorize("hasRole('ADMIN')")
   @PatchMapping("/{id}/retire")
   public void retire(@PathVariable Long id) {
     assetService.retireAsset(id);
   }
 
-  /* ============================================================
-   *  ASSIGN
-   * ============================================================ */
-
-  @Operation(
-      summary = "Atribuir ativo a usuário",
-      description = "Altera o status para ASSIGNED e vincula o usuário ao ativo.")
+  @Operation(summary = "Atribuir ativo a usuário")
   @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR')")
   @PatchMapping("/{assetId}/assign/{userId}")
   public void assign(@PathVariable Long assetId, @PathVariable Long userId) {
     assetService.assignAsset(assetId, userId);
   }
 
-  /* ============================================================
-   *  UNASSIGN
-   * ============================================================ */
+  @Operation(summary = "Atualizar dados financeiros do ativo")
+  @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR')")
+  @PatchMapping("/{id}/financial")
+  public AssetResponseDTO updateFinancial(
+      @PathVariable Long id,
+      @RequestBody com.portfolio.assetmanagement.application.asset.dto.AssetFinancialUpdateDTO dto) {
+    return assetMapper.toResponseDTO(assetService.updateFinancial(id, dto));
+  }
 
-  @Operation(
-      summary = "Remover atribuição de usuário",
-      description = "Remove o usuário vinculado e retorna o ativo para AVAILABLE.")
+  @Operation(summary = "Remover atribuição de usuário")
   @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR')")
   @PatchMapping("/{assetId}/unassign")
   public void unassign(@PathVariable Long assetId) {

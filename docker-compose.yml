@@ -1,52 +1,198 @@
+version: "3.8"
+
+networks:
+  asset-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  prometheus_data:
+  grafana_data:
+
 services:
+
+  # ─── Banco de dados ────────────────────────────────────────────────────────
   postgres:
-    image: postgres:16
+    image: postgres:16-alpine
     container_name: asset-management-db
     environment:
       POSTGRES_DB: asset_management
-      POSTGRES_USER: asset_user
-      POSTGRES_PASSWORD: asset123
+      POSTGRES_USER: ${DB_USERNAME:-asset_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-asset123}
     ports:
       - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U asset_user -d asset_management"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-asset_user} -d asset_management"]
+      interval: 10s
       timeout: 5s
       retries: 10
+      start_period: 30s
     restart: unless-stopped
+    networks:
+      - asset-net
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+
+  # ─── Backend Spring Boot ───────────────────────────────────────────────────
   asset-management:
     build: ./backend
     container_name: asset-management-api
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      # DB_URL aponta para o service interno; sobrescreve o valor localhost do .env
+      DB_URL: jdbc:postgresql://postgres:5432/asset_management?currentSchema=public
+      DB_USERNAME: ${DB_USERNAME:-asset_user}
+      DB_PASSWORD: ${DB_PASSWORD:-asset123}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+
+      MAIL_HOST: smtp-relay.brevo.com
+      MAIL_PORT: 587
+      MAIL_USERNAME: apikey
+      MAIL_PASSWORD: xsmtpsib-cb2eb57db6e9b4ade657cf6f4687e06a53c21b6180770ee85190bd5d7d322392-FMggUTLNk8z3MDci
+      MAIL_FROM: contato.layanne.batista@gmail.com
+      MAIL_FROM_NAME: Patrimônio 360
+
     ports:
       - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
-    environment:
-      SPRING_PROFILES_ACTIVE: docker
-      DB_URL: jdbc:postgresql://postgres:5432/asset_management?currentSchema=public
-      DB_USERNAME: asset_user
-      DB_PASSWORD: asset123
-      JWT_SECRET: asset-management-super-secret-key-1234567890
-      MAIL_USERNAME: test
-      MAIL_PASSWORD: test
-      CORS_ALLOWED_ORIGINS: http://localhost:5173
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
     restart: unless-stopped
+    networks:
+      - asset-net
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 768M
+
+  # ─── Frontend React (build estático via Nginx) ────────────────────────────
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080}
     container_name: asset-management-frontend
     ports:
-      - "5173:5173"
+      - "5173:80"
     depends_on:
       - asset-management
-    environment:
-      VITE_API_URL: http://localhost:8080
-    volumes:
-      - ./frontend/src:/app/src
     restart: unless-stopped
-volumes:
-  postgres_data:
+    networks:
+      - asset-net
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 128M
+
+  # ─── Prometheus ────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=15d"
+      - "--web.enable-lifecycle"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s
+    depends_on:
+      asset-management:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - asset-net
+
+  # ─── Grafana ───────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    # Porta 3001 para evitar conflito com servidores de dev locais na 3000
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin123}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_DOMAIN: localhost
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - asset-net
+
+  # ─── Allure Report Server (API + gerador de relatório) ────────────────────
+  # Assiste allure-results/ e gera relatório automaticamente após cada mvn test.
+  # Não depende do backend: é um serviço independente de qualidade.
+  allure:
+    image: frankescobar/allure-docker-service:latest
+    container_name: allure
+    ports:
+      - "5050:5050"
+    environment:
+      # Reprocessa resultados a cada 3 s quando há arquivos novos
+      CHECK_RESULTS_EVERY_SECONDS: "3"
+      # Mantém histórico das últimas 20 execuções (tendências, gráficos de retries)
+      KEEP_HISTORY: "1"
+      KEEP_HISTORY_LATEST: "20"
+      # Permite acesso aos endpoints do viewer sem autenticação
+      MAKE_VIEWER_ENDPOINTS_PUBLIC: "true"
+      SECURITY_ENABLED: "false"
+    volumes:
+      - ./backend/allure-results:/app/allure-results
+      - ./backend/allure-reports:/app/default-reports
+    restart: unless-stopped
+    networks:
+      - asset-net
+
+  # ─── Allure UI (interface web para gerenciar projetos e histórico) ─────────
+  # Acesse em http://localhost:5252
+  allure-ui:
+    image: frankescobar/allure-docker-service-ui:latest
+    container_name: allure-ui
+    ports:
+      - "5252:5252"
+    environment:
+      # URL pública da API (perspectiva do browser de quem acessa)
+      ALLURE_DOCKER_PUBLIC_API_URL: "http://localhost:5050"
+      ALLURE_DOCKER_PUBLIC_API_URL_PREFIX: ""
+    depends_on:
+      - allure
+    restart: unless-stopped
+    networks:
+      - asset-net

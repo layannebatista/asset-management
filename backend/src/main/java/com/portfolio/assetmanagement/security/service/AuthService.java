@@ -1,19 +1,24 @@
 package com.portfolio.assetmanagement.security.service;
 
 import com.portfolio.assetmanagement.application.mfa.service.MfaService;
-import com.portfolio.assetmanagement.application.user.service.UserService;
 import com.portfolio.assetmanagement.domain.auth.entity.RefreshToken;
 import com.portfolio.assetmanagement.domain.user.entity.User;
+import com.portfolio.assetmanagement.infrastructure.persistence.user.repository.UserRepository;
 import com.portfolio.assetmanagement.security.dto.LoginRequestDTO;
 import com.portfolio.assetmanagement.security.dto.LoginResponseDTO;
 import com.portfolio.assetmanagement.security.dto.MfaVerifyRequestDTO;
 import com.portfolio.assetmanagement.security.dto.RefreshRequestDTO;
 import com.portfolio.assetmanagement.security.enums.UserRole;
+import com.portfolio.assetmanagement.shared.exception.NotFoundException;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -21,94 +26,125 @@ import org.springframework.stereotype.Service;
 @Service
 public class AuthService {
 
+  private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+
   private final AuthenticationManager authenticationManager;
   private final TokenService tokenService;
-  private final UserService userService;
+  private final UserRepository userRepository;
   private final MfaService mfaService;
   private final RefreshTokenService refreshTokenService;
 
   public AuthService(
       AuthenticationManager authenticationManager,
       TokenService tokenService,
-      UserService userService,
+      UserRepository userRepository,
       MfaService mfaService,
       RefreshTokenService refreshTokenService) {
 
     this.authenticationManager = authenticationManager;
     this.tokenService = tokenService;
-    this.userService = userService;
+    this.userRepository = userRepository;
     this.mfaService = mfaService;
     this.refreshTokenService = refreshTokenService;
   }
 
-  /** Autentica com email + senha. Inicia MFA se usuário tiver telefone. */
   public LoginResponseDTO authenticate(LoginRequestDTO request) {
+    log.info("AUTH >> tentativa de login para: {}", request.getEmail());
+
     try {
       Authentication authentication =
           authenticationManager.authenticate(
               new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
+      log.info("AUTH >> authenticationManager OK para: {}", request.getEmail());
+
       UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-      User user = userService.findByEmail(request.getEmail());
+
+      User user = userRepository
+          .findByEmail(request.getEmail())
+          .orElseThrow(() -> new BadCredentialsException("Usuário não encontrado após autenticação"));
+
+      log.info("AUTH >> usuário encontrado: id={}, status={}, lgpd={}, hashPrefix={}",
+          user.getId(),
+          user.getStatus(),
+          user.isLgpdAccepted(),
+          user.getPasswordHash() != null ? user.getPasswordHash().substring(0, Math.min(10, user.getPasswordHash().length())) : "NULL"
+      );
 
       if (user.getPhoneNumber() != null && !user.getPhoneNumber().isBlank()) {
+        log.info("AUTH >> iniciando MFA para: {}", request.getEmail());
         mfaService.generateAndSend(user.getId(), user.getPhoneNumber());
         return LoginResponseDTO.mfaChallenge(user.getId());
       }
 
-      return issueFullResponse(userDetails, user.getId());
+      log.info("AUTH >> emitindo token para: {}", request.getEmail());
+      return issueFullResponse(userDetails, user);
 
-    } catch (BadCredentialsException ex) {
+    } catch (DisabledException ex) {
+      log.error("AUTH >> usuário desabilitado: {} — {}", request.getEmail(), ex.getMessage());
       throw new BadCredentialsException("Email ou senha inválidos");
+    } catch (BadCredentialsException ex) {
+      log.error("AUTH >> credenciais inválidas: {} — {}", request.getEmail(), ex.getMessage());
+      throw new BadCredentialsException("Email ou senha inválidos");
+    } catch (AuthenticationException ex) {
+      log.error("AUTH >> AuthenticationException inesperada: {} — {} ({})",
+          request.getEmail(), ex.getMessage(), ex.getClass().getSimpleName());
+      throw new BadCredentialsException("Email ou senha inválidos");
+    } catch (Exception ex) {
+      log.error("AUTH >> ERRO INESPERADO no login de {}: {} ({})",
+          request.getEmail(), ex.getMessage(), ex.getClass().getName(), ex);
+      throw ex;
     }
   }
 
-  /** Verifica código MFA e emite JWT + refresh token. */
   public LoginResponseDTO verifyMfa(MfaVerifyRequestDTO request) {
     mfaService.validate(request.getUserId(), request.getCode());
 
-    User user = userService.findById(request.getUserId());
-    UserDetails userDetails = buildUserDetails(user);
+    User user = userRepository
+        .findById(request.getUserId())
+        .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
-    return issueFullResponse(userDetails, user.getId());
+    UserDetails userDetails = buildUserDetails(user);
+    return issueFullResponse(userDetails, user);
   }
 
-  /**
-   * Renova o access token usando um refresh token válido.
-   *
-   * <p>Rotação automática: o refresh token recebido é revogado e um novo é emitido junto com o novo
-   * access token.
-   */
   public LoginResponseDTO refresh(RefreshRequestDTO request) {
     RefreshToken old = refreshTokenService.validateAndRotate(request.getRefreshToken());
 
-    User user = userService.findById(old.getUserId());
-    UserDetails userDetails = buildUserDetails(user);
+    User user = userRepository
+        .findById(old.getUserId())
+        .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
+    UserDetails userDetails = buildUserDetails(user);
     String newAccessToken = tokenService.generateToken(userDetails);
     RefreshToken newRefresh = refreshTokenService.generate(user.getId());
 
-    return LoginResponseDTO.refreshed(newAccessToken, newRefresh.getToken());
+    return buildFullResponse(newAccessToken, newRefresh.getToken(), user);
   }
 
-  /** Logout: revoga todos os refresh tokens do usuário autenticado. */
   public void logout(Long userId) {
     refreshTokenService.revokeAll(userId);
   }
 
-  // ─────────────────────────────────────────────
-  //  Helpers
-  // ─────────────────────────────────────────────
-
-  private LoginResponseDTO issueFullResponse(UserDetails userDetails, Long userId) {
+  private LoginResponseDTO issueFullResponse(UserDetails userDetails, User user) {
     String accessToken = tokenService.generateToken(userDetails);
-    RefreshToken refreshToken = refreshTokenService.generate(userId);
+    RefreshToken refreshToken = refreshTokenService.generate(user.getId());
+    return buildFullResponse(accessToken, refreshToken.getToken(), user);
+  }
 
-    UserRole role =
-        UserRole.valueOf(
-            userDetails.getAuthorities().iterator().next().getAuthority().replace("ROLE_", ""));
+  private LoginResponseDTO buildFullResponse(String accessToken, String refreshToken, User user) {
+    UserRole role = UserRole.valueOf(user.getRole().name());
 
-    return new LoginResponseDTO(accessToken, refreshToken.getToken(), "Bearer", role);
+    return new LoginResponseDTO(
+        accessToken,
+        refreshToken,
+        "Bearer",
+        role,
+        false,
+        user.getId(),
+        user.getEmail(),
+        user.getOrganization() != null ? user.getOrganization().getId() : null,
+        user.getUnit() != null ? user.getUnit().getId() : null);
   }
 
   private UserDetails buildUserDetails(User user) {

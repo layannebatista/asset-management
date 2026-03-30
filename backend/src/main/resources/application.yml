@@ -1,30 +1,55 @@
 server:
   port: 8080
+  # Graceful shutdown: aguarda requisições em andamento antes de encerrar
+  shutdown: graceful
 
 spring:
   application:
     name: asset-management
+
+  # Lifecycle timeout para shutdown graceful
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
 
   datasource:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
+    # ─── HikariCP – connection pool ─────────────────────────────────────────
+    hikari:
+      pool-name: AssetHikariPool
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 600000        # 10 min: libera conexões ociosas
+      connection-timeout: 30000   # 30 s: tempo máximo para obter conexão do pool
+      max-lifetime: 1800000       # 30 min: recicla conexões antes de expirar no PG
+      keepalive-time: 300000      # 5 min: keep-alive para evitar timeout do firewall
+      validation-timeout: 5000
+      leak-detection-threshold: 60000  # loga stack se conexão ficar >60s sem retorno
 
   jpa:
     show-sql: false
+    # open-in-view: false evita lazy-loading acidental fora da camada de serviço
+    open-in-view: false
     hibernate:
       ddl-auto: validate
     properties:
       hibernate:
         format_sql: true
+        jdbc:
+          time_zone: UTC
+        # Batch insert/update para melhor performance em operações em massa
+        jdbc.batch_size: 25
+        order_inserts: true
+        order_updates: true
 
   flyway:
     enabled: true
 
   mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
-    port: ${MAIL_PORT:587}
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT}
     username: ${MAIL_USERNAME}
     password: ${MAIL_PASSWORD}
     properties:
@@ -34,27 +59,62 @@ spring:
           starttls:
             enable: true
             required: true
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
 
+# ─── Actuator / Observabilidade ───────────────────────────────────────────────
 management:
   endpoints:
     web:
       exposure:
-        include: health
+        include: health, info, metrics, prometheus, loggers
+      base-path: /actuator
 
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+      probes:
+        enabled: false   # ⛔ desativado pra não quebrar readiness
+    prometheus:
+      enabled: true
+    info:
+      enabled: true
+
+  health:
+    mail:
+      enabled: false   # ⛔ desativa erro de SMTP no health
+
+  info:
+    env:
+      enabled: true
+    build:
+      enabled: true
+    git:
+      enabled: true
+      mode: simple
+
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5, 0.90, 0.95, 0.99
+      slo:
+        http.server.requests: 100ms, 500ms, 1s, 2s
+# ─── Segurança / JWT ──────────────────────────────────────────────────────────
 security:
   jwt:
     secret: ${JWT_SECRET}
     expiration: ${JWT_EXPIRATION:3600000}
     refresh-expiration: ${JWT_REFRESH_EXPIRATION:604800}
 
+# ─── Configurações da aplicação ───────────────────────────────────────────────
 app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
   mail:
-    from: ${MAIL_FROM:noreply@patrimonio360.com.br}
+    from: ${MAIL_FROM:contato.layanne.batista@gmail.com}
     from-name: ${MAIL_FROM_NAME:Patrimônio 360}
   frontend:
     url: ${FRONTEND_URL:http://localhost:5173}
@@ -62,11 +122,31 @@ app:
     expiration-seconds: ${MFA_EXPIRATION_SECONDS:300}
     code-length: 6
 
+# ─── Logging ──────────────────────────────────────────────────────────────────
 logging:
   level:
-    org.hibernate.SQL: off
-    org.hibernate.type.descriptor.sql.BasicBinder: off
+    root: INFO
+    com.portfolio.assetmanagement: INFO
+    org.hibernate.SQL: OFF
+    org.hibernate.type.descriptor.sql.BasicBinder: OFF
+    # Reduz ruído de frameworks no desenvolvimento
+    org.springframework.web: WARN
+    org.springframework.security: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
 
+# ─── Swagger / OpenAPI ────────────────────────────────────────────────────────
 springdoc:
   api-docs:
     enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    try-it-out-enabled: true
+  info:
+    title: Patrimônio 360 – API
+    description: API de gestão de ativos organizacionais
+    version: ${project.version:1.0.0}

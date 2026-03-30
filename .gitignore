@@ -1,6 +1,10 @@
 HELP.md
 target/
 
+### Secrets – nunca commitar ###
+.env
+!.env.example
+
 ### Maven ###
 .mvn/wrapper/maven-wrapper.jar
 
@@ -31,3 +35,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Allure – resultados e relatórios gerados (não versionar) ###
+backend/allure-results/*
+!backend/allure-results/.gitkeep
+backend/allure-reports/
+
+### Relatórios de build gerados ###
+backend/target/cucumber-reports/
+backend/target/site/

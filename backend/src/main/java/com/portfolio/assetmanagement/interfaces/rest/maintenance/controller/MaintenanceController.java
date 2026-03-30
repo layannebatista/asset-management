@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Maintenance", description = "Gerenciamento do ciclo de vida de manutenções de ativos")
 @RestController
-@RequestMapping("/api/maintenance")
+@RequestMapping("/maintenance")
 public class MaintenanceController {
 
   private final MaintenanceService maintenanceService;
@@ -41,38 +41,30 @@ public class MaintenanceController {
     this.maintenanceMapper = maintenanceMapper;
   }
 
-  @Operation(
-      summary = "Listar manutenções",
-      description =
-          """
-      Lista manutenções da organização com filtros opcionais e paginação.
-      Filtros: status, assetId, unitId, startDate, endDate.
-      ADMIN vê tudo; GESTOR vê sua unidade; OPERADOR vê apenas seus ativos.
+  @Operation(summary = "Listar manutenções",
+      description = """
+      Lista manutenções com filtros opcionais e paginação.
+      Suporta filtros: status, assetId, unitId, requestedByUserId, startDate, endDate.
+      ADMIN vê tudo; GESTOR vê sua unidade; OPERADOR vê seus ativos.
       """)
   @GetMapping
   public PageResponse<MaintenanceResponseDTO> list(
-      @Parameter(description = "Status da manutenção") @RequestParam(required = false)
-          MaintenanceStatus status,
+      @Parameter(description = "Status da manutenção") @RequestParam(required = false) MaintenanceStatus status,
       @Parameter(description = "ID do ativo") @RequestParam(required = false) Long assetId,
       @Parameter(description = "ID da unidade") @RequestParam(required = false) Long unitId,
-      @Parameter(description = "Data início (yyyy-MM-dd)")
-          @RequestParam(required = false)
-          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-          LocalDate startDate,
-      @Parameter(description = "Data fim (yyyy-MM-dd)")
-          @RequestParam(required = false)
-          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-          LocalDate endDate,
+      @Parameter(description = "ID do usuário solicitante") @RequestParam(required = false) Long requestedByUserId,
+      @Parameter(description = "Data início (yyyy-MM-dd)") @RequestParam(required = false)
+          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+      @Parameter(description = "Data fim (yyyy-MM-dd)") @RequestParam(required = false)
+          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
       @ParameterObject Pageable pageable) {
 
     Page<MaintenanceRecord> page =
-        queryService.list(status, assetId, unitId, startDate, endDate, pageable);
+        queryService.list(status, assetId, unitId, requestedByUserId, startDate, endDate, pageable);
 
     return PageResponse.from(
         page,
-        page.getContent().stream()
-            .map(maintenanceMapper::toResponseDTO)
-            .collect(Collectors.toList()));
+        page.getContent().stream().map(maintenanceMapper::toResponseDTO).collect(Collectors.toList()));
   }
 
   @Operation(summary = "Relatório de orçamento de manutenção")
@@ -80,18 +72,18 @@ public class MaintenanceController {
   @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
   public ResponseEntity<MaintenanceBudgetDTO> budget(
       @RequestParam(required = false) Long unitId,
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-          LocalDate startDate,
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
-          LocalDate endDate) {
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
     return ResponseEntity.ok(queryService.getBudgetReport(unitId, startDate, endDate));
   }
 
   @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
   @PostMapping
   public ResponseEntity<MaintenanceResponseDTO> create(@RequestBody MaintenanceCreateDTO request) {
-    MaintenanceRecord record =
-        maintenanceService.create(request.getAssetId(), request.getDescription());
+    MaintenanceRecord record = maintenanceService.create(
+        request.getAssetId(),
+        request.getDescription(),
+        request.getEstimatedCost());
     return ResponseEntity.status(201).body(maintenanceMapper.toResponseDTO(record));
   }
 

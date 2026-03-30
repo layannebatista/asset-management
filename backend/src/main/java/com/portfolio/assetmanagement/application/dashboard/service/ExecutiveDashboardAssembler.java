@@ -11,89 +11,53 @@ import org.springframework.stereotype.Component;
 public class ExecutiveDashboardAssembler {
 
   public ExecutiveDashboardDTO assemble(DashboardData data) {
-
     ExecutiveDashboardDTO dto = new ExecutiveDashboardDTO();
-
-    /* =======================
-    ===== CARDS ===========
-    ======================= */
 
     dto.setTotalAssets(data.getTotalAssets());
     dto.setTotalMaintenance(data.getTotalMaintenance());
     dto.setTotalUsers(data.getTotalUsers());
 
-    /* =======================
-    ===== ASSETS ==========
-    ======================= */
-
     dto.setAssetsByStatus(convertToMap(data.getAssetsByStatus()));
     dto.setAssetsByUnit(convertToMap(data.getAssetsByUnit()));
     dto.setAssetsByType(convertToMap(data.getAssetsByType()));
 
-    /* ==========================
-    ===== MAINTENANCE ========
-    ========================== */
-
     dto.setMaintenanceByStatus(convertToMap(data.getMaintenanceByStatus()));
     dto.setMaintenanceByMonth(convertMonthData(data.getMaintenanceByMonth()));
-
-    /* ==========================
-    ===== TRANSFER ===========
-    ========================== */
 
     dto.setTransferByStatus(convertToMap(data.getTransferByStatus()));
     dto.setTransferByMonth(convertMonthData(data.getTransferByMonth()));
 
-    /* ==========================
-    ===== USERS ==============
-    ========================== */
-
     dto.setUsersByStatus(convertToMap(data.getUsersByStatus()));
     dto.setUsersByRole(convertToMap(data.getUsersByRole()));
+
+    // Novos campos operacionais
+    dto.setAssetsAvailable(data.getAssetsAvailable());
+    dto.setAssetsRetiredThisMonth(data.getAssetsRetiredThisMonth());
+    dto.setAssetsIdleCount(data.getAssetsIdleCount());
+    dto.setPendingTransfersCount(data.getPendingTransfersCount());
+    dto.setMaintenanceCostMonth(data.getMaintenanceCostMonth());
+    dto.setInsuranceExpiringCount(data.getInsuranceExpiringCount());
 
     return dto;
   }
 
-  /* ===================================================== */
-
   private Map<String, Long> convertToMap(List<Object[]> rawData) {
-
     Map<String, Long> result = new HashMap<>();
-
-    if (rawData == null) {
-      return result;
-    }
-
+    if (rawData == null) return result;
     for (Object[] row : rawData) {
-
-      String key = String.valueOf(row[0]);
-      Long value = ((Number) row[1]).longValue();
-
-      result.put(key, value);
+      result.put(String.valueOf(row[0]), ((Number) row[1]).longValue());
     }
-
     return result;
   }
 
   private Map<String, Long> convertMonthData(List<Object[]> rawData) {
-
     Map<String, Long> result = new HashMap<>();
-
-    if (rawData == null) {
-      return result;
-    }
-
+    if (rawData == null) return result;
     for (Object[] row : rawData) {
-
       int year = ((Number) row[0]).intValue();
       int month = ((Number) row[1]).intValue();
-      Long count = ((Number) row[2]).longValue();
-
-      String key = year + "-" + String.format("%02d", month);
-
-      result.put(key, count);
+      result.put(year + "-" + String.format("%02d", month), ((Number) row[2]).longValue());
     }
-
     return result;
   }
 }

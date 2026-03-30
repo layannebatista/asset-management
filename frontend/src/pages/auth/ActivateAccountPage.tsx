@@ -17,15 +17,38 @@ export default function ActivateAccountPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (password !== confirm) { setError('As senhas não coincidem'); return }
-    if (!lgpd) { setError('Aceite a política de privacidade para continuar'); return }
+
+    const passwordPolicy = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).{8,}$/
+
+    if (!passwordPolicy.test(password)) {
+      setError('A senha deve ter no mínimo 8 caracteres, incluindo maiúscula, minúscula, número e símbolo (ex: @#$!)')
+      return
+    }
+
+    if (password !== confirm) {
+      setError('As senhas não coincidem')
+      return
+    }
+
+    if (!lgpd) {
+      setError('Aceite a política de privacidade para continuar')
+      return
+    }
+
     setError('')
     setLoading(true)
+
     try {
       await userApi.activateAccount(token, password, confirm, lgpd)
       setDone(true)
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Token inválido ou expirado')
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } } }
+
+      const message =
+        errorObj?.response?.data?.message ??
+        'Token inválido ou expirado'
+
+      setError(message)
     } finally {
       setLoading(false)
     }
@@ -61,24 +84,54 @@ export default function ActivateAccountPage() {
             <>
               <h1 className="text-[20px] font-bold text-center mb-1">Ative sua conta</h1>
               <p className="text-[13px] text-slate-500 text-center mb-6">Crie uma senha para acessar o sistema</p>
+
               <form onSubmit={handleSubmit} className="space-y-[14px]">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-[.4px] mb-[6px]">Nova senha</label>
-                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required
-                    className="w-full border-[1.5px] border-slate-200 rounded-[7px] px-3 py-[10px] text-[14px] outline-none bg-slate-50 focus:border-blue-600 focus:bg-white transition" />
+                  <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-[.4px] mb-[6px]">
+                    Nova senha
+                  </label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    minLength={8}
+                    required
+                    className="w-full border-[1.5px] border-slate-200 rounded-[7px] px-3 py-[10px] text-[14px] outline-none bg-slate-50 focus:border-blue-600 focus:bg-white transition"
+                  />
                 </div>
+
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-[.4px] mb-[6px]">Confirmar senha</label>
-                  <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required
-                    className="w-full border-[1.5px] border-slate-200 rounded-[7px] px-3 py-[10px] text-[14px] outline-none bg-slate-50 focus:border-blue-600 focus:bg-white transition" />
+                  <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-[.4px] mb-[6px]">
+                    Confirmar senha
+                  </label>
+                  <input
+                    type="password"
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    required
+                    className="w-full border-[1.5px] border-slate-200 rounded-[7px] px-3 py-[10px] text-[14px] outline-none bg-slate-50 focus:border-blue-600 focus:bg-white transition"
+                  />
                 </div>
+
                 <label className="flex items-start gap-2 text-[12.5px] text-slate-600 cursor-pointer">
-                  <input type="checkbox" checked={lgpd} onChange={(e) => setLgpd(e.target.checked)} className="mt-[2px] accent-blue-700" />
-                  <span>Li e aceito a <span className="text-blue-700 underline">Política de Privacidade</span> e os termos de tratamento de dados (LGPD).</span>
+                  <input
+                    type="checkbox"
+                    checked={lgpd}
+                    onChange={(e) => setLgpd(e.target.checked)}
+                    className="mt-[2px] accent-blue-700"
+                  />
+                  <span>
+                    Li e aceito a <span className="text-blue-700 underline">Política de Privacidade</span> e os termos de tratamento de dados (LGPD).
+                  </span>
                 </label>
+
                 {error && <p className="text-[12px] text-red-600">{error}</p>}
-                <button type="submit" disabled={loading}
-                  className="w-full py-[11px] bg-blue-700 text-white rounded-[8px] text-[14px] font-bold hover:bg-blue-800 transition disabled:opacity-50">
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-[11px] bg-blue-700 text-white rounded-[8px] text-[14px] font-bold hover:bg-blue-800 transition disabled:opacity-50"
+                >
                   {loading ? 'Ativando...' : 'Ativar conta'}
                 </button>
               </form>

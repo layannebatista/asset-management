@@ -45,7 +45,6 @@ public class InsuranceService {
         .findById(assetId)
         .orElseThrow(() -> new NotFoundException("Ativo não encontrado"));
 
-    // Desativa apólice anterior se houver
     insuranceRepository
         .findByAssetIdAndActiveTrue(assetId)
         .ifPresent(
@@ -66,6 +65,22 @@ public class InsuranceService {
             dto.getExpiryDate());
 
     return insuranceRepository.save(insurance);
+  }
+
+  /** Remove uma apólice de seguro pelo ID. */
+  @Transactional
+  public void delete(Long insuranceId) {
+    AssetInsurance insurance =
+        insuranceRepository
+            .findById(insuranceId)
+            .orElseThrow(() -> new NotFoundException("Apólice não encontrada"));
+    insuranceRepository.delete(insurance);
+  }
+
+  /** Lista todas as apólices de um ativo (ativas e inativas). */
+  @Transactional(readOnly = true)
+  public List<AssetInsurance> listByAsset(Long assetId) {
+    return insuranceRepository.findByAssetIdOrderByCreatedAtDesc(assetId);
   }
 
   /** Apólice ativa de um ativo. */
@@ -90,7 +105,6 @@ public class InsuranceService {
     List<AssetInsurance> expiringSoon =
         insuranceRepository.findExpiringSoon(orgId, LocalDate.now(), LocalDate.now().plusDays(30));
 
-    // Pode ser expandido com queries agregadas no repositório
     InsuranceSummaryDTO dto = new InsuranceSummaryDTO();
     dto.setExpiringIn30Days((long) expiringSoon.size());
     dto.setTotalCoverageExpiring(
@@ -100,10 +114,6 @@ public class InsuranceService {
     return dto;
   }
 
-  /**
-   * Scheduler: envia alertas WhatsApp de apólices vencendo em 30 dias. Executado diariamente às
-   * 08h00.
-   */
   @Scheduled(cron = "0 0 8 * * *")
   @Transactional(readOnly = true)
   public void sendExpiryAlerts() {
@@ -125,8 +135,6 @@ public class InsuranceService {
                       .ifPresent(
                           user -> {
                             if (user.getPhoneNumber() != null) {
-                              // Reutiliza template de manutenção como proxy — em produção
-                              // criar template específico: patrimonio_insurance_expiry
                               whatsAppService.sendMaintenanceRequested(
                                   user.getPhoneNumber(),
                                   user.getName(),

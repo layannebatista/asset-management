@@ -1,0 +1,45 @@
+name: Security – OWASP Dependency Check
+
+# Roda toda segunda às 06h UTC ou manualmente.
+# Separado do CI principal para não atrasar PRs (pode levar 15-20 min).
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  owasp:
+    name: OWASP Dependency Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configurar JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+          cache: maven
+
+      - name: Executar OWASP Dependency Check
+        working-directory: backend
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        run: >
+          mvn dependency-check:check -B --no-transfer-progress
+          -Dfailbuild=true
+
+      - name: Upload relatório OWASP
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: owasp-report
+          path: backend/target/dependency-check-report.html
+          retention-days: 30
+
+      - name: Notificar falha (opcional)
+        if: failure()
+        run: |
+          echo "::warning::OWASP encontrou vulnerabilidades críticas. Verifique o relatório."

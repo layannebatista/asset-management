@@ -8,11 +8,15 @@ import org.springframework.stereotype.Component;
 public class PersonalDashboardAssembler {
 
   public PersonalDashboardDTO assemble(DashboardData data) {
-
     PersonalDashboardDTO dto = new PersonalDashboardDTO();
 
     dto.setTotalAssetsAssigned(data.getTotalAssets());
     dto.setTotalMaintenanceRelated(data.getTotalMaintenance());
+
+    // Novos campos operacionais
+    dto.setMyPendingTransfers(data.getMyPendingTransfers());
+    dto.setMyAssets(data.getMyAssets());
+    dto.setMyOpenMaintenances(data.getMyOpenMaintenances());
 
     return dto;
   }

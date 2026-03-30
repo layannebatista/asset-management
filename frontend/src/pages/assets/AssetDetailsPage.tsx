@@ -1,154 +1,285 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { Plus } from 'lucide-react'
-import { assetApi, depreciationApi, insuranceApi } from '../../api'
+import { useParams, useNavigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
+import { assetApi, depreciationApi, insuranceApi, unitApi, userApi, organizationApi } from '../../api'
+import { useAuth } from '../../context/AuthContext'
 import type {
-  AssetResponse,
-  AssetDepreciation,
-  AssetInsurance,
-  AssetStatusHistory,
+  AssetResponse, AssetDepreciation, AssetInsurance,
+  AssetStatusHistory, AssetAssignmentHistory, UnitResponse, UserResponse,
 } from '../../types'
+import { resolveUnitName, resolveUserName, ErrorBanner, parseCurrency } from '../../shared'
+import { ASSET_STATUS_LABELS, ASSET_STATUS_COLORS, ASSET_TYPE_LABELS } from '../../shared'
 
-const STATUS_COLORS: Record<string, string> = {
-  AVAILABLE: 'bg-emerald-100 text-emerald-700',
-  ASSIGNED: 'bg-blue-100 text-blue-700',
-  MAINTENANCE: 'bg-amber-100 text-amber-700',
-  RETIRED: 'bg-slate-100 text-slate-500',
-  TRANSFER: 'bg-purple-100 text-purple-700',
+import { AssetActionBar } from './components/AssetActionBar'
+import { TabInfo } from './components/tabs/TabInfo'
+import { TabDepreciation } from './components/tabs/TabDepreciation'
+import { TabInsurance } from './components/tabs/TabInsurance'
+import { TabHistory } from './components/tabs/TabHistory'
+import { AssignModal } from './components/modals/AssignModal'
+import { FinancialModal } from './components/modals/FinancialModal'
+import type { FinancialFormState } from './components/modals/FinancialModal'
+import { TransferModal } from './components/modals/TransferModal'
+import { MaintenanceModal } from './components/modals/MaintenanceModal'
+import { maintenanceApi, transferApi } from '../../api'
+
+export interface AssetResponseExtended extends AssetResponse {
+  purchaseDate?: string
+  warrantyExpiry?: string
+  supplier?: string
+  invoiceNumber?: string
+  invoiceDate?: string
 }
 
 const TAB_LABELS: Record<string, string> = {
-  info: 'Informacoes',
-  depreciation: 'Depreciacao',
-  insurance: 'Seguros',
-  history: 'Historico',
+  info: 'Informações', depreciation: 'Depreciação', insurance: 'Seguros', history: 'Histórico',
 }
 
-const iCls = 'w-full border-[1.5px] border-slate-200 rounded-[7px] px-3 py-[9px] text-[13.5px] outline-none bg-slate-50 focus:border-blue-600 focus:bg-white transition'
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="mb-[14px]">
-      <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-[.4px] mb-[6px]">
-        {label}
-      </label>
-      {children}
-    </div>
-  )
-}
-
-function ModalFooter({ onCancel, onConfirm, loading, label }: {
-  onCancel: () => void
-  onConfirm: () => void
-  loading: boolean
-  label: string
-}) {
-  return (
-    <div className="flex gap-2 justify-end pt-2 border-t border-slate-100 mt-2">
-      <button
-        onClick={onCancel}
-        className="px-4 py-[8px] rounded-[8px] border-[1.5px] border-slate-200 text-[13px] font-semibold text-slate-700 hover:bg-slate-50 transition"
-      >
-        Cancelar
-      </button>
-      <button
-        onClick={onConfirm}
-        disabled={loading}
-        className="px-4 py-[8px] rounded-[8px] bg-blue-700 text-white text-[13px] font-semibold hover:bg-blue-800 transition disabled:opacity-50"
-      >
-        {loading ? 'Salvando...' : label}
-      </button>
-    </div>
-  )
-}
-
-export default function AssetDetailsPage() {
+export default function AssetDetailPage() {
   const { id } = useParams<{ id: string }>()
   const assetId = Number(id)
+  const nav = useNavigate()
+  const { isAdmin, isGestor } = useAuth()
 
-  const [asset, setAsset] = useState<AssetResponse | null>(null)
+  const [asset, setAsset] = useState<AssetResponseExtended | null>(null)
   const [dep, setDep] = useState<AssetDepreciation | null>(null)
   const [insurance, setInsurance] = useState<AssetInsurance[]>([])
   const [history, setHistory] = useState<AssetStatusHistory[]>([])
+  const [assignmentHistory, setAssignmentHistory] = useState<AssetAssignmentHistory[]>([])
+  const [units, setUnits] = useState<UnitResponse[]>([])
+  const [users, setUsers] = useState<UserResponse[]>([])
+  const [orgName, setOrgName] = useState('')
   const [tab, setTab] = useState<'info' | 'depreciation' | 'insurance' | 'history'>('info')
   const [loading, setLoading] = useState(true)
-  const [showIns, setShowIns] = useState(false)
-  const [insForm, setInsForm] = useState({
-    policyNumber: '',
-    insurer: '',
-    coverageValue: '',
-    premium: '',
-    startDate: '',
-    expiryDate: '',
-  })
+
+  const [actionError, setActionError] = useState('')
+  const [actionSaving, setActionSaving] = useState(false)
+  const [showQuickAssign, setShowQuickAssign] = useState(false)
+  const [quickAssignUserId, setQuickAssignUserId] = useState('')
+
+  const [showFinancial, setShowFinancial] = useState(false)
   const [saving, setSaving] = useState(false)
 
+  const [showTransfer, setShowTransfer] = useState(false)
+  const [transferForm, setTransferForm] = useState({ toUnitId: '', reason: '' })
+  const [transferSaving, setTransferSaving] = useState(false)
+  const [transferError, setTransferError] = useState('')
+
+  const [showMaint, setShowMaint] = useState(false)
+  const [maintDesc, setMaintDesc] = useState('')
+  const [maintSaving, setMaintSaving] = useState(false)
+
+  const handleTransferSubmit = async () => {
+    if (!asset || !transferForm.toUnitId || !transferForm.reason) return
+    setTransferSaving(true); setTransferError('')
+    try {
+      await transferApi.create({ assetId: asset.id, toUnitId: Number(transferForm.toUnitId), reason: transferForm.reason })
+      setShowTransfer(false)
+      setTransferForm({ toUnitId: '', reason: '' })
+      await refreshAsset()
+    } catch (e: any) {
+      setTransferError(e?.response?.data?.message ?? 'Erro ao solicitar transferência')
+    } finally { setTransferSaving(false) }
+  }
+
+  const handleMaintenanceSubmit = async () => {
+    if (!asset || maintDesc.length < 10) return
+    setMaintSaving(true)
+    try {
+      await maintenanceApi.create({ assetId: asset.id, description: maintDesc })
+      setShowMaint(false)
+      setMaintDesc('')
+      await refreshAsset()
+    } catch (e: any) {
+      console.error(e)
+    } finally { setMaintSaving(false) }
+  }
+
+  const refreshAsset = async () => {
+    if (!assetId || Number.isNaN(assetId)) return
+    const updated = await assetApi.getById(assetId)
+    setAsset(updated as AssetResponseExtended)
+  }
+
   useEffect(() => {
-    if (!assetId) return
+    if (!assetId || Number.isNaN(assetId)) return
+
+    let mounted = true
     setLoading(true)
+
     Promise.all([
       assetApi.getById(assetId),
       depreciationApi.getByAsset(assetId).catch(() => null),
       insuranceApi.getByAsset(assetId).catch(() => []),
       assetApi.getStatusHistory(assetId).catch(() => []),
+      assetApi.getAssignmentHistory(assetId).catch(() => []),
     ])
-      .then(([a, d, i, h]) => {
-        setAsset(a)
+      .then(([a, d, i, h, ah]) => {
+        if (!mounted) return
+        setAsset(a as AssetResponseExtended)
         setDep(d)
-        setInsurance(i as AssetInsurance[])
-        setHistory(h as AssetStatusHistory[])
+        setInsurance(Array.isArray(i) ? i : [])
+        setHistory(Array.isArray(h) ? h : [])
+        setAssignmentHistory(Array.isArray(ah) ? ah : [])
       })
-      .catch(console.error)
-      .finally(() => setLoading(false))
+      .catch((err) => console.error(err))
+      .finally(() => mounted && setLoading(false))
+
+    return () => {
+      mounted = false
+    }
   }, [assetId])
 
-  const handleAddInsurance = async () => {
-    if (!insForm.policyNumber || !insForm.insurer || !insForm.coverageValue) return
-    setSaving(true)
+  useEffect(() => {
+    if (!asset) return
+
+    unitApi.listByOrg(asset.organizationId)
+      .then((list) => setUnits(Array.isArray(list) ? list : []))
+      .catch((err) => console.error(err))
+
+    organizationApi.getById(asset.organizationId)
+      .then((org) => setOrgName(org.name))
+      .catch((err) => console.error(err))
+
+    userApi.list({ size: 100 })
+      .then((p) => setUsers(Array.isArray(p?.content) ? p.content : Array.isArray(p) ? p : []))
+      .catch((err) => console.error(err))
+  }, [asset])
+
+  const handleQuickAssign = async () => {
+    if (!quickAssignUserId || !asset) return
+
+    setActionSaving(true)
+    setActionError('')
+
     try {
-      await insuranceApi.create(assetId, {
-        policyNumber: insForm.policyNumber,
-        insurer: insForm.insurer,
-        coverageValue: Number(insForm.coverageValue),
-        premium: insForm.premium ? Number(insForm.premium) : undefined,
-        startDate: insForm.startDate,
-        expiryDate: insForm.expiryDate,
+      await assetApi.assign(asset.id, Number(quickAssignUserId))
+      await refreshAsset()
+      setShowQuickAssign(false)
+      setQuickAssignUserId('')
+    } catch (e: any) {
+      setActionError(
+        e?.response?.data?.error?.message ??
+        e?.response?.data?.message ??
+        'Erro ao atribuir'
+      )
+    } finally {
+      setActionSaving(false)
+    }
+  }
+
+  const handleQuickUnassign = async () => {
+    if (!asset || (typeof window !== 'undefined' && !confirm('Remover atribuição deste ativo?'))) return
+
+    setActionSaving(true)
+    setActionError('')
+
+    try {
+      await assetApi.unassign(asset.id)
+      await refreshAsset()
+    } catch (e: any) {
+      setActionError(
+        e?.response?.data?.error?.message ??
+        e?.response?.data?.message ??
+        'Erro ao desatribuir'
+      )
+    } finally {
+      setActionSaving(false)
+    }
+  }
+
+  const handleQuickRetire = async () => {
+    if (!asset || (typeof window !== 'undefined' && !confirm(`Aposentar o ativo ${asset.assetTag}? Esta ação é irreversível.`))) return
+
+    setActionSaving(true)
+    setActionError('')
+
+    try {
+      await assetApi.retire(asset.id)
+      await refreshAsset()
+    } catch (e: any) {
+      setActionError(
+        e?.response?.data?.error?.message ??
+        e?.response?.data?.message ??
+        'Erro ao aposentar'
+      )
+    } finally {
+      setActionSaving(false)
+    }
+  }
+
+  const handleSaveFinancial = async (finForm: FinancialFormState) => {
+    setSaving(true)
+
+    try {
+      await assetApi.updateFinancial(assetId, {
+        purchaseValue: parseCurrency(finForm.purchaseValue),
+        residualValue: finForm.residualValue ? parseCurrency(finForm.residualValue) : undefined,
+        usefulLifeMonths: Number(finForm.usefulLifeMonths),
+        depreciationMethod: finForm.depreciationMethod as 'LINEAR' | 'DECLINING_BALANCE' | 'SUM_OF_YEARS',
+        purchaseDate: finForm.purchaseDate,
+        warrantyExpiry: finForm.warrantyExpiry || undefined,
+        supplier: finForm.supplier || undefined,
+        invoiceNumber: finForm.invoiceNumber || undefined,
+        invoiceDate: finForm.invoiceDate || undefined,
       })
-      setShowIns(false)
-      insuranceApi.getByAsset(assetId).then(setInsurance)
+
+      const updated = await depreciationApi.getByAsset(assetId).catch(() => null)
+      setDep(updated)
+      setShowFinancial(false)
     } catch (e) {
-      console.error(e)
+      console.error('Erro ao salvar dados financeiros:', e)
     } finally {
       setSaving(false)
     }
   }
 
-  if (loading) {
-    return <div className="text-center py-20 text-slate-400">Carregando...</div>
-  }
-  if (!asset) {
-    return <div className="text-center py-20 text-slate-400">Ativo nao encontrado</div>
-  }
+  if (loading) return <div className="text-center py-20 text-slate-400">Carregando...</div>
+  if (!asset) return <div className="text-center py-20 text-slate-400">Ativo não encontrado</div>
 
   return (
     <div>
-      <div className="mb-5">
-        <div className="font-mono text-[13px] text-blue-700 mb-1">{asset.assetTag}</div>
-        <h1 className="text-[20px] font-bold tracking-tight">{asset.model}</h1>
-        <div className="flex items-center gap-2 mt-2">
-          <span className="text-[11.5px] bg-slate-100 text-slate-600 font-semibold px-2 py-[3px] rounded-full">
-            {asset.type}
-          </span>
-          <span className={`text-[11.5px] font-semibold px-[10px] py-[3px] rounded-full ${STATUS_COLORS[asset.status] ?? ''}`}>
-            {asset.status}
-          </span>
+      <div className="flex items-start justify-between mb-5">
+        <div>
+          <div className="font-mono text-[13px] text-blue-700 mb-[2px]">{asset.assetTag}</div>
+          <h1 className="text-[20px] font-bold tracking-tight leading-snug">{asset.model}</h1>
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-[11.5px] bg-slate-100 text-slate-600 font-semibold px-2 py-[3px] rounded-full">
+              {ASSET_TYPE_LABELS[asset.type] ?? asset.type}
+            </span>
+            <span className={`text-[11.5px] font-semibold px-[10px] py-[3px] rounded-full ${ASSET_STATUS_COLORS[asset.status] ?? 'bg-slate-100 text-slate-500'}`}>
+              {ASSET_STATUS_LABELS[asset.status] ?? asset.status}
+            </span>
+          </div>
         </div>
+
+        <button
+          type="button"
+          onClick={() => nav('/assets')}
+          className="flex items-center gap-1 px-3 py-[7px] rounded-[8px] border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition text-[12px] font-semibold"
+        >
+          <ArrowLeft size={14} /> Voltar
+        </button>
       </div>
+
+      <ErrorBanner message={actionError} onDismiss={() => setActionError('')} />
+
+      <AssetActionBar
+        asset={asset}
+        isAdmin={isAdmin}
+        isGestor={isGestor}
+        actionSaving={actionSaving}
+        onAssign={() => { setShowQuickAssign(true); setQuickAssignUserId('') }}
+        onUnassign={handleQuickUnassign}
+        onRetire={handleQuickRetire}
+        onTransfer={() => { setShowTransfer(true); setTransferForm({ toUnitId: '', reason: '' }); setTransferError('') }}
+        onMaintenance={() => { setShowMaint(true); setMaintDesc('') }}
+      />
 
       <div className="flex gap-1 mb-5 border-b border-slate-200">
         {(['info', 'depreciation', 'insurance', 'history'] as const).map((t) => (
           <button
             key={t}
+            type="button"
             onClick={() => setTab(t)}
             className={`px-4 py-[10px] text-[13px] font-semibold border-b-2 transition ${
               tab === t ? 'border-blue-700 text-blue-700' : 'border-transparent text-slate-500 hover:text-slate-700'
@@ -160,177 +291,76 @@ export default function AssetDetailsPage() {
       </div>
 
       {tab === 'info' && (
-        <div className="bg-white rounded-[10px] border border-slate-200 p-[18px] shadow-sm grid grid-cols-3 gap-4">
-          {[
-            { label: 'AssetTag', val: asset.assetTag },
-            { label: 'Modelo', val: asset.model },
-            { label: 'Tipo', val: asset.type },
-            { label: 'Status', val: asset.status },
-            { label: 'Organizacao', val: `#${asset.organizationId}` },
-            { label: 'Unidade', val: `#${asset.unitId}` },
-            { label: 'Atribuido a', val: asset.assignedUserId ? `#${asset.assignedUserId}` : 'Nenhum' },
-          ].map((f) => (
-            <div key={f.label}>
-              <div className="text-[10.5px] text-slate-400 uppercase tracking-[.4px] mb-1">{f.label}</div>
-              <div className="text-[13.5px] font-semibold">{f.val}</div>
-            </div>
-          ))}
-        </div>
+        <TabInfo
+          asset={asset}
+          orgName={orgName}
+          unitName={resolveUnitName(asset.unitId, units)}
+          userName={resolveUserName(asset.assignedUserId, users)}
+        />
       )}
 
-      {tab === 'depreciation' && dep && (
-        <div className="bg-white rounded-[10px] border border-slate-200 p-[18px] shadow-sm">
-          <div className="grid grid-cols-3 gap-4 mb-4">
-            {[
-              { label: 'Valor de Compra', val: dep.purchaseValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) },
-              { label: 'Valor Atual', val: dep.currentValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) },
-              { label: 'Depreciado', val: `${dep.depreciationPercentage.toFixed(1)}%` },
-              { label: 'Metodo', val: dep.depreciationMethod },
-              { label: 'Meses Decorridos', val: `${dep.elapsedMonths} / ${dep.usefulLifeMonths}` },
-              { label: 'Total Depreciado', val: dep.fullyDepreciated ? 'Sim' : 'Nao' },
-            ].map((f) => (
-              <div key={f.label}>
-                <div className="text-[10.5px] text-slate-400 uppercase tracking-[.4px] mb-1">{f.label}</div>
-                <div className="text-[13.5px] font-semibold">{f.val}</div>
-              </div>
-            ))}
-          </div>
-          <div className="h-[8px] bg-slate-100 rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full bg-blue-700"
-              style={{ width: `${100 - dep.depreciationPercentage}%` }}
-            />
-          </div>
-          <div className="text-[11.5px] text-slate-400 mt-2">
-            {(100 - dep.depreciationPercentage).toFixed(1)}% do valor patrimonial ainda ativo
-          </div>
-        </div>
-      )}
-
-      {tab === 'depreciation' && !dep && (
-        <div className="bg-white rounded-[10px] border border-slate-200 p-10 text-center text-slate-400 shadow-sm">
-          Sem dados de depreciacao para este ativo
-        </div>
+      {tab === 'depreciation' && (
+        <TabDepreciation dep={dep} onEdit={() => setShowFinancial(true)} canEdit={isAdmin || isGestor} />
       )}
 
       {tab === 'insurance' && (
-        <div>
-          <div className="flex justify-end mb-3">
-            <button
-              onClick={() => setShowIns(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-[8px] bg-blue-700 text-white text-[13px] font-semibold hover:bg-blue-800 transition"
-            >
-              <Plus size={14} />
-              Cadastrar Apolice
-            </button>
-          </div>
-
-          {insurance.length === 0 ? (
-            <div className="bg-white rounded-[10px] border border-slate-200 p-10 text-center text-slate-400 shadow-sm">
-              Nenhuma apolice cadastrada
-            </div>
-          ) : (
-            insurance.map((ins) => (
-              <div key={ins.id} className="bg-white rounded-[10px] border border-slate-200 p-[18px] shadow-sm mb-3 grid grid-cols-3 gap-4">
-                {[
-                  { label: 'Apolice', val: ins.policyNumber },
-                  { label: 'Seguradora', val: ins.insurer },
-                  { label: 'Cobertura', val: ins.coverageValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) },
-                  { label: 'Inicio', val: new Date(ins.startDate).toLocaleDateString('pt-BR') },
-                  { label: 'Vencimento', val: new Date(ins.expiryDate).toLocaleDateString('pt-BR') },
-                  { label: 'Premio', val: ins.premium ? ins.premium.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'N/A' },
-                ].map((f) => (
-                  <div key={f.label}>
-                    <div className="text-[10.5px] text-slate-400 uppercase tracking-[.4px] mb-1">{f.label}</div>
-                    <div className="text-[13.5px] font-semibold">{f.val}</div>
-                  </div>
-                ))}
-              </div>
-            ))
-          )}
-
-          {showIns && (
-            <div
-              className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-5"
-              onClick={(e) => e.target === e.currentTarget && setShowIns(false)}
-            >
-              <div className="bg-white rounded-[14px] w-full max-w-[520px] shadow-2xl max-h-[90vh] overflow-y-auto">
-                <div className="flex justify-between items-center px-6 pt-5 pb-0">
-                  <h2 className="text-[17px] font-bold">Cadastrar Apolice de Seguro</h2>
-                  <button
-                    onClick={() => setShowIns(false)}
-                    className="w-7 h-7 rounded-[6px] border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50"
-                  >
-                    x
-                  </button>
-                </div>
-                <div className="px-6 py-5">
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Numero da Apolice *">
-                      <input value={insForm.policyNumber} onChange={(e) => setInsForm((f) => ({ ...f, policyNumber: e.target.value }))} className={iCls} />
-                    </Field>
-                    <Field label="Seguradora *">
-                      <input value={insForm.insurer} onChange={(e) => setInsForm((f) => ({ ...f, insurer: e.target.value }))} className={iCls} />
-                    </Field>
-                    <Field label="Valor de Cobertura *">
-                      <input type="number" value={insForm.coverageValue} onChange={(e) => setInsForm((f) => ({ ...f, coverageValue: e.target.value }))} className={iCls} />
-                    </Field>
-                    <Field label="Premio">
-                      <input type="number" value={insForm.premium} onChange={(e) => setInsForm((f) => ({ ...f, premium: e.target.value }))} className={iCls} />
-                    </Field>
-                    <Field label="Inicio *">
-                      <input type="date" value={insForm.startDate} onChange={(e) => setInsForm((f) => ({ ...f, startDate: e.target.value }))} className={iCls} />
-                    </Field>
-                    <Field label="Vencimento *">
-                      <input type="date" value={insForm.expiryDate} onChange={(e) => setInsForm((f) => ({ ...f, expiryDate: e.target.value }))} className={iCls} />
-                    </Field>
-                  </div>
-                  <ModalFooter onCancel={() => setShowIns(false)} onConfirm={handleAddInsurance} loading={saving} label="Cadastrar" />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        <TabInsurance
+          assetId={assetId}
+          insurance={insurance}
+          setInsurance={setInsurance}
+          isAdmin={isAdmin}
+          isGestor={isGestor}
+        />
       )}
 
       {tab === 'history' && (
-        <div className="bg-white rounded-[10px] border border-slate-200 overflow-hidden shadow-sm">
-          <table className="w-full border-collapse">
-            <thead className="bg-slate-50">
-              <tr>
-                {['Status Anterior', 'Novo Status', 'Alterado em', 'Por'].map((h) => (
-                  <th key={h} className="px-[14px] py-[10px] text-left text-[11px] font-bold text-slate-400 uppercase tracking-[.5px] border-b border-slate-200">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {history.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="text-center py-10 text-slate-400">Sem historico</td>
-                </tr>
-              ) : (
-                history.map((h) => (
-                  <tr key={h.id} className="hover:bg-slate-50">
-                    <td className="px-[14px] py-3 border-b border-slate-50 text-[13px]">{h.oldStatus ?? 'N/A'}</td>
-                    <td className="px-[14px] py-3 border-b border-slate-50">
-                      <span className="text-[11.5px] font-semibold bg-blue-100 text-blue-700 px-2 py-[3px] rounded-full">
-                        {h.newStatus}
-                      </span>
-                    </td>
-                    <td className="px-[14px] py-3 border-b border-slate-50 text-[13px] text-slate-500">
-                      {new Date(h.changedAt).toLocaleString('pt-BR')}
-                    </td>
-                    <td className="px-[14px] py-3 border-b border-slate-50 text-[13px] text-slate-500">
-                      #{h.changedByUserId}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+        <TabHistory
+          history={history}
+          assignmentHistory={assignmentHistory}
+          users={users}
+        />
+      )}
+
+      <AssignModal
+        open={showQuickAssign}
+        users={users}
+        assignUserId={quickAssignUserId}
+        onUserChange={setQuickAssignUserId}
+        onConfirm={handleQuickAssign}
+        onCancel={() => setShowQuickAssign(false)}
+        saving={actionSaving}
+      />
+
+      <FinancialModal
+        open={showFinancial}
+        dep={dep}
+        asset={asset}
+        onClose={() => setShowFinancial(false)}
+        onSave={handleSaveFinancial}
+        saving={saving}
+      />
+
+      {showTransfer && (
+        <TransferModal
+          asset={asset}
+          onClose={() => setShowTransfer(false)}
+          units={units}
+          form={transferForm}
+          setForm={setTransferForm}
+          onConfirm={handleTransferSubmit}
+          saving={transferSaving}
+        />
+      )}
+
+      {showMaint && (
+        <MaintenanceModal
+          asset={asset}
+          onClose={() => setShowMaint(false)}
+          desc={maintDesc}
+          setDesc={setMaintDesc}
+          onConfirm={handleMaintenanceSubmit}
+          saving={maintSaving}
+        />
       )}
     </div>
   )
