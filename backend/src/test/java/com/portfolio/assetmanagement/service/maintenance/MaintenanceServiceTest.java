@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -109,7 +110,7 @@ class MaintenanceServiceTest {
       verify(validationService).validateCreate(eq(asset), any());
       verify(asset).changeStatus(AssetStatus.IN_MAINTENANCE);
       verify(maintenanceRepository).save(any(MaintenanceRecord.class));
-      verify(auditService).registerEvent(any(), anyLong(), anyLong(), anyLong(), anyLong(), any());
+      verify(auditService).registerEvent(any(), anyLong(), anyLong(), anyLong(), isNull(), any());
     }
 
     @Test
