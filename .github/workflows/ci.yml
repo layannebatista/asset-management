@@ -48,7 +48,7 @@ jobs:
           retention-days: 7
 
       - name: Publicar cobertura no Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v6
         if: always()
         with:
           files: backend/target/site/jacoco/jacoco.xml
