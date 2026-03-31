@@ -32,7 +32,7 @@ jobs:
         run: mvn clean verify -B --no-transfer-progress
 
       - name: Upload relatório JaCoCo
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: jacoco-report
@@ -40,7 +40,7 @@ jobs:
           retention-days: 7
 
       - name: Upload resultados Allure
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: allure-results
@@ -82,7 +82,7 @@ jobs:
         run: mvn pmd:check -B --no-transfer-progress
 
       - name: Upload relatório PMD
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: pmd-report
@@ -122,7 +122,7 @@ jobs:
         run: npm run build
 
       - name: Upload artefato de build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: frontend-dist
           path: frontend/dist/
