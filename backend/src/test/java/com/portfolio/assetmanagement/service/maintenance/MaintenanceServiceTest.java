@@ -149,9 +149,9 @@ class MaintenanceServiceTest {
 
     @BeforeEach
     void setup() {
-          lenient().when(loggedUser.getUserId()).thenReturn(99L);
-          lenient().when(loggedUser.isAdmin()).thenReturn(false);
-          lenient().when(loggedUser.isManager()).thenReturn(false);
+      lenient().when(loggedUser.getUserId()).thenReturn(99L);
+      lenient().when(loggedUser.isAdmin()).thenReturn(false);
+      lenient().when(loggedUser.isManager()).thenReturn(false);
     }
 
     @Test
@@ -193,63 +193,63 @@ class MaintenanceServiceTest {
     }
   }
 
- @Nested
- @DisplayName("complete()")
- class CompleteTest {
+  @Nested
+  @DisplayName("complete()")
+  class CompleteTest {
 
-  @BeforeEach
-  void setup() {
-    lenient().when(loggedUser.getUserId()).thenReturn(99L);
-    lenient().when(loggedUser.isAdmin()).thenReturn(true); // 🔥 CORREÇÃO
-    lenient().when(loggedUser.isManager()).thenReturn(false);
+    @BeforeEach
+    void setup() {
+      lenient().when(loggedUser.getUserId()).thenReturn(99L);
+      lenient().when(loggedUser.isAdmin()).thenReturn(true); // 🔥 CORREÇÃO
+      lenient().when(loggedUser.isManager()).thenReturn(false);
+    }
+
+    @Test
+    void deveConcluirERetornarAssetParaAvailable() {
+      MaintenanceRecord record = buildRecordMock(MaintenanceStatus.IN_PROGRESS);
+      Asset asset = record.getAsset(); // 🔥 IMPORTANTE
+
+      when(asset.getAssignedUser()).thenReturn(null);
+      when(maintenanceRepository.findById(55L)).thenReturn(Optional.of(record));
+
+      maintenanceService.complete(55L, "Troca da bateria", BigDecimal.ZERO);
+
+      verify(lockService).lockMaintenance(55L);
+      verify(validationService).validateComplete(record, "Troca da bateria");
+      verify(record).complete(99L, "Troca da bateria", BigDecimal.ZERO);
+      verify(asset).changeStatus(AssetStatus.AVAILABLE);
+    }
+
+    @Test
+    void deveRetornarAssetParaAssignedQuandoTinhaUsuario() {
+      MaintenanceRecord record = buildRecordMock(MaintenanceStatus.IN_PROGRESS);
+      Asset asset = record.getAsset();
+
+      when(asset.getAssignedUser())
+          .thenReturn(mock(com.portfolio.assetmanagement.domain.user.entity.User.class));
+
+      when(maintenanceRepository.findById(55L)).thenReturn(Optional.of(record));
+
+      maintenanceService.complete(55L, "Troca da bateria", BigDecimal.ZERO);
+
+      verify(asset).changeStatus(AssetStatus.ASSIGNED);
+    }
+
+    @Test
+    void deveLancarQuandoResolucaoAusente() {
+      MaintenanceRecord record = buildRecordMock(MaintenanceStatus.IN_PROGRESS);
+      when(maintenanceRepository.findById(55L)).thenReturn(Optional.of(record));
+
+      doThrow(new BusinessException("Resolução é obrigatória"))
+          .when(validationService)
+          .validateComplete(record, "");
+
+      assertThatThrownBy(() -> maintenanceService.complete(55L, "", BigDecimal.ZERO))
+          .isInstanceOf(BusinessException.class);
+
+      verify(record, never()).complete(anyLong(), any(), any());
+    }
   }
-
-  @Test
-  void deveConcluirERetornarAssetParaAvailable() {
-    MaintenanceRecord record = buildRecordMock(MaintenanceStatus.IN_PROGRESS);
-    Asset asset = record.getAsset(); // 🔥 IMPORTANTE
-
-    when(asset.getAssignedUser()).thenReturn(null);
-    when(maintenanceRepository.findById(55L)).thenReturn(Optional.of(record));
-
-    maintenanceService.complete(55L, "Troca da bateria", BigDecimal.ZERO);
-
-    verify(lockService).lockMaintenance(55L);
-    verify(validationService).validateComplete(record, "Troca da bateria");
-    verify(record).complete(99L, "Troca da bateria", BigDecimal.ZERO);
-    verify(asset).changeStatus(AssetStatus.AVAILABLE);
-  }
-
-  @Test
-  void deveRetornarAssetParaAssignedQuandoTinhaUsuario() {
-    MaintenanceRecord record = buildRecordMock(MaintenanceStatus.IN_PROGRESS);
-    Asset asset = record.getAsset();
-
-    when(asset.getAssignedUser())
-        .thenReturn(mock(com.portfolio.assetmanagement.domain.user.entity.User.class));
-
-    when(maintenanceRepository.findById(55L)).thenReturn(Optional.of(record));
-
-    maintenanceService.complete(55L, "Troca da bateria", BigDecimal.ZERO);
-
-    verify(asset).changeStatus(AssetStatus.ASSIGNED);
-  }
-
-  @Test
-  void deveLancarQuandoResolucaoAusente() {
-    MaintenanceRecord record = buildRecordMock(MaintenanceStatus.IN_PROGRESS);
-    when(maintenanceRepository.findById(55L)).thenReturn(Optional.of(record));
-
-    doThrow(new BusinessException("Resolução é obrigatória"))
-        .when(validationService)
-        .validateComplete(record, "");
-
-    assertThatThrownBy(() -> maintenanceService.complete(55L, "", BigDecimal.ZERO))
-        .isInstanceOf(BusinessException.class);
-
-    verify(record, never()).complete(anyLong(), any(), any());
-  }
-}
 
   @Nested
   @DisplayName("cancel()")
