@@ -24,7 +24,8 @@
     "noUncheckedSideEffectImports": true
   },
   "include": ["src"],
-    "exclude": [
-    "src/automation"
+  "exclude": [
+    "src/automation/cypress",
+    "src/automation/playwright"
   ]
 }
