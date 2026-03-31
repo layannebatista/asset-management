@@ -1,16 +1,13 @@
 # =============================================================================
 # Stage 1 – Build (Node + Vite)
 # =============================================================================
-FROM node:20-alpine AS build
+FROM node:20-alpine3.19 AS build
 
 WORKDIR /app
 
-# VITE_API_URL é embutida no bundle em tempo de build; pode ser sobrescrita via
-# build-arg no docker-compose (args: VITE_API_URL: ...).
 ARG VITE_API_URL=http://localhost:8080
 ENV VITE_API_URL=$VITE_API_URL
 
-# Cache de dependências separado do código-fonte
 COPY package.json package-lock.json* ./
 RUN npm ci --prefer-offline
 
@@ -20,9 +17,11 @@ RUN npm run build
 # =============================================================================
 # Stage 2 – Runtime (Nginx)
 # =============================================================================
-FROM nginx:1.27-alpine
+FROM nginx:1.27-alpine3.19
 
-# Remove config padrão do nginx
+# 🔥 garante atualização de pacotes (remove vulnerabilidades conhecidas)
+RUN apk update && apk upgrade
+
 RUN rm /etc/nginx/conf.d/default.conf
 
 COPY nginx.conf /etc/nginx/conf.d/default.conf
