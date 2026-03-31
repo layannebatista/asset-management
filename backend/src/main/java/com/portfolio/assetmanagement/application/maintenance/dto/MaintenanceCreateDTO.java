@@ -20,12 +20,27 @@ public class MaintenanceCreateDTO {
 
   public MaintenanceCreateDTO() {}
 
-  public Long getAssetId() { return assetId; }
-  public void setAssetId(Long assetId) { this.assetId = assetId; }
+  public Long getAssetId() {
+    return assetId;
+  }
 
-  public String getDescription() { return description; }
-  public void setDescription(String description) { this.description = description; }
+  public void setAssetId(Long assetId) {
+    this.assetId = assetId;
+  }
 
-  public BigDecimal getEstimatedCost() { return estimatedCost; }
-  public void setEstimatedCost(BigDecimal estimatedCost) { this.estimatedCost = estimatedCost; }
+  public String getDescription() {
+    return description;
+  }
+
+  public void setDescription(String description) {
+    this.description = description;
+  }
+
+  public BigDecimal getEstimatedCost() {
+    return estimatedCost;
+  }
+
+  public void setEstimatedCost(BigDecimal estimatedCost) {
+    this.estimatedCost = estimatedCost;
+  }
 }

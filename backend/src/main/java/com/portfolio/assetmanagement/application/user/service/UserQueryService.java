@@ -47,26 +47,20 @@ public class UserQueryService {
     if (loggedUser.isAdmin()) {
       // ADMIN pode usar filtro opcional
       if (unitId != null) {
-        spec =
-            spec.and(
-                (root, q, cb) -> cb.equal(root.join("unit").get("id"), unitId));
+        spec = spec.and((root, q, cb) -> cb.equal(root.join("unit").get("id"), unitId));
       }
 
     } else if (loggedUser.isManager()) {
       // GESTOR só vê a própria unidade
       Long userUnitId = loggedUser.getUnitId();
 
-      spec =
-          spec.and(
-              (root, q, cb) -> cb.equal(root.join("unit").get("id"), userUnitId));
+      spec = spec.and((root, q, cb) -> cb.equal(root.join("unit").get("id"), userUnitId));
 
     } else {
       // OPERADOR só vê a si mesmo
       Long userId = loggedUser.getUserId();
 
-      spec =
-          spec.and(
-              (root, q, cb) -> cb.equal(root.get("id"), userId));
+      spec = spec.and((root, q, cb) -> cb.equal(root.get("id"), userId));
     }
 
     return repository.findAll(spec, pageable);

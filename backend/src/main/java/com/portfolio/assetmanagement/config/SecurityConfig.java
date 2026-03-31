@@ -48,70 +48,68 @@ public class SecurityConfig {
     this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
   }
 
-@Bean
-public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+  @Bean
+  public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
-  http
-      // desabilita csrf pois usamos JWT
-      .csrf(AbstractHttpConfigurer::disable)
+    http
+        // desabilita csrf pois usamos JWT
+        .csrf(AbstractHttpConfigurer::disable)
 
-      // habilita CORS
-      .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+        // habilita CORS
+        .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-      // define sessão como stateless
-      .sessionManagement(
-          session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        // define sessão como stateless
+        .sessionManagement(
+            session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-      // entry point 401
-      .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
+        // entry point 401
+        .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
 
-      // regras de autorização
-      .authorizeHttpRequests(
-          auth ->
-              auth
+        // regras de autorização
+        .authorizeHttpRequests(
+            auth ->
+                auth
 
-                  // 🔥 LIBERA PREFLIGHT (CORS)
-                  .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")
-                  .permitAll()
+                    // 🔥 LIBERA PREFLIGHT (CORS)
+                    .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")
+                    .permitAll()
 
-                  // =========================
-                  // 🔓 ENDPOINTS PÚBLICOS
-                  // =========================
+                    // =========================
+                    // 🔓 ENDPOINTS PÚBLICOS
+                    // =========================
 
-                  // Login
-                  .requestMatchers("/auth/**")
-                  .permitAll()
+                    // Login
+                    .requestMatchers("/auth/**")
+                    .permitAll()
 
-                  // Ativação
-                  .requestMatchers("/users/activation/activate")
-                  .permitAll()
+                    // Ativação
+                    .requestMatchers("/users/activation/activate")
+                    .permitAll()
 
-                  // Swagger
-                  .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
-                  .permitAll()
+                    // Swagger
+                    .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
+                    .permitAll()
 
-                  // =========================
-                  // 🔒 ACTUATOR
-                  // =========================
-                  .requestMatchers(
-                      "/actuator/health",
-                      "/actuator/health/**",
-                      "/actuator/prometheus"
-                  ).permitAll()
+                    // =========================
+                    // 🔒 ACTUATOR
+                    // =========================
+                    .requestMatchers(
+                        "/actuator/health", "/actuator/health/**", "/actuator/prometheus")
+                    .permitAll()
+                    .requestMatchers("/actuator/**")
+                    .hasRole("ADMIN")
 
-                  .requestMatchers("/actuator/**").hasRole("ADMIN")
+                    // =========================
+                    // 🔐 RESTANTE
+                    // =========================
+                    .anyRequest()
+                    .authenticated())
 
-                  // =========================
-                  // 🔐 RESTANTE
-                  // =========================
-                  .anyRequest()
-                  .authenticated())
+        // filtro JWT
+        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-      // filtro JWT
-      .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-
-  return http.build();
-}
+    return http.build();
+  }
 
   /** Permite que Spring injete AuthenticationManager corretamente. */
   @Bean
@@ -133,8 +131,7 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     // 🔥 garante que múltiplas origens funcionem corretamente
     configuration.setAllowedOriginPatterns(List.of(allowedOrigins.split(",")));
 
-    configuration.setAllowedMethods(
-        List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+    configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
     // 🔥 libera TODOS os headers (essencial pro preflight)
     configuration.setAllowedHeaders(List.of("*"));

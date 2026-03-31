@@ -1,6 +1,5 @@
 package com.portfolio.assetmanagement.security.service;
 
-import com.portfolio.assetmanagement.domain.user.entity.User;
 import com.portfolio.assetmanagement.infrastructure.persistence.user.repository.UserRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -42,29 +41,33 @@ public class TokenService {
   /**
    * Gera token JWT com claims completos do usuário.
    *
-   * Inclui role, userId, organizationId e unitId para que o frontend
-   * consiga reidratar o contexto de autenticação sem precisar chamar a API.
+   * <p>Inclui role, userId, organizationId e unitId para que o frontend consiga reidratar o
+   * contexto de autenticação sem precisar chamar a API.
    */
   public String generateToken(UserDetails userDetails) {
     Date now = new Date();
     Date expiryDate = new Date(now.getTime() + expiration);
 
-    JwtBuilder builder = Jwts.builder()
-        .setSubject(userDetails.getUsername())
-        .setIssuedAt(now)
-        .setExpiration(expiryDate);
+    JwtBuilder builder =
+        Jwts.builder()
+            .setSubject(userDetails.getUsername())
+            .setIssuedAt(now)
+            .setExpiration(expiryDate);
 
     // Adiciona claims do usuário se encontrado no banco
-    userRepository.findByEmail(userDetails.getUsername()).ifPresent(user -> {
-      builder.claim("role", user.getRole().name());
-      builder.claim("userId", user.getId());
-      if (user.getOrganization() != null) {
-        builder.claim("organizationId", user.getOrganization().getId());
-      }
-      if (user.getUnit() != null) {
-        builder.claim("unitId", user.getUnit().getId());
-      }
-    });
+    userRepository
+        .findByEmail(userDetails.getUsername())
+        .ifPresent(
+            user -> {
+              builder.claim("role", user.getRole().name());
+              builder.claim("userId", user.getId());
+              if (user.getOrganization() != null) {
+                builder.claim("organizationId", user.getOrganization().getId());
+              }
+              if (user.getUnit() != null) {
+                builder.claim("unitId", user.getUnit().getId());
+              }
+            });
 
     return builder.signWith(key, SignatureAlgorithm.HS256).compact();
   }

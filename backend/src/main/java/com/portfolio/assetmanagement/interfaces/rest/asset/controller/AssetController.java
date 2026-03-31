@@ -73,19 +73,26 @@ public class AssetController {
   @GetMapping
   public PageResponse<AssetResponseDTO> list(
       @Parameter(description = "Status do ativo", example = "AVAILABLE")
-          @RequestParam(required = false) AssetStatus status,
+          @RequestParam(required = false)
+          AssetStatus status,
       @Parameter(description = "Tipo do ativo", example = "NOTEBOOK")
-          @RequestParam(required = false) AssetType type,
+          @RequestParam(required = false)
+          AssetType type,
       @Parameter(description = "ID da unidade organizacional", example = "1")
-          @RequestParam(required = false) Long unitId,
+          @RequestParam(required = false)
+          Long unitId,
       @Parameter(description = "ID do usuário atribuído", example = "10")
-          @RequestParam(required = false) Long assignedUserId,
+          @RequestParam(required = false)
+          Long assignedUserId,
       @Parameter(description = "Filtro por assetTag", example = "ASSET-001")
-          @RequestParam(required = false) String assetTag,
+          @RequestParam(required = false)
+          String assetTag,
       @Parameter(description = "Filtro por modelo", example = "Dell Latitude 5430")
-          @RequestParam(required = false) String model,
+          @RequestParam(required = false)
+          String model,
       @Parameter(description = "Busca simultânea em assetTag e modelo", example = "Dell")
-          @RequestParam(required = false) String search,
+          @RequestParam(required = false)
+          String search,
       @ParameterObject Pageable pageable) {
 
     return assetService.searchAssets(
@@ -115,7 +122,8 @@ public class AssetController {
   @PreAuthorize("hasAnyRole('ADMIN', 'GESTOR')")
   @PostMapping("/{organizationId}")
   public ResponseEntity<AssetResponseDTO> create(
-      @Parameter(description = "ID da organização", example = "1") @PathVariable Long organizationId,
+      @Parameter(description = "ID da organização", example = "1") @PathVariable
+          Long organizationId,
       @RequestBody @Valid AssetCreateDTO dto) {
 
     Organization organization = organizationService.findById(organizationId);
@@ -168,7 +176,8 @@ public class AssetController {
   @PatchMapping("/{id}/financial")
   public AssetResponseDTO updateFinancial(
       @PathVariable Long id,
-      @RequestBody com.portfolio.assetmanagement.application.asset.dto.AssetFinancialUpdateDTO dto) {
+      @RequestBody
+          com.portfolio.assetmanagement.application.asset.dto.AssetFinancialUpdateDTO dto) {
     return assetMapper.toResponseDTO(assetService.updateFinancial(id, dto));
   }
 

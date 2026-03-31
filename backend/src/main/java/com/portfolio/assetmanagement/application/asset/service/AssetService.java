@@ -71,16 +71,15 @@ public class AssetService {
     if (loggedUser.isAdmin()) return;
 
     if (loggedUser.isManager()) {
-      if (asset.getUnit() == null ||
-          !asset.getUnit().getId().equals(loggedUser.getUnitId())) {
+      if (asset.getUnit() == null || !asset.getUnit().getId().equals(loggedUser.getUnitId())) {
         throw new ForbiddenException("Access denied");
       }
       return;
     }
 
     // OPERADOR
-    if (asset.getAssignedUser() == null ||
-        !asset.getAssignedUser().getId().equals(loggedUser.getUserId())) {
+    if (asset.getAssignedUser() == null
+        || !asset.getAssignedUser().getId().equals(loggedUser.getUserId())) {
       throw new ForbiddenException("Access denied");
     }
   }
@@ -89,7 +88,8 @@ public class AssetService {
     if (loggedUser.isAdmin()) return;
     if (loggedUser.isManager()) {
       if (unit == null || !unit.getId().equals(loggedUser.getUnitId())) {
-        throw new ForbiddenException("Gestor não pode cadastrar ativos em unidades que não são suas");
+        throw new ForbiddenException(
+            "Gestor não pode cadastrar ativos em unidades que não são suas");
       }
     }
   }
@@ -237,13 +237,14 @@ public class AssetService {
   }
 
   @Transactional
-  public Asset updateFinancial(Long id,
-      com.portfolio.assetmanagement.application.asset.dto.AssetFinancialUpdateDTO dto) {
+  public Asset updateFinancial(
+      Long id, com.portfolio.assetmanagement.application.asset.dto.AssetFinancialUpdateDTO dto) {
     Asset asset = findById(id);
     if (dto.getPurchaseValue() != null) asset.setPurchaseValue(dto.getPurchaseValue());
     if (dto.getResidualValue() != null) asset.setResidualValue(dto.getResidualValue());
     if (dto.getUsefulLifeMonths() != null) asset.setUsefulLifeMonths(dto.getUsefulLifeMonths());
-    if (dto.getDepreciationMethod() != null) asset.setDepreciationMethod(dto.getDepreciationMethod());
+    if (dto.getDepreciationMethod() != null)
+      asset.setDepreciationMethod(dto.getDepreciationMethod());
     if (dto.getPurchaseDate() != null) asset.setPurchaseDate(dto.getPurchaseDate());
     if (dto.getWarrantyExpiry() != null) asset.setWarrantyExpiry(dto.getWarrantyExpiry());
     if (dto.getSupplier() != null) asset.setSupplier(dto.getSupplier());

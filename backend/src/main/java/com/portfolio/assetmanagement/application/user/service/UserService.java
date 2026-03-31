@@ -1,7 +1,6 @@
 package com.portfolio.assetmanagement.application.user.service;
 
 import com.portfolio.assetmanagement.application.audit.service.AuditService;
-import com.portfolio.assetmanagement.application.user.service.UserActivationService;
 import com.portfolio.assetmanagement.application.whatsapp.service.WhatsAppService;
 import com.portfolio.assetmanagement.domain.audit.enums.AuditEventType;
 import com.portfolio.assetmanagement.domain.organization.entity.Organization;
@@ -62,8 +61,9 @@ public class UserService {
     }
 
     if (loggedUser.isManager()) {
-      if (loggedUser.getUnitId() == null || unit == null ||
-          !loggedUser.getUnitId().equals(unit.getId())) {
+      if (loggedUser.getUnitId() == null
+          || unit == null
+          || !loggedUser.getUnitId().equals(unit.getId())) {
         throw new BusinessException("Gestor só pode criar usuários na própria unidade");
       }
     }
@@ -204,8 +204,7 @@ public class UserService {
     }
 
     if (loggedUser.isManager()) {
-      if (user.getUnit() == null ||
-          !user.getUnit().getId().equals(loggedUser.getUnitId())) {
+      if (user.getUnit() == null || !user.getUnit().getId().equals(loggedUser.getUnitId())) {
         throw new BusinessException("Acesso negado");
       }
     }

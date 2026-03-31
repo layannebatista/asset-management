@@ -58,16 +58,16 @@ public class TransferService {
     if (loggedUser.isManager()) {
       Long unitId = loggedUser.getUnitId();
 
-      if (!transfer.getFromUnit().getId().equals(unitId) &&
-          !transfer.getToUnit().getId().equals(unitId)) {
+      if (!transfer.getFromUnit().getId().equals(unitId)
+          && !transfer.getToUnit().getId().equals(unitId)) {
         throw new ForbiddenException("Acesso negado à transferência");
       }
       return transfer;
     }
 
     // OPERADOR
-    if (transfer.getAsset().getAssignedUser() == null ||
-        !transfer.getAsset().getAssignedUser().getId().equals(loggedUser.getUserId())) {
+    if (transfer.getAsset().getAssignedUser() == null
+        || !transfer.getAsset().getAssignedUser().getId().equals(loggedUser.getUserId())) {
       throw new ForbiddenException("Acesso negado à transferência");
     }
 
@@ -117,7 +117,8 @@ public class TransferService {
 
     if (loggedUser.isAdmin()) {
       return all.stream()
-          .filter(t -> t.getAsset().getOrganization().getId().equals(loggedUser.getOrganizationId()))
+          .filter(
+              t -> t.getAsset().getOrganization().getId().equals(loggedUser.getOrganizationId()))
           .collect(Collectors.toList());
     }
 
@@ -125,17 +126,19 @@ public class TransferService {
       Long unitId = loggedUser.getUnitId();
 
       return all.stream()
-          .filter(t ->
-              (t.getFromUnit() != null && t.getFromUnit().getId().equals(unitId)) ||
-              (t.getToUnit() != null && t.getToUnit().getId().equals(unitId)))
+          .filter(
+              t ->
+                  (t.getFromUnit() != null && t.getFromUnit().getId().equals(unitId))
+                      || (t.getToUnit() != null && t.getToUnit().getId().equals(unitId)))
           .collect(Collectors.toList());
     }
 
     // OPERADOR
     return all.stream()
-        .filter(t ->
-            t.getAsset().getAssignedUser() != null &&
-            t.getAsset().getAssignedUser().getId().equals(loggedUser.getUserId()))
+        .filter(
+            t ->
+                t.getAsset().getAssignedUser() != null
+                    && t.getAsset().getAssignedUser().getId().equals(loggedUser.getUserId()))
         .collect(Collectors.toList());
   }
 

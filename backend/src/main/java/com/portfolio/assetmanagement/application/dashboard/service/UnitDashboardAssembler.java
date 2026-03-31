@@ -1,6 +1,5 @@
 package com.portfolio.assetmanagement.application.dashboard.service;
 
-import com.portfolio.assetmanagement.application.dashboard.dto.AssetIdleItemDTO;
 import com.portfolio.assetmanagement.application.dashboard.dto.DashboardData;
 import com.portfolio.assetmanagement.application.dashboard.dto.UnitDashboardDTO;
 import java.util.HashMap;

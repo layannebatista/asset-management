@@ -37,7 +37,6 @@ public class AssetSpecificationBuilder {
       for (FilterCriteria criteria : criteriaList) {
 
         switch (criteria.getKey()) {
-
           case "status":
           case "type":
             predicates.add(cb.equal(root.get(criteria.getKey()), criteria.getValue()));
@@ -54,24 +53,18 @@ public class AssetSpecificationBuilder {
           case "unitId":
             // 🔥 LEFT JOIN seguro
             predicates.add(
-                cb.equal(
-                    root.join("unit", JoinType.LEFT).get("id"),
-                    criteria.getValue()));
+                cb.equal(root.join("unit", JoinType.LEFT).get("id"), criteria.getValue()));
             break;
 
           case "assignedUserId":
             // 🔥 LEFT JOIN seguro (evita erro com null)
             predicates.add(
-                cb.equal(
-                    root.join("assignedUser", JoinType.LEFT).get("id"),
-                    criteria.getValue()));
+                cb.equal(root.join("assignedUser", JoinType.LEFT).get("id"), criteria.getValue()));
             break;
 
           case "organizationId":
             predicates.add(
-                cb.equal(
-                    root.join("organization", JoinType.INNER).get("id"),
-                    criteria.getValue()));
+                cb.equal(root.join("organization", JoinType.INNER).get("id"), criteria.getValue()));
             break;
 
           default:

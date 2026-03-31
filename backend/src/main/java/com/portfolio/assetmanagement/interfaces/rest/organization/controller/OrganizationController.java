@@ -9,8 +9,6 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -55,7 +53,8 @@ public class OrganizationController {
     return organizationMapper.toResponseDTO(organizationService.createOrganization(dto.getName()));
   }
 
-  @Operation(summary = "Atualizar nome da organização",
+  @Operation(
+      summary = "Atualizar nome da organização",
       description = "Atualiza o nome da organização. Único campo editável pelo frontend.")
   @PreAuthorize("hasRole('ADMIN')")
   @PatchMapping("/{id}")

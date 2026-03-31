@@ -53,8 +53,7 @@ public class Organization {
   }
 
   public void setName(String name) {
-    if (name == null || name.isBlank())
-      throw new IllegalArgumentException("name é obrigatório");
+    if (name == null || name.isBlank()) throw new IllegalArgumentException("name é obrigatório");
     this.name = name.trim();
   }
 

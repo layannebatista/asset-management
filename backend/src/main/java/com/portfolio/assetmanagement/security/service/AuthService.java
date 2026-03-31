@@ -60,16 +60,20 @@ public class AuthService {
 
       UserDetails userDetails = (UserDetails) authentication.getPrincipal();
 
-      User user = userRepository
-          .findByEmail(request.getEmail())
-          .orElseThrow(() -> new BadCredentialsException("Usuário não encontrado após autenticação"));
+      User user =
+          userRepository
+              .findByEmail(request.getEmail())
+              .orElseThrow(
+                  () -> new BadCredentialsException("Usuário não encontrado após autenticação"));
 
-      log.info("AUTH >> usuário encontrado: id={}, status={}, lgpd={}, hashPrefix={}",
+      log.info(
+          "AUTH >> usuário encontrado: id={}, status={}, lgpd={}, hashPrefix={}",
           user.getId(),
           user.getStatus(),
           user.isLgpdAccepted(),
-          user.getPasswordHash() != null ? user.getPasswordHash().substring(0, Math.min(10, user.getPasswordHash().length())) : "NULL"
-      );
+          user.getPasswordHash() != null
+              ? user.getPasswordHash().substring(0, Math.min(10, user.getPasswordHash().length()))
+              : "NULL");
 
       if (user.getPhoneNumber() != null && !user.getPhoneNumber().isBlank()) {
         log.info("AUTH >> iniciando MFA para: {}", request.getEmail());
@@ -87,12 +91,19 @@ public class AuthService {
       log.error("AUTH >> credenciais inválidas: {} — {}", request.getEmail(), ex.getMessage());
       throw new BadCredentialsException("Email ou senha inválidos");
     } catch (AuthenticationException ex) {
-      log.error("AUTH >> AuthenticationException inesperada: {} — {} ({})",
-          request.getEmail(), ex.getMessage(), ex.getClass().getSimpleName());
+      log.error(
+          "AUTH >> AuthenticationException inesperada: {} — {} ({})",
+          request.getEmail(),
+          ex.getMessage(),
+          ex.getClass().getSimpleName());
       throw new BadCredentialsException("Email ou senha inválidos");
     } catch (Exception ex) {
-      log.error("AUTH >> ERRO INESPERADO no login de {}: {} ({})",
-          request.getEmail(), ex.getMessage(), ex.getClass().getName(), ex);
+      log.error(
+          "AUTH >> ERRO INESPERADO no login de {}: {} ({})",
+          request.getEmail(),
+          ex.getMessage(),
+          ex.getClass().getName(),
+          ex);
       throw ex;
     }
   }
@@ -100,9 +111,10 @@ public class AuthService {
   public LoginResponseDTO verifyMfa(MfaVerifyRequestDTO request) {
     mfaService.validate(request.getUserId(), request.getCode());
 
-    User user = userRepository
-        .findById(request.getUserId())
-        .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+    User user =
+        userRepository
+            .findById(request.getUserId())
+            .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
     UserDetails userDetails = buildUserDetails(user);
     return issueFullResponse(userDetails, user);
@@ -111,9 +123,10 @@ public class AuthService {
   public LoginResponseDTO refresh(RefreshRequestDTO request) {
     RefreshToken old = refreshTokenService.validateAndRotate(request.getRefreshToken());
 
-    User user = userRepository
-        .findById(old.getUserId())
-        .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+    User user =
+        userRepository
+            .findById(old.getUserId())
+            .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
     UserDetails userDetails = buildUserDetails(user);
     String newAccessToken = tokenService.generateToken(userDetails);

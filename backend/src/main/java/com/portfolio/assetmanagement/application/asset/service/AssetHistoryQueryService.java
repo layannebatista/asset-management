@@ -63,16 +63,15 @@ public class AssetHistoryQueryService {
     }
 
     if (loggedUser.isManager()) {
-      if (asset.getUnit() == null ||
-          !asset.getUnit().getId().equals(loggedUser.getUnitId())) {
+      if (asset.getUnit() == null || !asset.getUnit().getId().equals(loggedUser.getUnitId())) {
         throw new BusinessException("Acesso negado ao ativo");
       }
       return asset;
     }
 
     // OPERADOR
-    if (asset.getAssignedUser() == null ||
-        !asset.getAssignedUser().getId().equals(loggedUser.getUserId())) {
+    if (asset.getAssignedUser() == null
+        || !asset.getAssignedUser().getId().equals(loggedUser.getUserId())) {
       throw new BusinessException("Acesso negado ao ativo");
     }
 

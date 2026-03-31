@@ -46,8 +46,7 @@ public class InventoryService {
     if (loggedUser.isAdmin()) return session;
 
     if (loggedUser.isManager()) {
-      if (session.getUnit() == null ||
-          !session.getUnit().getId().equals(loggedUser.getUnitId())) {
+      if (session.getUnit() == null || !session.getUnit().getId().equals(loggedUser.getUnitId())) {
         throw new ForbiddenException("Acesso negado ao inventário");
       }
       return session;
@@ -65,8 +64,7 @@ public class InventoryService {
     validationService.validateNoActiveSession(unit.getId());
 
     if (loggedUser.isManager()) {
-      if (loggedUser.getUnitId() == null ||
-          !loggedUser.getUnitId().equals(unit.getId())) {
+      if (loggedUser.getUnitId() == null || !loggedUser.getUnitId().equals(unit.getId())) {
         throw new ForbiddenException("Gestor só pode criar inventário na própria unidade");
       }
     }
@@ -105,8 +103,7 @@ public class InventoryService {
       Long unitId = loggedUser.getUnitId();
 
       return repository.findByOrganization_Id(orgId).stream()
-          .filter(session -> session.getUnit() != null &&
-              session.getUnit().getId().equals(unitId))
+          .filter(session -> session.getUnit() != null && session.getUnit().getId().equals(unitId))
           .map(this::map)
           .collect(Collectors.toList());
     }

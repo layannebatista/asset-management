@@ -4,7 +4,6 @@ import com.portfolio.assetmanagement.application.dashboard.dto.DashboardData;
 import com.portfolio.assetmanagement.infrastructure.persistence.dashboard.repository.DashboardQueryRepository;
 import com.portfolio.assetmanagement.security.context.LoggedUserContext;
 import com.portfolio.assetmanagement.shared.exception.BusinessException;
-import java.util.List;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -74,9 +73,10 @@ public class DashboardQueryService {
 
     // Calcula utilizationRate: ASSIGNED / (total - RETIRED) * 100
     Long assignedCount = repository.countAssetsByStatusAndUnit(unitId, "ASSIGNED");
-    Long retiredCount  = repository.countAssetsByStatusAndUnit(unitId, "RETIRED");
+    Long retiredCount = repository.countAssetsByStatusAndUnit(unitId, "RETIRED");
     long activeTotal = total - retiredCount;
-    double rate = activeTotal > 0 ? Math.round((assignedCount * 100.0 / activeTotal) * 10.0) / 10.0 : 0.0;
+    double rate =
+        activeTotal > 0 ? Math.round((assignedCount * 100.0 / activeTotal) * 10.0) / 10.0 : 0.0;
 
     data.setAssetsAvailable(available);
     data.setUtilizationRate(rate);

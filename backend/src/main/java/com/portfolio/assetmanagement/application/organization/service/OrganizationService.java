@@ -39,7 +39,11 @@ public class OrganizationService {
     unitService.createMainUnit(saved);
 
     auditService.registerEvent(
-        AuditEventType.ORGANIZATION_CREATED, null, saved.getId(), null, saved.getId(),
+        AuditEventType.ORGANIZATION_CREATED,
+        null,
+        saved.getId(),
+        null,
+        saved.getId(),
         "Organization created with main unit");
     return saved;
   }
@@ -67,7 +71,8 @@ public class OrganizationService {
   @Transactional(readOnly = true)
   public Organization findById(Long id) {
     if (id == null) throw new IllegalArgumentException("organizationId não pode ser null");
-    return organizationRepository.findById(id)
+    return organizationRepository
+        .findById(id)
         .orElseThrow(() -> new NotFoundException("Organização não encontrada"));
   }
 
@@ -79,8 +84,12 @@ public class OrganizationService {
     organization.setStatus(OrganizationStatus.INACTIVE);
     organizationRepository.save(organization);
     auditService.registerEvent(
-        AuditEventType.ORGANIZATION_INACTIVATED, null, organization.getId(), null,
-        organization.getId(), "Organization inactivated");
+        AuditEventType.ORGANIZATION_INACTIVATED,
+        null,
+        organization.getId(),
+        null,
+        organization.getId(),
+        "Organization inactivated");
   }
 
   @Transactional
@@ -91,8 +100,12 @@ public class OrganizationService {
     organization.setStatus(OrganizationStatus.ACTIVE);
     organizationRepository.save(organization);
     auditService.registerEvent(
-        AuditEventType.ORGANIZATION_ACTIVATED, null, organization.getId(), null,
-        organization.getId(), "Organization activated");
+        AuditEventType.ORGANIZATION_ACTIVATED,
+        null,
+        organization.getId(),
+        null,
+        organization.getId(),
+        "Organization activated");
   }
 
   private void validateOrganizationName(String name) {

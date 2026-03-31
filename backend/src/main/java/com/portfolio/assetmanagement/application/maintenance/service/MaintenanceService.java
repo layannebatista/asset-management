@@ -48,21 +48,22 @@ public class MaintenanceService {
   // 🔒 VALIDAÇÃO DE ESCOPO
   // ─────────────────────────────────────────────
   private Asset validateAssetAccess(Long assetId) {
-    Asset asset = assetRepository.findById(assetId)
-        .orElseThrow(() -> new NotFoundException("Ativo não encontrado"));
+    Asset asset =
+        assetRepository
+            .findById(assetId)
+            .orElseThrow(() -> new NotFoundException("Ativo não encontrado"));
 
     if (loggedUser.isAdmin()) return asset;
 
     if (loggedUser.isManager()) {
-      if (asset.getUnit() == null ||
-          !asset.getUnit().getId().equals(loggedUser.getUnitId())) {
+      if (asset.getUnit() == null || !asset.getUnit().getId().equals(loggedUser.getUnitId())) {
         throw new ForbiddenException("Acesso negado ao ativo");
       }
       return asset;
     }
 
-    if (asset.getAssignedUser() == null ||
-        !asset.getAssignedUser().getId().equals(loggedUser.getUserId())) {
+    if (asset.getAssignedUser() == null
+        || !asset.getAssignedUser().getId().equals(loggedUser.getUserId())) {
       throw new ForbiddenException("Acesso negado ao ativo");
     }
 
@@ -70,23 +71,24 @@ public class MaintenanceService {
   }
 
   private MaintenanceRecord validateMaintenanceAccess(Long maintenanceId) {
-    MaintenanceRecord record = maintenanceRepository.findById(maintenanceId)
-        .orElseThrow(() -> new NotFoundException("Manutenção não encontrada"));
+    MaintenanceRecord record =
+        maintenanceRepository
+            .findById(maintenanceId)
+            .orElseThrow(() -> new NotFoundException("Manutenção não encontrada"));
 
     Asset asset = record.getAsset();
 
     if (loggedUser.isAdmin()) return record;
 
     if (loggedUser.isManager()) {
-      if (asset.getUnit() == null ||
-          !asset.getUnit().getId().equals(loggedUser.getUnitId())) {
+      if (asset.getUnit() == null || !asset.getUnit().getId().equals(loggedUser.getUnitId())) {
         throw new ForbiddenException("Acesso negado à manutenção");
       }
       return record;
     }
 
-    if (asset.getAssignedUser() == null ||
-        !asset.getAssignedUser().getId().equals(loggedUser.getUserId())) {
+    if (asset.getAssignedUser() == null
+        || !asset.getAssignedUser().getId().equals(loggedUser.getUserId())) {
       throw new ForbiddenException("Acesso negado à manutenção");
     }
 
@@ -101,12 +103,13 @@ public class MaintenanceService {
     lockService.lockAssetForMaintenance(assetId);
     validationService.validateCreate(asset, description);
 
-    MaintenanceRecord record = new MaintenanceRecord(
-        asset,
-        asset.getOrganization().getId(),
-        asset.getUnit().getId(),
-        loggedUser.getUserId(),
-        description);
+    MaintenanceRecord record =
+        new MaintenanceRecord(
+            asset,
+            asset.getOrganization().getId(),
+            asset.getUnit().getId(),
+            loggedUser.getUserId(),
+            description);
 
     if (estimatedCost != null) {
       record.setEstimatedCost(estimatedCost);
@@ -169,7 +172,8 @@ public class MaintenanceService {
 
     Asset asset = record.getAsset();
 
-    asset.changeStatus(asset.getAssignedUser() != null ? AssetStatus.ASSIGNED : AssetStatus.AVAILABLE);
+    asset.changeStatus(
+        asset.getAssignedUser() != null ? AssetStatus.ASSIGNED : AssetStatus.AVAILABLE);
 
     auditService.registerEvent(
         AuditEventType.MAINTENANCE_COMPLETED,
@@ -195,7 +199,8 @@ public class MaintenanceService {
 
     Asset asset = record.getAsset();
 
-    asset.changeStatus(asset.getAssignedUser() != null ? AssetStatus.ASSIGNED : AssetStatus.AVAILABLE);
+    asset.changeStatus(
+        asset.getAssignedUser() != null ? AssetStatus.ASSIGNED : AssetStatus.AVAILABLE);
 
     auditService.registerEvent(
         AuditEventType.MAINTENANCE_CANCELLED,
@@ -225,14 +230,18 @@ public class MaintenanceService {
 
     if (loggedUser.isManager()) {
       return all.stream()
-          .filter(r -> r.getAsset().getUnit() != null &&
-              r.getAsset().getUnit().getId().equals(loggedUser.getUnitId()))
+          .filter(
+              r ->
+                  r.getAsset().getUnit() != null
+                      && r.getAsset().getUnit().getId().equals(loggedUser.getUnitId()))
           .collect(Collectors.toList());
     }
 
     return all.stream()
-        .filter(r -> r.getAsset().getAssignedUser() != null &&
-            r.getAsset().getAssignedUser().getId().equals(loggedUser.getUserId()))
+        .filter(
+            r ->
+                r.getAsset().getAssignedUser() != null
+                    && r.getAsset().getAssignedUser().getId().equals(loggedUser.getUserId()))
         .collect(Collectors.toList());
   }
 
@@ -246,13 +255,15 @@ public class MaintenanceService {
     if (startDate == null && endDate == null) {
       records = maintenanceRepository.findByOrganizationIdOrderByCreatedAtDesc(orgId);
     } else {
-      OffsetDateTime start = startDate != null
-          ? startDate.atStartOfDay().atOffset(ZoneOffset.UTC)
-          : OffsetDateTime.now().minusMonths(1);
+      OffsetDateTime start =
+          startDate != null
+              ? startDate.atStartOfDay().atOffset(ZoneOffset.UTC)
+              : OffsetDateTime.now().minusMonths(1);
 
-      OffsetDateTime end = endDate != null
-          ? endDate.plusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC)
-          : OffsetDateTime.now();
+      OffsetDateTime end =
+          endDate != null
+              ? endDate.plusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC)
+              : OffsetDateTime.now();
 
       records = maintenanceRepository.findByOrganizationIdAndCreatedAtBetween(orgId, start, end);
     }
@@ -261,14 +272,18 @@ public class MaintenanceService {
 
     if (loggedUser.isManager()) {
       return records.stream()
-          .filter(r -> r.getAsset().getUnit() != null &&
-              r.getAsset().getUnit().getId().equals(loggedUser.getUnitId()))
+          .filter(
+              r ->
+                  r.getAsset().getUnit() != null
+                      && r.getAsset().getUnit().getId().equals(loggedUser.getUnitId()))
           .collect(Collectors.toList());
     }
 
     return records.stream()
-        .filter(r -> r.getAsset().getAssignedUser() != null &&
-            r.getAsset().getAssignedUser().getId().equals(loggedUser.getUserId()))
+        .filter(
+            r ->
+                r.getAsset().getAssignedUser() != null
+                    && r.getAsset().getAssignedUser().getId().equals(loggedUser.getUserId()))
         .collect(Collectors.toList());
   }
 }

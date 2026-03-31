@@ -39,18 +39,22 @@ public class TransferQueryService {
     if (loggedUser.isManager()) {
       Long managerUnitId = loggedUser.getUnitId();
       if (managerUnitId != null) {
-        spec = spec.and((root, q, cb) ->
-            cb.or(
-                cb.equal(root.join("fromUnit").get("id"), managerUnitId),
-                cb.equal(root.join("toUnit").get("id"), managerUnitId)));
+        spec =
+            spec.and(
+                (root, q, cb) ->
+                    cb.or(
+                        cb.equal(root.join("fromUnit").get("id"), managerUnitId),
+                        cb.equal(root.join("toUnit").get("id"), managerUnitId)));
       }
     } else if (unitId != null) {
       // ADMIN com filtro explícito de unidade
       final Long fUnitId = unitId;
-      spec = spec.and((root, q, cb) ->
-          cb.or(
-              cb.equal(root.join("fromUnit").get("id"), fUnitId),
-              cb.equal(root.join("toUnit").get("id"), fUnitId)));
+      spec =
+          spec.and(
+              (root, q, cb) ->
+                  cb.or(
+                      cb.equal(root.join("fromUnit").get("id"), fUnitId),
+                      cb.equal(root.join("toUnit").get("id"), fUnitId)));
     }
 
     if (status != null) {
@@ -74,7 +78,11 @@ public class TransferQueryService {
   /** Retrocompatível sem unitId. */
   @Transactional(readOnly = true)
   public Page<TransferRequest> list(
-      TransferStatus status, Long assetId, LocalDate startDate, LocalDate endDate, Pageable pageable) {
+      TransferStatus status,
+      Long assetId,
+      LocalDate startDate,
+      LocalDate endDate,
+      Pageable pageable) {
     return list(status, assetId, null, startDate, endDate, pageable);
   }
 }
