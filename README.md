@@ -223,7 +223,7 @@ O isolamento de escopo é aplicado em todos os serviços via `LoggedUserContext`
 | Cypress + Cucumber | Testes E2E frontend (BDD) |
 | Playwright + Cucumber | Testes E2E frontend (BDD) |
 
----
+--- 
 
 ## 📂 Estrutura do Projeto
 
