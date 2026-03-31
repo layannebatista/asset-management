@@ -362,31 +362,67 @@ SELECT 'Filial BH', 'ACTIVE', false, id FROM public.organizations WHERE name = '
 ON CONFLICT DO NOTHING;
 
 -- 3. USUÁRIOS DEMO
--- admin@empresa.com | Admin@123
-INSERT INTO public.users (name, email, document_number, role, status, organization_id, unit_id, lgpd_accepted, password_hash, version)
-SELECT 'Administrador Sistema', 'admin@empresa.com', '000.000.000-01', 'ADMIN', 'ACTIVE',
-    o.id, u.id, true,
-    'SEED_PENDING', 0
+-- password_hash = 'SEED_PENDING' → será substituído pelo DataSeeder no startup
+-- O DataSeeder gera o hash BCrypt correto via Spring PasswordEncoder
+
+-- ADMIN
+INSERT INTO public.users (
+    name, email, document_number, role, status,
+    organization_id, unit_id, lgpd_accepted, password_hash, version
+)
+SELECT
+    'Administrador Sistema',
+    'admin@empresa.com',
+    '000.000.000-01',
+    'ADMIN',
+    'ACTIVE',
+    o.id,
+    u.id,
+    true,
+    'SEED_PENDING',
+    0
 FROM public.organizations o
 JOIN public.units u ON u.organization_id = o.id AND u.name = 'Matriz SP'
 WHERE o.name = 'Empresa Demo Ltda'
 ON CONFLICT (email) DO NOTHING;
 
--- gestor@empresa.com | Gestor@123
-INSERT INTO public.users (name, email, document_number, role, status, organization_id, unit_id, lgpd_accepted, password_hash, version)
-SELECT 'Gestor Filial RJ', 'gestor@empresa.com', '000.000.000-02', 'GESTOR', 'ACTIVE',
-    o.id, u.id, true,
-    'SEED_PENDING', 0
+-- GESTOR
+INSERT INTO public.users (
+    name, email, document_number, role, status,
+    organization_id, unit_id, lgpd_accepted, password_hash, version
+)
+SELECT
+    'Gestor Filial RJ',
+    'gestor@empresa.com',
+    '000.000.000-02',
+    'GESTOR',
+    'ACTIVE',
+    o.id,
+    u.id,
+    true,
+    'SEED_PENDING',
+    0
 FROM public.organizations o
 JOIN public.units u ON u.organization_id = o.id AND u.name = 'Filial RJ'
 WHERE o.name = 'Empresa Demo Ltda'
 ON CONFLICT (email) DO NOTHING;
 
--- operador@empresa.com | Op@12345
-INSERT INTO public.users (name, email, document_number, role, status, organization_id, unit_id, lgpd_accepted, password_hash, version)
-SELECT 'Operador Filial BH', 'operador@empresa.com', '000.000.000-03', 'OPERADOR', 'ACTIVE',
-    o.id, u.id, true,
-    'SEED_PENDING', 0
+-- OPERADOR
+INSERT INTO public.users (
+    name, email, document_number, role, status,
+    organization_id, unit_id, lgpd_accepted, password_hash, version
+)
+SELECT
+    'Operador Filial BH',
+    'operador@empresa.com',
+    '000.000.000-03',
+    'OPERADOR',
+    'ACTIVE',
+    o.id,
+    u.id,
+    true,
+    'SEED_PENDING',
+    0
 FROM public.organizations o
 JOIN public.units u ON u.organization_id = o.id AND u.name = 'Filial BH'
 WHERE o.name = 'Empresa Demo Ltda'

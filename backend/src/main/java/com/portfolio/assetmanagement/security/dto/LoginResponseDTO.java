@@ -22,6 +22,11 @@ public class LoginResponseDTO {
   private boolean mfaRequired;
   private Long userId;
 
+  // 🔥 NOVOS CAMPOS (mantidos opcionais para compatibilidade)
+  private String email;
+  private Long organizationId;
+  private Long unitId;
+
   public LoginResponseDTO() {}
 
   /** Login completo sem MFA. */
@@ -32,6 +37,29 @@ public class LoginResponseDTO {
     this.tokenType = tokenType;
     this.role = role;
     this.mfaRequired = false;
+  }
+
+  // 🔥 NOVO CONSTRUTOR COMPLETO (usado pelo AuthService atualizado)
+  public LoginResponseDTO(
+      String accessToken,
+      String refreshToken,
+      String tokenType,
+      UserRole role,
+      boolean mfaRequired,
+      Long userId,
+      String email,
+      Long organizationId,
+      Long unitId) {
+
+    this.accessToken = accessToken;
+    this.refreshToken = refreshToken;
+    this.tokenType = tokenType;
+    this.role = role;
+    this.mfaRequired = mfaRequired;
+    this.userId = userId;
+    this.email = email;
+    this.organizationId = organizationId;
+    this.unitId = unitId;
   }
 
   /** Challenge MFA — tokens não emitidos ainda. */
@@ -76,6 +104,19 @@ public class LoginResponseDTO {
     return userId;
   }
 
+  // 🔥 NOVOS GETTERS
+  public String getEmail() {
+    return email;
+  }
+
+  public Long getOrganizationId() {
+    return organizationId;
+  }
+
+  public Long getUnitId() {
+    return unitId;
+  }
+
   public void setAccessToken(String v) {
     this.accessToken = v;
   }
@@ -98,5 +139,18 @@ public class LoginResponseDTO {
 
   public void setUserId(Long v) {
     this.userId = v;
+  }
+
+  // 🔥 NOVOS SETTERS
+  public void setEmail(String v) {
+    this.email = v;
+  }
+
+  public void setOrganizationId(Long v) {
+    this.organizationId = v;
+  }
+
+  public void setUnitId(Long v) {
+    this.unitId = v;
   }
 }

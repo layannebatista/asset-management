@@ -1,4 +1,5 @@
 import api from './axios'
+import { apiService } from './base'
 import type {
   LoginRequest, MfaVerifyRequest, AuthResponse,
   UserResponse, UserCreateRequest, Page, PageParams,
@@ -21,29 +22,30 @@ import type {
 // ═══════════════════════════════════════════════════════════════════════════════
 export const authApi = {
   login: (body: LoginRequest) =>
-    api.post<AuthResponse>('/auth/login', body).then((r) => r.data),
+    apiService.post<AuthResponse>('/auth/login', body),
 
   mfaVerify: (body: MfaVerifyRequest) =>
-    api.post<AuthResponse>('/auth/mfa/verify', body).then((r) => r.data),
+    apiService.post<AuthResponse>('/auth/mfa/verify', body),
 
   refresh: (refreshToken: string) =>
-    api.post<AuthResponse>('/auth/refresh', { refreshToken }).then((r) => r.data),
+    apiService.post<AuthResponse>('/auth/refresh', { refreshToken }),
 
-  logout: () => api.post('/auth/logout'),
+  logout: () =>
+    apiService.post<void>('/auth/logout'),
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ORGANIZATIONS
 // ═══════════════════════════════════════════════════════════════════════════════
 export const organizationApi = {
-  create: (name: string) =>
-    api.post<OrganizationResponse>('/organizations', { name }).then((r) => r.data),
+  list: () =>
+    apiService.get<OrganizationResponse[]>('/organizations'),
 
   getById: (id: number) =>
-    api.get<OrganizationResponse>(`/organizations/${id}`).then((r) => r.data),
+    apiService.get<OrganizationResponse>(`/organizations/${id}`),
 
-  activate: (id: number) => api.patch(`/organizations/${id}/activate`),
-  inactivate: (id: number) => api.patch(`/organizations/${id}/inactivate`),
+  updateName: (id: number, name: string) =>
+    apiService.patch<OrganizationResponse>(`/organizations/${id}`, { name }),
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -51,16 +53,19 @@ export const organizationApi = {
 // ═══════════════════════════════════════════════════════════════════════════════
 export const unitApi = {
   create: (organizationId: number, name: string) =>
-    api.post<UnitResponse>(`/units/${organizationId}`, { name }).then((r) => r.data),
+    apiService.post<UnitResponse>(`/units/${organizationId}`, { name }),
 
   listByOrg: (organizationId: number) =>
-    api.get<UnitResponse[]>(`/units/${organizationId}`).then((r) => r.data),
+    apiService.get<UnitResponse[]>(`/units/${organizationId}`),
 
   getById: (id: number) =>
-    api.get<UnitResponse>(`/units/unit/${id}`).then((r) => r.data),
+    apiService.get<UnitResponse>(`/units/unit/${id}`),
 
-  activate: (id: number) => api.patch(`/units/${id}/activate`),
-  inactivate: (id: number) => api.patch(`/units/${id}/inactivate`),
+  activate: (id: number) =>
+    apiService.patch<void>(`/units/${id}/activate`),
+
+  inactivate: (id: number) =>
+    apiService.patch<void>(`/units/${id}/inactivate`),
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -68,24 +73,32 @@ export const unitApi = {
 // ═══════════════════════════════════════════════════════════════════════════════
 export const userApi = {
   list: (params?: PageParams & { status?: UserStatus; unitId?: number; includeInactive?: boolean }) =>
-    api.get<Page<UserResponse>>('/users', { params }).then((r) => r.data),
+    apiService.get<Page<UserResponse>>('/users', { params }),
 
   create: (body: UserCreateRequest) =>
-    api.post<UserResponse>('/users', body).then((r) => r.data),
+    apiService.post<UserResponse>('/users', body),
 
   getById: (id: number) =>
-    api.get<UserResponse>(`/users/${id}`).then((r) => r.data),
+    apiService.get<UserResponse>(`/users/${id}`),
 
-  block: (id: number) => api.patch(`/users/${id}/block`),
-  activate: (id: number) => api.patch(`/users/${id}/activate`),
-  inactivate: (id: number) => api.patch(`/users/${id}/inactivate`),
+  block: (id: number) =>
+    apiService.patch<void>(`/users/${id}/block`),
+
+  activate: (id: number) =>
+    apiService.patch<void>(`/users/${id}/activate`),
+
+  inactivate: (id: number) =>
+    apiService.patch<void>(`/users/${id}/inactivate`),
 
   generateActivationToken: (userId: number) =>
-    api.post<string>(`/users/activation/token/${userId}`).then((r) => r.data),
+    apiService.post<string>(`/users/activation/token/${userId}`),
 
   activateAccount: (token: string, password: string, confirmPassword: string, lgpdAccepted: boolean) =>
-    api.post('/users/activation/activate', null, {
-      params: { token, password, confirmPassword, lgpdAccepted },
+    apiService.post<void>('/users/activation/activate', {
+      token,
+      password,
+      confirmPassword,
+      lgpdAccepted,
     }),
 }
 
@@ -95,32 +108,41 @@ export const userApi = {
 export const assetApi = {
   list: (params?: PageParams & {
     status?: AssetStatus; type?: AssetType; unitId?: number;
-    assignedUserId?: number; assetTag?: string; model?: string
+    assignedUserId?: number; assetTag?: string; model?: string; search?: string
   }) =>
-    api.get<Page<AssetResponse>>('/assets', { params }).then((r) => r.data),
+    apiService.get<Page<AssetResponse>>('/assets', { params }),
 
   getById: (id: number) =>
-    api.get<AssetResponse>(`/assets/${id}`).then((r) => r.data),
+    apiService.get<AssetResponse>(`/assets/${id}`),
 
   create: (organizationId: number, body: AssetCreateRequest) =>
-    api.post<AssetResponse>(`/assets/${organizationId}`, body).then((r) => r.data),
+    apiService.post<AssetResponse>(`/assets/${organizationId}`, body),
 
   createAuto: (organizationId: number, body: Omit<AssetCreateRequest, 'assetTag'>) =>
-    api.post<AssetResponse>(`/assets/${organizationId}/auto`, body).then((r) => r.data),
+    apiService.post<AssetResponse>(`/assets/${organizationId}/auto`, body),
 
-  retire: (id: number) => api.patch(`/assets/${id}/retire`),
+  retire: (id: number) =>
+    apiService.patch<void>(`/assets/${id}/retire`),
 
   assign: (assetId: number, userId: number) =>
-    api.patch(`/assets/${assetId}/assign/${userId}`),
+    apiService.patch<void>(`/assets/${assetId}/assign/${userId}`),
 
   unassign: (assetId: number) =>
-    api.patch(`/assets/${assetId}/unassign`),
+    apiService.patch<void>(`/assets/${assetId}/unassign`),
+
+  updateFinancial: (id: number, body: {
+    purchaseValue?: number; residualValue?: number; usefulLifeMonths?: number;
+    depreciationMethod?: 'LINEAR' | 'DECLINING_BALANCE' | 'SUM_OF_YEARS';
+    purchaseDate?: string; warrantyExpiry?: string; supplier?: string;
+    invoiceNumber?: string; invoiceDate?: string;
+  }) =>
+    apiService.patch<AssetResponse>(`/assets/${id}/financial`, body),
 
   getStatusHistory: (assetId: number) =>
-    api.get<AssetStatusHistory[]>(`/assets/${assetId}/history/status`).then((r) => r.data),
+    apiService.get<AssetStatusHistory[]>(`/assets/${assetId}/history/status`),
 
   getAssignmentHistory: (assetId: number) =>
-    api.get<AssetAssignmentHistory[]>(`/assets/${assetId}/history/assignment`).then((r) => r.data),
+    apiService.get<AssetAssignmentHistory[]>(`/assets/${assetId}/history/assignment`),
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -129,26 +151,31 @@ export const assetApi = {
 export const maintenanceApi = {
   list: (params?: PageParams & {
     status?: MaintenanceStatus; assetId?: number; unitId?: number;
+    requestedByUserId?: number;
     startDate?: string; endDate?: string
   }) =>
-    api.get<Page<MaintenanceResponse>>('/api/maintenance', { params }).then((r) => r.data),
+    apiService.get<Page<MaintenanceResponse>>('/maintenance', { params }),
 
   getBudget: (params: { unitId?: number; startDate?: string; endDate?: string }) =>
-    api.get<MaintenanceBudget>('/api/maintenance/budget', { params }).then((r) => r.data),
+    apiService.get<MaintenanceBudget>('/maintenance/budget', { params }),
 
   create: (body: MaintenanceCreateRequest) =>
-    api.post<MaintenanceResponse>('/api/maintenance', body).then((r) => r.data),
+    apiService.post<MaintenanceResponse>('/maintenance', body),
 
   start: (id: number) =>
-    api.post<MaintenanceResponse>(`/api/maintenance/${id}/start`).then((r) => r.data),
+    apiService.post<MaintenanceResponse>(`/maintenance/${id}/start`),
 
+  // FIX: backend usa @RequestParam, não @RequestBody — enviar como query params
   complete: (id: number, resolution: string, actualCost?: number) =>
-    api.post(`/api/maintenance/${id}/complete`, null, {
-      params: { resolution, ...(actualCost !== undefined ? { actualCost } : {}) },
+    apiService.post<MaintenanceResponse>(`/maintenance/${id}/complete`, undefined, {
+      params: {
+        resolution,
+        ...(actualCost !== undefined ? { actualCost } : {}),
+      },
     }),
 
   cancel: (id: number) =>
-    api.post(`/api/maintenance/${id}/cancel`),
+    apiService.post<void>(`/maintenance/${id}/cancel`),
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -156,62 +183,78 @@ export const maintenanceApi = {
 // ═══════════════════════════════════════════════════════════════════════════════
 export const transferApi = {
   list: (params?: PageParams & {
-    status?: TransferStatus; assetId?: number; startDate?: string; endDate?: string
+    status?: TransferStatus; assetId?: number; unitId?: number; startDate?: string; endDate?: string
   }) =>
-    api.get<Page<TransferResponse>>('/transfers', { params }).then((r) => r.data),
+    apiService.get<Page<TransferResponse>>('/transfers', { params }),
 
   create: (body: TransferCreateRequest) =>
-    api.post<TransferResponse>('/transfers', body).then((r) => r.data),
+    apiService.post<TransferResponse>('/transfers', body),
 
   approve: (id: number, body?: TransferApproveRequest) =>
-    api.patch(`/transfers/${id}/approve`, body ?? {}),
+    apiService.patch<void>(`/transfers/${id}/approve`, body ?? {}),
 
   reject: (id: number, body?: TransferApproveRequest) =>
-    api.patch(`/transfers/${id}/reject`, body ?? {}),
+    apiService.patch<void>(`/transfers/${id}/reject`, body ?? {}),
 
   complete: (id: number) =>
-    api.patch(`/transfers/${id}/complete`),
+    apiService.patch<void>(`/transfers/${id}/complete`),
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // INVENTORY
 // ═══════════════════════════════════════════════════════════════════════════════
 export const inventoryApi = {
-  list: (params?: PageParams) =>
-    api.get<Page<InventoryResponse>>('/inventory', { params }).then((r) => r.data),
+  list: () =>
+    apiService.get<InventoryResponse[]>('/inventory'),
 
   create: (unitId: number) =>
-    api.post<InventoryResponse>('/inventory', { unitId }).then((r) => r.data),
+    apiService.post<InventoryResponse>('/inventory', { unitId }),
 
   getById: (id: number) =>
-    api.get<InventoryResponse>(`/inventory/${id}`).then((r) => r.data),
+    apiService.get<InventoryResponse>(`/inventory/${id}`),
 
-  start: (id: number) => api.patch(`/inventory/${id}/start`),
-  close: (id: number) => api.patch(`/inventory/${id}/close`),
-  cancel: (id: number) => api.patch(`/inventory/${id}/cancel`),
+  start: (id: number) =>
+    apiService.patch<void>(`/inventory/${id}/start`),
+
+  close: (id: number) =>
+    apiService.patch<void>(`/inventory/${id}/close`),
+
+  cancel: (id: number) =>
+    apiService.patch<void>(`/inventory/${id}/cancel`),
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CATEGORIES
 // ═══════════════════════════════════════════════════════════════════════════════
 export const categoryApi = {
-  list: () => api.get<CategoryResponse[]>('/categories').then((r) => r.data),
-  getById: (id: number) => api.get<CategoryResponse>(`/categories/${id}`).then((r) => r.data),
+  list: () =>
+    apiService.get<CategoryResponse[]>('/categories'),
+
+  getById: (id: number) =>
+    apiService.get<CategoryResponse>(`/categories/${id}`),
+
   create: (body: CategoryRequest) =>
-    api.post<CategoryResponse>('/categories', body).then((r) => r.data),
+    apiService.post<CategoryResponse>('/categories', body),
+
   update: (id: number, body: CategoryRequest) =>
-    api.put<CategoryResponse>(`/categories/${id}`, body).then((r) => r.data),
-  delete: (id: number) => api.delete(`/categories/${id}`),
+    apiService.put<CategoryResponse>(`/categories/${id}`, body),
+
+  delete: (id: number) =>
+    apiService.delete<void>(`/categories/${id}`),
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // COST CENTERS
 // ═══════════════════════════════════════════════════════════════════════════════
 export const costCenterApi = {
-  list: () => api.get<CostCenterResponse[]>('/cost-centers').then((r) => r.data),
+  list: () =>
+    apiService.get<CostCenterResponse[]>('/cost-centers'),
+
   create: (body: CostCenterRequest) =>
-    api.post<CostCenterResponse>('/cost-centers', body).then((r) => r.data),
-  deactivate: (id: number) => api.patch(`/cost-centers/${id}/deactivate`),
+    apiService.post<CostCenterResponse>('/cost-centers', body),
+
+  deactivate: (id: number) =>
+    apiService.patch<void>(`/cost-centers/${id}/deactivate`),
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -219,13 +262,15 @@ export const costCenterApi = {
 // ═══════════════════════════════════════════════════════════════════════════════
 export const depreciationApi = {
   getByAsset: (assetId: number) =>
-    api.get<AssetDepreciation>(`/assets/${assetId}/depreciation`).then((r) => r.data),
+    apiService.get<AssetDepreciation>(`/assets/${assetId}/depreciation`),
 
   getPortfolio: () =>
-    api.get<PortfolioDepreciation>('/assets/depreciation/portfolio').then((r) => r.data),
+    apiService.get<PortfolioDepreciation>('/assets/depreciation/portfolio'),
 
   getReport: () =>
-    api.get<AssetDepreciation[]>('/assets/depreciation/report').then((r) => r.data),
+    apiService.get<{ items: AssetDepreciation[]; totalAssets: number; generatedAt: string }>(
+      '/assets/depreciation/report'
+    ),
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -233,16 +278,19 @@ export const depreciationApi = {
 // ═══════════════════════════════════════════════════════════════════════════════
 export const insuranceApi = {
   create: (assetId: number, body: InsuranceCreateRequest) =>
-    api.post<AssetInsurance>(`/assets/${assetId}/insurance`, body).then((r) => r.data),
+    apiService.post<AssetInsurance>(`/assets/${assetId}/insurance`, body),
 
   getByAsset: (assetId: number) =>
-    api.get<AssetInsurance[]>(`/assets/${assetId}/insurance`).then((r) => r.data),
+    apiService.get<AssetInsurance[]>(`/assets/${assetId}/insurance`),
 
   getExpiring: (days = 30) =>
-    api.get<AssetInsurance[]>('/assets/insurance/expiring', { params: { days } }).then((r) => r.data),
+    apiService.get<AssetInsurance[]>('/assets/insurance/expiring', { params: { days } }),
+
+  delete: (insuranceId: number) =>
+    apiService.delete<void>(`/assets/insurance/${insuranceId}`),
 
   getSummary: () =>
-    api.get<InsuranceSummary>('/assets/insurance/summary').then((r) => r.data),
+    apiService.get<InsuranceSummary>('/assets/insurance/summary'),
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -250,35 +298,44 @@ export const insuranceApi = {
 // ═══════════════════════════════════════════════════════════════════════════════
 export const auditApi = {
   list: (params?: PageParams) =>
-    api.get<Page<AuditEvent>>('/audit', { params }).then((r) => r.data),
+    apiService.get<AuditEvent[]>('/audit', { params }),
 
   byUser: (userId: number, params?: PageParams) =>
-    api.get<Page<AuditEvent>>(`/audit/user/${userId}`, { params }).then((r) => r.data),
+    apiService.get<AuditEvent[]>(`/audit/user/${userId}`, { params }),
 
   byType: (type: string, params?: PageParams) =>
-    api.get<Page<AuditEvent>>(`/audit/type/${type}`, { params }).then((r) => r.data),
+    apiService.get<AuditEvent[]>(`/audit/type/${type}`, { params }),
 
   byTarget: (targetType: string, targetId: number, params?: PageParams) =>
-    api.get<Page<AuditEvent>>('/audit/target', { params: { targetType, targetId, ...params } }).then((r) => r.data),
+    apiService.get<AuditEvent[]>('/audit/target', {
+      params: { targetType, targetId, ...params },
+    }),
 
   byPeriod: (organizationId: number, start: string, end: string, params?: PageParams) =>
-    api.get<Page<AuditEvent>>('/audit/period', { params: { organizationId, start, end, ...params } }).then((r) => r.data),
+    apiService.get<AuditEvent[]>('/audit/period', {
+      params: { organizationId, start, end, ...params },
+    }),
 
   lastByTarget: (targetType: string, targetId: number) =>
-    api.get<AuditEvent>('/audit/target/last', { params: { targetType, targetId } }).then((r) => r.data),
+    apiService.get<AuditEvent>('/audit/target/last', {
+      params: { targetType, targetId },
+    }),
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// EXPORT  (streams CSV — create blob download)
+// EXPORT
 // ═══════════════════════════════════════════════════════════════════════════════
 export const exportApi = {
-  downloadAssets: async () => {
-    const res = await api.get('/export/assets', { responseType: 'blob' })
+  downloadAssets: async (startDate?: string, endDate?: string) => {
+    const res = await api.get<Blob>('/export/assets', {
+      responseType: 'blob',
+      params: { startDate, endDate },
+    })
     triggerDownload(res.data, 'ativos.csv')
   },
 
   downloadMaintenance: async (startDate?: string, endDate?: string) => {
-    const res = await api.get('/export/maintenance', {
+    const res = await api.get<Blob>('/export/maintenance', {
       responseType: 'blob',
       params: { startDate, endDate },
     })
@@ -286,7 +343,7 @@ export const exportApi = {
   },
 
   downloadAudit: async (startDate?: string, endDate?: string) => {
-    const res = await api.get('/export/audit', {
+    const res = await api.get<Blob>('/export/audit', {
       responseType: 'blob',
       params: { startDate, endDate },
     })
@@ -300,7 +357,7 @@ function triggerDownload(blob: Blob, filename: string) {
   a.href = url
   a.download = filename
   a.click()
-  URL.revokeObjectURL(url)
+  setTimeout(() => URL.revokeObjectURL(url), 100)
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -308,11 +365,11 @@ function triggerDownload(blob: Blob, filename: string) {
 // ═══════════════════════════════════════════════════════════════════════════════
 export const dashboardApi = {
   executive: () =>
-    api.get<ExecutiveDashboard>('/api/dashboard/executive').then((r) => r.data),
+    apiService.get<ExecutiveDashboard>('/api/dashboard/executive'),
 
   unit: () =>
-    api.get<UnitDashboard>('/api/dashboard/unit').then((r) => r.data),
+    apiService.get<UnitDashboard>('/api/dashboard/unit'),
 
   personal: () =>
-    api.get<PersonalDashboard>('/api/dashboard/personal').then((r) => r.data),
+    apiService.get<PersonalDashboard>('/api/dashboard/personal'),
 }

@@ -17,10 +17,6 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-/**
- * B3: TenantContextHolder.setTenant() nunca era chamado — o holder era declarado mas sempre vazio.
- * O filtro agora o popula com o organizationId do usuário autenticado.
- */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -52,17 +48,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return;
       }
 
-      UserDetails userDetails = tokenService.getUserDetails(token);
+      try {
+        UserDetails userDetails = tokenService.getUserDetails(token);
 
-      UsernamePasswordAuthenticationToken authentication =
-          new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-      authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-      SecurityContextHolder.getContext().setAuthentication(authentication);
+        UsernamePasswordAuthenticationToken authentication =
+            new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
 
-      // B3: popula o TenantContextHolder com o organizationId do usuário autenticado
-      Optional<User> user = userRepository.findByEmail(userDetails.getUsername());
-      user.filter(u -> u.getOrganization() != null)
-          .ifPresent(u -> TenantContextHolder.setTenant(u.getOrganization().getId()));
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // popula o TenantContextHolder com o organizationId do usuário autenticado
+        Optional<User> user = userRepository.findByEmail(userDetails.getUsername());
+        user.filter(u -> u.getOrganization() != null)
+            .ifPresent(u -> TenantContextHolder.setTenant(u.getOrganization().getId()));
+
+      } catch (Exception ex) {
+        SecurityContextHolder.clearContext();
+      }
 
       filterChain.doFilter(request, response);
 

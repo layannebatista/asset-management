@@ -9,12 +9,13 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.*;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(
-    name = "Organizations",
-    description = "Gerenciamento de organizações (multi-tenant root entity)")
+@Tag(name = "Organizations", description = "Gerenciamento de organizações")
 @RestController
 @RequestMapping("/organizations")
 public class OrganizationController {
@@ -24,103 +25,61 @@ public class OrganizationController {
 
   public OrganizationController(
       OrganizationService organizationService, OrganizationMapper organizationMapper) {
-
     this.organizationService = organizationService;
     this.organizationMapper = organizationMapper;
   }
 
-  /* ============================================================
-   *  CRIAR ORGANIZAÇÃO
-   * ============================================================ */
-
-  @Operation(
-      summary = "Criar nova organização",
-      description =
-          """
-          Cria uma nova organização no sistema.
-
-          A organização é a entidade raiz do modelo multi-tenant.
-          Apenas usuários com perfil ADMIN podem executar.
-          """)
-  @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Organização criada com sucesso"),
-    @ApiResponse(responseCode = "400", description = "Dados inválidos"),
-    @ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
-    @ApiResponse(responseCode = "403", description = "Usuário sem permissão")
-  })
+  @Operation(summary = "Listar todas as organizações")
   @PreAuthorize("hasRole('ADMIN')")
-  @PostMapping
-  public OrganizationResponseDTO create(@RequestBody @Valid OrganizationCreateDTO dto) {
-
-    return organizationMapper.toResponseDTO(organizationService.createOrganization(dto.getName()));
+  @GetMapping
+  public List<OrganizationResponseDTO> listAll() {
+    return organizationService.listAll().stream()
+        .map(organizationMapper::toResponseDTO)
+        .collect(Collectors.toList());
   }
 
-  /* ============================================================
-   *  BUSCAR ORGANIZAÇÃO
-   * ============================================================ */
-
-  @Operation(
-      summary = "Buscar organização por ID",
-      description = "Retorna detalhes da organização informada.")
-  @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Organização encontrada"),
-    @ApiResponse(responseCode = "404", description = "Organização não encontrada"),
-    @ApiResponse(responseCode = "403", description = "Acesso restrito ao ADMIN")
-  })
+  @Operation(summary = "Buscar organização por ID")
   @PreAuthorize("hasRole('ADMIN')")
   @GetMapping("/{id}")
   public OrganizationResponseDTO findById(
-      @Parameter(description = "ID da organização", example = "1") @PathVariable Long id) {
-
+      @Parameter(description = "ID da organização") @PathVariable Long id) {
     return organizationMapper.toResponseDTO(organizationService.findById(id));
   }
 
-  /* ============================================================
-   *  ATIVAR ORGANIZAÇÃO
-   * ============================================================ */
+  @Operation(summary = "Criar nova organização")
+  @PreAuthorize("hasRole('ADMIN')")
+  @PostMapping
+  public OrganizationResponseDTO create(@RequestBody @Valid OrganizationCreateDTO dto) {
+    return organizationMapper.toResponseDTO(organizationService.createOrganization(dto.getName()));
+  }
 
   @Operation(
-      summary = "Ativar organização",
-      description =
-          """
-          Move a organização para o status ACTIVE.
+      summary = "Atualizar nome da organização",
+      description = "Atualiza o nome da organização. Único campo editável pelo frontend.")
+  @PreAuthorize("hasRole('ADMIN')")
+  @PatchMapping("/{id}")
+  public OrganizationResponseDTO updateName(
+      @Parameter(description = "ID da organização") @PathVariable Long id,
+      @RequestBody Map<String, String> body) {
+    String name = body.get("name");
+    if (name == null || name.isBlank()) {
+      throw new com.portfolio.assetmanagement.shared.exception.BusinessException(
+          "Nome da organização é obrigatório");
+    }
+    return organizationMapper.toResponseDTO(organizationService.updateName(id, name.trim()));
+  }
 
-          Apenas ADMIN pode executar.
-          """)
-  @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Organização ativada com sucesso"),
-    @ApiResponse(responseCode = "404", description = "Organização não encontrada")
-  })
+  @Operation(summary = "Ativar organização")
   @PreAuthorize("hasRole('ADMIN')")
   @PatchMapping("/{id}/activate")
-  public void activate(
-      @Parameter(description = "ID da organização", example = "1") @PathVariable Long id) {
-
+  public void activate(@PathVariable Long id) {
     organizationService.activateOrganization(id);
   }
 
-  /* ============================================================
-   *  INATIVAR ORGANIZAÇÃO
-   * ============================================================ */
-
-  @Operation(
-      summary = "Inativar organização",
-      description =
-          """
-          Move a organização para o status INACTIVE.
-
-          Organizações inativas não devem permitir operações operacionais.
-          Apenas ADMIN pode executar.
-          """)
-  @ApiResponses({
-    @ApiResponse(responseCode = "200", description = "Organização inativada com sucesso"),
-    @ApiResponse(responseCode = "404", description = "Organização não encontrada")
-  })
+  @Operation(summary = "Inativar organização")
   @PreAuthorize("hasRole('ADMIN')")
   @PatchMapping("/{id}/inactivate")
-  public void inactivate(
-      @Parameter(description = "ID da organização", example = "1") @PathVariable Long id) {
-
+  public void inactivate(@PathVariable Long id) {
     organizationService.inactivateOrganization(id);
   }
 }

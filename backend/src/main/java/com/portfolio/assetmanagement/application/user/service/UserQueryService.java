@@ -24,11 +24,15 @@ public class UserQueryService {
   @Transactional(readOnly = true)
   public Page<User> list(
       UserStatus status, Long unitId, boolean includeInactive, Pageable pageable) {
+
     Long orgId = loggedUser.getOrganizationId();
 
     Specification<User> spec =
         (root, q, cb) -> cb.equal(root.join("organization").get("id"), orgId);
 
+    // ─────────────────────────────────────────────
+    // STATUS
+    // ─────────────────────────────────────────────
     if (!includeInactive) {
       spec = spec.and((root, q, cb) -> cb.notEqual(root.get("status"), UserStatus.INACTIVE));
     }
@@ -37,8 +41,26 @@ public class UserQueryService {
       spec = spec.and((root, q, cb) -> cb.equal(root.get("status"), status));
     }
 
-    if (unitId != null) {
-      spec = spec.and((root, q, cb) -> cb.equal(root.join("unit").get("id"), unitId));
+    // ─────────────────────────────────────────────
+    // 🔥 CONTROLE DE ESCOPO (CORREÇÃO PRINCIPAL)
+    // ─────────────────────────────────────────────
+    if (loggedUser.isAdmin()) {
+      // ADMIN pode usar filtro opcional
+      if (unitId != null) {
+        spec = spec.and((root, q, cb) -> cb.equal(root.join("unit").get("id"), unitId));
+      }
+
+    } else if (loggedUser.isManager()) {
+      // GESTOR só vê a própria unidade
+      Long userUnitId = loggedUser.getUnitId();
+
+      spec = spec.and((root, q, cb) -> cb.equal(root.join("unit").get("id"), userUnitId));
+
+    } else {
+      // OPERADOR só vê a si mesmo
+      Long userId = loggedUser.getUserId();
+
+      spec = spec.and((root, q, cb) -> cb.equal(root.get("id"), userId));
     }
 
     return repository.findAll(spec, pageable);

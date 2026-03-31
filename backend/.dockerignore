@@ -1,0 +1,17 @@
+# Diretório de build Maven – já copiado pelo stage de build
+target/
+
+# Arquivos de IDE e controle de versão
+.git/
+.gitignore
+.idea/
+*.iml
+.vscode/
+
+# Configuração local e testes
+src/test/
+allure-results/
+allure-reports/
+
+# Documentação
+*.md

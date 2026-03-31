@@ -4,43 +4,28 @@ import com.portfolio.assetmanagement.domain.audit.entity.AuditEvent;
 import com.portfolio.assetmanagement.domain.audit.enums.AuditEventType;
 import com.portfolio.assetmanagement.infrastructure.persistence.audit.repository.AuditEventRepository;
 import com.portfolio.assetmanagement.security.context.LoggedUserContext;
+import com.portfolio.assetmanagement.shared.exception.ForbiddenException;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/**
- * Serviço responsável pela persistência e consulta de eventos de auditoria.
- *
- * <p>Garantias enterprise:
- *
- * <p>- nunca quebra fluxo principal - nunca lança exception para camada superior - garante
- * consistência mínima - suporta modo legado e enterprise
- */
 @Service
 public class AuditService {
 
   private static final Logger log = LoggerFactory.getLogger(AuditService.class);
 
   private final AuditEventRepository repository;
-
   private final LoggedUserContext loggedUser;
 
   public AuditService(AuditEventRepository repository, LoggedUserContext loggedUser) {
-
     this.repository = repository;
     this.loggedUser = loggedUser;
   }
 
-  /**
-   * MÉTODO LEGADO — NÃO ALTERAR ASSINATURA.
-   *
-   * <p>Usado por:
-   *
-   * <p>OrganizationService UnitService UserService AssetService MaintenanceService TransferService
-   */
   @Transactional
   public void registerEvent(
       AuditEventType eventType,
@@ -52,19 +37,8 @@ public class AuditService {
 
     try {
 
-      if (eventType == null) {
-
-        log.warn("Audit ignored: eventType is null");
-
-        return;
-      }
-
-      if (organizationId == null) {
-
-        log.warn("Audit ignored: organizationId is null. EventType: {}", eventType);
-
-        return;
-      }
+      if (eventType == null) return;
+      if (organizationId == null) return;
 
       AuditEvent event =
           new AuditEvent(
@@ -73,39 +47,22 @@ public class AuditService {
       repository.save(event);
 
     } catch (Exception ex) {
-
-      log.error(
-          "Failed to persist audit event. Type={}, Org={}, Target={}",
-          eventType,
-          organizationId,
-          targetId,
-          ex);
+      log.error("Failed to persist audit event", ex);
     }
   }
 
-  /** Método enterprise moderno. */
   @Transactional
   public void logEvent(AuditEventType eventType, String targetType, Long targetId, String details) {
 
     try {
 
-      if (eventType == null) {
-
-        log.warn("Audit ignored: eventType is null");
-
-        return;
-      }
+      if (eventType == null) return;
 
       Long actorUserId = safeGetUserId();
       Long organizationId = safeGetOrganizationId();
       Long unitId = safeGetUnitId();
 
-      if (organizationId == null) {
-
-        log.warn("Audit ignored: organizationId unavailable. EventType={}", eventType);
-
-        return;
-      }
+      if (organizationId == null) return;
 
       AuditEvent event =
           new AuditEvent(
@@ -120,52 +77,80 @@ public class AuditService {
       repository.save(event);
 
     } catch (Exception ex) {
-
-      log.error(
-          "Failed to persist enterprise audit event. Type={}, TargetType={}, TargetId={}",
-          eventType,
-          targetType,
-          targetId,
-          ex);
+      log.error("Failed to persist enterprise audit event", ex);
     }
   }
 
-  /** Consultas */
+  // 🔒 FILTRO CENTRAL DE ESCOPO
+  private List<AuditEvent> applyScope(List<AuditEvent> events) {
+
+    if (loggedUser.isAdmin()) {
+      return events;
+    }
+
+    if (loggedUser.isManager()) {
+      Long unitId = loggedUser.getUnitId();
+
+      return events.stream()
+          .filter(e -> e.getUnitId() != null && e.getUnitId().equals(unitId))
+          .collect(Collectors.toList());
+    }
+
+    // OPERADOR
+    Long userId = loggedUser.getUserId();
+
+    return events.stream()
+        .filter(e -> e.getActorUserId() != null && e.getActorUserId().equals(userId))
+        .collect(Collectors.toList());
+  }
+
   @Transactional(readOnly = true)
   public List<AuditEvent> findByOrganization(Long organizationId) {
 
-    return repository.findByOrganizationIdOrderByCreatedAtDesc(organizationId);
+    if (!organizationId.equals(loggedUser.getOrganizationId())) {
+      throw new ForbiddenException("Acesso negado");
+    }
+
+    return applyScope(repository.findByOrganizationIdOrderByCreatedAtDesc(organizationId));
   }
 
   @Transactional(readOnly = true)
   public List<AuditEvent> findByUser(Long userId) {
 
-    return repository.findByActorUserIdOrderByCreatedAtDesc(userId);
+    if (!loggedUser.isAdmin() && !loggedUser.getUserId().equals(userId)) {
+      throw new ForbiddenException("Acesso negado");
+    }
+
+    return applyScope(repository.findByActorUserIdOrderByCreatedAtDesc(userId));
   }
 
   @Transactional(readOnly = true)
   public List<AuditEvent> findByTarget(String targetType, Long targetId) {
 
-    return repository.findByTargetTypeAndTargetIdOrderByCreatedAtDesc(targetType, targetId);
+    return applyScope(
+        repository.findByTargetTypeAndTargetIdOrderByCreatedAtDesc(targetType, targetId));
   }
 
   @Transactional(readOnly = true)
   public List<AuditEvent> findByType(AuditEventType type) {
 
-    return repository.findByTypeOrderByCreatedAtDesc(type);
+    return applyScope(repository.findByTypeOrderByCreatedAtDesc(type));
   }
 
   @Transactional(readOnly = true)
   public List<AuditEvent> findByOrganizationAndPeriod(
       Long organizationId, OffsetDateTime start, OffsetDateTime end) {
 
-    return repository.findByOrganizationIdAndCreatedAtBetweenOrderByCreatedAtDesc(
-        organizationId, start, end);
+    if (!organizationId.equals(loggedUser.getOrganizationId())) {
+      throw new ForbiddenException("Acesso negado");
+    }
+
+    return applyScope(
+        repository.findByOrganizationIdAndCreatedAtBetweenOrderByCreatedAtDesc(
+            organizationId, start, end));
   }
 
-  /** Métodos auxiliares seguros */
   private Long safeGetUserId() {
-
     try {
       return loggedUser.getUserId();
     } catch (Exception ignored) {
@@ -174,7 +159,6 @@ public class AuditService {
   }
 
   private Long safeGetOrganizationId() {
-
     try {
       return loggedUser.getOrganizationId();
     } catch (Exception ignored) {
@@ -183,7 +167,6 @@ public class AuditService {
   }
 
   private Long safeGetUnitId() {
-
     try {
       return loggedUser.getUnitId();
     } catch (Exception ignored) {
@@ -192,19 +175,13 @@ public class AuditService {
   }
 
   private String normalize(String value) {
-
-    if (value == null) {
-      return null;
-    }
+    if (value == null) return null;
 
     String trimmed = value.trim();
 
-    if (trimmed.isEmpty()) {
-      return null;
-    }
+    if (trimmed.isEmpty()) return null;
 
     if (trimmed.length() > 5000) {
-
       return trimmed.substring(0, 5000);
     }
 

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -62,7 +63,11 @@ class MaintenanceServiceTest {
     lenient().when(asset.getOrganization()).thenReturn(org);
     lenient().when(asset.getUnit()).thenReturn(unit);
     lenient().when(asset.getStatus()).thenReturn(AssetStatus.AVAILABLE);
-    lenient().when(asset.getAssignedUser()).thenReturn(null);
+
+    // 🔥 CORREÇÃO AQUI — usuário com acesso
+    var user = mock(com.portfolio.assetmanagement.domain.user.entity.User.class);
+    lenient().when(user.getId()).thenReturn(99L);
+    lenient().when(asset.getAssignedUser()).thenReturn(user);
 
     return asset;
   }
@@ -86,6 +91,8 @@ class MaintenanceServiceTest {
     @BeforeEach
     void setup() {
       lenient().when(loggedUser.getUserId()).thenReturn(99L);
+      lenient().when(loggedUser.isAdmin()).thenReturn(false);
+      lenient().when(loggedUser.isManager()).thenReturn(false);
       lenient().when(loggedUser.getOrganizationId()).thenReturn(1L);
     }
 
@@ -103,7 +110,7 @@ class MaintenanceServiceTest {
       verify(validationService).validateCreate(eq(asset), any());
       verify(asset).changeStatus(AssetStatus.IN_MAINTENANCE);
       verify(maintenanceRepository).save(any(MaintenanceRecord.class));
-      verify(auditService).registerEvent(any(), anyLong(), anyLong(), anyLong(), anyLong(), any());
+      verify(auditService).registerEvent(any(), anyLong(), anyLong(), anyLong(), isNull(), any());
     }
 
     @Test
@@ -144,6 +151,8 @@ class MaintenanceServiceTest {
     @BeforeEach
     void setup() {
       lenient().when(loggedUser.getUserId()).thenReturn(99L);
+      lenient().when(loggedUser.isAdmin()).thenReturn(false);
+      lenient().when(loggedUser.isManager()).thenReturn(false);
     }
 
     @Test
@@ -192,12 +201,16 @@ class MaintenanceServiceTest {
     @BeforeEach
     void setup() {
       lenient().when(loggedUser.getUserId()).thenReturn(99L);
+      lenient().when(loggedUser.isAdmin()).thenReturn(true); // 🔥 CORREÇÃO
+      lenient().when(loggedUser.isManager()).thenReturn(false);
     }
 
     @Test
     void deveConcluirERetornarAssetParaAvailable() {
       MaintenanceRecord record = buildRecordMock(MaintenanceStatus.IN_PROGRESS);
-      when(record.getAsset().getAssignedUser()).thenReturn(null);
+      Asset asset = record.getAsset(); // 🔥 IMPORTANTE
+
+      when(asset.getAssignedUser()).thenReturn(null);
       when(maintenanceRepository.findById(55L)).thenReturn(Optional.of(record));
 
       maintenanceService.complete(55L, "Troca da bateria", BigDecimal.ZERO);
@@ -205,19 +218,22 @@ class MaintenanceServiceTest {
       verify(lockService).lockMaintenance(55L);
       verify(validationService).validateComplete(record, "Troca da bateria");
       verify(record).complete(99L, "Troca da bateria", BigDecimal.ZERO);
-      verify(record.getAsset()).changeStatus(AssetStatus.AVAILABLE);
+      verify(asset).changeStatus(AssetStatus.AVAILABLE);
     }
 
     @Test
     void deveRetornarAssetParaAssignedQuandoTinhaUsuario() {
       MaintenanceRecord record = buildRecordMock(MaintenanceStatus.IN_PROGRESS);
-      when(record.getAsset().getAssignedUser())
+      Asset asset = record.getAsset();
+
+      when(asset.getAssignedUser())
           .thenReturn(mock(com.portfolio.assetmanagement.domain.user.entity.User.class));
+
       when(maintenanceRepository.findById(55L)).thenReturn(Optional.of(record));
 
       maintenanceService.complete(55L, "Troca da bateria", BigDecimal.ZERO);
 
-      verify(record.getAsset()).changeStatus(AssetStatus.ASSIGNED);
+      verify(asset).changeStatus(AssetStatus.ASSIGNED);
     }
 
     @Test
@@ -243,12 +259,16 @@ class MaintenanceServiceTest {
     @BeforeEach
     void setup() {
       lenient().when(loggedUser.getUserId()).thenReturn(99L);
+      lenient().when(loggedUser.isAdmin()).thenReturn(true); // 🔥 CORREÇÃO
+      lenient().when(loggedUser.isManager()).thenReturn(false);
     }
 
     @Test
     void deveCancelarELiberarAtivo() {
       MaintenanceRecord record = buildRecordMock(MaintenanceStatus.REQUESTED);
-      when(record.getAsset().getAssignedUser()).thenReturn(null);
+      Asset asset = record.getAsset();
+
+      when(asset.getAssignedUser()).thenReturn(null);
       when(maintenanceRepository.findById(55L)).thenReturn(Optional.of(record));
 
       maintenanceService.cancel(55L);
@@ -256,7 +276,7 @@ class MaintenanceServiceTest {
       verify(lockService).lockMaintenance(55L);
       verify(validationService).validateCancel(record);
       verify(record).cancel();
-      verify(record.getAsset()).changeStatus(AssetStatus.AVAILABLE);
+      verify(asset).changeStatus(AssetStatus.AVAILABLE);
       verify(auditService).registerEvent(any(), anyLong(), anyLong(), anyLong(), anyLong(), any());
     }
 

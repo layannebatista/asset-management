@@ -52,6 +52,11 @@ public class Organization {
     return name;
   }
 
+  public void setName(String name) {
+    if (name == null || name.isBlank()) throw new IllegalArgumentException("name é obrigatório");
+    this.name = name.trim();
+  }
+
   public OrganizationStatus getStatus() {
     return status;
   }

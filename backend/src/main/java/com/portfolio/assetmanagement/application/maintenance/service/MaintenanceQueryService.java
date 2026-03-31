@@ -28,18 +28,20 @@ public class MaintenanceQueryService {
   }
 
   /**
-   * Lista manutenções com filtros dinâmicos e paginação. Aplica isolamento por role
-   * automaticamente: - ADMIN: organização inteira - GESTOR: apenas sua unidade - OPERADOR: apenas
-   * ativos atribuídos a ele
+   * Lista manutenções com filtros dinâmicos. - ADMIN: organização inteira; aceita unitId e
+   * requestedByUserId como filtros extras - GESTOR: sua unidade por padrão; pode filtrar por
+   * requestedByUserId dentro da unidade - OPERADOR: apenas seus ativos (pelo assignedUser)
    */
   @Transactional(readOnly = true)
   public Page<MaintenanceRecord> list(
       MaintenanceStatus status,
       Long assetId,
       Long unitId,
+      Long requestedByUserId,
       LocalDate startDate,
       LocalDate endDate,
       Pageable pageable) {
+
     Specification<MaintenanceRecord> spec = Specification.where(null);
 
     // Isolamento por organização (sempre)
@@ -53,29 +55,37 @@ public class MaintenanceQueryService {
         final Long fUnitId = scopeUnitId;
         spec = spec.and((root, q, cb) -> cb.equal(root.get("unitId"), fUnitId));
       }
+      // GESTOR pode filtrar por usuário solicitante dentro da sua unidade
+      if (requestedByUserId != null) {
+        spec =
+            spec.and((root, q, cb) -> cb.equal(root.get("requestedByUserId"), requestedByUserId));
+      }
     } else if (loggedUser.isOperator()) {
       Long userId = loggedUser.getUserId();
       spec =
           spec.and(
               (root, q, cb) -> cb.equal(root.join("asset").get("assignedUser").get("id"), userId));
-    } else if (unitId != null) {
-      // ADMIN com filtro de unidade
-      spec = spec.and((root, q, cb) -> cb.equal(root.get("unitId"), unitId));
+    } else {
+      // ADMIN — aplica filtros opcionais
+      if (unitId != null) {
+        spec = spec.and((root, q, cb) -> cb.equal(root.get("unitId"), unitId));
+      }
+      if (requestedByUserId != null) {
+        spec =
+            spec.and((root, q, cb) -> cb.equal(root.get("requestedByUserId"), requestedByUserId));
+      }
     }
 
     if (status != null) {
       spec = spec.and((root, q, cb) -> cb.equal(root.get("status"), status));
     }
-
     if (assetId != null) {
       spec = spec.and((root, q, cb) -> cb.equal(root.get("asset").get("id"), assetId));
     }
-
     if (startDate != null) {
       OffsetDateTime start = startDate.atStartOfDay().atOffset(ZoneOffset.UTC);
       spec = spec.and((root, q, cb) -> cb.greaterThanOrEqualTo(root.get("createdAt"), start));
     }
-
     if (endDate != null) {
       OffsetDateTime end = endDate.plusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC);
       spec = spec.and((root, q, cb) -> cb.lessThan(root.get("createdAt"), end));
@@ -84,7 +94,18 @@ public class MaintenanceQueryService {
     return repository.findAll(spec, pageable);
   }
 
-  /** Relatório de orçamento: estimado vs real, por período e unidade. */
+  /** Sobrecarga retrocompatível sem requestedByUserId. */
+  @Transactional(readOnly = true)
+  public Page<MaintenanceRecord> list(
+      MaintenanceStatus status,
+      Long assetId,
+      Long unitId,
+      LocalDate startDate,
+      LocalDate endDate,
+      Pageable pageable) {
+    return list(status, assetId, unitId, null, startDate, endDate, pageable);
+  }
+
   @Transactional(readOnly = true)
   public MaintenanceBudgetDTO getBudgetReport(Long unitId, LocalDate startDate, LocalDate endDate) {
     Long orgId = loggedUser.getOrganizationId();
@@ -93,7 +114,6 @@ public class MaintenanceQueryService {
         startDate != null
             ? startDate.atStartOfDay().atOffset(ZoneOffset.UTC)
             : OffsetDateTime.now().minusMonths(1);
-
     OffsetDateTime end =
         endDate != null
             ? endDate.plusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC)

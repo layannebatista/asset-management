@@ -1,0 +1,21 @@
+# Dependências e build já gerenciados dentro do container
+node_modules/
+dist/
+
+# Controle de versão e IDE
+.git/
+.gitignore
+.vscode/
+
+# Arquivos de automação e teste
+src/automation/
+*.test.*
+*.spec.*
+
+# Variáveis de ambiente locais
+.env
+.env.*
+!.env.example
+
+# Documentação
+*.md

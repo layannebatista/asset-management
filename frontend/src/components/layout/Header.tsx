@@ -1,75 +1,249 @@
-import { useLocation, useNavigate } from 'react-router-dom'
-import { Menu, Download, Bell, BarChart3, LogOut } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { Bell, LogOut, X } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
+import { auditApi } from '../../api'
+import type { AuditEvent } from '../../types'
+import { USER_ROLE_LABELS } from '../../shared'
 
-interface Props {
-  onToggleSidebar: () => void
+const AUDIT_LABELS: Record<string, string> = {
+  ASSET_CREATED:          'Ativo criado',
+  ASSET_ASSIGNED:         'Ativo atribuído',
+  ASSET_UNASSIGNED:       'Ativo desatribuído',
+  ASSET_RETIRED:          'Ativo aposentado',
+  ASSET_STATUS_CHANGED:   'Status do ativo alterado',
+  ASSET_UPDATED:          'Ativo atualizado',
+  TRANSFER_REQUESTED:     'Transferência solicitada',
+  TRANSFER_APPROVED:      'Transferência aprovada',
+  TRANSFER_REJECTED:      'Transferência rejeitada',
+  TRANSFER_COMPLETED:     'Transferência concluída',
+  TRANSFER_CANCELLED:     'Transferência cancelada',
+  MAINTENANCE_OPENED:     'Manutenção aberta',
+  MAINTENANCE_STARTED:    'Manutenção iniciada',
+  MAINTENANCE_COMPLETED:  'Manutenção concluída',
+  MAINTENANCE_CANCELLED:  'Manutenção cancelada',
+  USER_CREATED:           'Usuário criado',
+  USER_BLOCKED:           'Usuário bloqueado',
+  USER_ACTIVATED:         'Usuário ativado',
+  USER_INACTIVATED:       'Usuário inativado',
+  USER_STATUS_CHANGED:    'Status do usuário alterado',
+  UNIT_CREATED:           'Unidade criada',
+  UNIT_ACTIVATED:         'Unidade ativada',
+  UNIT_INACTIVATED:       'Unidade inativada',
+  UNIT_STATUS_CHANGED:    'Status da unidade alterado',
 }
 
-const BREADCRUMBS: Record<string, string> = {
-  '/dashboard': 'Dashboard',
-  '/assets': 'Ativos',
-  '/transfers': 'Transferências',
-  '/maintenance': 'Manutenção',
-  '/inventory': 'Inventário',
-  '/users': 'Usuários',
-  '/audit': 'Auditoria',
-  '/reports': 'Relatórios',
+const AUDIT_DETAILS: Record<string, string> = {
+  // Usuários
+  'User created':           'Usuário criado',
+  'User activated':         'Usuário ativado',
+  'User blocked':           'Usuário bloqueado',
+  'User inactivated':       'Usuário inativado',
+  // Unidades
+  'Unit created':           'Unidade criada',
+  'Unit activated':         'Unidade ativada',
+  'Unit inactivated':       'Unidade inativada',
+  // Ativos
+  'Asset created':          'Ativo criado',
+  'Asset updated':          'Ativo atualizado',
+  'Asset retired':          'Ativo aposentado',
+  'Asset assigned':         'Ativo atribuído',
+  'Asset unassigned':       'Ativo desatribuído',
+  // Transferências
+  'Transfer requested':     'Transferência solicitada',
+  'Transfer approved':      'Transferência aprovada',
+  'Transfer rejected':      'Transferência rejeitada',
+  'Transfer completed':     'Transferência concluída',
+  'Transfer cancelled':     'Transferência cancelada',
+  // Manutenções (inglês, caso a API retorne)
+  'Maintenance opened':     'Manutenção aberta',
+  'Maintenance started':    'Manutenção iniciada',
+  'Maintenance completed':  'Manutenção concluída',
+  'Maintenance cancelled':  'Manutenção cancelada',
 }
 
-export default function Header({ onToggleSidebar }: Props) {
-  const { pathname } = useLocation()
-  const navigate = useNavigate()
+// ─────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────
+function getInitials(name?: string, email?: string) {
+  if (name) {
+    return name
+      .split(' ')
+      .slice(0, 2)
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+  }
+  return email?.slice(0, 2).toUpperCase() ?? 'U'
+}
+
+function formatDate(date: string) {
+  return new Date(date).toLocaleString('pt-BR')
+}
+
+function translateDetails(details?: string) {
+  if (!details) return undefined
+  return AUDIT_DETAILS[details] ?? details
+}
+
+export default function Header() {
   const { user, logout } = useAuth()
 
-  const base = '/' + pathname.split('/')[1]
-  const pageTitle = BREADCRUMBS[base] ?? 'Patrimônio 360'
-  const initials = user?.email?.slice(0, 2).toUpperCase() ?? 'U'
+  const [showBell, setShowBell] = useState(false)
+  const [events, setEvents] = useState<AuditEvent[]>([])
+  const [loadingEvents, setLoadingEvents] = useState(false)
+  const [hasUnread, setHasUnread] = useState(true)
+
+  const eventsRef = useRef<AuditEvent[]>([])
+  eventsRef.current = events
+
+  // ─────────────────────────────────────────────────────────
+  // FETCH EVENTS
+  // ─────────────────────────────────────────────────────────
+  const fetchEvents = useCallback(async () => {
+    try {
+      setLoadingEvents(true)
+
+      const items = await auditApi.list({ size: 10, sort: 'createdAt,desc' })
+
+      const prev = eventsRef.current
+
+      if (items.length > 0 && prev.length > 0 && items[0]?.id !== prev[0]?.id) {
+        setHasUnread(true)
+      } else if (prev.length === 0 && items.length > 0) {
+        setHasUnread(true)
+      }
+
+      setEvents(items)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoadingEvents(false)
+    }
+  }, [])
+
+  // ─────────────────────────────────────────────────────────
+  // LOAD WHEN OPEN
+  // ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (showBell) fetchEvents()
+  }, [showBell, fetchEvents])
+
+  // Fechar painel com ESC
+  useEffect(() => {
+    if (!showBell) return
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowBell(false)
+    }
+    document.addEventListener('keydown', handleKey)
+    return () => document.removeEventListener('keydown', handleKey)
+  }, [showBell])
+
+  // ─────────────────────────────────────────────────────────
+  // POLLING
+  // ─────────────────────────────────────────────────────────
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!showBell) {
+        auditApi
+          .list({ size: 1, sort: 'createdAt,desc' })
+          .then((items) => {
+            const prev = eventsRef.current
+
+            if (items.length > 0 && prev.length > 0 && items[0]?.id !== prev[0]?.id) {
+              setHasUnread(true)
+            }
+          })
+          .catch(() => {})
+      }
+    }, 60_000)
+
+    return () => clearInterval(interval)
+  }, [showBell])
+
+  const initials = getInitials(user?.name, user?.email)
 
   return (
     <header className="h-[54px] bg-white border-b border-slate-200 flex items-center justify-between px-[18px] flex-shrink-0">
-      {/* Left */}
-      <div className="flex items-center gap-[10px]">
-        <button
-          onClick={onToggleSidebar}
-          title="Recolher / expandir menu"
-          className="w-[34px] h-[34px] rounded-[7px] border-[1.5px] border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors"
-        >
-          <Menu size={16} />
-        </button>
-        <nav className="flex items-center gap-[6px] text-[13px] text-slate-500">
-          <span>Patrimônio 360</span>
-          <span className="text-slate-300">›</span>
-          <span className="text-slate-900 font-semibold">{pageTitle}</span>
-        </nav>
-      </div>
 
-      {/* Right */}
+      <div />
+
       <div className="flex items-center gap-[6px]">
-        {/* Export CSV */}
-        <IconButton title="Exportar página atual (CSV)" onClick={() => navigate('/reports')}>
-          <Download size={15} />
-        </IconButton>
 
-        {/* Reports */}
-        <IconButton title="Relatórios & Exportações" onClick={() => navigate('/reports')}>
-          <BarChart3 size={15} />
-        </IconButton>
+        <div className="relative">
+          <button
+            onClick={() => {
+              setShowBell((v) => !v)
+              setHasUnread(false)
+            }}
+            title="Últimas atividades"
+            className="relative w-[34px] h-[34px] rounded-[7px] border-[1.5px] border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors"
+          >
+            <Bell size={15} />
 
-        {/* Notifications */}
-        <IconButton title="Notificações" onClick={() => navigate('/audit')} dot>
-          <Bell size={15} />
-        </IconButton>
+            {hasUnread && !showBell && (
+              <span className="absolute top-[7px] right-[7px] w-[6px] h-[6px] bg-red-600 rounded-full border-[1.5px] border-white" />
+            )}
+          </button>
 
-        {/* User chip */}
-        <div className="flex items-center gap-2 px-[10px] py-[5px] rounded-[8px] border-[1.5px] border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors ml-1">
+          {showBell && (
+            <div
+              className="absolute top-[42px] right-0 z-50 bg-white rounded-[12px] border border-slate-200 shadow-xl w-[360px]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center px-4 py-3 border-b border-slate-100">
+                <span className="text-[13.5px] font-bold">Últimas atividades</span>
+                <button onClick={() => setShowBell(false)} className="text-slate-400 hover:text-slate-600">
+                  <X size={14} />
+                </button>
+              </div>
+
+              <ul className="max-h-[340px] overflow-y-auto divide-y divide-slate-50">
+                {loadingEvents ? (
+                  <li className="text-center py-6 text-[12px] text-slate-400">Carregando...</li>
+                ) : events.length === 0 ? (
+                  <li className="text-center py-6 text-[12px] text-slate-400">Sem atividades</li>
+                ) : (
+                  events.map((e) => (
+                    <li key={e.id} className="px-4 py-3 hover:bg-slate-50 transition">
+                      <div className="text-[12.5px] font-medium text-slate-700">
+                        {AUDIT_LABELS[e.eventType] ?? e.eventType}
+                      </div>
+
+                      {e.details && (
+                        <div className="text-[11px] text-slate-400 mt-[2px] truncate">
+                          {translateDetails(e.details)}
+                        </div>
+                      )}
+
+                      <div className="text-[10.5px] text-slate-400 mt-[2px]">
+                        {formatDate(e.createdAt)}
+                      </div>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
+          )}
+        </div>
+
+        {showBell && (
+          <div className="fixed inset-0 z-40" onClick={() => setShowBell(false)} />
+        )}
+
+        <div className="flex items-center gap-2 px-[10px] py-[5px] rounded-[8px] border-[1.5px] border-slate-200 ml-1">
           <div className="w-[26px] h-[26px] rounded-full bg-blue-700 flex items-center justify-center text-white font-bold text-[10px] flex-shrink-0">
             {initials}
           </div>
+
           <div>
-            <div className="text-[12.5px] font-semibold text-slate-900 leading-tight">{user?.email}</div>
-            <div className="text-[10.5px] text-slate-400 leading-tight">{user?.role}</div>
+            <div className="text-[12.5px] font-semibold text-slate-900 leading-tight">
+              {user?.email}
+            </div>
+            <div className="text-[10.5px] text-slate-400 leading-tight">
+              {USER_ROLE_LABELS[user?.role as keyof typeof USER_ROLE_LABELS] ?? user?.role}
+            </div>
           </div>
+
           <button
             onClick={logout}
             title="Sair"
@@ -80,28 +254,5 @@ export default function Header({ onToggleSidebar }: Props) {
         </div>
       </div>
     </header>
-  )
-}
-
-function IconButton({
-  children, title, onClick, dot,
-}: {
-  children: React.ReactNode; title: string; onClick?: () => void; dot?: boolean
-}) {
-  return (
-    <div className="relative group">
-      <button
-        onClick={onClick}
-        className="relative w-[34px] h-[34px] rounded-[7px] border-[1.5px] border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors"
-      >
-        {children}
-        {dot && (
-          <span className="absolute top-[7px] right-[7px] w-[6px] h-[6px] bg-red-600 rounded-full border-[1.5px] border-white" />
-        )}
-      </button>
-      <div className="absolute bottom-[-34px] left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white text-[11px] px-2 py-1 rounded-[5px] whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity">
-        {title}
-      </div>
-    </div>
   )
 }

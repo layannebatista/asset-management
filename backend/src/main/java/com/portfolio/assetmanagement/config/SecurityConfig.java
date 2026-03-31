@@ -55,21 +55,25 @@ public class SecurityConfig {
         // desabilita csrf pois usamos JWT
         .csrf(AbstractHttpConfigurer::disable)
 
-        // habilita CORS — fonte única, CorsConfig.java removido
+        // habilita CORS
         .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
         // define sessão como stateless
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-        // registra entry point para retornar JSON 401 padronizado
-        // em vez do comportamento padrão do Spring para não autenticados
+        // entry point 401
         .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
 
-        // define regras de autorização
+        // regras de autorização
         .authorizeHttpRequests(
             auth ->
                 auth
+
+                    // 🔥 LIBERA PREFLIGHT (CORS)
+                    .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**")
+                    .permitAll()
+
                     // =========================
                     // 🔓 ENDPOINTS PÚBLICOS
                     // =========================
@@ -78,29 +82,30 @@ public class SecurityConfig {
                     .requestMatchers("/auth/**")
                     .permitAll()
 
-                    // Ativação de usuário — usuário ainda não autenticado
+                    // Ativação
                     .requestMatchers("/users/activation/activate")
                     .permitAll()
 
-                    // Swagger / OpenAPI
+                    // Swagger
                     .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                     .permitAll()
 
                     // =========================
-                    // 🔒 ACTUATOR — só health público
+                    // 🔒 ACTUATOR
                     // =========================
-                    .requestMatchers("/actuator/health")
+                    .requestMatchers(
+                        "/actuator/health", "/actuator/health/**", "/actuator/prometheus")
                     .permitAll()
                     .requestMatchers("/actuator/**")
                     .hasRole("ADMIN")
 
                     // =========================
-                    // 🔐 RESTANTE PROTEGIDO
+                    // 🔐 RESTANTE
                     // =========================
                     .anyRequest()
                     .authenticated())
 
-        // adiciona filtro JWT antes do filtro padrão
+        // filtro JWT
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();
@@ -123,10 +128,22 @@ public class SecurityConfig {
 
     CorsConfiguration configuration = new CorsConfiguration();
 
-    configuration.setAllowedOrigins(List.of(allowedOrigins.split(",")));
+    // 🔥 garante que múltiplas origens funcionem corretamente
+    configuration.setAllowedOriginPatterns(List.of(allowedOrigins.split(",")));
+
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-    configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+
+    // 🔥 libera TODOS os headers (essencial pro preflight)
+    configuration.setAllowedHeaders(List.of("*"));
+
+    // 🔥 permite o frontend ler o Authorization (token JWT)
+    configuration.setExposedHeaders(List.of("Authorization"));
+
+    // 🔥 necessário quando usa cookies/token/header auth
     configuration.setAllowCredentials(true);
+
+    // 🔥 importante para cache do preflight (evita múltiplos OPTIONS)
+    configuration.setMaxAge(3600L);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", configuration);

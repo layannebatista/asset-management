@@ -34,19 +34,28 @@ public class InsuranceController {
     return ResponseEntity.status(HttpStatus.CREATED).body(insuranceService.register(assetId, dto));
   }
 
-  @Operation(summary = "Consultar apólice ativa de um ativo")
+  @Operation(summary = "Remover apólice de seguro")
+  @DeleteMapping("/insurance/{insuranceId}")
+  @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
+  public ResponseEntity<Void> delete(
+      @Parameter(description = "ID da apólice") @PathVariable Long insuranceId) {
+    insuranceService.delete(insuranceId);
+    return ResponseEntity.noContent().build();
+  }
+
+  @Operation(summary = "Listar todas as apólices de um ativo")
   @GetMapping("/{assetId}/insurance")
+  public ResponseEntity<List<AssetInsurance>> listByAsset(@PathVariable Long assetId) {
+    return ResponseEntity.ok(insuranceService.listByAsset(assetId));
+  }
+
+  @Operation(summary = "Consultar apólice ativa de um ativo")
+  @GetMapping("/{assetId}/insurance/active")
   public ResponseEntity<AssetInsurance> getActive(@PathVariable Long assetId) {
     return ResponseEntity.ok(insuranceService.getActive(assetId));
   }
 
-  @Operation(
-      summary = "Listar apólices vencendo em breve",
-      description =
-          """
-      Retorna apólices ativas que vencem nos próximos `days` dias.
-      Padrão: 30 dias. Útil para alertas proativos de renovação.
-      """)
+  @Operation(summary = "Listar apólices vencendo em breve")
   @GetMapping("/insurance/expiring")
   @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
   public ResponseEntity<List<AssetInsurance>> getExpiring(
@@ -54,12 +63,7 @@ public class InsuranceController {
     return ResponseEntity.ok(insuranceService.getExpiringSoon(days));
   }
 
-  @Operation(
-      summary = "Resumo de seguros da organização",
-      description =
-          """
-      Total de apólices vencendo em 30 dias e valor total de cobertura em risco.
-      """)
+  @Operation(summary = "Resumo de seguros da organização")
   @GetMapping("/insurance/summary")
   @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
   public ResponseEntity<InsuranceSummaryDTO> getSummary() {
