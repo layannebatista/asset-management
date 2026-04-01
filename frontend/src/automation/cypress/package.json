@@ -15,7 +15,7 @@
     "@bahmutov/cypress-esbuild-preprocessor": "^2.2.0",
     "allure-cypress": "^3.0.0",
     "allure-js-commons": "^3.0.0",
-    "cypress": "^13.0.0",
+    "cypress": "^15.13.0",
     "esbuild": "^0.23.0",
     "typescript": "^5.0.0"
   },
