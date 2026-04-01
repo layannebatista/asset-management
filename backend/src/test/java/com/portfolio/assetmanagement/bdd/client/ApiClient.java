@@ -91,7 +91,10 @@ public class ApiClient {
         .response();
   }
 
-  /** POST /maintenance/{id}/complete — resolution via query param conforme @RequestParam no controller */
+  /**
+   * POST /maintenance/{id}/complete — resolution via query param conforme @RequestParam no
+   * controller
+   */
   public MockMvcResponse concluirManutencao(Long maintenanceId, String resolucao, String token) {
     return given()
         .contentType(ContentType.JSON)
