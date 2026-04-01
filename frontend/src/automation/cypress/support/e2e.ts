@@ -1,4 +1,5 @@
 import './commands';
+import 'allure-cypress';
 
 // Suprimir erros de ResizeObserver que podem aparecer em alguns browsers
 Cypress.on('uncaught:exception', (err) => {

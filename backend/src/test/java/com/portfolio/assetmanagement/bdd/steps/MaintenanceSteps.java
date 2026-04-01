@@ -124,7 +124,7 @@ public class MaintenanceSteps {
         .as("Login falhou para o usuário %s — verifique se o TestDataHelper criou o usuário", email)
         .isEqualTo(200);
 
-    String token = response.path("token");
+    String token = response.path("accessToken");
     assertThat(token).as("Token JWT não encontrado na resposta de login").isNotBlank();
 
     context.setToken(token);

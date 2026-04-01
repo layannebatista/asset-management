@@ -89,14 +89,13 @@ Após `docker compose up --build`, todos os serviços ficam disponíveis:
 | **API REST** | http://localhost:8080 | — | Backend Spring Boot |
 | **Swagger UI** | http://localhost:8080/swagger-ui.html | Bearer token | Documentação interativa |
 | **Health Check** | http://localhost:8080/actuator/health | público | Status da aplicação |
-| **Liveness Probe** | http://localhost:8080/actuator/health/liveness | público | Probe de liveness |
-| **Readiness Probe** | http://localhost:8080/actuator/health/readiness | público | Probe de readiness |
-| **Métricas** | http://localhost:8080/actuator/prometheus | público | Métricas para Prometheus |
-| **Prometheus** | http://localhost:9090 | — | Coleta e consulta de métricas |
-| **Grafana** | http://localhost:3001 | admin / admin123 | Dashboards de observabilidade |
-| **Allure UI** | http://localhost:5252 | — | Interface de relatórios de teste |
-| **Allure Relatório** | http://localhost:5050/allure-docker-service/projects/default/reports/latest/index.html | — | Relatório direto |
-| **Allure API** | http://localhost:5050/allure-docker-service/ | — | REST API do Allure |
+| **Métricas (Prometheus)** | http://localhost:8080/actuator/prometheus | público | Métricas expostas para coleta |
+| **Prometheus** | http://localhost:9090 | — | Coleta e consulta de métricas da API |
+| **Grafana** | http://localhost:3001 | admin / admin123 | Dashboards de observabilidade e performance |
+| **InfluxDB** | http://localhost:8086 | sem autenticação | Banco de métricas de carga do k6 |
+| **Allure UI** | http://localhost:5252 | — | Interface de relatórios — navegue entre execuções e histórico |
+| **Allure Relatório** | http://localhost:5050/allure-docker-service/projects/default/reports/latest/index.html | — | Último relatório gerado (abre direto) |
+| **Allure API** | http://localhost:5050/allure-docker-service/ | — | REST API do Allure (integração CI) |
 
 > As credenciais do Grafana são configuráveis via `GRAFANA_USER` e `GRAFANA_PASSWORD` no `.env`.
 
@@ -198,13 +197,14 @@ O isolamento de escopo é aplicado em todos os serviços via `LoggedUserContext`
 ### Infraestrutura e Observabilidade
 | Tecnologia | Porta | Uso |
 |---|---|---|
-| Docker Compose | — | Orquestração de toda a stack |
-| PostgreSQL | 5433 | Banco de dados |
-| Prometheus | 9090 | Coleta de métricas (15s interval, retenção 15d) |
-| Grafana | 3001 | Dashboards (auto-provisionados) |
-| Allure Service | 5050 | Geração de relatórios de teste |
-| Allure UI | 5252 | Interface de gestão de relatórios |
-| k6 | — | Testes de carga e performance |
+| Docker Compose | — | Orquestração de toda a stack (9 containers) |
+| PostgreSQL | 5433 | Banco de dados principal |
+| Prometheus | 9090 | Coleta de métricas da API (intervalo 15s, retenção 15 dias) |
+| Grafana | 3001 | Dashboards auto-provisionados: Backend (Spring Boot) + k6 Performance |
+| InfluxDB | 8086 | Banco de séries temporais para métricas de carga do k6 |
+| Allure Service | 5050 | Geração e servimento de relatórios de teste (backend + frontend) |
+| Allure UI | 5252 | Interface web para navegar entre execuções e histórico |
+| k6 | — | Testes de carga e performance (3 cenários: smoke, load, spike) |
 
 ### Qualidade e Testes
 | Tecnologia | Uso |
@@ -231,7 +231,7 @@ O isolamento de escopo é aplicado em todos os serviços via `LoggedUserContext`
 asset-management/
 ├── .env.example                         # Template de variáveis de ambiente
 ├── .env                                 # Variáveis locais (não commitado)
-├── docker-compose.yml                   # Stack completa: 8 serviços
+├── docker-compose.yml                   # Stack completa: 9 serviços
 ├── .github/
 │   ├── dependabot.yml                   # Atualizações automáticas (Maven, npm, Actions)
 │   └── workflows/
@@ -292,7 +292,8 @@ asset-management/
 │       │   ├── datasources/datasource.yml
 │       │   └── dashboards/dashboard.yml
 │       └── dashboards/
-│           └── backend.json             # Dashboard com 14 painéis (auto-provisionado)
+│           ├── backend.json             # Dashboard Spring Boot com 14 painéis (auto-provisionado)
+│           └── k6-performance.json      # Dashboard k6 com 13 painéis (auto-provisionado)
 └── k6/
     └── test.js                          # Testes de carga e performance
 ```
@@ -301,24 +302,25 @@ asset-management/
 
 ## 🐳 Ambiente Docker
 
-A stack completa sobe via `docker compose up --build` com **8 containers**:
+A stack completa sobe via `docker compose up --build` com **9 containers**:
 
 | Container | Imagem | Porta | Função |
 |---|---|---|---|
 | `asset-management-db` | postgres:16-alpine | 5433 | Banco de dados |
 | `asset-management-api` | build ./backend | 8080 | Backend Spring Boot |
 | `asset-management-frontend` | build ./frontend | 5173→80 | Frontend via Nginx |
-| `prometheus` | prom/prometheus:latest | 9090 | Coleta de métricas |
-| `grafana` | grafana/grafana:latest | 3001 | Dashboards |
-| `allure` | frankescobar/allure-docker-service | 5050 | Geração de relatórios |
+| `prometheus` | prom/prometheus:latest | 9090 | Coleta de métricas da API |
+| `influxdb` | influxdb:1.8-alpine | 8086 | Métricas de carga do k6 |
+| `grafana` | grafana/grafana:latest | 3001 | Dashboards (Backend + k6) |
+| `allure` | frankescobar/allure-docker-service | 5050 | Relatórios de teste (API + geração) |
 | `allure-ui` | frankescobar/allure-docker-service-ui | 5252 | Interface de relatórios |
 
 ### Ordem de inicialização
 
 ```
 postgres ──(healthy)──► backend ──(healthy)──► frontend
-                                           └──► prometheus ──► grafana
-allure-results/ ──────────────────────────────► allure ──────► allure-ui
+                                           └──► prometheus ──► grafana ◄── influxdb
+backend/allure-results/ ──────────────────────► allure ──────────────────► allure-ui
 ```
 
 ### Recursos por container
@@ -596,7 +598,7 @@ Hooks: `support/hooks.ts` (screenshot automático em falha, limpeza de browser)
 
 ## 📈 Testes de Carga — k6
 
-Testes de performance com [k6](https://k6.io/) em `k6/test.js`.
+Testes de performance com [k6](https://k6.io/) em `k6/test.js`. Os resultados são enviados em tempo real para o InfluxDB e visualizados no Grafana.
 
 ### Pré-requisito
 
@@ -615,22 +617,52 @@ winget install k6
 ### Executar
 
 ```bash
-# Com a aplicação rodando (docker compose up ou local)
+# Modo simples (resultados apenas no terminal)
 k6 run k6/test.js
+
+# Com envio de métricas para Grafana (recomendado)
+k6 run --out influxdb=http://localhost:8086/k6 k6/test.js
 ```
 
-### O que é testado
+> Com `docker compose up` rodando, o InfluxDB já está disponível. O dashboard **"Patrimônio 360 — Testes de Performance (k6)"** no Grafana atualiza em tempo real durante a execução.
 
-- Endpoint de health check sob carga
-- *(Extensível para cenários de login, listagem de ativos, criação, etc.)*
+### Cenários de teste (3)
 
-### Interpretar resultados
+| Cenário | VUs | Duração | Objetivo |
+|---|---|---|---|
+| **Smoke** | 1 VU | ~1 min | Verificar que os endpoints respondem sem carga |
+| **Load** | até 20 VUs | ~7 min | Simular carga normal de produção |
+| **Spike** | até 50 VUs | ~5 min | Verificar comportamento sob pico repentino |
 
-Os resultados exibem:
-- `http_req_duration` — latência (p50, p90, p95, p99)
-- `http_req_failed` — taxa de erros
-- `iterations` — total de requisições executadas
-- `vus` — usuários virtuais simultâneos
+### Endpoints cobertos
+
+- **Health**: `GET /actuator/health`
+- **Auth**: `POST /auth/login` (métricas de latência de login separadas)
+- **Ativos**: listagem, criação, detalhes, histórico, depreciação (por unidade e global)
+- **Manutenção**: listagem e criação de solicitações
+- **Transferências**: listagem e solicitação
+- **Usuários**: listagem por organização
+- **Dashboard**: métricas por perfil (ADMIN, GESTOR, OPERADOR)
+- **Auditoria**: listagem de logs de auditoria
+
+### Thresholds (critérios de aprovação)
+
+| Métrica | Limite |
+|---|---|
+| `http_req_duration` p95 | ≤ 2000 ms |
+| `http_req_failed` | ≤ 10% |
+| `login_duration` p95 | ≤ 3000 ms |
+| `assets_duration` p95 | ≤ 2000 ms |
+| `maintenance_duration` p95 | ≤ 2000 ms |
+
+### Interpretar resultados no Grafana
+
+Acesse http://localhost:3001 → dashboard **"Patrimônio 360 — Testes de Performance (k6)"**:
+
+- **Resumo do Teste**: requisições totais, taxa de erros, duração média e p95
+- **Latência ao Longo do Tempo**: gráfico temporal de p50/p90/p95/p99
+- **Erros e Thresholds**: falhas HTTP e verificações com falha
+- **Métricas Customizadas**: latência separada por domínio (login, ativos, manutenção)
 
 ---
 
@@ -654,7 +686,9 @@ User: admin  (configurável via GRAFANA_USER no .env)
 Pass: admin123  (configurável via GRAFANA_PASSWORD no .env)
 ```
 
-O dashboard **"Asset Management — Backend"** é **provisionado automaticamente** ao subir o container — não é necessária nenhuma configuração manual. Ele carrega via `infra/grafana/provisioning/`.
+Dois dashboards são **provisionados automaticamente** ao subir o container — nenhuma configuração manual é necessária. Eles carregam via `infra/grafana/provisioning/`.
+
+#### Dashboard 1 — Patrimônio 360: Backend (Spring Boot)
 
 **14 painéis em 4 seções:**
 
@@ -662,8 +696,19 @@ O dashboard **"Asset Management — Backend"** é **provisionado automaticamente
 |---|---|
 | **Visão Geral** | Req/s, Taxa de erros 5xx, Latência P99, Uptime |
 | **HTTP** | Taxa por endpoint, Latência p50/p90/p95/p99, Status HTTP, Erros 4xx/5xx |
-| **JVM** | Heap (usado/máximo/confirmado), CPU, GC pause rate, Threads |
+| **JVM** | Heap (usado/máximo/confirmado), CPU, GC pausas, Threads |
 | **HikariCP** | Conexões (ativas/ociosas/pendentes/máximo), Tempo de aquisição e uso |
+
+#### Dashboard 2 — Patrimônio 360: Testes de Performance (k6)
+
+Alimentado pelo InfluxDB (métricas enviadas em tempo real pelo k6). **13 painéis em 4 seções:**
+
+| Seção | Painéis |
+|---|---|
+| **Resumo do Teste** | Total de requisições, Taxa de erros, Duração média, p95 geral |
+| **Latência ao Longo do Tempo** | p50, p90, p95, p99 em gráfico temporal |
+| **Erros e Thresholds** | Falhas HTTP, Verificações com falha |
+| **Métricas Customizadas** | Latência de login (p95), Ativos (p95), Manutenção (p95), Total de req., Tráfego |
 
 ### Prometheus — acesso e alertas
 
@@ -694,41 +739,62 @@ Para consultar alertas ativos:
 ### Como funciona
 
 ```
+# Backend (BDD com Cucumber + Rest Assured)
 mvn clean verify
-    ↓ (AllureCucumber7Jvm listener registrado via junit-platform.properties)
-backend/allure-results/*.json  ←  gerados automaticamente
-    ↓ (volume Docker montado)
+    ↓ (AllureCucumber7Jvm listener via junit-platform.properties)
+backend/allure-results/*.json  ←  JSONs gerados automaticamente
+
+# Frontend (E2E com Cypress + Cucumber)
+npm test  (dentro de frontend/src/automation/cypress)
+    ↓ (allure-cypress reporter configurado em cypress.config.ts)
+backend/allure-results/*.json  ←  JSONs gravados no mesmo diretório
+
+    ↓ (volume Docker montado: backend/allure-results → /app/allure-results)
 Container allure (porta 5050)  ←  detecta arquivos em até 3s e gera relatório
     ↓
 Container allure-ui (porta 5252)  ←  interface web com histórico
 ```
 
+> Backend e Frontend escrevem no **mesmo diretório** (`backend/allure-results/`) e aparecem no **mesmo projeto Allure**. A separação visual é feita pela label `@allure.label.parentSuite:Backend` / `@allure.label.parentSuite:Frontend` na aba **Suites** do relatório.
+
 ### Acessos
 
 | Interface | URL | Descrição |
 |---|---|---|
-| **Allure UI** | http://localhost:5252 | Lista de projetos, histórico de execuções, tendências |
-| **Relatório direto** | http://localhost:5050/allure-docker-service/projects/default/reports/latest/index.html | Relatório da última execução |
-| **API REST** | http://localhost:5050/allure-docker-service/ | API para integração com CI |
+| **Allure UI** | http://localhost:5252 | Interface principal — histórico de execuções e tendências |
+| **Relatório direto** | http://localhost:5050/allure-docker-service/projects/default/reports/latest/index.html | Último relatório gerado (abre direto) |
+| **API REST** | http://localhost:5050/allure-docker-service/ | REST API para integração com CI |
 
 ### Fluxo completo
 
 ```bash
-# 1. Suba o stack (se ainda não estiver rodando)
+# 1. Suba a stack (se ainda não estiver rodando)
 docker compose up allure allure-ui
 
-# 2. Execute os testes (o listener gera os JSONs em allure-results/)
+# 2. Execute os testes backend (gera JSONs em backend/allure-results/)
 cd backend && mvn clean verify
 
-# 3. Acesse o relatório (gerado automaticamente em até 3s)
+# 3. Execute os testes E2E frontend (grava no mesmo diretório)
+cd frontend/src/automation/cypress && npm test
+
+# 4. Acesse o relatório (gerado automaticamente em até 3s)
 # http://localhost:5252
 ```
+
+### Organização do relatório
+
+Na aba **Suites**, os testes aparecem em dois grupos separados:
+
+| Grupo | Origem | Label |
+|---|---|---|
+| **Backend** | Cucumber BDD (Java) — features em `backend/src/test/resources/features/` | `@allure.label.parentSuite:Backend` |
+| **Frontend** | Cypress BDD (TypeScript) — features em `frontend/src/automation/cypress/e2e/` | `@allure.label.parentSuite:Frontend` |
 
 ### O que o relatório contém
 
 - **Overview**: total de testes, passou/falhou/quebrado/ignorado
-- **Suites**: agrupamento por feature Cucumber e por classe JUnit
-- **Behaviors**: cenários BDD organizados por Feature e Scenario
+- **Suites**: agrupamento por parentSuite (Backend / Frontend), depois por feature
+- **Behaviors**: cenários BDD organizados por Epic e Feature
 - **Timeline**: execução dos testes ao longo do tempo
 - **Graphs**: distribuição de status, duração, severidade
 - **Categories**: classificação automática de falhas por tipo

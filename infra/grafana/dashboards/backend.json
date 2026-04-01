@@ -17,12 +17,12 @@
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
-        "name": "Annotations & Alerts",
+        "name": "Anotações e Alertas",
         "type": "dashboard"
       }
     ]
   },
-  "description": "Métricas do backend Spring Boot: HTTP, JVM, HikariCP e sistema.",
+  "description": "Painel de observabilidade do backend Spring Boot — acompanhe requisições HTTP, saúde da JVM, pool de conexões com o banco de dados e uso de CPU em tempo real.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
@@ -34,12 +34,13 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "id": 1,
-      "title": "Visão Geral",
+      "title": "📊 Visão Geral",
       "type": "row"
     },
 
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Número de requisições HTTP processadas por segundo pela API nos últimos 2 minutos.\n\nComo interpretar:\n• Verde (< 50 req/s) → carga normal\n• Amarelo (50–100 req/s) → atenção à capacidade\n• Vermelho (> 100 req/s) → possível sobrecarga\n\nUse este indicador para identificar picos de tráfego.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
@@ -57,7 +58,14 @@
       },
       "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
       "id": 2,
-      "options": { "colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -65,12 +73,13 @@
           "legendFormat": "req/s"
         }
       ],
-      "title": "Requisições / seg",
+      "title": "Requisições por Segundo",
       "type": "stat"
     },
 
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Proporção de respostas com status HTTP 5xx (erros do servidor) sobre o total de requisições nos últimos 5 minutos.\n\nComo interpretar:\n• Verde (< 1%) → operação normal\n• Amarelo (1–5%) → investigar logs de erro\n• Vermelho (> 5%) → incidente em andamento\n\nErros 5xx indicam falhas internas da API que precisam de atenção imediata.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
@@ -90,7 +99,14 @@
       },
       "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
       "id": 3,
-      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -104,6 +120,7 @@
 
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Tempo de resposta HTTP no percentil 99 — ou seja, 99% das requisições respondem em menos que este valor.\n\nComo interpretar:\n• Verde (< 500 ms) → excelente\n• Amarelo (500 ms – 2 s) → aceitável, monitorar\n• Vermelho (> 2 s) → usuários percebendo lentidão\n\nO p99 captura os casos mais lentos e é o indicador mais importante para SLA de experiência do usuário.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
@@ -121,7 +138,14 @@
       },
       "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
       "id": 4,
-      "options": { "colorMode": "background", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -135,6 +159,7 @@
 
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Tempo total que a aplicação está em execução sem reinicialização.\n\nUm uptime alto indica estabilidade. Reinicializações frequentes ou inesperadas podem indicar falhas de memória (OutOfMemoryError), crashes ou deploys automáticos.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
@@ -148,7 +173,14 @@
       },
       "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
       "id": 5,
-      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -156,7 +188,7 @@
           "legendFormat": "uptime"
         }
       ],
-      "title": "Uptime",
+      "title": "Tempo em Operação (Uptime)",
       "type": "stat"
     },
 
@@ -164,12 +196,13 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
       "id": 10,
-      "title": "HTTP",
+      "title": "🌐 HTTP — Tráfego e Latência",
       "type": "row"
     },
 
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Volume de chamadas por segundo agrupado por endpoint e método HTTP (GET, POST, PATCH, etc.).\n\nUso: identifique quais endpoints são mais requisitados. Picos repentinos num endpoint específico podem indicar uso inadequado, loop em cliente ou ataque.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -187,12 +220,13 @@
           "legendFormat": "{{method}} {{uri}}"
         }
       ],
-      "title": "Taxa de Requisições por Endpoint",
+      "title": "Volume de Requisições por Endpoint",
       "type": "timeseries"
     },
 
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Tempo de resposta da API calculado em diferentes percentis ao longo do tempo.\n\n• p50 (mediana): metade das requisições respondem abaixo deste valor\n• p90: 90% das requisições respondem abaixo deste valor\n• p95: 95% respondem abaixo — referência comum para SLAs\n• p99: apenas 1% das requisições são mais lentas que este valor\n\nGrandes divergências entre p50 e p99 indicam picos de lentidão intermitentes que merecem investigação.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -207,7 +241,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "expr": "histogram_quantile(0.50, sum(rate(http_server_requests_seconds_bucket{application=\"asset-management\"}[5m])) by (le))",
-          "legendFormat": "p50"
+          "legendFormat": "p50 (mediana)"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
@@ -231,6 +265,7 @@
 
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Distribuição do volume de requisições agrupada pelo código de status HTTP retornado.\n\n• 2xx (verde): respostas bem-sucedidas\n• 4xx (laranja): erros do cliente (requisição inválida, não autorizado, recurso não encontrado)\n• 5xx (vermelho): erros internos do servidor\n\nMonitore o crescimento de 4xx para detectar erros de integração entre frontend e backend.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -262,12 +297,13 @@
           "legendFormat": "HTTP {{status}}"
         }
       ],
-      "title": "Requisições por Código HTTP",
+      "title": "Requisições por Código de Status HTTP",
       "type": "timeseries"
     },
 
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Detalhamento dos erros HTTP 4xx e 5xx por endpoint, para localizar rapidamente a origem dos problemas.\n\n• 4xx: erros causados pelo chamador — verifique payloads, autenticação e parâmetros\n• 5xx: falhas internas — verifique logs, exceções não tratadas e integrações externas\n\nEndpoints com alto volume de erros devem ser priorizados na investigação.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -290,7 +326,7 @@
           "legendFormat": "5xx — {{status}} {{uri}}"
         }
       ],
-      "title": "Detalhamento de Erros (4xx / 5xx)",
+      "title": "Detalhamento de Erros por Endpoint (4xx / 5xx)",
       "type": "timeseries"
     },
 
@@ -298,12 +334,13 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 },
       "id": 20,
-      "title": "JVM",
+      "title": "☕ JVM — Memória, CPU e Threads",
       "type": "row"
     },
 
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Uso da memória Heap da JVM — área onde objetos Java são alocados durante a execução.\n\n• Heap Usado: memória efetivamente ocupada por objetos ativos\n• Heap Confirmado: memória reservada pelo sistema operacional para a JVM\n• Heap Máximo: limite configurado (-Xmx)\n\nAlerta: quando o heap usado se aproximar do máximo, o Garbage Collector trabalhará mais intensamente, causando pausas e degradação de performance. Considere ajustar -Xmx ou verificar vazamentos de memória.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -332,12 +369,13 @@
           "legendFormat": "Heap Confirmado — {{id}}"
         }
       ],
-      "title": "Memória Heap JVM",
+      "title": "Memória Heap da JVM",
       "type": "timeseries"
     },
 
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Percentual de uso de CPU pelo processo Java e pelo sistema operacional como um todo.\n\n• CPU do Processo: quanto a JVM está consumindo de CPU\n• CPU do Sistema: uso total da máquina (inclui outros processos)\n\nComo interpretar:\n• Verde (< 70%) → operação saudável\n• Amarelo (70–90%) → atenção, pode afetar tempos de resposta\n• Vermelho (> 90%) → risco de degradação severa ou travamento\n\nCPU alta com baixa taxa de requisições pode indicar processamento em background ineficiente.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -362,20 +400,21 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "expr": "process_cpu_usage{application=\"asset-management\"}",
-          "legendFormat": "CPU processo"
+          "legendFormat": "CPU do Processo (JVM)"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "expr": "system_cpu_usage{application=\"asset-management\"}",
-          "legendFormat": "CPU sistema"
+          "legendFormat": "CPU do Sistema"
         }
       ],
-      "title": "CPU Usage",
+      "title": "Uso de CPU",
       "type": "timeseries"
     },
 
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Taxa de pausas do Garbage Collector (GC) — períodos em que a JVM interrompe a execução para liberar memória.\n\nPausas longas ou frequentes causam picos de latência nas requisições HTTP, pois nenhuma thread consegue processar durante o GC.\n\n• G1GC / ZGC (padrão em Java 17): pausas muito curtas são esperadas\n• Picos acima de 100ms merecem atenção\n\nSe as pausas forem longas, considere ajustar as configurações do GC ou aumentar o heap.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -390,15 +429,16 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "expr": "rate(jvm_gc_pause_seconds_sum{application=\"asset-management\"}[2m])",
-          "legendFormat": "GC Pause — {{action}} {{cause}}"
+          "legendFormat": "Pausa GC — {{action}} ({{cause}})"
         }
       ],
-      "title": "GC Pause Time (taxa)",
+      "title": "Pausas do Garbage Collector (GC)",
       "type": "timeseries"
     },
 
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Número de threads em execução na JVM.\n\n• Threads Ativas: threads Java executando código no momento\n• Threads Daemon: threads de background (ex.: GC, monitoramento)\n• Pico de Threads: maior número já registrado desde o início\n\nUm crescimento contínuo de threads ativas sem queda pode indicar vazamento de threads (thread leak), causando esgotamento de recursos e eventual queda da aplicação.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -414,20 +454,20 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "expr": "jvm_threads_live_threads{application=\"asset-management\"}",
-          "legendFormat": "Threads ativas"
+          "legendFormat": "Threads Ativas"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "expr": "jvm_threads_daemon_threads{application=\"asset-management\"}",
-          "legendFormat": "Threads daemon"
+          "legendFormat": "Threads Daemon (background)"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "expr": "jvm_threads_peak_threads{application=\"asset-management\"}",
-          "legendFormat": "Pico de threads"
+          "legendFormat": "Pico de Threads"
         }
       ],
-      "title": "Threads JVM",
+      "title": "Threads da JVM",
       "type": "timeseries"
     },
 
@@ -435,12 +475,13 @@
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 39 },
       "id": 30,
-      "title": "Banco de Dados — HikariCP",
+      "title": "🗄️ Banco de Dados — Pool de Conexões (HikariCP)",
       "type": "row"
     },
 
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Estado atual das conexões no pool HikariCP — gerenciador de conexões com o banco de dados PostgreSQL.\n\n• Ativas: conexões em uso por alguma operação neste momento\n• Ociosas: conexões disponíveis aguardando uso\n• Pendentes: requisições aguardando uma conexão ficar disponível (sinal de alerta!)\n• Máximo: limite configurado (hikari.maximum-pool-size = 10)\n\nAlerta: se conexões Pendentes aparecerem, a aplicação está sofrendo para obter conexões com o banco — pode indicar queries lentas travando conexões ou pool subdimensionado para a carga atual.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -472,20 +513,21 @@
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "expr": "hikaricp_connections_pending{application=\"asset-management\"}",
-          "legendFormat": "Pendentes"
+          "legendFormat": "Pendentes ⚠️"
         },
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
           "expr": "hikaricp_connections_max{application=\"asset-management\"}",
-          "legendFormat": "Máximo"
+          "legendFormat": "Máximo configurado"
         }
       ],
-      "title": "Pool de Conexões HikariCP",
+      "title": "Estado do Pool de Conexões HikariCP",
       "type": "timeseries"
     },
 
     {
       "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Tempo médio gasto nas operações de conexão com o banco de dados.\n\n• Tempo de Aquisição: quanto tempo a aplicação espera para obter uma conexão do pool. Ideal < 5ms. Valores altos indicam pool esgotado.\n• Tempo de Uso: quanto tempo cada conexão permanece em uso por uma query. Valores altos podem indicar queries lentas ou transações abertas por tempo excessivo.\n\nMonitore esses tempos para detectar gargalos de banco de dados antes que afetem os usuários.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "palette-classic" },
@@ -508,7 +550,7 @@
           "legendFormat": "Tempo médio de uso (ms)"
         }
       ],
-      "title": "Tempo de Aquisição e Uso de Conexão",
+      "title": "Tempo de Aquisição e Uso de Conexão com o Banco",
       "type": "timeseries"
     }
 
@@ -520,7 +562,7 @@
   "time": { "from": "now-1h", "to": "now" },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Asset Management — Backend",
+  "title": "Patrimônio 360 — Backend (Spring Boot)",
   "uid": "asset-management-backend",
-  "version": 1
+  "version": 2
 }

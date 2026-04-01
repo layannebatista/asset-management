@@ -6,17 +6,21 @@
     "test": "cypress run",
     "test:headed": "cypress run --headed",
     "test:open": "cypress open",
-    "test:assets": "cypress run --spec 'cypress/e2e/features/asset-management.feature'"
+    "test:assets": "cypress run --spec 'e2e/features/asset-management.feature'",
+    "allure:generate": "allure generate allure-results --clean -o allure-report",
+    "allure:open": "allure open allure-report"
   },
   "devDependencies": {
     "@badeball/cypress-cucumber-preprocessor": "^21.0.3",
     "@bahmutov/cypress-esbuild-preprocessor": "^2.2.0",
+    "allure-cypress": "^3.0.0",
+    "allure-js-commons": "^3.0.0",
     "cypress": "^13.0.0",
     "esbuild": "^0.23.0",
     "typescript": "^5.0.0"
   },
   "cypress-cucumber-preprocessor": {
     "nonGlobalStepDefinitions": false,
-    "stepDefinitions": "cypress/support/step-definitions/**/*.ts"
+    "stepDefinitions": "support/step-definitions/**/*.ts"
   }
 }
