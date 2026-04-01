@@ -12,3 +12,16 @@ datasources:
       httpMethod: POST
       timeInterval: "15s"
       exemplarTraceIdDestinations: []
+
+  # InfluxDB — métricas de performance do k6
+  # Para enviar dados: k6 run --out influxdb=http://localhost:8086/k6 k6/test.js
+  - name: InfluxDB (k6)
+    uid: influxdb-k6
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    isDefault: false
+    editable: false
+    jsonData:
+      dbName: k6
+      httpMode: GET

@@ -73,44 +73,47 @@ public class ApiClient {
         .header("Authorization", "Bearer " + token)
         .body(Map.of("assetId", assetId, "description", descricao))
         .when()
-        .post("/api/maintenance")
+        .post("/maintenance")
         .then()
         .extract()
         .response();
   }
 
-  /** POST /api/maintenance/{id}/start */
+  /** POST /maintenance/{id}/start */
   public MockMvcResponse iniciarManutencao(Long maintenanceId, String token) {
     return given()
         .contentType(ContentType.JSON)
         .header("Authorization", "Bearer " + token)
         .when()
-        .post("/api/maintenance/{id}/start", maintenanceId)
+        .post("/maintenance/{id}/start", maintenanceId)
         .then()
         .extract()
         .response();
   }
 
-  /** POST /api/maintenance/{id}/complete */
+  /**
+   * POST /maintenance/{id}/complete — resolution via query param conforme @RequestParam no
+   * controller
+   */
   public MockMvcResponse concluirManutencao(Long maintenanceId, String resolucao, String token) {
     return given()
         .contentType(ContentType.JSON)
         .header("Authorization", "Bearer " + token)
         .queryParam("resolution", resolucao)
         .when()
-        .post("/api/maintenance/{id}/complete", maintenanceId)
+        .post("/maintenance/{id}/complete", maintenanceId)
         .then()
         .extract()
         .response();
   }
 
-  /** POST /api/maintenance/{id}/cancel */
+  /** POST /maintenance/{id}/cancel */
   public MockMvcResponse cancelarManutencao(Long maintenanceId, String token) {
     return given()
         .contentType(ContentType.JSON)
         .header("Authorization", "Bearer " + token)
         .when()
-        .post("/api/maintenance/{id}/cancel", maintenanceId)
+        .post("/maintenance/{id}/cancel", maintenanceId)
         .then()
         .extract()
         .response();

@@ -8,6 +8,7 @@ volumes:
   postgres_data:
   prometheus_data:
   grafana_data:
+  influxdb_data:
 
 services:
 
@@ -121,7 +122,33 @@ services:
     networks:
       - asset-net
 
+  # ─── InfluxDB — banco de séries temporais para métricas do k6 ─────────────
+  # k6 envia métricas em tempo real via: k6 run --out influxdb=http://localhost:8086/k6
+  # Acesse os dados via Grafana (datasource InfluxDB já provisionado)
+  influxdb:
+    image: influxdb:1.8-alpine
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      INFLUXDB_DB: k6
+      INFLUXDB_HTTP_AUTH_ENABLED: "false"
+    volumes:
+      - influxdb_data:/var/lib/influxdb
+    healthcheck:
+      test: ["CMD", "influx", "-execute", "SHOW DATABASES"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+    networks:
+      - asset-net
+
   # ─── Grafana ───────────────────────────────────────────────────────────────
+  # Painéis disponíveis:
+  #   • Spring Boot / JVM (métricas da API via Prometheus)
+  #   • k6 Load Testing (métricas de performance via InfluxDB)
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
@@ -145,35 +172,39 @@ services:
       start_period: 15s
     depends_on:
       - prometheus
+      - influxdb
     restart: unless-stopped
     networks:
       - asset-net
 
-  # ─── Allure Report Server (API + gerador de relatório) ────────────────────
-  # Assiste allure-results/ e gera relatório automaticamente após cada mvn test.
-  # Não depende do backend: é um serviço independente de qualidade.
+  # ─── Allure — Projeto Backend (BDD Spring Boot) ───────────────────────────
+  # Lê os resultados gerados por: mvn test (dentro de backend/)
+  # Acesse o relatório em: http://localhost:5050
+  #
+  # A separação Backend / Frontend no painel é feita pelas labels:
+  #   @allure.label.parentSuite:Backend  → nos testes Java (feature files)
+  #   @allure.label.parentSuite:Frontend → nos testes Cypress (feature files)
+  # Na aba "Suites" do Allure ambos aparecem como grupos separados dentro do mesmo projeto.
   allure:
     image: frankescobar/allure-docker-service:latest
     container_name: allure
     ports:
       - "5050:5050"
     environment:
-      # Reprocessa resultados a cada 3 s quando há arquivos novos
       CHECK_RESULTS_EVERY_SECONDS: "3"
-      # Mantém histórico das últimas 20 execuções (tendências, gráficos de retries)
       KEEP_HISTORY: "1"
       KEEP_HISTORY_LATEST: "20"
-      # Permite acesso aos endpoints do viewer sem autenticação
       MAKE_VIEWER_ENDPOINTS_PUBLIC: "true"
       SECURITY_ENABLED: "false"
     volumes:
+      # Volume único: backend/allure-results é onde o Maven e o Cypress gravam os JSONs
       - ./backend/allure-results:/app/allure-results
       - ./backend/allure-reports:/app/default-reports
     restart: unless-stopped
     networks:
       - asset-net
 
-  # ─── Allure UI (interface web para gerenciar projetos e histórico) ─────────
+  # ─── Allure UI (interface web) ─────────────────────────────────────────────
   # Acesse em http://localhost:5252
   allure-ui:
     image: frankescobar/allure-docker-service-ui:latest
@@ -181,7 +212,6 @@ services:
     ports:
       - "5252:5252"
     environment:
-      # URL pública da API (perspectiva do browser de quem acessa)
       ALLURE_DOCKER_PUBLIC_API_URL: "http://localhost:5050"
       ALLURE_DOCKER_PUBLIC_API_URL_PREFIX: ""
     depends_on:
