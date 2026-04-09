@@ -21,7 +21,7 @@
         <java.version>17</java.version>
         <allure.version>2.24.0</allure.version>
         <cucumber.version>7.15.0</cucumber.version>
-        <restassured.version>5.4.0</restassured.version>
+        <restassured.version>6.0.0</restassured.version>
         <testcontainers.version>1.19.7</testcontainers.version>
         <archunit.version>1.2.1</archunit.version>
         <pitest.version>1.15.0</pitest.version>
