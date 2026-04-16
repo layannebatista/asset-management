@@ -27,6 +27,11 @@ import com.portfolio.assetmanagement.infrastructure.persistence.maintenance.repo
 import com.portfolio.assetmanagement.security.context.LoggedUserContext;
 import com.portfolio.assetmanagement.shared.exception.BusinessException;
 import com.portfolio.assetmanagement.shared.exception.NotFoundException;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Story;
 import java.math.BigDecimal;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,7 +44,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("MaintenanceService — orquestração e regras de negócio")
+@Epic("Backend")
+@Feature("Serviços — Manutenção")
+@DisplayName("Serviço de Manutenção")
 class MaintenanceServiceTest {
 
   @Mock private MaintenanceRepository maintenanceRepository;
@@ -85,7 +92,8 @@ class MaintenanceServiceTest {
   }
 
   @Nested
-  @DisplayName("create()")
+  @Story("Criação de manutenção")
+  @DisplayName("Criar Manutenção")
   class CreateTest {
 
     @BeforeEach
@@ -97,6 +105,7 @@ class MaintenanceServiceTest {
     }
 
     @Test
+    @Severity(SeverityLevel.CRITICAL)
     @DisplayName("deve criar manutenção e mudar status do ativo para IN_MAINTENANCE")
     void deveCriarEMudarStatusDoAtivo() {
       Asset asset = buildAssetMock(1L, 10L);
@@ -114,6 +123,7 @@ class MaintenanceServiceTest {
     }
 
     @Test
+    @Severity(SeverityLevel.NORMAL)
     @DisplayName("deve lançar NotFoundException quando ativo não existe")
     void deveLancarQuandoAtivoNaoExiste() {
       when(assetRepository.findById(999L)).thenReturn(Optional.empty());
@@ -127,6 +137,7 @@ class MaintenanceServiceTest {
     }
 
     @Test
+    @Severity(SeverityLevel.NORMAL)
     @DisplayName("deve lançar BusinessException quando já existe manutenção ativa para o ativo")
     void deveLancarQuandoJaExisteManuAtiva() {
       Asset asset = buildAssetMock(1L, 10L);
@@ -145,7 +156,8 @@ class MaintenanceServiceTest {
   }
 
   @Nested
-  @DisplayName("start()")
+  @Story("Execução de manutenção")
+  @DisplayName("Iniciar Manutenção")
   class StartTest {
 
     @BeforeEach
@@ -156,6 +168,8 @@ class MaintenanceServiceTest {
     }
 
     @Test
+    @Severity(SeverityLevel.CRITICAL)
+    @DisplayName("deve iniciar manutenção corretamente")
     void deveIniciarCorretamente() {
       MaintenanceRecord record = buildRecordMock(MaintenanceStatus.REQUESTED);
       when(maintenanceRepository.findById(55L)).thenReturn(Optional.of(record));
@@ -169,6 +183,8 @@ class MaintenanceServiceTest {
     }
 
     @Test
+    @Severity(SeverityLevel.NORMAL)
+    @DisplayName("deve lançar NotFoundException quando manutenção não existe")
     void deveLancarQuandoManuNaoExiste() {
       when(maintenanceRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -180,6 +196,8 @@ class MaintenanceServiceTest {
     }
 
     @Test
+    @Severity(SeverityLevel.NORMAL)
+    @DisplayName("deve lançar BusinessException quando validação falha")
     void deveLancarQuandoValidacaoFalha() {
       MaintenanceRecord record = buildRecordMock(MaintenanceStatus.COMPLETED);
       when(maintenanceRepository.findById(55L)).thenReturn(Optional.of(record));
@@ -195,7 +213,8 @@ class MaintenanceServiceTest {
   }
 
   @Nested
-  @DisplayName("complete()")
+  @Story("Execução de manutenção")
+  @DisplayName("Concluir Manutenção")
   class CompleteTest {
 
     @BeforeEach
@@ -206,6 +225,8 @@ class MaintenanceServiceTest {
     }
 
     @Test
+    @Severity(SeverityLevel.CRITICAL)
+    @DisplayName("deve concluir e retornar ativo para AVAILABLE")
     void deveConcluirERetornarAssetParaAvailable() {
       MaintenanceRecord record = buildRecordMock(MaintenanceStatus.IN_PROGRESS);
       Asset asset = record.getAsset(); // 🔥 IMPORTANTE
@@ -222,6 +243,8 @@ class MaintenanceServiceTest {
     }
 
     @Test
+    @Severity(SeverityLevel.NORMAL)
+    @DisplayName("deve retornar ativo para ASSIGNED quando tinha usuário atribuído")
     void deveRetornarAssetParaAssignedQuandoTinhaUsuario() {
       MaintenanceRecord record = buildRecordMock(MaintenanceStatus.IN_PROGRESS);
       Asset asset = record.getAsset();
@@ -237,6 +260,8 @@ class MaintenanceServiceTest {
     }
 
     @Test
+    @Severity(SeverityLevel.NORMAL)
+    @DisplayName("deve lançar BusinessException quando resolução está ausente")
     void deveLancarQuandoResolucaoAusente() {
       MaintenanceRecord record = buildRecordMock(MaintenanceStatus.IN_PROGRESS);
       when(maintenanceRepository.findById(55L)).thenReturn(Optional.of(record));
@@ -253,7 +278,8 @@ class MaintenanceServiceTest {
   }
 
   @Nested
-  @DisplayName("cancel()")
+  @Story("Execução de manutenção")
+  @DisplayName("Cancelar Manutenção")
   class CancelTest {
 
     @BeforeEach
@@ -264,6 +290,8 @@ class MaintenanceServiceTest {
     }
 
     @Test
+    @Severity(SeverityLevel.NORMAL)
+    @DisplayName("deve cancelar e liberar ativo")
     void deveCancelarELiberarAtivo() {
       MaintenanceRecord record = buildRecordMock(MaintenanceStatus.REQUESTED);
       Asset asset = record.getAsset();
@@ -281,6 +309,8 @@ class MaintenanceServiceTest {
     }
 
     @Test
+    @Severity(SeverityLevel.NORMAL)
+    @DisplayName("deve lançar BusinessException ao cancelar manutenção concluída")
     void deveLancarAoCancelarConcluida() {
       MaintenanceRecord record = buildRecordMock(MaintenanceStatus.COMPLETED);
       when(maintenanceRepository.findById(55L)).thenReturn(Optional.of(record));

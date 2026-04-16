@@ -32,9 +32,9 @@ export function CreateTransferModal({
 
   const selectedAsset = assets.find((a) => String(a.id) === form.assetId)
 
-  const destUnits = selectedAsset
-    ? units.filter((u) => u.id !== selectedAsset.unitId)
-    : units
+  const destUnits = units
+    .filter((u) => u.status === 'ACTIVE')
+    .filter((u) => !selectedAsset || u.id !== selectedAsset.unitId)
 
   return (
     <div

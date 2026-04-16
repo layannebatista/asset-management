@@ -105,7 +105,7 @@ public class TransferService {
         asset.getOrganization().getId(),
         asset.getUnit().getId(),
         saved.getId(),
-        "Transferência solicitada para unidade #" + toUnitId);
+        "Transferência solicitada para unidade " + toUnit.getName());
 
     return saved;
   }
@@ -212,5 +212,29 @@ public class TransferService {
         transfer.getToUnit().getId(),
         transfer.getId(),
         "Transferência concluída");
+  }
+
+  @Transactional(rollbackFor = Exception.class)
+  public void cancel(Long transferId) {
+
+    TransferRequest transfer = validateAccess(transferId);
+
+    validationService.validateCanCancel(transfer);
+
+    concurrencyService.executeWithAssetLock(
+        transfer.getAsset().getId(),
+        () -> {
+          transfer.cancel();
+          transfer.getAsset().changeStatus(AssetStatus.AVAILABLE);
+          repository.save(transfer);
+        });
+
+    auditService.registerEvent(
+        AuditEventType.TRANSFER_CANCELLED,
+        loggedUser.getUserId(),
+        transfer.getAsset().getOrganization().getId(),
+        transfer.getAsset().getUnit().getId(),
+        transfer.getId(),
+        "Transferência cancelada");
   }
 }

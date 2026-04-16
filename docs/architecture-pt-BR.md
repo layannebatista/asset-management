@@ -1,364 +1,174 @@
 # Arquitetura Enterprise
 
+Documento revisado contra a estrutura atual do repositório e os módulos implementados.
+
 ## 1. Visão Geral do Sistema
 
-O Sistema de Gestão de Ativos Enterprise é uma plataforma backend multi-tenant projetada para gerenciar todo o ciclo de vida dos ativos organizacionais em múltiplas empresas, unidades e usuários.
+O sistema é composto por:
 
-O sistema garante controle de acesso seguro, auditabilidade completa e isolamento rigoroso entre tenants, ao mesmo tempo em que suporta fluxos operacionais como transferências, ciclos de inventário e manutenção.
+- frontend React + TypeScript
+- backend Spring Boot
+- PostgreSQL com Flyway
+- microsserviço `ai-intelligence` em Node.js + TypeScript
+- stack de observabilidade com Prometheus, Grafana, InfluxDB, cAdvisor e Allure
 
-Este backend é construído utilizando Spring Boot e segue princípios de arquitetura enterprise.
-
----
-
-## 2. Estilo Arquitetural
-
-O sistema segue o padrão de arquitetura em camadas.
-
-Cada camada possui uma responsabilidade bem definida e se comunica apenas com camadas adjacentes.
-
-Camadas da arquitetura:
-
-Camada Cliente  
-↓  
-Camada de API (Controllers REST)  
-↓  
-Camada de Aplicação (Services)  
-↓  
-Camada de Domínio (Entidades e Regras de Negócio)  
-↓  
-Camada de Persistência (Repositories)  
-↓  
-Camada de Banco de Dados (PostgreSQL)  
-
-Essa separação melhora a manutenibilidade, testabilidade e escalabilidade.
+O backend continua sendo o núcleo transacional e o ponto central de autenticação, autorização e multi-tenancy.
 
 ---
 
-## 3. Responsabilidades das Camadas
+## 2. Estrutura em Camadas do Backend
 
-### 3.1 Camada Cliente
+Organização observada no código:
 
-Exemplos:
+- `interfaces` — controllers REST
+- `application` — services, DTOs, mappers e orquestração de casos de uso
+- `domain` — entidades, enums e regras centrais
+- `infrastructure` — persistência e integrações
+- `shared` — paginação, exceções, exportação e utilitários transversais
 
-- Aplicações web
-- Aplicações mobile
-- Clientes de API
-- Postman / integrações
+Além disso, existem pacotes dedicados para:
 
-Responsabilidades:
-
-- Enviar requisições HTTP
-- Fornecer tokens de autenticação
-- Exibir dados
-
-Clientes nunca acessam o banco de dados diretamente.
+- `security`
+- `config`
 
 ---
 
-### 3.2 Camada de API (Controllers)
+## 3. Módulos Funcionais Implementados
 
-Localização:
+Módulos confirmados no backend:
 
-src/main/java/.../interfaces/rest/
-
-Responsabilidades:
-
-- Manipular requisições HTTP
-- Validar a estrutura da requisição
-- Converter requisição em DTO
-- Chamar services da aplicação
-- Retornar respostas HTTP
-
-Controllers não contêm lógica de negócio.
-
----
-
-### 3.3 Camada de Aplicação (Services)
-
-Localização:
-
-src/main/java/.../application/
-
-Responsabilidades:
-
-- Implementar lógica de negócio
-- Validar regras de negócio
-- Aplicar validação de escopo de autorização
-- Coordenar operações de domínio
-- Gerenciar transações
-
-Esta é a camada onde reside a maior parte da lógica do sistema.
+- autenticação, MFA e refresh token
+- organizações, unidades e usuários
+- ativos e histórico de ativos
+- transferências
+- inventário
+- manutenção
+- auditoria
+- categorias
+- exportação CSV
+- dashboards
+- depreciação
+- seguros
+- centros de custo
+- AI Intelligence
 
 ---
 
-### 3.4 Camada de Domínio
+## 4. Multi-Tenant
 
-Localização:
+O tenant é a organização.
 
-src/main/java/.../domain/
+A implementação combina:
 
-Responsabilidades:
+- contexto do usuário autenticado
+- filtros e validações por `organization_id`
+- checagens adicionais de ownership nas regras de serviço
 
-- Definir entidades principais
-- Representar conceitos de negócio
-- Aplicar regras de domínio
-
-Exemplos:
-
-- Asset
-- User
-- Organization
-- Unit
-- Transfer
-- InventoryCycle
-- MaintenanceRequest
-- AuditLog
-
-A camada de domínio é independente da infraestrutura.
+Nem toda tabela precisa armazenar `organization_id` diretamente; em alguns casos o tenant é herdado por relacionamento.
 
 ---
 
-### 3.5 Camada de Persistência (Repositories)
+## 5. Segurança
 
-Localização:
+Camadas principais:
 
-src/main/java/.../infrastructure/
+1. `SecurityFilterChain` com JWT stateless
+2. `@PreAuthorize` nos controllers
+3. validações de negócio e escopo no service layer
+4. constraints e foreign keys no banco
 
-Responsabilidades:
+O modelo de papéis implementado é:
 
-- Persistir entidades
-- Consultar o banco de dados
-- Implementar interfaces de repositório
+- `ADMIN`
+- `GESTOR`
+- `OPERADOR`
 
-Utiliza:
+Além do JWT, o sistema já suporta:
 
-- JPA
-- Hibernate
-
-Repositories abstraem o acesso ao banco de dados.
-
----
-
-### 3.6 Camada de Banco de Dados
-
-Banco de dados utilizado:
-
-PostgreSQL
-
-Responsabilidades:
-
-- Armazenar dados persistentes
-- Manter integridade
-- Aplicar constraints
-
-Ferramenta de migração:
-
-Flyway
-
-Garante evolução consistente do schema.
+- MFA opcional via WhatsApp
+- refresh tokens rotativos
+- integração service-to-service com `X-AI-Service-Key`
 
 ---
 
-## 4. Arquitetura Multi-Tenant
+## 6. Persistência
 
-O sistema é totalmente multi-tenant.
+Banco principal:
 
-Cada tenant representa uma organização.
+- PostgreSQL
 
-Todas as entidades pertencem exatamente a uma organização.
+Migrations:
 
-Exemplo:
+- Flyway
 
-Organization  
- └── Units  
-      └── Users  
-      └── Assets  
-           └── Transfers  
-           └── Inventory  
-           └── Maintenance  
+Evoluções recentes do schema:
 
-O isolamento entre tenants é aplicado por meio de:
-
-- Filtragem de queries por organizationId
-- Validação de autorização
-- Validação de escopo
-
-O acesso entre tenants é estritamente proibido.
+- MFA
+- refresh tokens
+- dados fiscais e financeiros dos ativos
+- custo de manutenção
+- centros de custo
+- seguros
 
 ---
 
-## 5. Arquitetura de Segurança
+## 7. Arquitetura de Deploy
 
-A segurança é aplicada utilizando múltiplas camadas.
+Topologia local observada no `docker-compose.yml`:
 
-### Autenticação
+```
+Frontend (Nginx)
+  -> Backend Spring Boot
+     -> PostgreSQL
+     -> AI Intelligence
+     -> Prometheus / Allure / Grafana / InfluxDB
+```
 
-Método:
-
-JWT (JSON Web Token)
-
-Fluxo:
-
-1. Usuário faz login
-2. Servidor valida as credenciais
-3. Servidor gera o token JWT
-4. Cliente envia o token no header Authorization
-5. Servidor valida o token em cada requisição
+O frontend em Docker recebe `VITE_API_URL=/api` e usa o Nginx para proxy reverso até o backend.
 
 ---
 
-### Autorização
+## 8. Observabilidade e Qualidade
 
-Modelo:
+Componentes integrados:
 
-Controle de acesso baseado em roles (RBAC)
+- Actuator + Micrometer
+- Prometheus
+- Grafana
+- cAdvisor
+- InfluxDB para k6
+- Allure para relatórios de teste
 
-Roles incluem:
+O repositório também contém:
 
-- ADMINISTRATOR
-- MANAGER
-- OPERATOR
-
-As verificações de autorização garantem que usuários acessem apenas recursos permitidos.
-
----
-
-### Fluxo de Segurança da Requisição
-
-Requisição  
-↓  
-Filtro JWT  
-↓  
-Contexto de Segurança  
-↓  
-Controller  
-↓  
-Validação de Autorização no Service  
-↓  
-Lógica de Negócio  
+- CI via GitHub Actions
+- build e scan de imagens Docker
+- suíte E2E Playwright
 
 ---
 
-## 6. Módulos Principais do Sistema
+## 9. AI Intelligence
 
-O sistema é dividido em módulos principais:
+O microsserviço `ai-intelligence` roda separado do backend e é acessado pelo módulo `/api/ai`.
 
-- Módulo de Autenticação
-- Módulo de Organização
-- Módulo de Unidade
-- Módulo de Usuário
-- Módulo de Ativo
-- Módulo de Transferência
-- Módulo de Inventário
-- Módulo de Manutenção
-- Módulo de Auditoria
+Coletores confirmados:
 
----
+- Prometheus
+- Allure
+- GitHub Actions
+- backend
 
-## 7. Arquitetura Stateless
+Tipos de análise expostos hoje:
 
-O sistema é stateless.
-
-Nenhuma sessão é armazenada no servidor.
-
-Todo o estado de autenticação é mantido utilizando JWT.
-
-Benefícios:
-
-- Escalabilidade
-- Escalabilidade horizontal
-- Simplicidade
+- `observability`
+- `test-intelligence`
+- `cicd`
+- `incident`
+- `risk`
+- `multi-agent`
 
 ---
 
-## 8. Arquitetura de Deploy
+## 10. Resumo
 
-Deploy típico:
-
-Cliente  
-↓  
-HTTPS  
-↓  
-Aplicação Spring Boot  
-↓  
-Banco de Dados PostgreSQL  
-
-Componentes opcionais de produção:
-
-Cliente  
-↓  
-Load Balancer  
-↓  
-Reverse Proxy (NGINX)  
-↓  
-Instâncias da Aplicação  
-↓  
-Cluster de Banco de Dados  
-
----
-
-## 9. Projeto de Escalabilidade
-
-O sistema suporta escalabilidade horizontal.
-
-Como é stateless, múltiplas instâncias podem executar simultaneamente.
-
-Opções de escalabilidade:
-
-- Múltiplas instâncias backend
-- Balanceamento de carga
-- Replicação de banco de dados
-
----
-
-## 10. Auditoria e Rastreabilidade
-
-Todas as ações críticas geram registros de auditoria.
-
-Os dados de auditoria incluem:
-
-- Usuário
-- Timestamp
-- Operação
-- Entidade afetada
-- Estado anterior
-- Novo estado
-
-Isso garante:
-
-- Responsabilização
-- Conformidade
-- Monitoramento de segurança
-
----
-
-## 11. Arquitetura de Tratamento de Erros
-
-Formato padronizado de resposta de erro:
-
-{
-  "errors": [
-    {
-      "field": "fieldName",
-      "message": "descrição do erro",
-      "code": "ERROR_CODE"
-    }
-  ]
-}
-
-Garante comportamento consistente da API.
-
----
-
-## 12. Resumo
-
-Esta arquitetura fornece:
-
-- Controle de acesso seguro
-- Isolamento multi-tenant
-- Auditabilidade completa
-- Escalabilidade
-- Manutenibilidade
-- Robustez nível enterprise
-
-Ela segue princípios modernos de arquitetura backend e é adequada para implantação enterprise.
+A arquitetura atual é mais ampla do que a primeira versão puramente backend. Hoje ela combina aplicação transacional, capacidades financeiras, observabilidade e um sidecar de IA, mantendo o backend Spring Boot como centro de segurança, tenant e regras de negócio.

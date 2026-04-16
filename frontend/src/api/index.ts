@@ -93,12 +93,15 @@ export const userApi = {
   generateActivationToken: (userId: number) =>
     apiService.post<string>(`/users/activation/token/${userId}`),
 
+  // Backend usa @RequestParam neste endpoint; enviamos como query params.
   activateAccount: (token: string, password: string, confirmPassword: string, lgpdAccepted: boolean) =>
-    apiService.post<void>('/users/activation/activate', {
-      token,
-      password,
-      confirmPassword,
-      lgpdAccepted,
+    apiService.post<void>('/users/activation/activate', undefined, {
+      params: {
+        token,
+        password,
+        confirmPassword,
+        lgpdAccepted,
+      },
     }),
 }
 
@@ -198,6 +201,9 @@ export const transferApi = {
 
   complete: (id: number) =>
     apiService.patch<void>(`/transfers/${id}/complete`),
+
+  cancel: (id: number) =>
+    apiService.patch<void>(`/transfers/${id}/cancel`),
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

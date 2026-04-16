@@ -7,7 +7,7 @@ import type { AssetResponse, AssetInsurance, AssetStatus, AssetType, UnitRespons
 import {
   ASSET_STATUS_LABELS, ASSET_STATUS_COLORS, ASSET_TYPE_LABELS, ASSET_TYPE_OPTIONS,
   INPUT_CLS, resolveUnitName, resolveUserName,
-  TipButton, Pagination, ErrorBanner,
+  TipButton, Pagination, ErrorBanner, parseCurrency,
 } from '../../shared'
 
 import { useAssets } from './hooks/useAssets'
@@ -76,6 +76,7 @@ export default function AssetListPage() {
 
   const [showMaint, setShowMaint] = useState<AssetResponse | null>(null)
   const [maintDesc, setMaintDesc] = useState('')
+  const [maintCost, setMaintCost] = useState('')
 
   const [showRetire, setShowRetire] = useState<AssetResponse | null>(null)
 
@@ -192,8 +193,9 @@ export default function AssetListPage() {
     if (!showMaint || maintDesc.length < 10) return
     setSaving(true); setActionError('')
     try {
-      await assets.maintenance({ assetId: showMaint.id, description: maintDesc })
-      setShowMaint(null); setMaintDesc('')
+      const estimatedCost = maintCost ? parseCurrency(maintCost) : undefined
+      await assets.maintenance({ assetId: showMaint.id, description: maintDesc, estimatedCost })
+      setShowMaint(null); setMaintDesc(''); setMaintCost('')
       reload()
     } catch (e: any) {
       setActionError(e?.response?.data?.message ?? 'Erro ao abrir manutenção')
@@ -463,9 +465,11 @@ export default function AssetListPage() {
       />
       <MaintenanceModal
         asset={showMaint}
-        onClose={() => setShowMaint(null)}
+        onClose={() => { setShowMaint(null); setMaintCost('') }}
         desc={maintDesc}
         setDesc={setMaintDesc}
+        cost={maintCost}
+        setCost={setMaintCost}
         onConfirm={handleMaintenance}
         saving={saving}
       />

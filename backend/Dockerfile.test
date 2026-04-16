@@ -1,0 +1,22 @@
+# =============================================================================
+# Runner de testes do backend (Maven + H2 em memória)
+# Não precisa de banco externo — usa perfil "test" com H2.
+# Resultados Allure são escritos em /allure-results (um nível acima do WORKDIR)
+# conforme configurado em pom.xml: ${project.basedir}/../allure-results
+# =============================================================================
+FROM maven:3.9.9-eclipse-temurin-17
+
+WORKDIR /app
+
+# settings-docker.xml redireciona nexus.flywaydb.org (inacessível em containers)
+# para o Maven Central, evitando travamento no download de dependências
+COPY settings-docker.xml /root/.m2/settings.xml
+
+# Cache de dependências separado do código para aproveitar layer cache
+COPY pom.xml .
+RUN mvn -B --no-transfer-progress dependency:resolve dependency:resolve-plugins
+
+# Código fonte completo (src/main + src/test)
+COPY src ./src
+
+CMD ["mvn", "test", "-B", "--no-transfer-progress", "-Dallure.results.directory=/allure-results"]

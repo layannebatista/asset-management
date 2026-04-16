@@ -1,4 +1,4 @@
-import { CheckCircle, XCircle, Check } from 'lucide-react'
+import { CheckCircle, XCircle, Check, Ban } from 'lucide-react'
 import { transferApi } from '../../../api'
 import type { TransferResponse, TransferStatus, UnitResponse, AssetResponse } from '../../../types'
 import {
@@ -78,17 +78,26 @@ export function TransferDetail({
         )}
       </div>
 
-      {(isAdmin || isGestor) && selected.status === 'PENDING' && (
+      {selected.status === 'PENDING' && (
         <div className="flex gap-2 mb-4">
+          {(isAdmin || isGestor) && (
+            <>
+              <button type="button" disabled={actionLoading}
+                onClick={() => onAction(() => transferApi.approve(selected.id), 'aprovar')}
+                className="flex items-center gap-2 px-4 py-2 rounded-[8px] bg-emerald-600 text-white text-[13px] font-semibold hover:bg-emerald-700 transition disabled:opacity-50">
+                <CheckCircle size={14} /> {actionLoading ? 'Processando...' : 'Aprovar Transferência'}
+              </button>
+              <button type="button" disabled={actionLoading}
+                onClick={() => onAction(() => transferApi.reject(selected.id), 'rejeitar')}
+                className="flex items-center gap-2 px-4 py-2 rounded-[8px] border-[1.5px] border-red-200 text-red-600 text-[13px] font-semibold hover:bg-red-50 transition disabled:opacity-50">
+                <XCircle size={14} /> Rejeitar
+              </button>
+            </>
+          )}
           <button type="button" disabled={actionLoading}
-            onClick={() => onAction(() => transferApi.approve(selected.id), 'aprovar')}
-            className="flex items-center gap-2 px-4 py-2 rounded-[8px] bg-emerald-600 text-white text-[13px] font-semibold hover:bg-emerald-700 transition disabled:opacity-50">
-            <CheckCircle size={14} /> {actionLoading ? 'Processando...' : 'Aprovar Transferência'}
-          </button>
-          <button type="button" disabled={actionLoading}
-            onClick={() => onAction(() => transferApi.reject(selected.id), 'rejeitar')}
-            className="flex items-center gap-2 px-4 py-2 rounded-[8px] border-[1.5px] border-red-200 text-red-600 text-[13px] font-semibold hover:bg-red-50 transition disabled:opacity-50">
-            <XCircle size={14} /> Rejeitar
+            onClick={() => onAction(() => transferApi.cancel(selected.id), 'cancelar')}
+            className="flex items-center gap-2 px-4 py-2 rounded-[8px] border-[1.5px] border-slate-200 text-slate-500 text-[13px] font-semibold hover:bg-slate-50 transition disabled:opacity-50">
+            <Ban size={14} /> Cancelar
           </button>
         </div>
       )}

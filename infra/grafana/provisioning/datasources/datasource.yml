@@ -23,5 +23,6 @@ datasources:
     isDefault: false
     editable: false
     jsonData:
+      version: InfluxQL
       dbName: k6
-      httpMode: GET
+      httpMode: POST

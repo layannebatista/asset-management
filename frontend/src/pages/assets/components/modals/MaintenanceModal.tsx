@@ -1,12 +1,14 @@
 import { useEffect } from 'react'
 import type { AssetResponse } from '../../../../types'
-import { Modal, Field, ModalFooter, INPUT_CLS } from '../../../../shared'
+import { Modal, Field, ModalFooter, INPUT_CLS, formatCurrencyInput } from '../../../../shared'
 
 interface MaintenanceModalProps {
   asset: AssetResponse | null
   onClose: () => void
   desc: string
   setDesc: (v: string) => void
+  cost: string
+  setCost: (v: string) => void
   onConfirm: () => void
   saving: boolean
 }
@@ -16,14 +18,16 @@ export function MaintenanceModal({
   onClose,
   desc,
   setDesc,
+  cost,
+  setCost,
   onConfirm,
   saving,
 }: MaintenanceModalProps) {
 
   // ✅ reset ao abrir/trocar ativo
   useEffect(() => {
-    if (asset) setDesc('')
-  }, [asset, setDesc])
+    if (asset) { setDesc(''); setCost('') }
+  }, [asset, setDesc, setCost])
 
   const trimmed = desc.trim()
   const isInvalid = trimmed.length > 0 && trimmed.length < 10
@@ -65,6 +69,17 @@ export function MaintenanceModal({
             {desc.length}/1000
           </p>
         </div>
+      </Field>
+
+      <Field label="Custo Estimado (opcional)">
+        <input
+          inputMode="numeric"
+          value={cost}
+          maxLength={15}
+          placeholder="R$ 0,00"
+          onChange={(e) => setCost(formatCurrencyInput(e.target.value))}
+          className={INPUT_CLS}
+        />
       </Field>
 
       <ModalFooter

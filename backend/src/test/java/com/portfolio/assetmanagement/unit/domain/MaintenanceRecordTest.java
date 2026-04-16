@@ -12,268 +12,240 @@ import com.portfolio.assetmanagement.domain.maintenance.enums.MaintenanceStatus;
 import com.portfolio.assetmanagement.domain.organization.entity.Organization;
 import com.portfolio.assetmanagement.domain.unit.entity.Unit;
 import com.portfolio.assetmanagement.shared.exception.BusinessException;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-@DisplayName("MaintenanceRecord — regras de negócio da entidade")
+@Epic("Backend")
+@Feature("Domínio — Manutenção")
+@DisplayName("Entidade MaintenanceRecord")
 class MaintenanceRecordTest {
 
-  private Asset buildAsset(Long orgId, Long unitId) {
-    Organization org = mock(Organization.class);
-    when(org.getId()).thenReturn(orgId);
+private Asset buildAsset(Long orgId, Long unitId) {
+Organization org = mock(Organization.class);
+when(org.getId()).thenReturn(orgId);
 
-    Unit unit = mock(Unit.class);
-    when(unit.getId()).thenReturn(unitId);
-    when(unit.getOrganization()).thenReturn(org);
+Unit unit = mock(Unit.class);
+when(unit.getId()).thenReturn(unitId);
+when(unit.getOrganization()).thenReturn(org);
 
-    Asset asset = mock(Asset.class);
-    when(asset.getOrganization()).thenReturn(org);
-    when(asset.getUnit()).thenReturn(unit);
-    when(asset.getStatus()).thenReturn(AssetStatus.AVAILABLE);
+Asset asset = mock(Asset.class);
+when(asset.getOrganization()).thenReturn(org);
+when(asset.getUnit()).thenReturn(unit);
+when(asset.getStatus()).thenReturn(AssetStatus.AVAILABLE);
 
-    return asset;
-  }
+return asset;
 
-  private MaintenanceRecord buildRecord() {
-    Asset asset = buildAsset(1L, 10L);
-    return new MaintenanceRecord(asset, 1L, 10L, 99L, "Descrição válida com mais de 10 chars");
-  }
+}
 
-  @Nested
-  @DisplayName("Construtor")
-  class ConstrucaoTest {
+private MaintenanceRecord buildRecord() {
+Asset asset = buildAsset(1L, 10L);
+return new MaintenanceRecord(asset, 1L, 10L, 99L, "Descrição válida com mais de 10 chars");
+}
 
-    @Test
-    @DisplayName("deve criar registro com status REQUESTED e createdAt preenchido")
-    void deveCriarComStatusRequestedECreatedAt() {
-      MaintenanceRecord record = buildRecord();
+@Nested
+@DisplayName("Construtor")
+@Story("Criação de manutenção")
+class ConstrucaoTest {
 
-      assertThat(record.getStatus()).isEqualTo(MaintenanceStatus.REQUESTED);
-      assertThat(record.getCreatedAt()).isNotNull();
-      assertThat(record.getStartedAt()).isNull();
-      assertThat(record.getCompletedAt()).isNull();
-    }
+@Test
+@Severity(SeverityLevel.CRITICAL)
+@DisplayName("Deve iniciar como REQUESTED com datas corretas")
+void deveCriarComStatusRequestedECreatedAt() {
+  MaintenanceRecord record = buildRecord();
 
-    @Test
-    @DisplayName("deve lançar IllegalArgumentException quando asset é null")
-    void deveLancarQuandoAssetNull() {
-      assertThatThrownBy(() -> new MaintenanceRecord(null, 1L, 10L, 99L, "Descrição válida aqui"))
-          .isInstanceOf(IllegalArgumentException.class)
-          .hasMessageContaining("asset é obrigatório");
-    }
+  assertThat(record.getStatus()).isEqualTo(MaintenanceStatus.REQUESTED);
+  assertThat(record.getCreatedAt()).isNotNull();
+  assertThat(record.getStartedAt()).isNull();
+  assertThat(record.getCompletedAt()).isNull();
+}
 
-    @Test
-    @DisplayName("deve lançar IllegalArgumentException quando description é blank")
-    void deveLancarQuandoDescricaoBlank() {
-      Asset asset = buildAsset(1L, 10L);
+@Test
+@Severity(SeverityLevel.CRITICAL)
+@DisplayName("Deve falhar quando asset é null")
+void deveLancarQuandoAssetNull() {
+  assertThatThrownBy(() -> new MaintenanceRecord(null, 1L, 10L, 99L, "Descrição válida aqui"))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("asset é obrigatório");
+}
 
-      assertThatThrownBy(() -> new MaintenanceRecord(asset, 1L, 10L, 99L, "   "))
-          .isInstanceOf(IllegalArgumentException.class)
-          .hasMessageContaining("description é obrigatório");
-    }
+@Test
+@Severity(SeverityLevel.NORMAL)
+@DisplayName("Deve falhar quando descrição é inválida")
+void deveLancarQuandoDescricaoBlank() {
+  Asset asset = buildAsset(1L, 10L);
 
-    @Test
-    @DisplayName("deve lançar BusinessException quando asset pertence a outra organização")
-    void deveLancarQuandoAssetDeOutraOrg() {
-      Asset asset = buildAsset(2L, 10L);
+  assertThatThrownBy(() -> new MaintenanceRecord(asset, 1L, 10L, 99L, "   "))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("description é obrigatório");
+}
 
-      assertThatThrownBy(() -> new MaintenanceRecord(asset, 1L, 10L, 99L, "Descrição válida aqui"))
-          .isInstanceOf(BusinessException.class)
-          .hasMessageContaining("Asset não pertence à organization");
-    }
+@Test
+@Severity(SeverityLevel.CRITICAL)
+@DisplayName("Deve falhar quando asset pertence a outra organização")
+void deveLancarQuandoAssetDeOutraOrg() {
+  Asset asset = buildAsset(2L, 10L);
 
-    @Test
-    @DisplayName("deve lançar BusinessException quando asset pertence a outra unidade")
-    void deveLancarQuandoAssetDeOutraUnit() {
-      Asset asset = buildAsset(1L, 20L);
+  assertThatThrownBy(() -> new MaintenanceRecord(asset, 1L, 10L, 99L, "Descrição válida aqui"))
+      .isInstanceOf(BusinessException.class)
+      .hasMessageContaining("Asset não pertence à organization");
+}
 
-      assertThatThrownBy(() -> new MaintenanceRecord(asset, 1L, 10L, 99L, "Descrição válida aqui"))
-          .isInstanceOf(BusinessException.class)
-          .hasMessageContaining("Asset não pertence à unit");
-    }
-  }
+@Test
+@Severity(SeverityLevel.CRITICAL)
+@DisplayName("Deve falhar quando asset pertence a outra unidade")
+void deveLancarQuandoAssetDeOutraUnit() {
+  Asset asset = buildAsset(1L, 20L);
 
-  @Nested
-  @DisplayName("start()")
-  class StartTest {
+  assertThatThrownBy(() -> new MaintenanceRecord(asset, 1L, 10L, 99L, "Descrição válida aqui"))
+      .isInstanceOf(BusinessException.class)
+      .hasMessageContaining("Asset não pertence à unit");
+}
 
-    @Test
-    @DisplayName("deve transitar para IN_PROGRESS e preencher startedAt e startedByUserId")
-    void deveIniciarCorretamente() {
-      MaintenanceRecord record = buildRecord();
+}
 
-      record.start(42L);
+@Nested
+@DisplayName("Início de manutenção")
+@Story("Execução de manutenção")
+class StartTest {
 
-      assertThat(record.getStatus()).isEqualTo(MaintenanceStatus.IN_PROGRESS);
-      assertThat(record.getStartedByUserId()).isEqualTo(42L);
-      assertThat(record.getStartedAt()).isNotNull();
-    }
+@Test
+@Severity(SeverityLevel.CRITICAL)
+@DisplayName("Deve iniciar manutenção corretamente")
+void deveIniciarCorretamente() {
+  MaintenanceRecord record = buildRecord();
 
-    @Test
-    @DisplayName("deve lançar BusinessException quando status não é REQUESTED")
-    void deveLancarQuandoStatusNaoEhRequested() {
-      MaintenanceRecord record = buildRecord();
-      record.start(42L);
+  record.start(42L);
 
-      assertThatThrownBy(() -> record.start(42L))
-          .isInstanceOf(BusinessException.class)
-          .hasMessageContaining("Somente manutenção REQUESTED pode ser iniciada");
-    }
+  assertThat(record.getStatus()).isEqualTo(MaintenanceStatus.IN_PROGRESS);
+  assertThat(record.getStartedByUserId()).isEqualTo(42L);
+  assertThat(record.getStartedAt()).isNotNull();
+}
 
-    @Test
-    @DisplayName("deve lançar IllegalArgumentException quando userId é null")
-    void deveLancarQuandoUserIdNull() {
-      MaintenanceRecord record = buildRecord();
+@Test
+@Severity(SeverityLevel.CRITICAL)
+@DisplayName("Deve falhar ao iniciar fora do estado REQUESTED")
+void deveLancarQuandoStatusNaoEhRequested() {
+  MaintenanceRecord record = buildRecord();
+  record.start(42L);
 
-      assertThatThrownBy(() -> record.start(null))
-          .isInstanceOf(IllegalArgumentException.class)
-          .hasMessageContaining("userId é obrigatório");
-    }
-  }
+  assertThatThrownBy(() -> record.start(42L))
+      .isInstanceOf(BusinessException.class)
+      .hasMessageContaining("Somente manutenção REQUESTED pode ser iniciada");
+}
 
-  @Nested
-  @DisplayName("complete()")
-  class CompleteTest {
+@Test
+@Severity(SeverityLevel.NORMAL)
+@DisplayName("Deve falhar quando userId é null")
+void deveLancarQuandoUserIdNull() {
+  MaintenanceRecord record = buildRecord();
 
-    private MaintenanceRecord recordEmProgresso() {
-      MaintenanceRecord record = buildRecord();
-      record.start(42L);
-      return record;
-    }
+  assertThatThrownBy(() -> record.start(null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("userId é obrigatório");
+}
 
-    @Test
-    @DisplayName("deve transitar para COMPLETED e preencher todos os campos")
-    void deveConcluirCorretamente() {
-      MaintenanceRecord record = recordEmProgresso();
+}
 
-      record.complete(42L, "Troca da bateria realizada", BigDecimal.valueOf(150));
+@Nested
+@DisplayName("Conclusão de manutenção")
+@Story("Execução de manutenção")
+class CompleteTest {
 
-      assertThat(record.getStatus()).isEqualTo(MaintenanceStatus.COMPLETED);
-      assertThat(record.getCompletedByUserId()).isEqualTo(42L);
-      assertThat(record.getCompletedAt()).isNotNull();
-      assertThat(record.getResolution()).isEqualTo("Troca da bateria realizada");
-    }
+private MaintenanceRecord recordEmProgresso() {
+  MaintenanceRecord record = buildRecord();
+  record.start(42L);
+  return record;
+}
 
-    @Test
-    @DisplayName("deve lançar BusinessException quando status não é IN_PROGRESS")
-    void deveLancarQuandoStatusNaoEhInProgress() {
-      MaintenanceRecord record = buildRecord();
+@Test
+@Severity(SeverityLevel.CRITICAL)
+@DisplayName("Deve concluir manutenção corretamente")
+void deveConcluirCorretamente() {
+  MaintenanceRecord record = recordEmProgresso();
 
-      assertThatThrownBy(() -> record.complete(42L, "resolução", BigDecimal.ZERO))
-          .isInstanceOf(BusinessException.class)
-          .hasMessageContaining("Somente manutenção IN_PROGRESS pode ser concluída");
-    }
+  record.complete(42L, "Troca da bateria realizada", BigDecimal.valueOf(150));
 
-    @Test
-    @DisplayName("deve lançar IllegalArgumentException quando resolution é blank")
-    void deveLancarQuandoResolutionBlank() {
-      MaintenanceRecord record = recordEmProgresso();
+  assertThat(record.getStatus()).isEqualTo(MaintenanceStatus.COMPLETED);
+  assertThat(record.getCompletedByUserId()).isEqualTo(42L);
+  assertThat(record.getCompletedAt()).isNotNull();
+  assertThat(record.getResolution()).isEqualTo("Troca da bateria realizada");
+}
 
-      assertThatThrownBy(() -> record.complete(42L, "  ", BigDecimal.ZERO))
-          .isInstanceOf(IllegalArgumentException.class)
-          .hasMessageContaining("resolution é obrigatório");
-    }
+@Test
+@Severity(SeverityLevel.CRITICAL)
+@DisplayName("Deve falhar ao concluir fora do estado IN_PROGRESS")
+void deveLancarQuandoStatusNaoEhInProgress() {
+  MaintenanceRecord record = buildRecord();
 
-    @Test
-    @DisplayName("deve lançar IllegalArgumentException quando userId é null")
-    void deveLancarQuandoUserIdNull() {
-      MaintenanceRecord record = recordEmProgresso();
+  assertThatThrownBy(() -> record.complete(42L, "resolução", BigDecimal.ZERO))
+      .isInstanceOf(BusinessException.class)
+      .hasMessageContaining("Somente manutenção IN_PROGRESS pode ser concluída");
+}
 
-      assertThatThrownBy(() -> record.complete(null, "resolução válida", BigDecimal.ZERO))
-          .isInstanceOf(IllegalArgumentException.class)
-          .hasMessageContaining("userId é obrigatório");
-    }
-  }
+}
 
-  @Nested
-  @DisplayName("cancel()")
-  class CancelTest {
+@Nested
+@DisplayName("Cancelamento")
+@Story("Execução de manutenção")
+class CancelTest {
 
-    @Test
-    @DisplayName("deve cancelar manutenção REQUESTED")
-    void deveCancelarRequestedCorretamente() {
-      MaintenanceRecord record = buildRecord();
+@Test
+@Severity(SeverityLevel.NORMAL)
+@DisplayName("Deve cancelar manutenção REQUESTED")
+void deveCancelarRequestedCorretamente() {
+  MaintenanceRecord record = buildRecord();
+  record.cancel();
 
-      record.cancel();
+  assertThat(record.getStatus()).isEqualTo(MaintenanceStatus.CANCELLED);
+}
 
-      assertThat(record.getStatus()).isEqualTo(MaintenanceStatus.CANCELLED);
-    }
+@Test
+@Severity(SeverityLevel.NORMAL)
+@DisplayName("Deve cancelar manutenção IN_PROGRESS")
+void deveCancelarInProgressCorretamente() {
+  MaintenanceRecord record = buildRecord();
+  record.start(42L);
+  record.cancel();
 
-    @Test
-    @DisplayName("deve cancelar manutenção IN_PROGRESS")
-    void deveCancelarInProgressCorretamente() {
-      MaintenanceRecord record = buildRecord();
-      record.start(42L);
+  assertThat(record.getStatus()).isEqualTo(MaintenanceStatus.CANCELLED);
+}
 
-      record.cancel();
+}
 
-      assertThat(record.getStatus()).isEqualTo(MaintenanceStatus.CANCELLED);
-    }
+@Nested
+@DisplayName("Estados auxiliares")
+@Story("Validação de estado")
+class HelpersTest {
 
-    @Test
-    @DisplayName("deve lançar BusinessException ao cancelar manutenção COMPLETED")
-    void deveLancarQuandoConcluida() {
-      MaintenanceRecord record = buildRecord();
-      record.start(42L);
-      record.complete(42L, "resolução válida", BigDecimal.ZERO);
+@Test
+@DisplayName("isActive deve ser verdadeiro para estados ativos")
+void isActiveDeveSerTrueParaRequestedEInProgress() {
+  MaintenanceRecord requested = buildRecord();
+  assertThat(requested.isActive()).isTrue();
 
-      assertThatThrownBy(record::cancel)
-          .isInstanceOf(BusinessException.class)
-          .hasMessageContaining("Manutenção concluída não pode ser cancelada");
-    }
+  requested.start(1L);
+  assertThat(requested.isActive()).isTrue();
+}
 
-    @Test
-    @DisplayName("deve lançar BusinessException ao cancelar manutenção já CANCELLED")
-    void deveLancarQuandoJaCancelada() {
-      MaintenanceRecord record = buildRecord();
-      record.cancel();
+@Test
+@DisplayName("isActive deve ser falso para estados finais")
+void isActiveDeveSerFalseParaTerminados() {
+  MaintenanceRecord completed = buildRecord();
+  completed.start(1L);
+  completed.complete(1L, "ok", BigDecimal.ZERO);
+  assertThat(completed.isActive()).isFalse();
 
-      assertThatThrownBy(record::cancel)
-          .isInstanceOf(BusinessException.class)
-          .hasMessageContaining("Manutenção já cancelada");
-    }
-  }
+  MaintenanceRecord cancelled = buildRecord();
+  cancelled.cancel();
+  assertThat(cancelled.isActive()).isFalse();
+}
 
-  @Nested
-  @DisplayName("Helpers de estado")
-  class HelpersTest {
-
-    @Test
-    @DisplayName("isActive() deve ser true para REQUESTED e IN_PROGRESS")
-    void isActiveDeveSerTrueParaRequestedEInProgress() {
-      MaintenanceRecord requested = buildRecord();
-      assertThat(requested.isActive()).isTrue();
-
-      requested.start(1L);
-      assertThat(requested.isActive()).isTrue();
-    }
-
-    @Test
-    @DisplayName("isActive() deve ser false para COMPLETED e CANCELLED")
-    void isActiveDeveSerFalseParaTerminados() {
-      MaintenanceRecord completed = buildRecord();
-      completed.start(1L);
-      completed.complete(1L, "ok", BigDecimal.ZERO);
-      assertThat(completed.isActive()).isFalse();
-
-      MaintenanceRecord cancelled = buildRecord();
-      cancelled.cancel();
-      assertThat(cancelled.isActive()).isFalse();
-    }
-
-    @Test
-    @DisplayName("isCompleted() deve ser true apenas para COMPLETED")
-    void isCompletedDeveSerTrueApenasParaCompleted() {
-      MaintenanceRecord record = buildRecord();
-      assertThat(record.isCompleted()).isFalse();
-
-      record.start(1L);
-      assertThat(record.isCompleted()).isFalse();
-
-      record.complete(1L, "ok", BigDecimal.ZERO);
-      assertThat(record.isCompleted()).isTrue();
-    }
-  }
+}
 }

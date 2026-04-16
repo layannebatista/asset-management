@@ -65,6 +65,7 @@ export default function UsersPage() {
   const [createError, setCreateError] = useState('')
   const [actionError, setActionError] = useState('')
   const [actionLoadingId, setActionLoadingId] = useState<number | null>(null)
+  const [activationLinkInfo, setActivationLinkInfo] = useState<{ email: string; link: string } | null>(null)
 
   useEffect(() => {
     if (!user?.organizationId) return
@@ -112,7 +113,7 @@ export default function UsersPage() {
     try {
       const rawDoc = form.documentNumber.replace(/\D/g, '')
 
-      await userApi.create({
+      const created = await userApi.create({
         name: form.name.trim(),
         email: form.email.trim(),
         documentNumber: rawDoc,
@@ -121,6 +122,10 @@ export default function UsersPage() {
         organizationId: Number(form.organizationId),
         phoneNumber: form.phoneNumber ? form.phoneNumber.replace(/\D/g, '') : undefined,
       })
+      const token = await userApi.generateActivationToken(created.id)
+      const link = buildActivationLink(token)
+      setActivationLinkInfo({ email: created.email, link })
+      await copyActivationLink(link)
 
       setShowCreate(false)
       load(currentPage)
@@ -153,6 +158,41 @@ export default function UsersPage() {
     }
   }
 
+  const buildActivationLink = (token: string) => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    return `${origin}/activate?token=${token}`
+  }
+
+  const copyActivationLink = async (link: string) => {
+    try {
+      if (typeof navigator === 'undefined' || !navigator.clipboard) return
+      await navigator.clipboard.writeText(link)
+    } catch {
+      // The link remains visible on screen for manual copy.
+    }
+  }
+
+  const handleResendActivation = async (targetUser: UserResponse) => {
+    setActionLoadingId(targetUser.id)
+    setActionError('')
+
+    try {
+      const token = await userApi.generateActivationToken(targetUser.id)
+      const link = buildActivationLink(token)
+      setActivationLinkInfo({ email: targetUser.email, link })
+      await copyActivationLink(link)
+      load(currentPage)
+    } catch (e: any) {
+      setActionError(
+        e?.response?.data?.error?.message ??
+        e?.response?.data?.message ??
+        'Erro ao reenviar ativação'
+      )
+    } finally {
+      setActionLoadingId(null)
+    }
+  }
+
   return (
     <div>
       <div className="flex items-start justify-between mb-5">
@@ -170,6 +210,36 @@ export default function UsersPage() {
       </div>
 
       <ErrorBanner message={error || actionError} onDismiss={() => setActionError('')} />
+
+      {activationLinkInfo && (
+        <div className="mb-4 rounded-[10px] border border-emerald-200 bg-emerald-50 p-4">
+          <div className="text-[13px] font-semibold text-emerald-800">
+            Link de ativação pronto para envio manual
+          </div>
+          <div className="mt-1 text-[12.5px] text-emerald-700">
+            Usuário: {activationLinkInfo.email}
+          </div>
+          <div className="mt-2 break-all rounded-[8px] bg-white px-3 py-2 text-[12px] text-slate-700">
+            {activationLinkInfo.link}
+          </div>
+          <div className="mt-3 flex gap-2">
+            <button
+              type="button"
+              onClick={() => copyActivationLink(activationLinkInfo.link)}
+              className="rounded-[8px] bg-emerald-700 px-3 py-2 text-[12px] font-semibold text-white hover:bg-emerald-800"
+            >
+              Copiar link
+            </button>
+            <button
+              type="button"
+              onClick={() => setActivationLinkInfo(null)}
+              className="rounded-[8px] border border-emerald-200 px-3 py-2 text-[12px] font-semibold text-emerald-800 hover:bg-emerald-100"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
 
       {page && (
         <div className="grid grid-cols-3 gap-[14px] mb-5">
@@ -248,7 +318,7 @@ export default function UsersPage() {
 
                       {u.status === 'PENDING_ACTIVATION' && (
                         <TipButton tip="Reenviar ativação" loading={actionLoadingId === u.id}
-                          onClick={() => handleUserAction(u.id, () => userApi.generateActivationToken(u.id))}>
+                          onClick={() => handleResendActivation(u)}>
                           <Mail size={13} />
                         </TipButton>
                       )}

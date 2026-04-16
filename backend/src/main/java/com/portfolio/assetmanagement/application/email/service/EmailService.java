@@ -5,6 +5,7 @@ import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -38,8 +39,8 @@ public class EmailService {
   /**
    * Envia o e-mail de ativação de conta com o link de primeiro acesso.
    *
-   * <p>O link expira em 24 horas conforme configurado em {@code TOKEN_EXPIRATION_SECONDS} no {@link
-   * com.portfolio.assetmanagement.application.user.service.UserActivationService}.
+   * <p>O link expira em 24 horas conforme configurado em {@code TOKEN_EXPIRATION_SECONDS} no
+   * {@link com.portfolio.assetmanagement.application.user.service.UserActivationService}.
    *
    * @param toEmail endereço de destino
    * @param userName nome do usuário para personalizar o e-mail
@@ -48,7 +49,7 @@ public class EmailService {
   @Async
   public void sendActivationEmail(String toEmail, String userName, String token) {
 
-    String activationLink = frontendUrl + "/ativar?token=" + token;
+    String activationLink = frontendUrl + "/activate?token=" + token;
 
     String subject = "Patrimônio 360 — Ative sua conta";
 
@@ -56,10 +57,6 @@ public class EmailService {
 
     send(toEmail, subject, body);
   }
-
-  // ─────────────────────────────────────────────
-  //  Helpers
-  // ─────────────────────────────────────────────
 
   private void send(String to, String subject, String htmlBody) {
 
@@ -72,15 +69,20 @@ public class EmailService {
       helper.setFrom(fromAddress, fromName);
       helper.setTo(to);
       helper.setSubject(subject);
-      helper.setText(htmlBody, true); // true = HTML
+      helper.setText(htmlBody, true);
 
       mailSender.send(message);
 
       log.info("E-mail enviado com sucesso para: {}", to);
 
-    } catch (MessagingException | java.io.UnsupportedEncodingException e) {
+    } catch (MessagingException
+        | java.io.UnsupportedEncodingException
+        | MailException e) {
 
-      // Loga mas não propaga — falha de e-mail não deve reverter a transação principal
+      log.error("Falha ao enviar e-mail para {}: {}", to, e.getMessage(), e);
+
+    } catch (RuntimeException e) {
+
       log.error("Falha ao enviar e-mail para {}: {}", to, e.getMessage(), e);
     }
   }
@@ -103,7 +105,6 @@ public class EmailService {
                 <table width="560" cellpadding="0" cellspacing="0"
                        style="background-color:#ffffff;border-radius:8px;border:1px solid #e2e8f0;overflow:hidden;">
 
-                  <!-- Header -->
                   <tr>
                     <td style="background-color:#1e293b;padding:28px 40px;">
                       <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:600;letter-spacing:-0.3px;">
@@ -112,7 +113,6 @@ public class EmailService {
                     </td>
                   </tr>
 
-                  <!-- Body -->
                   <tr>
                     <td style="padding:40px;">
 
@@ -128,10 +128,9 @@ public class EmailService {
                       </p>
 
                       <p style="margin:0 0 32px;color:#94a3b8;font-size:13px;">
-                        ⏱ Este link é válido por <strong>24 horas</strong>.
+                        Este link é válido por <strong>24 horas</strong>.
                       </p>
 
-                      <!-- CTA Button -->
                       <table cellpadding="0" cellspacing="0" style="margin:0 0 32px;">
                         <tr>
                           <td style="background-color:#3b51d9;border-radius:6px;">
@@ -145,7 +144,6 @@ public class EmailService {
                         </tr>
                       </table>
 
-                      <!-- Password policy box -->
                       <table cellpadding="0" cellspacing="0" width="100%%"
                              style="background-color:#f1f5f9;border-radius:6px;margin-bottom:32px;">
                         <tr>
@@ -164,7 +162,6 @@ public class EmailService {
                         </tr>
                       </table>
 
-                      <!-- Fallback link -->
                       <p style="margin:0;color:#94a3b8;font-size:12px;line-height:1.6;">
                         Se o botão não funcionar, copie e cole o link abaixo no seu navegador:<br/>
                         <a href="%s" style="color:#3b51d9;word-break:break-all;">%s</a>
@@ -173,7 +170,6 @@ public class EmailService {
                     </td>
                   </tr>
 
-                  <!-- Footer -->
                   <tr>
                     <td style="background-color:#f8fafc;border-top:1px solid #e2e8f0;
                                 padding:20px 40px;">

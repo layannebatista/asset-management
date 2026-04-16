@@ -1,274 +1,196 @@
 # Segurança
 
+Este documento foi revisado contra `SecurityConfig`, `AuthController` e os controllers REST atuais.
+
 ---
 
 # 1. Visão Geral
 
-Este documento descreve o modelo de segurança do Sistema de Gestão de Ativos Enterprise.
+O sistema aplica defesa em profundidade com:
 
-O sistema implementa controles de segurança nível enterprise para garantir:
-
-- Autenticação via JWT
-- Autorização baseada em roles (RBAC)
-- Isolamento multi-tenant
-- Proteção de dados e credenciais
-- Auditabilidade
-
-A segurança é aplicada em todas as camadas da aplicação.
+- JWT stateless
+- MFA opcional via WhatsApp
+- refresh tokens rotativos
+- RBAC com `@PreAuthorize`
+- isolamento multi-tenant
+- auditoria de operações críticas
 
 ---
 
 # 2. Autenticação
 
-A autenticação verifica a identidade do usuário.
+## Login principal
 
-Método: **JWT (JSON Web Token)**
+O fluxo começa em `POST /auth/login`.
 
-Processo de autenticação:
+Comportamento atual:
 
-1. O usuário fornece e-mail e senha para `POST /auth/login`
-2. O sistema valida as credenciais via BCrypt
-3. O sistema verifica que o usuário está com status `ACTIVE`
-4. O sistema gera um token JWT assinado
-5. O cliente utiliza o token JWT no header `Authorization: Bearer <token>` em todas as requisições subsequentes
+- usuário com telefone cadastrado: a autenticação exige MFA e o login inicial retorna `mfaRequired: true`
+- usuário sem telefone cadastrado: a API já retorna `accessToken` e `refreshToken`
 
-O token JWT inclui:
+## MFA
 
-- Identidade do usuário (`userId`)
-- Organização do usuário (`organizationId`)
-- Role do usuário (`role`)
-- Expiração (`exp`)
+`POST /auth/mfa/verify`
 
-Os tokens JWT devem ser:
+- OTP de 6 dígitos
+- expiração padrão de 5 minutos
+- uso único
+- persistido em `mfa_codes`
 
-- Assinados com segredo seguro (configurado via variável de ambiente `JWT_SECRET`)
-- Limitados por tempo (padrão: 86400000ms / 24h, configurável via `JWT_EXPIRATION`)
-- Validados em cada requisição pelo `JwtAuthenticationFilter`
+## Renovação de sessão
 
----
+`POST /auth/refresh`
 
-# 3. Autorização
+- faz rotação do refresh token
+- revoga o token anterior
+- usa a tabela `refresh_tokens`
 
-A autorização controla o acesso aos recursos.
+## Logout
 
-Modelo: **Controle de Acesso Baseado em Roles (RBAC)** implementado via `@PreAuthorize` do Spring Security.
+`POST /auth/logout`
 
-As roles definidas no sistema são:
-
-| Role | Nome no código | Descrição |
-|------|---------------|-----------|
-| Administrador | `ADMIN` | Acesso total — gerencia usuários, organizações e todas as operações |
-| Gestor | `GESTOR` | Gerencia ativos, transferências e manutenções da organização |
-| Operador | `OPERADOR` | Acesso de leitura e execução de manutenções |
-
-Matriz de autorização por operação:
-
-| Operação | ADMIN | GESTOR | OPERADOR |
-|----------|-------|--------|----------|
-| Gerenciar usuários | ✅ | ❌ | ❌ |
-| Criar/aposentar ativos | ✅ | ✅ | ❌ |
-| Listar/visualizar ativos | ✅ | ✅ | ✅ |
-| Criar transferências | ✅ | ✅ | ❌ |
-| Aprovar/rejeitar/concluir transferências | ✅ | ✅ | ❌ |
-| Criar/cancelar manutenções | ✅ | ✅ | ❌ |
-| Iniciar/concluir manutenções | ✅ | ✅ | ✅ |
-| Visualizar auditoria | ✅ | ✅ | ❌ |
-| Acessar actuator | ✅ | ❌ | ❌ |
-
-O acesso é concedido com base em:
-
-- Role do usuário
-- Escopo da organização (tenant)
-
-Acesso não autorizado é rejeitado com `403 Forbidden`.
+- revoga os refresh tokens do usuário autenticado
+- o access token atual segue válido até expirar
 
 ---
 
-# 4. Endpoints Públicos
+# 3. JWT
 
-Os seguintes endpoints **não requerem autenticação JWT**:
+O JWT é assinado com `JWT_SECRET` e validado em todas as rotas protegidas pelo `JwtAuthenticationFilter`.
 
-| Endpoint | Justificativa |
-|----------|---------------|
-| `POST /auth/login` | Geração do token inicial |
-| `POST /users/activation/activate` | Usuário ainda não possui senha |
-| `GET /v3/api-docs/**` | Documentação OpenAPI |
-| `GET /swagger-ui/**` | Interface Swagger |
-| `GET /swagger-ui.html` | Interface Swagger |
-| `GET /actuator/health` | Health check para infraestrutura |
+Configuração atual em `application.yml`:
 
-Todos os demais endpoints exigem token JWT válido.
+- `security.jwt.expiration`: padrão `3600000` ms
+- `security.jwt.refresh-expiration`: padrão `604800`
 
-O endpoint `/actuator/**` (exceto `/actuator/health`) é restrito à role `ADMIN`.
+Claims e contexto efetivo usados pela aplicação incluem identidade, organização e role do usuário autenticado.
 
 ---
 
-# 5. Isolamento Multi-Tenant
+# 4. Autorização
 
-O isolamento multi-tenant garante a separação completa dos dados entre organizações.
+O modelo é RBAC com três papéis:
 
-Regras:
+| Role | Descrição |
+|---|---|
+| `ADMIN` | acesso global da organização, inclusive governança e operações sensíveis |
+| `GESTOR` | gestão operacional de ativos, transferências, manutenção e parte analítica |
+| `OPERADOR` | acesso operacional e leitura limitada |
 
-- Cada organização é um tenant isolado
-- Usuários acessam apenas os dados de sua própria organização
-- O `organizationId` é extraído do token JWT e propagado via `LoggedUserContext`
-- O acesso entre tenants é estritamente proibido e resulta em `403 Forbidden`
+Exemplos reais do código:
 
-O isolamento multi-tenant é aplicado em:
-
-- **Camada de filtro JWT:** organização extraída do token
-- **Camada de serviço:** validação explícita de ownership (`validateOwnership`, `validateTenant`)
-- **Camada de consulta ao banco de dados:** filtros por `organization_id` em todas as queries
-
----
-
-# 6. Segurança de Senhas
-
-As senhas são armazenadas de forma segura.
-
-Método: **Hash BCrypt**
-
-Regras:
-
-- Senhas em texto puro nunca são armazenadas ou logadas
-- A senha não é definida no momento da criação do usuário pelo ADMIN
-- A senha é definida pelo próprio usuário no fluxo de ativação de conta via token seguro
-- A mudança de senha é realizada apenas pelo método `changePassword()` da entidade `User`, que valida e re-hasheia
+- `ADMIN`: organizações, centros de custo, aposentadoria de ativo, dashboard executivo
+- `ADMIN` e `GESTOR`: criação de ativo, manutenção, orçamento, AI analyses
+- `ADMIN`, `GESTOR`, `OPERADOR`: leitura de ativos, inventário por ID, parte do fluxo de manutenção
 
 ---
 
-# 7. Segurança de Token JWT
+# 5. Endpoints Públicos
 
-Os tokens JWT devem ser:
+Rotas liberadas explicitamente pelo `SecurityConfig`:
 
-- Assinados utilizando segredo seguro configurado via variável de ambiente (`JWT_SECRET`)
-- Validados em todas as requisições pelo `JwtAuthenticationFilter`
-- Expirados após o período configurado (padrão: 24h)
+- `/auth/**`
+- `/users/activation/activate`
+- `/v3/api-docs/**`
+- `/swagger-ui/**`
+- `/swagger-ui.html`
+- `/actuator/health`
+- `/actuator/health/**`
+- `/actuator/prometheus`
+- `OPTIONS /**`
 
-Tokens expirados ou inválidos são rejeitados com `401 Unauthorized`, retornando resposta JSON padronizada via `JwtAuthenticationEntryPoint`.
-
----
-
-# 8. Segurança de Ativação de Conta
-
-O fluxo de ativação de conta usa tokens temporários para garantir que apenas o destinatário legítimo possa ativar a conta:
-
-- Token gerado como UUID aleatório
-- Token tem prazo de expiração configurável
-- Token é de uso único (marcado como `used` após utilização)
-- Tokens expirados ou já usados são rejeitados
-- O endpoint de ativação é público mas o token é o único meio de acesso
+Os demais endpoints exigem autenticação.
 
 ---
 
-# 9. Segurança da API
+# 6. Actuator e Observabilidade
 
-Todos os endpoints protegidos exigem:
+Regras atuais:
 
-- Token JWT válido no header `Authorization: Bearer <token>`
-- Autorização adequada conforme role do usuário
+- `/actuator/health` e variações são públicos
+- `/actuator/prometheus` é público para scrape do Prometheus
+- demais rotas `/actuator/**` exigem `ADMIN`
 
-Requisições sem autenticação válida retornam `401 Unauthorized` com corpo JSON padronizado.
-
-Requisições autenticadas sem a role necessária retornam `403 Forbidden`.
-
-CORS é configurado via `SecurityConfig`:
-
-- Origens permitidas configuráveis via variável de ambiente `CORS_ALLOWED_ORIGINS` (padrão: `http://localhost:5173`)
-- Métodos permitidos: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`
-- Headers permitidos: `Authorization`, `Content-Type`
+Isso é importante porque o Prometheus do `docker-compose` depende de acesso livre a `/actuator/prometheus`.
 
 ---
 
-# 10. Registro de Auditoria
+# 7. Isolamento Multi-Tenant
 
-Eventos de segurança e operacionais são registrados na tabela `audit_events`.
+O isolamento ocorre em múltiplas camadas:
 
-Eventos registrados incluem:
+- contexto autenticado do usuário
+- validações de ownership e tenant na camada de serviço
+- queries filtradas por `organization_id` ou por relacionamentos derivados do tenant
 
-- Mudanças de status de ativos
-- Operações de transferência
-- Operações de manutenção
-- Outras operações críticas de negócio
-
-Os logs de auditoria são imutáveis — não é permitido alterar ou excluir registros.
+O código ainda utiliza `LoggedUserContext` em partes do sistema para resolver organização, unidade e usuário autenticado.
 
 ---
 
-# 11. Controle de Concorrência
+# 8. Senhas e Ativação
 
-Para evitar condições de corrida em operações críticas (ex.: dois usuários iniciando a mesma manutenção simultaneamente), o sistema utiliza:
+- senha nunca é armazenada em texto puro
+- `password_hash` pode ser `NULL` até o usuário ativar a conta
+- o hash é BCrypt
+- a ativação usa `user_activation_tokens`
+- o endpoint público de ativação continua sendo `POST /users/activation/activate`
 
-- **Controle otimista** via `@Version` do Hibernate nas entidades principais
-- **Locks explícitos** via `MaintenanceLockService`, `InventoryLockService` e `TransferConcurrencyService` para operações de alta contenção
+---
+
+# 9. CORS e Superfície HTTP
+
+CORS é centralizado em `SecurityConfig`.
+
+Configuração atual:
+
+- origens via `app.cors.allowed-origins`
+- métodos: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`
+- headers permitidos: `*`
+- header exposto: `Authorization`
+- `allowCredentials=true`
+
+---
+
+# 10. Auditoria
+
+Operações críticas geram eventos em `audit_events`. Além disso, o sistema mantém histórico dedicado de ativos em:
+
+- `asset_assignment_history`
+- `asset_status_history`
+
+Esses registros reforçam rastreabilidade operacional e investigação.
+
+---
+
+# 11. Concorrência e Integridade
+
+Além de `@Version` nas entidades principais, existem serviços especializados para reduzir condições de corrida:
+
+- `MaintenanceLockService`
+- `InventoryLockService`
+- `TransferConcurrencyService`
+- `OptimisticLockService`
 
 ---
 
 # 12. Segurança de Infraestrutura
 
-A segurança de infraestrutura inclui:
+Controles atuais observados:
 
-- Credenciais de banco de dados via variáveis de ambiente (`DB_URL`, `DB_USERNAME`, `DB_PASSWORD`)
-- Segredo JWT via variável de ambiente (`JWT_SECRET`)
-- Acesso ao banco de dados restrito à aplicação
-- `ddl-auto: validate` — Hibernate nunca altera o schema em produção
-
----
-
-# 13. Proteção de Dados
-
-Dados sensíveis devem ser:
-
-- Protegidos contra acesso não autorizado
-- Com acesso controlado por role e tenant
-- Armazenados de forma segura (passwords como hash BCrypt)
-
-O campo `document_number` do usuário é armazenado mas não exposto desnecessariamente.
+- segredos via `.env` e variáveis de ambiente
+- banco configurado por `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`
+- Hibernate em modo `validate`
+- serviço de IA protegido por `X-AI-Service-Key`
+- rate limiting no serviço `ai-intelligence` com `express-rate-limit`
 
 ---
 
-# 14. Pontos de Aplicação de Segurança
+# 13. Recomendações Operacionais
 
-A segurança é aplicada em múltiplas camadas (defesa em profundidade):
+Para produção:
 
-1. **Camada de filtro:** `JwtAuthenticationFilter` valida o token antes de qualquer processamento
-2. **Camada de controller:** `@PreAuthorize` verifica role do usuário
-3. **Camada de serviço:** validação de ownership e isolamento de tenant
-4. **Camada de domínio:** construtores validam integridade (unidade pertence à organização, etc.)
-5. **Camada de banco de dados:** constraints, chaves estrangeiras e `organization_id` em todas as tabelas
-
----
-
-# 15. Monitoramento de Segurança
-
-O monitoramento de segurança inclui:
-
-- Logs de auditoria para rastrear todas as operações críticas
-- Endpoint `/actuator/health` público para monitoramento de infraestrutura
-- Demais endpoints do actuator restritos à role `ADMIN`
-
----
-
-# 16. Requisitos de Segurança para Produção
-
-Requisitos de produção:
-
-- HTTPS habilitado (TLS/SSL no load balancer ou aplicação)
-- `JWT_SECRET` com entropia suficiente (mínimo 256 bits)
-- `DB_PASSWORD` complexa e rotacionada periodicamente
-- Isolamento de rede do banco de dados
-- `CORS_ALLOWED_ORIGINS` configurado apenas para domínios autorizados
-
----
-
-# 17. Resumo
-
-Este modelo de segurança garante:
-
-- Autenticação segura via JWT com expiração configurável
-- Autorização granular por role (`ADMIN`, `GESTOR`, `OPERADOR`)
-- Isolamento multi-tenant em todas as camadas
-- Proteção de credenciais via BCrypt e variáveis de ambiente
-- Ativação segura de contas via token temporário de uso único
-- Auditabilidade completa das operações
-- Defesa em profundidade com múltiplas camadas de controle
+- habilitar HTTPS no proxy ou balanceador
+- usar `JWT_SECRET` e `AI_SERVICE_API_KEY` com alta entropia
+- restringir `CORS_ALLOWED_ORIGINS` a domínios válidos
+- não expor PostgreSQL publicamente
+- rotacionar credenciais SMTP, banco e tokens de integração

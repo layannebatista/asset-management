@@ -28,9 +28,18 @@ spring:
 
 # ─── Actuator em produção: detalhes apenas para requisições autenticadas ──────
 management:
+  health:
+    mail:
+      enabled: false   # SMTP não disponível no Docker; evita que AuthenticationFailed derrube o healthcheck
   endpoint:
     health:
       show-details: when-authorized
+
+# ─── AI Intelligence Service (Docker) ────────────────────────────────────────
+ai:
+  service:
+    url: ${AI_SERVICE_URL:http://ai-intelligence:3100}
+    api-key: ${AI_SERVICE_API_KEY:}
 
 # ─── Swagger habilitado no Docker (desabilitar em produção real) ──────────────
 springdoc:

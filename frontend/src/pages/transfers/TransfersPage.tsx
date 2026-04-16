@@ -69,7 +69,7 @@ export default function TransfersPage() {
       .catch(console.error)
   }, [user?.organizationId, effectiveUnitId])
 
-  const load = (pg = transferPage) => {
+  const load = (pg = transferPage, selectFirst = false) => {
     setLoading(true)
 
     transferApi
@@ -86,9 +86,9 @@ export default function TransfersPage() {
         setTransferTotal(p?.totalElements ?? 0)
 
         if (content.length) {
-          const stillExists = content.find(
-            (t) => t.id === selected?.id
-          )
+          const stillExists = selectFirst
+            ? undefined
+            : content.find((t) => t.id === selected?.id)
           setSelected(stillExists ?? content[0])
         } else {
           setSelected(null)
@@ -148,7 +148,7 @@ export default function TransfersPage() {
       })
 
       setShowCreate(false)
-      load()
+      load(0, true)
     } catch (e: any) {
       setError(
         e?.response?.data?.error?.message ??

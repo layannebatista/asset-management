@@ -13,6 +13,11 @@ import com.portfolio.assetmanagement.domain.unit.entity.Unit;
 import com.portfolio.assetmanagement.infrastructure.persistence.asset.repository.AssetRepository;
 import com.portfolio.assetmanagement.security.context.LoggedUserContext;
 import com.portfolio.assetmanagement.shared.exception.BusinessException;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -25,223 +30,231 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("DepreciationService — cálculo matemático")
+@Epic("Backend")
+@Feature("Serviços — Depreciação")
+@DisplayName("Serviço de Depreciação")
 class DepreciationServiceTest {
 
-  @Mock private AssetRepository assetRepository;
-  @Mock private LoggedUserContext loggedUser;
+@Mock private AssetRepository assetRepository;
+@Mock private LoggedUserContext loggedUser;
 
-  @InjectMocks private DepreciationService depreciationService;
+@InjectMocks private DepreciationService depreciationService;
 
-  private Asset createAsset(
-      BigDecimal purchaseValue,
-      BigDecimal residual,
-      Integer lifeMonths,
-      DepreciationMethod method,
-      LocalDate purchaseDate) {
+private Asset createAsset(
+BigDecimal purchaseValue,
+BigDecimal residual,
+Integer lifeMonths,
+DepreciationMethod method,
+LocalDate purchaseDate) {
 
-    Organization org = mock(Organization.class);
-    lenient().when(org.getId()).thenReturn(1L);
+Organization org = mock(Organization.class);
+lenient().when(org.getId()).thenReturn(1L);
 
-    Unit unit = mock(Unit.class);
-    lenient().when(unit.getId()).thenReturn(1L);
-    lenient().when(unit.getOrganization()).thenReturn(org);
+Unit unit = mock(Unit.class);
+lenient().when(unit.getId()).thenReturn(1L);
+lenient().when(unit.getOrganization()).thenReturn(org);
 
-    Asset asset = new Asset("TAG-001", AssetType.NOTEBOOK, "Test Model", org, unit);
+Asset asset = new Asset("TAG-001", AssetType.NOTEBOOK, "Test Model", org, unit);
 
-    asset.setPurchaseValue(purchaseValue);
-    asset.setResidualValue(residual);
-    asset.setUsefulLifeMonths(lifeMonths);
-    asset.setDepreciationMethod(method);
-    asset.setPurchaseDate(purchaseDate);
+asset.setPurchaseValue(purchaseValue);
+asset.setResidualValue(residual);
+asset.setUsefulLifeMonths(lifeMonths);
+asset.setDepreciationMethod(method);
+asset.setPurchaseDate(purchaseDate);
 
-    return asset;
-  }
+return asset;
 
-  @Nested
-  @DisplayName("LINEAR (Quotas Constantes)")
-  class Linear {
+}
 
-    @Test
-    void linearAfter12Months() {
+@Nested
+@DisplayName("Depreciação Linear (Quotas Constantes)")
+@Story("Cálculo Linear")
+class Linear {
 
-      Asset asset =
-          createAsset(
-              new BigDecimal("12000.00"),
-              BigDecimal.ZERO,
-              60,
-              DepreciationMethod.LINEAR,
-              LocalDate.now().minusMonths(12));
+@Test
+@Severity(SeverityLevel.CRITICAL)
+@DisplayName("Depreciação após 12 meses deve ser proporcional")
+void linearAfter12Months() {
 
-      when(assetRepository.findById(1L)).thenReturn(Optional.of(asset));
+  Asset asset =
+      createAsset(
+          new BigDecimal("12000.00"),
+          BigDecimal.ZERO,
+          60,
+          DepreciationMethod.LINEAR,
+          LocalDate.now().minusMonths(12));
 
-      DepreciationResultDTO result = depreciationService.calculate(1L);
+  when(assetRepository.findById(1L)).thenReturn(Optional.of(asset));
 
-      assertThat(result.getAccumulatedDepreciation())
-          .isEqualByComparingTo(new BigDecimal("2400.00"));
+  DepreciationResultDTO result = depreciationService.calculate(1L);
 
-      assertThat(result.getCurrentValue()).isEqualByComparingTo(new BigDecimal("9600.00"));
+  assertThat(result.getAccumulatedDepreciation())
+      .isEqualByComparingTo(new BigDecimal("2400.00"));
 
-      assertThat(result.getElapsedMonths()).isEqualTo(12);
+  assertThat(result.getCurrentValue()).isEqualByComparingTo(new BigDecimal("9600.00"));
 
-      assertThat(result.getRemainingMonths()).isEqualTo(48);
+  assertThat(result.getElapsedMonths()).isEqualTo(12);
+  assertThat(result.getRemainingMonths()).isEqualTo(48);
+  assertThat(result.isFullyDepreciated()).isFalse();
+}
 
-      assertThat(result.isFullyDepreciated()).isFalse();
-    }
+@Test
+@Severity(SeverityLevel.NORMAL)
+@DisplayName("Deve respeitar valor residual")
+void linearRespectsResidualValue() {
 
-    @Test
-    void linearRespectsResidualValue() {
+  Asset asset =
+      createAsset(
+          new BigDecimal("10000.00"),
+          new BigDecimal("1000.00"),
+          24,
+          DepreciationMethod.LINEAR,
+          LocalDate.now().minusMonths(30));
 
-      Asset asset =
-          createAsset(
-              new BigDecimal("10000.00"),
-              new BigDecimal("1000.00"),
-              24,
-              DepreciationMethod.LINEAR,
-              LocalDate.now().minusMonths(30));
+  when(assetRepository.findById(1L)).thenReturn(Optional.of(asset));
 
-      when(assetRepository.findById(1L)).thenReturn(Optional.of(asset));
+  DepreciationResultDTO result = depreciationService.calculate(1L);
 
-      DepreciationResultDTO result = depreciationService.calculate(1L);
+  assertThat(result.getAccumulatedDepreciation())
+      .isEqualByComparingTo(new BigDecimal("9000.00"));
 
-      assertThat(result.getAccumulatedDepreciation())
-          .isEqualByComparingTo(new BigDecimal("9000.00"));
+  assertThat(result.getCurrentValue()).isEqualByComparingTo(new BigDecimal("1000.00"));
+  assertThat(result.isFullyDepreciated()).isTrue();
+}
 
-      assertThat(result.getCurrentValue()).isEqualByComparingTo(new BigDecimal("1000.00"));
+@Test
+@Severity(SeverityLevel.NORMAL)
+@DisplayName("Deve atingir 100% ao final da vida útil")
+void linearFullyDepreciatedAt100Percent() {
 
-      assertThat(result.isFullyDepreciated()).isTrue();
-    }
+  Asset asset =
+      createAsset(
+          new BigDecimal("5000.00"),
+          BigDecimal.ZERO,
+          12,
+          DepreciationMethod.LINEAR,
+          LocalDate.now().minusMonths(12));
 
-    @Test
-    void linearFullyDepreciatedAt100Percent() {
+  when(assetRepository.findById(1L)).thenReturn(Optional.of(asset));
 
-      Asset asset =
-          createAsset(
-              new BigDecimal("5000.00"),
-              BigDecimal.ZERO,
-              12,
-              DepreciationMethod.LINEAR,
-              LocalDate.now().minusMonths(12));
+  DepreciationResultDTO result = depreciationService.calculate(1L);
 
-      when(assetRepository.findById(1L)).thenReturn(Optional.of(asset));
+  assertThat(result.getDepreciationPercentage())
+      .isEqualByComparingTo(new BigDecimal("100.00"));
 
-      DepreciationResultDTO result = depreciationService.calculate(1L);
+  assertThat(result.isFullyDepreciated()).isTrue();
+}
 
-      assertThat(result.getDepreciationPercentage()).isEqualByComparingTo(new BigDecimal("100.00"));
+}
 
-      assertThat(result.isFullyDepreciated()).isTrue();
-    }
-  }
+@Nested
+@DisplayName("Depreciação Saldo Decrescente")
+@Story("Cálculo Acelerado")
+class DecliningBalance {
 
-  @Nested
-  @DisplayName("DECLINING_BALANCE")
-  class DecliningBalance {
+@Test
+@Severity(SeverityLevel.NORMAL)
+@DisplayName("Método acelerado deve depreciar mais rápido que linear no início")
+void decliningFasterThanLinearInFirstYear() {
 
-    @Test
-    void decliningFasterThanLinearInFirstYear() {
+  BigDecimal purchaseValue = new BigDecimal("10000.00");
 
-      BigDecimal purchaseValue = new BigDecimal("10000.00");
+  Asset linearAsset =
+      createAsset(
+          purchaseValue, BigDecimal.ZERO, 60,
+          DepreciationMethod.LINEAR, LocalDate.now().minusMonths(12));
 
-      Asset linearAsset =
-          createAsset(
-              purchaseValue,
-              BigDecimal.ZERO,
-              60,
-              DepreciationMethod.LINEAR,
-              LocalDate.now().minusMonths(12));
+  Asset decliningAsset =
+      createAsset(
+          purchaseValue, BigDecimal.ZERO, 60,
+          DepreciationMethod.DECLINING_BALANCE, LocalDate.now().minusMonths(12));
 
-      Asset decliningAsset =
-          createAsset(
-              purchaseValue,
-              BigDecimal.ZERO,
-              60,
-              DepreciationMethod.DECLINING_BALANCE,
-              LocalDate.now().minusMonths(12));
+  when(assetRepository.findById(1L)).thenReturn(Optional.of(linearAsset));
+  DepreciationResultDTO linearResult = depreciationService.calculate(1L);
 
-      when(assetRepository.findById(1L)).thenReturn(Optional.of(linearAsset));
+  when(assetRepository.findById(1L)).thenReturn(Optional.of(decliningAsset));
+  DepreciationResultDTO decliningResult = depreciationService.calculate(1L);
 
-      DepreciationResultDTO linearResult = depreciationService.calculate(1L);
+  assertThat(decliningResult.getAccumulatedDepreciation())
+      .isGreaterThan(linearResult.getAccumulatedDepreciation());
+}
 
-      when(assetRepository.findById(1L)).thenReturn(Optional.of(decliningAsset));
+}
 
-      DepreciationResultDTO decliningResult = depreciationService.calculate(1L);
+@Nested
+@DisplayName("Depreciação Soma dos Dígitos dos Anos")
+@Story("Cálculo Acelerado")
+class SumOfYears {
 
-      assertThat(decliningResult.getAccumulatedDepreciation())
-          .isGreaterThan(linearResult.getAccumulatedDepreciation());
-    }
-  }
+@Test
+@Severity(SeverityLevel.NORMAL)
+@DisplayName("Método soma dos dígitos deve ser mais rápido que linear no início")
+void sydFasterThanLinearInitially() {
 
-  @Nested
-  @DisplayName("SUM_OF_YEARS")
-  class SumOfYears {
+  BigDecimal purchaseValue = new BigDecimal("12000.00");
 
-    @Test
-    void sydFasterThanLinearInitially() {
+  Asset linearAsset =
+      createAsset(
+          purchaseValue, BigDecimal.ZERO, 24,
+          DepreciationMethod.LINEAR, LocalDate.now().minusMonths(6));
 
-      BigDecimal purchaseValue = new BigDecimal("12000.00");
+  Asset sydAsset =
+      createAsset(
+          purchaseValue, BigDecimal.ZERO, 24,
+          DepreciationMethod.SUM_OF_YEARS, LocalDate.now().minusMonths(6));
 
-      Asset linearAsset =
-          createAsset(
-              purchaseValue,
-              BigDecimal.ZERO,
-              24,
-              DepreciationMethod.LINEAR,
-              LocalDate.now().minusMonths(6));
+  when(assetRepository.findById(1L)).thenReturn(Optional.of(linearAsset));
+  DepreciationResultDTO linearResult = depreciationService.calculate(1L);
 
-      Asset sydAsset =
-          createAsset(
-              purchaseValue,
-              BigDecimal.ZERO,
-              24,
-              DepreciationMethod.SUM_OF_YEARS,
-              LocalDate.now().minusMonths(6));
+  when(assetRepository.findById(1L)).thenReturn(Optional.of(sydAsset));
+  DepreciationResultDTO sydResult = depreciationService.calculate(1L);
 
-      when(assetRepository.findById(1L)).thenReturn(Optional.of(linearAsset));
+  assertThat(sydResult.getAccumulatedDepreciation())
+      .isGreaterThan(linearResult.getAccumulatedDepreciation());
+}
 
-      DepreciationResultDTO linearResult = depreciationService.calculate(1L);
+}
 
-      when(assetRepository.findById(1L)).thenReturn(Optional.of(sydAsset));
+@Nested
+@DisplayName("Validações")
+@Story("Validação de dados")
+class Validations {
 
-      DepreciationResultDTO sydResult = depreciationService.calculate(1L);
+@Test
+@Severity(SeverityLevel.CRITICAL)
+@DisplayName("Deve lançar exceção quando não há valor de compra")
+void throwsWhenNoPurchaseValue() {
 
-      assertThat(sydResult.getAccumulatedDepreciation())
-          .isGreaterThan(linearResult.getAccumulatedDepreciation());
-    }
-  }
+  Asset asset =
+      createAsset(null, null, 60,
+          DepreciationMethod.LINEAR, LocalDate.now().minusMonths(6));
 
-  @Nested
-  @DisplayName("Validações")
-  class Validations {
+  when(assetRepository.findById(1L)).thenReturn(Optional.of(asset));
 
-    @Test
-    void throwsWhenNoPurchaseValue() {
+  assertThatThrownBy(() -> depreciationService.calculate(1L))
+      .isInstanceOf(BusinessException.class)
+      .hasMessageContaining("purchaseValue");
+}
 
-      Asset asset =
-          createAsset(null, null, 60, DepreciationMethod.LINEAR, LocalDate.now().minusMonths(6));
+@Test
+@Severity(SeverityLevel.CRITICAL)
+@DisplayName("Deve lançar exceção quando não há vida útil")
+void throwsWhenNoUsefulLife() {
 
-      when(assetRepository.findById(1L)).thenReturn(Optional.of(asset));
+  Asset asset =
+      createAsset(
+          new BigDecimal("5000"),
+          null,
+          null,
+          DepreciationMethod.LINEAR,
+          LocalDate.now().minusMonths(6));
 
-      assertThatThrownBy(() -> depreciationService.calculate(1L))
-          .isInstanceOf(BusinessException.class)
-          .hasMessageContaining("purchaseValue");
-    }
+  when(assetRepository.findById(1L)).thenReturn(Optional.of(asset));
 
-    @Test
-    void throwsWhenNoUsefulLife() {
+  assertThatThrownBy(() -> depreciationService.calculate(1L))
+      .isInstanceOf(BusinessException.class)
+      .hasMessageContaining("usefulLifeMonths");
+}
 
-      Asset asset =
-          createAsset(
-              new BigDecimal("5000"),
-              null,
-              null,
-              DepreciationMethod.LINEAR,
-              LocalDate.now().minusMonths(6));
-
-      when(assetRepository.findById(1L)).thenReturn(Optional.of(asset));
-
-      assertThatThrownBy(() -> depreciationService.calculate(1L))
-          .isInstanceOf(BusinessException.class)
-          .hasMessageContaining("usefulLifeMonths");
-    }
-  }
+}
 }

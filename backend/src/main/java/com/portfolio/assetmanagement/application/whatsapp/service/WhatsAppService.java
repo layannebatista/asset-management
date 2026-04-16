@@ -58,10 +58,12 @@ public class WhatsAppService {
    */
   @Async
   public void sendActivationLink(String phoneNumber, String userName, String activationLink) {
+    String templateName = resolveTemplateName("activation");
+    if (templateName == null) return;
     List<String> params = new ArrayList<>();
     params.add(userName);
     params.add(activationLink);
-    sendTemplate(phoneNumber, props.template("activation"), params);
+    sendTemplate(phoneNumber, templateName, params);
   }
 
   /**
@@ -76,9 +78,11 @@ public class WhatsAppService {
    */
   @Async
   public void sendMfaCode(String phoneNumber, String code) {
+    String templateName = resolveTemplateName("mfa");
+    if (templateName == null) return;
     List<String> params = new ArrayList<>();
     params.add(code);
-    sendTemplate(phoneNumber, props.template("mfa"), params);
+    sendTemplate(phoneNumber, templateName, params);
   }
 
   // ════════════════════════════════════════════════════════
@@ -97,9 +101,11 @@ public class WhatsAppService {
    */
   @Async
   public void sendUserBlocked(String phoneNumber, String userName) {
+    String templateName = resolveTemplateName("user-blocked");
+    if (templateName == null) return;
     List<String> params = new ArrayList<>();
     params.add(userName);
-    sendTemplate(phoneNumber, props.template("user-blocked"), params);
+    sendTemplate(phoneNumber, templateName, params);
   }
 
   // ════════════════════════════════════════════════════════
@@ -118,11 +124,13 @@ public class WhatsAppService {
   @Async
   public void sendAssetAssigned(
       String phoneNumber, String userName, String assetTag, String assetModel) {
+    String templateName = resolveTemplateName("asset-assigned");
+    if (templateName == null) return;
     List<String> params = new ArrayList<>();
     params.add(userName);
     params.add(assetTag);
     params.add(assetModel);
-    sendTemplate(phoneNumber, props.template("asset-assigned"), params);
+    sendTemplate(phoneNumber, templateName, params);
   }
 
   /**
@@ -137,11 +145,13 @@ public class WhatsAppService {
   @Async
   public void sendAssetUnassigned(
       String phoneNumber, String userName, String assetTag, String assetModel) {
+    String templateName = resolveTemplateName("asset-unassigned");
+    if (templateName == null) return;
     List<String> params = new ArrayList<>();
     params.add(userName);
     params.add(assetTag);
     params.add(assetModel);
-    sendTemplate(phoneNumber, props.template("asset-unassigned"), params);
+    sendTemplate(phoneNumber, templateName, params);
   }
 
   // ════════════════════════════════════════════════════════
@@ -161,12 +171,14 @@ public class WhatsAppService {
   @Async
   public void sendMaintenanceRequested(
       String phoneNumber, String userName, String assetTag, String assetModel, Long maintenanceId) {
+    String templateName = resolveTemplateName("maintenance-requested");
+    if (templateName == null) return;
     List<String> params = new ArrayList<>();
     params.add(userName);
     params.add(assetTag);
     params.add(assetModel);
     params.add(String.valueOf(maintenanceId));
-    sendTemplate(phoneNumber, props.template("maintenance-requested"), params);
+    sendTemplate(phoneNumber, templateName, params);
   }
 
   /**
@@ -182,12 +194,14 @@ public class WhatsAppService {
   @Async
   public void sendMaintenanceCompleted(
       String phoneNumber, String userName, Long maintenanceId, String assetTag, String resolution) {
+    String templateName = resolveTemplateName("maintenance-completed");
+    if (templateName == null) return;
     List<String> params = new ArrayList<>();
     params.add(userName);
     params.add(String.valueOf(maintenanceId));
     params.add(assetTag);
     params.add(resolution);
-    sendTemplate(phoneNumber, props.template("maintenance-completed"), params);
+    sendTemplate(phoneNumber, templateName, params);
   }
 
   // ════════════════════════════════════════════════════════
@@ -206,11 +220,13 @@ public class WhatsAppService {
   @Async
   public void sendTransferApproved(
       String phoneNumber, String userName, Long transferId, String assetTag) {
+    String templateName = resolveTemplateName("transfer-approved");
+    if (templateName == null) return;
     List<String> params = new ArrayList<>();
     params.add(userName);
     params.add(String.valueOf(transferId));
     params.add(assetTag);
-    sendTemplate(phoneNumber, props.template("transfer-approved"), params);
+    sendTemplate(phoneNumber, templateName, params);
   }
 
   /**
@@ -225,11 +241,13 @@ public class WhatsAppService {
   @Async
   public void sendTransferRejected(
       String phoneNumber, String userName, Long transferId, String assetTag) {
+    String templateName = resolveTemplateName("transfer-rejected");
+    if (templateName == null) return;
     List<String> params = new ArrayList<>();
     params.add(userName);
     params.add(String.valueOf(transferId));
     params.add(assetTag);
-    sendTemplate(phoneNumber, props.template("transfer-rejected"), params);
+    sendTemplate(phoneNumber, templateName, params);
   }
 
   /**
@@ -245,11 +263,13 @@ public class WhatsAppService {
   @Async
   public void sendTransferCompleted(
       String phoneNumber, String userName, Long transferId, String assetTag) {
+    String templateName = resolveTemplateName("transfer-completed");
+    if (templateName == null) return;
     List<String> params = new ArrayList<>();
     params.add(userName);
     params.add(String.valueOf(transferId));
     params.add(assetTag);
-    sendTemplate(phoneNumber, props.template("transfer-completed"), params);
+    sendTemplate(phoneNumber, templateName, params);
   }
 
   // ════════════════════════════════════════════════════════
@@ -269,11 +289,13 @@ public class WhatsAppService {
   @Async
   public void sendInventoryStarted(
       String phoneNumber, String userName, String unitName, Long inventoryId) {
+    String templateName = resolveTemplateName("inventory-started");
+    if (templateName == null) return;
     List<String> params = new ArrayList<>();
     params.add(userName);
     params.add(unitName);
     params.add(String.valueOf(inventoryId));
-    sendTemplate(phoneNumber, props.template("inventory-started"), params);
+    sendTemplate(phoneNumber, templateName, params);
   }
 
   /**
@@ -288,11 +310,22 @@ public class WhatsAppService {
   @Async
   public void sendInventoryClosed(
       String phoneNumber, String userName, Long inventoryId, String unitName) {
+    String templateName = resolveTemplateName("inventory-closed");
+    if (templateName == null) return;
     List<String> params = new ArrayList<>();
     params.add(userName);
     params.add(String.valueOf(inventoryId));
     params.add(unitName);
-    sendTemplate(phoneNumber, props.template("inventory-closed"), params);
+    sendTemplate(phoneNumber, templateName, params);
+  }
+
+  private String resolveTemplateName(String key) {
+    try {
+      return props.template(key);
+    } catch (IllegalStateException ex) {
+      log.warn("WhatsApp desabilitado para '{}': {}", key, ex.getMessage());
+      return null;
+    }
   }
 
   // ════════════════════════════════════════════════════════

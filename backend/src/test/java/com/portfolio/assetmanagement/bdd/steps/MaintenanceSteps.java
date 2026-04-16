@@ -66,11 +66,13 @@ public class MaintenanceSteps {
   @Dado("que existe uma organização {string} cadastrada")
   public void queExisteUmaOrganizacao(String nome) {
     organizacao = testDataHelper.criarOrganizacao(nome);
+    context.setId("organizacaoId", organizacao.getId());
   }
 
   @E("que existe uma unidade {string} nessa organização")
   public void queExisteUmaUnidade(String nome) {
     unidade = testDataHelper.criarUnidade(nome, organizacao);
+    context.setId("unidadeId", unidade.getId());
   }
 
   @E("que existe um ativo {string} disponível nessa unidade")
@@ -82,6 +84,7 @@ public class MaintenanceSteps {
             organizacao,
             unidade);
     ativos.put(assetTag, ativo);
+    context.setId("ativoId_" + assetTag, ativo.getId());
   }
 
   @E("que existe um usuário ADMIN com email {string} e senha {string}")
@@ -109,6 +112,13 @@ public class MaintenanceSteps {
   public void queExisteAtivoAposentado(String assetTag) {
     Asset ativo = testDataHelper.criarAtivoAposentado(organizacao, unidade);
     ativos.put(assetTag, ativo);
+  }
+
+  @E("que existe um ativo {string} em transferência nessa unidade")
+  public void queExisteAtivoEmTransferencia(String assetTag) {
+    Asset ativo = testDataHelper.criarAtivoEmTransferencia(organizacao, unidade);
+    ativos.put(assetTag, ativo);
+    context.setId("ativoId_" + assetTag, ativo.getId());
   }
 
   // =========================================================
@@ -144,7 +154,7 @@ public class MaintenanceSteps {
         .as("Falha ao criar manutenção no setup do cenário")
         .isEqualTo(201);
 
-    Long manutencaoId = response.path("id");
+    Long manutencaoId = ((Number) response.path("id")).longValue();
     context.setLastCreatedId(manutencaoId);
     context.setId("manutencaoId", manutencaoId);
   }
@@ -167,9 +177,46 @@ public class MaintenanceSteps {
         .isEqualTo(200);
   }
 
+  @E("que cancelei essa manutenção")
+  public void queCanceleiEssaManutencao() {
+    MockMvcResponse response =
+        apiClient.cancelarManutencao(context.getLastCreatedId(), context.getToken());
+    assertThat(response.statusCode())
+        .as("Falha ao cancelar manutenção no setup do cenário")
+        .isEqualTo(200);
+  }
+
   // =========================================================
   // AÇÕES — passos do "Quando"
   // =========================================================
+
+  @Quando("solicito manutenção para o ativo {string} com descrição longa de {int} caracteres")
+  public void solicitoManutencaoComDescricaoLonga(String assetTag, int tamanho) {
+    Asset ativo = ativos.get(assetTag);
+    assertThat(ativo).as("Ativo '%s' não foi criado no Contexto do cenário", assetTag).isNotNull();
+
+    String descricaoLonga = "A".repeat(tamanho);
+    MockMvcResponse response =
+        apiClient.criarManutencao(ativo.getId(), descricaoLonga, context.getToken());
+    context.setLastResponse(response);
+  }
+
+  @Quando("solicito manutenção para o ativo {string} com custo estimado inválido de {double}")
+  public void solicitoManutencaoComCustoInvalido(String assetTag, double custo) {
+    Asset ativo = ativos.get(assetTag);
+    assertThat(ativo).as("Ativo '%s' não foi criado no Contexto do cenário", assetTag).isNotNull();
+
+    MockMvcResponse response =
+        apiClient.criarManutencaoComCusto(ativo.getId(), "Descrição mínima para custo inválido", custo, context.getToken());
+    context.setLastResponse(response);
+  }
+
+  @Quando("concluo a manutenção salva sem enviar resolution")
+  public void concluoAManutencaoSalvaSemEnviarResolution() {
+    MockMvcResponse response =
+        apiClient.concluirManutencaoSemResolucao(context.getLastCreatedId(), context.getToken());
+    context.setLastResponse(response);
+  }
 
   @Quando("solicito manutenção para o ativo {string} com descrição {string}")
   public void solicitoManutencao(String assetTag, String descricao) {
@@ -182,7 +229,7 @@ public class MaintenanceSteps {
 
     // Salva o ID se a criação foi bem-sucedida (para steps seguintes)
     if (response.statusCode() == 201) {
-      Long manutencaoId = response.path("id");
+      Long manutencaoId = ((Number) response.path("id")).longValue();
       context.setLastCreatedId(manutencaoId);
     }
   }
@@ -237,9 +284,9 @@ public class MaintenanceSteps {
 
   @E("salvo o ID da manutenção criada")
   public void salvoOIdDaManutencaoCriada() {
-    Long manutencaoId = context.getLastResponse().path("id");
-    assertThat(manutencaoId).as("ID da manutenção não encontrado na resposta").isNotNull();
-    context.setLastCreatedId(manutencaoId);
+    Number raw = context.getLastResponse().path("id");
+    assertThat(raw).as("ID da manutenção não encontrado na resposta").isNotNull();
+    context.setLastCreatedId(raw.longValue());
   }
 
   @E("o ativo {string} deve ter status {string}")

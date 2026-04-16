@@ -8,8 +8,7 @@ target/
 *.iml
 .vscode/
 
-# Configuração local e testes
-src/test/
+# Resultados e relatórios de teste gerados
 allure-results/
 allure-reports/
 

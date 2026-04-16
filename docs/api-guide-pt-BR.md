@@ -1,23 +1,19 @@
 # Guia da API
 
+Este documento descreve os endpoints implementados atualmente no backend Spring Boot e foi validado contra os controllers em `backend/src/main/java/.../interfaces/rest`.
+
 ---
 
 # 1. Visão Geral
 
-Este documento descreve a API do Sistema de Gestão de Ativos Enterprise.
+A API REST é multi-tenant e usa JSON para entrada e saída. Os módulos atualmente expostos são:
 
-A API fornece gerenciamento seguro e multi-tenant de:
-
-- Organizações
-- Unidades
-- Usuários
-- Ativos
-- Transferências
-- Ciclos de inventário
-- Operações de manutenção
-- Logs de auditoria
-
-A API segue os princípios REST e utiliza JSON para os dados de requisição e resposta.
+- autenticação e ativação de conta
+- organizações, unidades e usuários
+- ativos e histórico de ativos
+- transferências, inventário e manutenção
+- categorias, auditoria e exportação CSV
+- dashboards, depreciação, seguros, centros de custo e AI Intelligence
 
 ---
 
@@ -25,331 +21,298 @@ A API segue os princípios REST e utiliza JSON para os dados de requisição e r
 
 Desenvolvimento:
 
-http://localhost:8080
+`http://localhost:8080`
 
-Produção:
+Documentação OpenAPI gerada pela aplicação:
 
-https://api.yourdomain.com
-
-> **Nota:** A API não utiliza prefixo de versionamento nas rotas (ex.: `/api/v1/`). Os endpoints são acessados diretamente a partir da URL base. A exceção é o módulo de manutenção, cujas rotas utilizam o prefixo `/api/maintenance`.
+- `GET /v3/api-docs`
+- `GET /swagger-ui.html`
 
 ---
 
 # 3. Autenticação
 
-A API utiliza autenticação JWT (JSON Web Token).
-
-Após login bem-sucedido, o cliente deve incluir o token em todas as requisições protegidas.
+A API usa JWT Bearer.
 
 Header:
 
-```
+```http
 Authorization: Bearer <JWT_TOKEN>
 ```
 
+Fluxo atual:
+
+1. `POST /auth/login`
+2. se o usuário tiver telefone cadastrado, a API retorna desafio MFA
+3. `POST /auth/mfa/verify` emite `accessToken` e `refreshToken`
+4. `POST /auth/refresh` faz rotação do refresh token
+5. `POST /auth/logout` revoga os refresh tokens do usuário autenticado
+
 ---
 
-# 4. Endpoints Públicos (sem autenticação)
+# 4. Endpoints Públicos
 
-Os seguintes endpoints não requerem JWT:
+Os seguintes endpoints não exigem JWT:
 
 | Método | Rota | Descrição |
-|--------|------|-----------|
-| POST | `/auth/login` | Autenticação e geração de token |
-| POST | `/users/activation/activate` | Ativação de conta pelo usuário |
-| GET | `/v3/api-docs/**` | Documentação OpenAPI |
-| GET | `/swagger-ui/**` | Interface Swagger |
+|---|---|---|
+| POST | `/auth/login` | Login inicial |
+| POST | `/auth/mfa/verify` | Conclusão do MFA |
+| POST | `/auth/refresh` | Renovação de token |
+| POST | `/users/activation/activate` | Ativação de conta |
+| GET | `/v3/api-docs/**` | OpenAPI |
+| GET | `/swagger-ui/**` | Swagger UI |
+| GET | `/swagger-ui.html` | Swagger UI |
 | GET | `/actuator/health` | Health check |
+| GET | `/actuator/health/**` | Health details |
+| GET | `/actuator/prometheus` | Métricas Prometheus |
 
 ---
+
+# 5. Endpoints de Autenticação
 
 ## POST /auth/login
 
-Autentica o usuário e retorna um token de acesso.
+Autentica com e-mail e senha.
 
-Requisição:
+- usuário com `phoneNumber`: retorna `mfaRequired: true`
+- usuário sem telefone: retorna `accessToken` + `refreshToken`
 
-```json
-{
-  "email": "user@company.com",
-  "password": "password"
-}
-```
+## POST /auth/mfa/verify
 
-Resposta:
+Valida o OTP de 6 dígitos enviado via WhatsApp e retorna `accessToken` + `refreshToken`.
 
-```json
-{
-  "accessToken": "JWT_TOKEN",
-  "tokenType": "Bearer",
-  "expiresIn": 3600
-}
-```
+## POST /auth/refresh
 
-Respostas de erro:
+Recebe `refreshToken` válido e retorna novo par de tokens.
 
-- `401 Unauthorized` — credenciais inválidas
-- `403 Forbidden` — usuário inativo ou bloqueado
+## POST /auth/logout
+
+Revoga os refresh tokens do usuário autenticado.
 
 ---
 
-## POST /users/activation/activate
+# 6. Endpoints de Organização
 
-Permite que o usuário recém-criado defina sua senha e ative sua conta usando o token de ativação recebido.
+Todos exigem role `ADMIN`.
 
-Este endpoint é **público** — não requer JWT. O usuário ainda não possui senha no momento da criação.
-
----
-
-# 5. Endpoints de Organização
-
-## POST /organizations
-
-Cria uma nova organização. Requer role `ADMIN`.
-
-## GET /organizations
-
-Retorna a lista de organizações acessíveis ao usuário.
-
-## GET /organizations/{id}
-
-Retorna os detalhes da organização.
+| Método | Rota |
+|---|---|
+| GET | `/organizations` |
+| GET | `/organizations/{id}` |
+| POST | `/organizations` |
+| PATCH | `/organizations/{id}` |
+| PATCH | `/organizations/{id}/activate` |
+| PATCH | `/organizations/{id}/inactivate` |
 
 ---
 
-# 6. Endpoints de Unidade
+# 7. Endpoints de Unidade
 
-## POST /units
-
-Cria uma nova unidade. Requer role `ADMIN` ou `GESTOR`.
-
-## GET /units
-
-Retorna as unidades acessíveis ao usuário.
-
-## GET /units/{id}
-
-Retorna os detalhes da unidade.
+| Método | Rota | Acesso |
+|---|---|---|
+| POST | `/units/{organizationId}` | `ADMIN`, `GESTOR` |
+| GET | `/units/{organizationId}` | `ADMIN`, `GESTOR` |
+| GET | `/units/unit/{id}` | `ADMIN`, `GESTOR` |
+| PATCH | `/units/{id}/activate` | `ADMIN`, `GESTOR` |
+| PATCH | `/units/{id}/inactivate` | `ADMIN`, `GESTOR` |
 
 ---
 
-# 7. Endpoints de Usuário
+# 8. Endpoints de Usuário
 
-Todos os endpoints abaixo requerem role `ADMIN`, exceto onde indicado.
+| Método | Rota | Acesso |
+|---|---|---|
+| GET | `/users` | `ADMIN`, `GESTOR`, `OPERADOR` |
+| POST | `/users` | `ADMIN` |
+| GET | `/users/{id}` | `ADMIN` |
+| PATCH | `/users/{id}/block` | `ADMIN` |
+| PATCH | `/users/{id}/activate` | `ADMIN` |
+| PATCH | `/users/{id}/inactivate` | `ADMIN` |
+| POST | `/users/activation/token/{userId}` | `ADMIN` |
+| POST | `/users/activation/activate` | público |
 
-## POST /users
+Observações:
 
-Cria um novo usuário.
-
-O usuário é criado com status `PENDING_ACTIVATION`. A senha **não** é definida neste momento — o próprio usuário a define no fluxo de ativação via `POST /users/activation/activate`.
-
-## GET /users/{id}
-
-Retorna os detalhes do usuário.
-
-## PATCH /users/{id}/block
-
-Bloqueia o usuário. Usuário bloqueado não consegue autenticar.
-
-## PATCH /users/{id}/activate
-
-Move o usuário para o status `ACTIVE`.
-
-## PATCH /users/{id}/inactivate
-
-Move o usuário para o status `INACTIVE`.
+- a listagem suporta filtros `status`, `unitId` e `includeInactive`
+- o usuário é criado sem senha e com ativação posterior por token
+- o cadastro já aceita `phoneNumber`, o que habilita MFA no login
 
 ---
 
-# 8. Endpoints de Ativo
+# 9. Endpoints de Ativo
 
-## POST /assets/{organizationId}
+| Método | Rota | Acesso |
+|---|---|---|
+| GET | `/assets` | `ADMIN`, `GESTOR`, `OPERADOR` |
+| GET | `/assets/{id}` | `ADMIN`, `GESTOR`, `OPERADOR` |
+| POST | `/assets/{organizationId}` | `ADMIN`, `GESTOR` |
+| POST | `/assets/{organizationId}/auto` | `ADMIN`, `GESTOR` |
+| PATCH | `/assets/{id}/retire` | `ADMIN` |
+| PATCH | `/assets/{assetId}/assign/{userId}` | `ADMIN`, `GESTOR` |
+| PATCH | `/assets/{assetId}/unassign` | `ADMIN`, `GESTOR` |
+| PATCH | `/assets/{id}/financial` | `ADMIN`, `GESTOR` |
 
-Cria um novo ativo informando o `assetTag` explicitamente. Requer role `ADMIN` ou `GESTOR`.
+Filtros suportados em `GET /assets`:
 
-## POST /assets/{organizationId}/auto
-
-Cria um novo ativo com `assetTag` gerado automaticamente pelo sistema. Requer role `ADMIN` ou `GESTOR`.
-
-## GET /assets
-
-Retorna lista paginada de ativos com filtros opcionais.
-
-Parâmetros de filtro suportados:
-
-- `status` — ex.: `AVAILABLE`, `ASSIGNED`, `IN_MAINTENANCE`
-- `type` — ex.: `NOTEBOOK`, `MOBILE_PHONE`
+- `status`
+- `type`
 - `unitId`
 - `assignedUserId`
 - `assetTag`
 - `model`
-
-Suporta paginação via parâmetros `page`, `size` e `sort`.
-
-## GET /assets/{id}
-
-Retorna os detalhes do ativo.
-
-## PATCH /assets/{id}/retire
-
-Aposenta o ativo (move para `RETIRED`). Requer role `ADMIN`.
-
-## PATCH /assets/{assetId}/assign/{userId}
-
-Atribui o ativo a um usuário (move para `ASSIGNED`). Requer role `ADMIN` ou `GESTOR`.
-
-## PATCH /assets/{assetId}/unassign
-
-Remove a atribuição do ativo (retorna para `AVAILABLE`). Requer role `ADMIN` ou `GESTOR`.
+- `search`
+- paginação via `page`, `size` e `sort`
 
 ---
 
-# 9. Endpoints de Transferência
+# 10. Histórico de Ativos
 
-## POST /transfers
-
-Cria uma solicitação de transferência de ativo entre unidades. Requer role `ADMIN` ou `GESTOR`.
-
-O ativo passa imediatamente para o status `IN_TRANSFER`.
-
-Requisição:
-
-```json
-{
-  "assetId": 1,
-  "toUnitId": 5,
-  "reason": "Realocação de equipe"
-}
-```
-
-## GET /transfers
-
-Retorna as transferências visíveis ao usuário autenticado (como origem ou destino da unidade). Acessível por `ADMIN`, `GESTOR` e `OPERADOR`.
-
-## PATCH /transfers/{id}/approve
-
-Aprova uma transferência com status `PENDING`. Requer role `ADMIN` ou `GESTOR`.
-
-## PATCH /transfers/{id}/reject
-
-Rejeita uma transferência com status `PENDING`. O ativo retorna para `AVAILABLE`. Requer role `ADMIN` ou `GESTOR`.
-
-## PATCH /transfers/{id}/complete
-
-Finaliza uma transferência com status `APPROVED`. Atualiza a unidade do ativo e move para `COMPLETED`. Requer role `ADMIN` ou `GESTOR`.
+| Método | Rota | Acesso |
+|---|---|---|
+| GET | `/assets/{assetId}/history/status` | `ADMIN`, `GESTOR` |
+| GET | `/assets/{assetId}/history/assignment` | `ADMIN`, `GESTOR` |
 
 ---
 
-# 10. Endpoints de Inventário
+# 11. Transferências
 
-## POST /inventory
+| Método | Rota | Acesso |
+|---|---|---|
+| GET | `/transfers` | autenticado |
+| POST | `/transfers` | autenticado |
+| PATCH | `/transfers/{id}/approve` | `ADMIN`, `GESTOR` |
+| PATCH | `/transfers/{id}/reject` | `ADMIN`, `GESTOR` |
+| PATCH | `/transfers/{id}/complete` | autenticado |
+| PATCH | `/transfers/{id}/cancel` | autenticado |
 
-Inicia um novo ciclo de inventário para uma unidade. A sessão é criada com status `OPEN`.
-
-## GET /inventory
-
-Retorna os ciclos de inventário da organização do usuário autenticado.
-
----
-
-# 11. Endpoints de Manutenção
-
-> **Atenção:** As rotas de manutenção utilizam o prefixo `/api/maintenance`.
-
-## POST /api/maintenance
-
-Cria uma solicitação de manutenção para um ativo. Requer role `ADMIN` ou `GESTOR`.
-
-O ativo é imediatamente movido para o status `IN_MAINTENANCE` ao criar a solicitação.
-
-Requisição:
-
-```json
-{
-  "assetId": 1,
-  "description": "Teclado com teclas travadas"
-}
-```
-
-## GET /api/maintenance
-
-Retorna os registros de manutenção da organização do usuário autenticado.
-
-## POST /api/maintenance/{id}/start
-
-Inicia a execução da manutenção (move de `REQUESTED` para `IN_PROGRESS`). Acessível por `ADMIN`, `GESTOR` e `OPERADOR`.
-
-## POST /api/maintenance/{id}/complete
-
-Conclui a manutenção (move de `IN_PROGRESS` para `COMPLETED`). O ativo retorna para `AVAILABLE` ou `ASSIGNED`. Requer o parâmetro `resolution` (obrigatório). Acessível por `ADMIN`, `GESTOR` e `OPERADOR`.
-
-Parâmetro de query:
-
-```
-resolution=Troca da bateria realizada com sucesso
-```
-
-## POST /api/maintenance/{id}/cancel
-
-Cancela a manutenção. Não é permitido cancelar manutenções já `COMPLETED`. Requer role `ADMIN` ou `GESTOR`.
+O fluxo de negócio continua validando tenant, unidade e estado da transferência.
 
 ---
 
-# 12. Endpoints de Auditoria
+# 12. Inventário
 
-## GET /audit
-
-Retorna os logs de auditoria. Restrito a usuários autorizados.
-
----
-
-# 13. Códigos de Status HTTP
-
-| Código | Significado |
-|--------|-------------|
-| 200 OK | Requisição bem-sucedida |
-| 201 Created | Recurso criado |
-| 400 Bad Request | Erro de validação |
-| 401 Unauthorized | Autenticação necessária |
-| 403 Forbidden | Permissão insuficiente |
-| 404 Not Found | Recurso não encontrado |
-| 409 Conflict | Conflito de estado (ex.: transição inválida) |
-| 500 Internal Server Error | Erro interno do servidor |
+| Método | Rota | Acesso |
+|---|---|---|
+| POST | `/inventory` | `ADMIN`, `GESTOR` |
+| GET | `/inventory` | `ADMIN`, `GESTOR`, `OPERADOR` |
+| GET | `/inventory/{id}` | `ADMIN`, `GESTOR`, `OPERADOR` |
+| PATCH | `/inventory/{id}/start` | `ADMIN`, `GESTOR` |
+| PATCH | `/inventory/{id}/close` | `ADMIN`, `GESTOR` |
+| PATCH | `/inventory/{id}/cancel` | `ADMIN`, `GESTOR` |
 
 ---
 
-# 14. Formato de Resposta de Erro
+# 13. Manutenção
 
-Formato padrão:
+As rotas implementadas usam o prefixo `/maintenance`, sem `/api`.
 
-```json
-{
-  "errors": [
-    {
-      "field": "fieldName",
-      "message": "descrição do erro",
-      "code": "ERROR_CODE"
-    }
-  ]
-}
-```
+| Método | Rota | Acesso |
+|---|---|---|
+| GET | `/maintenance` | autenticado |
+| GET | `/maintenance/budget` | `ADMIN`, `GESTOR` |
+| POST | `/maintenance` | `ADMIN`, `GESTOR` |
+| POST | `/maintenance/{id}/start` | `ADMIN`, `GESTOR`, `OPERADOR` |
+| POST | `/maintenance/{id}/complete` | `ADMIN`, `GESTOR`, `OPERADOR` |
+| POST | `/maintenance/{id}/cancel` | `ADMIN`, `GESTOR` |
 
----
+Filtros disponíveis na listagem:
 
-# 15. Considerações de Segurança
-
-- Todos os endpoints exigem autenticação JWT, exceto os listados na seção 4
-- O acesso é restrito por role e tenant (organização)
-- O acesso entre tenants é estritamente proibido
-- Todas as ações críticas geram logs de auditoria
-- O endpoint `/actuator/**` (exceto `/actuator/health`) é restrito à role `ADMIN`
+- `status`
+- `assetId`
+- `unitId`
+- `requestedByUserId`
+- `startDate`
+- `endDate`
 
 ---
 
-# 16. Comportamento Multi-Tenant
+# 14. Categorias, Auditoria e Exportação
 
-Todas as requisições operam dentro do escopo da organização do usuário autenticado.
+## Categorias
 
-Os dados são automaticamente filtrados pela organização.
+`/categories`
 
-O acesso entre tenants não é permitido e é considerado uma falha crítica de segurança.
+- `POST`, `PUT`, `DELETE`: `ADMIN`, `GESTOR`
+- `GET`, `GET /{id}`: `ADMIN`, `GESTOR`, `OPERADOR`
+
+## Auditoria
+
+`/audit`
+
+- `GET /audit`
+- `GET /audit/user/{userId}`
+- `GET /audit/type/{type}`
+- `GET /audit/target`
+- `GET /audit/period`
+- `GET /audit/target/last`
+
+Acesso: `ADMIN`, `GESTOR`
+
+## Exportação CSV
+
+`/export`
+
+- `GET /export/assets` — `ADMIN`, `GESTOR`
+- `GET /export/maintenance` — `ADMIN`, `GESTOR`
+- `GET /export/audit` — `ADMIN`
+
+---
+
+# 15. Módulos Financeiros e Complementares
+
+## Depreciação
+
+`/assets/{id}/depreciation`, `/assets/depreciation/portfolio`, `/assets/depreciation/report`
+
+## Seguros
+
+`/assets/{assetId}/insurance`, `/assets/{assetId}/insurance/active`, `/assets/insurance/expiring`, `/assets/insurance/summary`
+
+## Centros de custo
+
+`/cost-centers`
+
+## Dashboards
+
+- `/api/dashboard/executive` — `ADMIN`
+- `/api/dashboard/unit` — `GESTOR`
+- `/api/dashboard/personal` — `OPERADOR`
+
+## AI Intelligence
+
+- `POST /api/ai/analysis/observability`
+- `POST /api/ai/analysis/test-intelligence`
+- `POST /api/ai/analysis/cicd`
+- `POST /api/ai/analysis/incident`
+- `POST /api/ai/analysis/risk`
+- `POST /api/ai/analysis/multi-agent`
+- `GET /api/ai/analysis/history`
+- `GET /api/ai/analysis/{id}`
+
+---
+
+# 16. Códigos HTTP e Erros
+
+Códigos mais frequentes:
+
+- `200 OK`
+- `201 Created`
+- `204 No Content`
+- `400 Bad Request`
+- `401 Unauthorized`
+- `403 Forbidden`
+- `404 Not Found`
+- `409 Conflict`
+- `500 Internal Server Error`
+
+O formato de erro é centralizado pelo `GlobalExceptionHandler` e pelo entry point JWT. O payload pode variar conforme a origem da falha, então o cliente deve tratar pelo status HTTP e pelos campos textuais retornados.
+
+---
+
+# 17. Considerações de Segurança
+
+- `@PreAuthorize` é aplicado diretamente nos controllers
+- `/actuator/prometheus` é público para scrape do Prometheus
+- os demais endpoints `/actuator/**` exigem `ADMIN`
+- o isolamento multi-tenant continua sendo reforçado na camada de serviço e nas queries

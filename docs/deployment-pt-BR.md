@@ -1,253 +1,168 @@
+# Deploy
+
+Documento revisado contra `docker-compose.yml`, `backend/src/main/resources/application*.yml` e a estrutura atual dos serviços.
+
 # 1. Visão Geral
 
-Este documento descreve como realizar o deploy do Sistema de Gestão de Ativos Enterprise nos ambientes de desenvolvimento, homologação (staging) e produção.
-
-O sistema é uma aplicação Spring Boot que utiliza PostgreSQL como banco de dados.
-
----
-
-# 2. Requisitos do Sistema
-
-Requisitos mínimos:
-
-Servidor da aplicação:
-
-- Java 17 ou superior
-- Mínimo de 2 núcleos de CPU
-- 4 GB de RAM recomendados
-
-Servidor de banco de dados:
-
-- PostgreSQL 13 ou superior
-- Mínimo de 2 núcleos de CPU
-- 4 GB de RAM recomendados
-
----
-
-# 3. Software Necessário
-
-Aplicação:
-
-- Java 17+
-- Maven 3.8+
-
-Banco de dados:
+O projeto hoje possui uma stack completa com:
 
 - PostgreSQL
-
-Componentes opcionais para produção:
-
-- NGINX (reverse proxy)
-- Load balancer
-- Certificado SSL
-
----
-
-# 4. Variáveis de Ambiente
-
-Variáveis de ambiente obrigatórias:
-
-SPRING_DATASOURCE_URL=jdbc:postgresql://host:port/database
-
-SPRING_DATASOURCE_USERNAME=database_user
-
-SPRING_DATASOURCE_PASSWORD=database_password
-
-JWT_SECRET=secure_jwt_secret
-
-Variáveis opcionais:
-
-SPRING_PROFILES_ACTIVE=prod
-
-SERVER_PORT=8080
+- backend Spring Boot
+- frontend React servido por Nginx
+- AI Intelligence
+- Prometheus
+- Grafana
+- InfluxDB
+- Allure + Allure UI
+- cAdvisor
 
 ---
 
-# 5. Configuração do Banco de Dados
+# 2. Execução Recomendada em Desenvolvimento
 
-Etapas:
+```bash
+cp .env.example .env
+docker compose up --build
+```
 
-1. Instalar o PostgreSQL
+Portas principais:
 
-2. Criar o banco de dados:
-
-CREATE DATABASE asset_management;
-
-3. Criar o usuário do banco de dados
-
-4. Configurar as variáveis de conexão
-
-5. Executar as migrações utilizando Flyway (automático na inicialização)
-
----
-
-# 6. Build da Aplicação
-
-Executar:
-
-mvn clean package
-
-Isso gera:
-
-target/asset-management.jar
+| Serviço | Porta |
+|---|---|
+| Frontend | `5173` |
+| Backend | `8080` |
+| PostgreSQL | `5433` |
+| AI Intelligence | `3100` |
+| Prometheus | `9090` |
+| Grafana | `3001` |
+| InfluxDB | `8086` |
+| Allure | `5050` |
+| Allure UI | `5252` |
+| cAdvisor | `8081` |
 
 ---
 
-# 7. Executar a Aplicação
+# 3. Variáveis de Ambiente
 
-Executar localmente:
+## Backend
 
-mvn spring-boot:run
+- `DB_URL`
+- `DB_USERNAME`
+- `DB_PASSWORD`
+- `JWT_SECRET`
+- `JWT_EXPIRATION`
+- `JWT_REFRESH_EXPIRATION`
+- `MAIL_HOST`
+- `MAIL_PORT`
+- `MAIL_USERNAME`
+- `MAIL_PASSWORD`
+- `MAIL_FROM`
+- `MAIL_FROM_NAME`
+- `CORS_ALLOWED_ORIGINS`
+- `FRONTEND_URL`
+- `AI_SERVICE_URL`
+- `AI_SERVICE_API_KEY`
+- `MFA_EXPIRATION_SECONDS`
 
-Executar o JAR:
+## AI Intelligence
 
-java -jar target/asset-management.jar
+- `AI_SERVICE_PORT`
+- `AI_SERVICE_API_KEY`
+- `OPENAI_API_KEY`
+- `OPENAI_MODEL`
+- `OPENAI_FALLBACK_MODEL`
+- `OPENAI_MAX_TOKENS`
+- `AI_DB_HOST`
+- `AI_DB_PORT`
+- `AI_DB_NAME`
+- `AI_DB_USER`
+- `AI_DB_PASSWORD`
+- `PROMETHEUS_URL`
+- `ALLURE_URL`
+- `BACKEND_URL`
+- `GRAFANA_URL`
+- `GITHUB_TOKEN`
+- `GITHUB_OWNER`
+- `GITHUB_REPO`
 
----
+## Observabilidade
 
-# 8. Verificar o Deploy
-
-Verificar:
-
-Aplicação em execução:
-
-http://localhost:8080
-
-Swagger UI:
-
-http://localhost:8080/swagger-ui.html
-
----
-
-# 9. Arquitetura de Deploy em Produção
-
-Arquitetura recomendada:
-
-Cliente
-↓
-HTTPS
-↓
-Reverse Proxy (NGINX)
-↓
-Aplicação Spring Boot
-↓
-Banco de Dados PostgreSQL
-
-Opcional:
-
-Load balancer
-Múltiplas instâncias da aplicação
-
----
-
-# 10. Configuração de Reverse Proxy (Recomendado)
-
-O NGINX fornece:
-
-- Terminação HTTPS
-- Proteção de segurança
-- Balanceamento de carga
-- Roteamento de requisições
+- `GRAFANA_USER`
+- `GRAFANA_PASSWORD`
 
 ---
 
-# 11. Requisitos de Segurança
+# 4. Banco de Dados
 
-Requisitos de segurança para produção:
+O backend usa PostgreSQL com Flyway automático no startup.
 
-- HTTPS deve estar habilitado
-- O segredo JWT deve ser seguro
-- O banco de dados não deve estar exposto publicamente
-- As variáveis de ambiente devem ser protegidas
+No `docker-compose`, o serviço `asset-management` sobrescreve `DB_URL` para apontar para o hostname interno `postgres:5432`.
 
----
-
-# 12. Logs
-
-Logs da aplicação:
-
-Logging do Spring Boot habilitado
-
-Os logs devem ser armazenados de forma segura.
-
-Recomendações para produção:
-
-- Logging centralizado
-- Monitoramento de logs
+O banco também é usado pelo serviço `ai-intelligence`, que persiste análises em schema próprio.
 
 ---
 
-# 13. Monitoramento
+# 5. Healthchecks
 
-Monitoramento recomendado:
+Healthchecks configurados:
 
-- Monitoramento de saúde da aplicação
-- Monitoramento do banco de dados
-- Monitoramento de recursos
+- backend: `GET /actuator/health`
+- Prometheus: `GET /-/healthy`
+- Grafana: `GET /api/health`
+- Allure: endpoint do serviço Allure
+- AI Intelligence: `GET /health`
+- PostgreSQL: `pg_isready`
+- InfluxDB: `SHOW DATABASES`
 
-O Spring Boot Actuator pode ser utilizado.
-
----
-
-# 14. Integração com Backup
-
-Os backups do banco de dados devem estar habilitados.
-
-Estratégia de backup:
-
-- Backups diários
-- Backups incrementais
-
-Ver backup-recovery.md
+Isso controla a ordem de inicialização da stack.
 
 ---
 
-# 15. Escalabilidade
+# 6. Frontend em Docker
 
-Opções de escalabilidade:
+O frontend Dockerizado usa build estático e Nginx.
 
-Escalabilidade horizontal:
+Configuração importante:
 
-- Múltiplas instâncias da aplicação
-- Load balancer
+- `VITE_API_URL=/api`
+- o proxy reverso do Nginx encaminha `/api` para o backend
 
-Escalabilidade vertical:
-
-- Aumento de CPU e memória
-
-A arquitetura stateless suporta escalabilidade.
+Para desenvolvimento local fora do Docker, o frontend pode usar `npm run dev` e `VITE_API_URL` direto.
 
 ---
 
-# 16. Ambientes de Deploy
+# 7. Produção
 
-Ambientes recomendados:
+Topologia recomendada:
 
-Desenvolvimento
-Homologação (Staging)
-Produção
+1. HTTPS no reverse proxy ou load balancer
+2. frontend estático atrás de proxy
+3. backend Spring Boot em rede privada
+4. PostgreSQL sem exposição pública
+5. AI Intelligence acessível apenas internamente
 
-Cada ambiente deve possuir configuração separada.
+Recomendações:
 
----
-
-# 17. Recuperação de Falhas
-
-Etapas de recuperação:
-
-1. Identificar a falha
-2. Reiniciar a aplicação
-3. Restaurar o banco de dados se necessário
-
-Ver backup-recovery.md
+- restringir CORS a domínios válidos
+- usar segredos fortes para JWT e integração AI
+- externalizar volumes persistentes
+- centralizar logs e métricas
 
 ---
 
-# 18. Resumo
+# 8. Testes e Serviços Auxiliares
 
-Esta estratégia de deploy garante:
+O `docker-compose` também inclui serviços de apoio:
 
-- Deploy seguro
-- Arquitetura escalável
-- Operação confiável
-- Prontidão para deploy nível enterprise
+- `reset-e2e-data`
+- `clean-allure-results`
+- `test-backend`
+- `test-playwright`
+
+Eles não fazem parte do runtime de produção, mas são parte oficial do ambiente local e do fluxo de testes.
+
+---
+
+# 9. Resumo
+
+O deploy atual já não é apenas backend + banco. A stack real inclui frontend servido por Nginx, observabilidade, relatórios de testes e um sidecar de IA, todos orquestrados pelo `docker-compose.yml`.

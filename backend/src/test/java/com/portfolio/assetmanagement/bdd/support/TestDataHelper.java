@@ -9,6 +9,7 @@ import com.portfolio.assetmanagement.domain.user.entity.User;
 import com.portfolio.assetmanagement.infrastructure.persistence.asset.repository.AssetRepository;
 import com.portfolio.assetmanagement.infrastructure.persistence.maintenance.repository.MaintenanceRepository;
 import com.portfolio.assetmanagement.infrastructure.persistence.organization.repository.OrganizationRepository;
+import com.portfolio.assetmanagement.infrastructure.persistence.transfer.repository.TransferRepository;
 import com.portfolio.assetmanagement.infrastructure.persistence.unit.repository.UnitRepository;
 import com.portfolio.assetmanagement.infrastructure.persistence.user.repository.UserRepository;
 import com.portfolio.assetmanagement.security.enums.UserRole;
@@ -43,6 +44,7 @@ public class TestDataHelper {
   private final UserRepository userRepository;
   private final AssetRepository assetRepository;
   private final MaintenanceRepository maintenanceRepository;
+  private final TransferRepository transferRepository;
   private final PasswordEncoder passwordEncoder;
 
   public TestDataHelper(
@@ -51,12 +53,14 @@ public class TestDataHelper {
       UserRepository userRepository,
       AssetRepository assetRepository,
       MaintenanceRepository maintenanceRepository,
+      TransferRepository transferRepository,
       PasswordEncoder passwordEncoder) {
     this.organizationRepository = organizationRepository;
     this.unitRepository = unitRepository;
     this.userRepository = userRepository;
     this.assetRepository = assetRepository;
     this.maintenanceRepository = maintenanceRepository;
+    this.transferRepository = transferRepository;
     this.passwordEncoder = passwordEncoder;
   }
 
@@ -72,6 +76,7 @@ public class TestDataHelper {
    */
   @Transactional
   public void cleanDatabase() {
+    transferRepository.deleteAll();
     maintenanceRepository.deleteAll();
     assetRepository.deleteAll();
     userRepository.deleteAll();
@@ -183,6 +188,14 @@ public class TestDataHelper {
   public Asset criarAtivoAposentado(Organization org, Unit unit) {
     Asset asset = criarAtivo("ASSET-RETIRED-001", AssetType.NOTEBOOK, org, unit);
     asset.changeStatus(AssetStatus.RETIRED);
+    return assetRepository.save(asset);
+  }
+
+  /** Cria ativo em transferência — para testar que IN_TRANSFER bloqueia novas manutenções. */
+  @Transactional
+  public Asset criarAtivoEmTransferencia(Organization org, Unit unit) {
+    Asset asset = criarAtivo("ASSET-TRANSFER-001", AssetType.NOTEBOOK, org, unit);
+    asset.changeStatus(AssetStatus.IN_TRANSFER);
     return assetRepository.save(asset);
   }
 }

@@ -12,6 +12,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -106,6 +107,14 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ApiResponse<Void>> handleUnauthorized(
       UnauthorizedException ex, HttpServletRequest request) {
     log.warn("Unauthorized access: {}", ex.getMessage());
+    return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+        .body(ApiResponse.error(new ErrorResponse(ErrorCodes.UNAUTHORIZED, ex.getMessage())));
+  }
+
+  @ExceptionHandler(BadCredentialsException.class)
+  public ResponseEntity<ApiResponse<Void>> handleBadCredentials(
+      BadCredentialsException ex, HttpServletRequest request) {
+    log.warn("Bad credentials: {}", ex.getMessage());
     return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
         .body(ApiResponse.error(new ErrorResponse(ErrorCodes.UNAUTHORIZED, ex.getMessage())));
   }

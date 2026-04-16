@@ -109,4 +109,12 @@ public class TransferController {
     transferService.complete(id);
     return ResponseEntity.noContent().build();
   }
+
+  @Operation(summary = "Cancelar transferência",
+      description = "Cancela uma transferência pendente. Somente transferências PENDING podem ser canceladas.")
+  @PatchMapping("/{id}/cancel")
+  public ResponseEntity<Void> cancel(@PathVariable Long id) {
+    transferService.cancel(id);
+    return ResponseEntity.noContent().build();
+  }
 }

@@ -1,17 +1,27 @@
+const path = require('path');
+
+const allureResultsDir = process.env.ALLURE_RESULTS_DIR
+  || path.resolve(__dirname, '../../../../allure-results');
+
 module.exports = {
   default: {
-    paths: ['../shared/features/**/*.feature'],
+    paths: ['features/**/*.feature'],
     require: [
+      'support/world.ts',
       'support/hooks.ts',
       'step-definitions/**/*.ts',
     ],
     requireModule: ['ts-node/register'],
     format: [
-      'progress-bar',
+      'summary',
       'html:reports/cucumber-report.html',
       'json:reports/cucumber-report.json',
+      `allure-cucumberjs/reporter`,
     ],
-    formatOptions: { snippetInterface: 'async-await' },
+    formatOptions: {
+      snippetInterface: 'async-await',
+      resultsDir: allureResultsDir,
+    },
     worldParameters: {
       baseUrl: process.env.BASE_URL || 'http://localhost:5173',
       headless: process.env.PWHEADLESS !== 'false',

@@ -17,6 +17,7 @@ import AuditPage from '../pages/audit/AuditPage'
 import ReportsPage from '../pages/reports/ReportsPage'
 import OrganizationsPage from '../pages/organizations/OrganizationsPage'
 import UnitsPage from '../pages/units/UnitsPage'
+import AIInsightsPage from '../pages/ai-insights/AIInsightsPage'
 
 // ─────────────────────────────────────────────────────────
 // Role wrappers (elimina repetição)
@@ -36,6 +37,7 @@ export default function AppRoutes() {
         {/* ───────────── PUBLIC ───────────── */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/activate" element={<ActivateAccountPage />} />
+        <Route path="/ativar" element={<ActivateAccountPage />} />
 
         {/* FIX: proteger root */}
         <Route
@@ -110,6 +112,16 @@ export default function AppRoutes() {
             element={
               <AdminOrGestor>
                 <ReportsPage />
+              </AdminOrGestor>
+            }
+          />
+
+          {/* AI Intelligence – ADMIN + GESTOR */}
+          <Route
+            path="/ai-insights"
+            element={
+              <AdminOrGestor>
+                <AIInsightsPage />
               </AdminOrGestor>
             }
           />

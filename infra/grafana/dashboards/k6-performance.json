@@ -3,7 +3,7 @@
     {
       "name": "DS_INFLUXDB_K6",
       "label": "InfluxDB (k6)",
-      "description": "",
+      "description": "Datasource com as metricas do k6 enviadas ao InfluxDB.",
       "type": "datasource",
       "pluginId": "influxdb",
       "pluginName": "InfluxDB"
@@ -12,30 +12,29 @@
   "__requires": [
     { "type": "grafana", "id": "grafana", "name": "Grafana", "version": "10.0.0" },
     { "type": "datasource", "id": "influxdb", "name": "InfluxDB", "version": "1.0.0" },
-    { "type": "panel", "id": "timeseries", "name": "Série temporal", "version": "" },
-    { "type": "panel", "id": "stat", "name": "Estatística", "version": "" },
-    { "type": "panel", "id": "gauge", "name": "Medidor", "version": "" }
+    { "type": "panel", "id": "timeseries", "name": "Time series", "version": "" },
+    { "type": "panel", "id": "stat", "name": "Stat", "version": "" }
   ],
-  "annotations": { "list": [] },
-  "description": "Painel de resultados dos testes de carga executados com k6 — acompanhe latência, throughput, taxa de erros e comportamento sob diferentes níveis de usuários virtuais.\n\nComo alimentar: k6 run --out influxdb=http://localhost:8086/k6 k6/test.js",
+  "annotations": {
+    "list": []
+  },
+  "description": "Dashboard de performance do k6. Mostra latencia, throughput, erros e saturacao da API a partir das series realmente gravadas no InfluxDB.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
   "id": null,
   "links": [],
   "panels": [
-
     {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
       "id": 100,
-      "title": "📊 Resumo do Teste",
+      "title": "Resumo do teste",
       "type": "row"
     },
-
     {
       "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-      "description": "Proporção de requisições HTTP que falharam (status >= 400 ou erro de conexão) em relação ao total enviado pelo k6.\n\nComo interpretar:\n• Verde (< 1%) → API estável sob carga\n• Amarelo (1–5%) → limiar aceitável, mas investigar causas\n• Vermelho (> 5%) → API com problemas sob carga — revisar thresholds no k6/test.js\n\nO threshold configurado no teste é: error_rate < 5%.",
+      "description": "Taxa media da metrica customizada error_rate. Verde ate 1%, amarelo ate 5% e vermelho acima disso.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
@@ -47,26 +46,31 @@
               { "color": "red", "value": 0.05 }
             ]
           },
-          "unit": "percentunit"
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
         }
       },
       "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
       "id": 1,
-      "options": { "colorMode": "background", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "title": "Taxa de Erros",
-      "type": "stat",
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
       "targets": [
         {
           "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-          "query": "SELECT mean(\"value\") FROM \"http_req_failed\" WHERE $timeFilter",
+          "query": "SELECT mean(\"value\") FROM \"error_rate\" WHERE $timeFilter",
           "refId": "A"
         }
-      ]
+      ],
+      "title": "Taxa de erros",
+      "type": "stat"
     },
-
     {
       "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-      "description": "Tempo de resposta HTTP no percentil 95 durante o teste de carga — 95% das requisições responderam abaixo deste valor.\n\nComo interpretar:\n• Verde (< 500 ms) → excelente performance sob carga\n• Amarelo (500 ms – 1 s) → aceitável\n• Vermelho (> 1 s) → API não cumprindo o SLA configurado\n\nO threshold configurado no teste é: p(95) < 1000 ms.",
+      "description": "Percentil 95 da latencia HTTP total. Mostra o comportamento de cauda que mais se aproxima do SLA do teste.",
       "fieldConfig": {
         "defaults": {
           "color": { "mode": "thresholds" },
@@ -83,208 +87,218 @@
       },
       "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
       "id": 2,
-      "options": { "colorMode": "background", "reduceOptions": { "calcs": ["p95"] } },
-      "title": "Latência p95",
-      "type": "stat",
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
       "targets": [
         {
           "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
           "query": "SELECT percentile(\"value\", 95) FROM \"http_req_duration\" WHERE $timeFilter",
           "refId": "A"
         }
-      ]
+      ],
+      "title": "Latencia p95",
+      "type": "stat"
     },
-
     {
       "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-      "description": "Quantidade de usuários virtuais (VUs) ativos no momento — cada VU representa um usuário simulado executando o fluxo de teste em paralelo.\n\nO teste possui 3 cenários:\n• smoke: 1 VU por 30s (validação básica)\n• load: ramp-up até 20 VUs por 2 min (carga normal)\n• spike: pico de 50 VUs por 40s (teste de estresse)\n\nAcompanhe como a latência reage ao aumento de VUs para identificar o ponto de saturação da API.",
-      "fieldConfig": { "defaults": { "unit": "short" } },
+      "description": "Numero atual de usuarios virtuais ativos. Ajuda a comparar latencia e throughput com o nivel de concorrencia.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        }
+      },
       "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
       "id": 3,
-      "options": { "colorMode": "value", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "title": "Usuários Virtuais Ativos (VUs)",
-      "type": "stat",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
       "targets": [
         {
           "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
           "query": "SELECT last(\"value\") FROM \"vus\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
           "refId": "A"
         }
-      ]
+      ],
+      "title": "VUs ativos",
+      "type": "stat"
     },
-
     {
       "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-      "description": "Média de requisições HTTP enviadas por segundo durante o teste.\n\nEste valor representa o throughput real alcançado pela combinação de VUs e tempo de resposta da API. Um throughput baixo com VUs altos indica que a API está lenta (cada VU fica bloqueado esperando resposta).",
-      "fieldConfig": { "defaults": { "unit": "reqps" } },
+      "description": "Throughput medio aproximado em requisicoes por segundo, calculado a partir da soma das amostras de http_reqs por intervalo.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        }
+      },
       "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
       "id": 4,
-      "options": { "colorMode": "value", "reduceOptions": { "calcs": ["mean"] } },
-      "title": "Requisições por Segundo (Throughput)",
-      "type": "stat",
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["mean"], "fields": "", "values": false }
+      },
       "targets": [
         {
           "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-          "query": "SELECT mean(\"value\") FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "query": "SELECT sum(\"value\") * 1000 / $__interval_ms FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval) fill(0)",
           "refId": "A"
         }
-      ]
+      ],
+      "title": "Throughput medio",
+      "type": "stat"
     },
-
     {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 5 },
       "id": 101,
-      "title": "⏱️ Latência ao Longo do Tempo",
+      "title": "Latencia e saturacao",
       "type": "row"
     },
-
     {
       "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-      "description": "Evolução da latência HTTP ao longo do teste, medida em três percentis:\n\n• p50 (mediana): tempo que metade das requisições leva — representa o caso comum\n• p95: 95% das requisições respondem abaixo deste valor — referência de SLA\n• p99: apenas 1% das requisições são mais lentas — captura os piores casos\n\nComo usar: compare como os percentis se comportam durante o ramp-up de VUs. Um p99 subindo enquanto p50 permanece estável indica que apenas requisições esporádicas estão lentas. Se todos subirem juntos, há um gargalo sistêmico.",
+      "description": "Latencia HTTP nos percentis 50, 95 e 99. Quando p95 e p99 sobem juntos, a degradacao deixa de ser pontual e passa a ser sistemica.",
       "fieldConfig": {
-        "defaults": { "unit": "ms", "color": { "mode": "palette-classic" } },
-        "overrides": [
-          {
-            "matcher": { "id": "byName", "options": "p95" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }]
-          },
-          {
-            "matcher": { "id": "byName", "options": "p99" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
-          },
-          {
-            "matcher": { "id": "byName", "options": "p50 (mediana)" },
-            "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }]
-          }
-        ]
+        "defaults": {
+          "unit": "ms",
+          "color": { "mode": "palette-classic" }
+        }
       },
       "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
       "id": 5,
-      "options": { "tooltip": { "mode": "multi" } },
-      "title": "Latência por Percentil (p50 / p95 / p99)",
-      "type": "timeseries",
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
       "targets": [
         {
-          "alias": "p50 (mediana)",
+          "alias": "p50",
           "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-          "query": "SELECT percentile(\"value\", 50) AS \"p50\" FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "query": "SELECT percentile(\"value\", 50) FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
           "refId": "A"
         },
         {
           "alias": "p95",
           "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-          "query": "SELECT percentile(\"value\", 95) AS \"p95\" FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "query": "SELECT percentile(\"value\", 95) FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
           "refId": "B"
         },
         {
           "alias": "p99",
           "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-          "query": "SELECT percentile(\"value\", 99) AS \"p99\" FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "query": "SELECT percentile(\"value\", 99) FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
           "refId": "C"
         }
-      ]
+      ],
+      "title": "Latencia por percentil",
+      "type": "timeseries"
     },
-
     {
       "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-      "description": "Correlação entre o número de usuários virtuais ativos e a taxa de requisições por segundo.\n\nComo usar: quando os VUs sobem mas o throughput (req/s) não cresce proporcionalmente, significa que a API está ficando mais lenta — as VUs ficam bloqueadas esperando resposta.\n\nEsse padrão identifica o ponto de saturação: a carga a partir da qual adicionar mais usuários não aumenta o throughput, apenas piora a latência.",
-      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "palette-classic" } } },
+      "description": "Compara concorrencia e throughput. Se VUs sobem e req/s nao acompanham, a API esta saturando.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "unit": "short"
+        }
+      },
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
       "id": 6,
-      "title": "Usuários Virtuais vs. Requisições por Segundo",
-      "type": "timeseries",
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
       "targets": [
         {
-          "alias": "Usuários Virtuais (VUs)",
+          "alias": "VUs",
           "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-          "query": "SELECT last(\"value\") AS \"VUs\" FROM \"vus\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "query": "SELECT last(\"value\") FROM \"vus\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
           "refId": "A"
         },
         {
-          "alias": "Requisições por segundo",
+          "alias": "req/s",
           "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-          "query": "SELECT mean(\"value\") AS \"req/s\" FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "query": "SELECT sum(\"value\") * 1000 / $__interval_ms FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval) fill(0)",
           "refId": "B"
         }
-      ]
+      ],
+      "title": "VUs versus throughput",
+      "type": "timeseries"
     },
-
     {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 14 },
       "id": 102,
-      "title": "❌ Erros e Thresholds",
+      "title": "Qualidade do teste",
       "type": "row"
     },
-
     {
       "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-      "description": "Medidor visual da taxa de erros com zonas de alerta.\n\nZonas:\n• Verde (0–1%): dentro do esperado\n• Amarelo (1–5%): próximo do limite do threshold\n• Vermelho (> 5%): threshold violado — o teste está falhando\n\nO threshold configurado em k6/test.js é: http_req_failed rate < 5%.",
+      "description": "Taxa de erro da execucao separada por scenario. Ajuda a localizar se a falha aparece no smoke, na carga sustentada ou no pico.",
       "fieldConfig": {
         "defaults": {
           "unit": "percentunit",
-          "color": { "mode": "thresholds" },
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 0.01 },
-              { "color": "red", "value": 0.05 }
-            ]
-          },
-          "max": 0.1,
-          "min": 0
+          "color": { "mode": "palette-classic" }
         }
       },
       "gridPos": { "h": 6, "w": 8, "x": 0, "y": 15 },
       "id": 7,
-      "title": "Taxa de Erros — Medidor",
-      "type": "gauge",
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
       "targets": [
         {
           "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-          "query": "SELECT mean(\"value\") FROM \"http_req_failed\" WHERE $timeFilter",
+          "query": "SELECT mean(\"value\") FROM \"error_rate\" WHERE $timeFilter GROUP BY time($__interval), \"scenario\" fill(null)",
           "refId": "A"
         }
-      ]
+      ],
+      "title": "Erro por scenario",
+      "type": "timeseries"
     },
-
     {
       "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-      "description": "Tempo gasto em partes específicas do ciclo de vida de cada requisição HTTP.\n\n• Tempo de Conexão TCP: quanto tempo leva para estabelecer a conexão com o servidor. Valores altos indicam problemas de rede ou servidor com muitas conexões simultâneas.\n• Tempo de Espera (TTFB): tempo até receber o primeiro byte da resposta (Time To First Byte). Representa o tempo de processamento do servidor — inclui tempo de query no banco e lógica de negócio.\n\nComparar esses dois valores ajuda a distinguir se o problema está na rede ou no processamento da API.",
-      "fieldConfig": { "defaults": { "unit": "ms", "color": { "mode": "palette-classic" } } },
+      "description": "Separa latencia de conexao TCP e tempo de espera pela resposta. Se o waiting cresce muito mais do que connecting, o gargalo esta no backend e nao na rede.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "color": { "mode": "palette-classic" }
+        }
+      },
       "gridPos": { "h": 6, "w": 16, "x": 8, "y": 15 },
       "id": 8,
-      "title": "Tempo de Conexão TCP e Espera pela Resposta (TTFB)",
-      "type": "timeseries",
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
       "targets": [
         {
-          "alias": "Conexão TCP",
+          "alias": "Conexao TCP",
           "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-          "query": "SELECT mean(\"value\") AS \"Conexão TCP\" FROM \"http_req_connecting\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "query": "SELECT mean(\"value\") FROM \"http_req_connecting\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
           "refId": "A"
         },
         {
-          "alias": "Espera pela resposta (TTFB)",
+          "alias": "Waiting / TTFB",
           "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-          "query": "SELECT mean(\"value\") AS \"Aguardando\" FROM \"http_req_waiting\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "query": "SELECT mean(\"value\") FROM \"http_req_waiting\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
           "refId": "B"
         }
-      ]
+      ],
+      "title": "Conexao TCP e waiting",
+      "type": "timeseries"
     },
-
     {
       "collapsed": false,
       "gridPos": { "h": 1, "w": 24, "x": 0, "y": 21 },
       "id": 103,
-      "title": "🔬 Métricas Customizadas do Teste",
+      "title": "Fluxos do sistema",
       "type": "row"
     },
-
     {
       "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-      "description": "Latência específica do endpoint de login (POST /auth/login) ao longo do teste.\n\nO login é o ponto crítico de entrada — se estiver lento, todos os demais fluxos serão impactados, pois os testes precisam autenticar antes de executar qualquer operação.\n\nThreshold configurado: p(95) < 500 ms.",
+      "description": "Latencia p95 do endpoint de login. E o melhor indicador para saber se a autenticacao virou gargalo do teste.",
       "fieldConfig": {
         "defaults": {
           "unit": "ms",
@@ -301,21 +315,24 @@
       },
       "gridPos": { "h": 6, "w": 8, "x": 0, "y": 22 },
       "id": 9,
-      "options": { "colorMode": "background", "reduceOptions": { "calcs": ["p95"] } },
-      "title": "Latência do Login (p95)",
-      "type": "stat",
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
       "targets": [
         {
           "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-          "query": "SELECT percentile(\"value\", 95) FROM \"login_duration\" WHERE $timeFilter",
+          "query": "SELECT percentile(\"value\", 95) FROM \"http_req_duration\" WHERE $timeFilter AND \"method\"='POST' AND \"name\" =~ /.*\\/auth\\/login/",
           "refId": "A"
         }
-      ]
+      ],
+      "title": "Login p95",
+      "type": "stat"
     },
-
     {
       "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-      "description": "Latência específica das operações de listagem e criação de ativos (GET/POST /assets) ao longo do teste.\n\nEndpoints de ativos são os mais utilizados no sistema. Latência alta aqui indica possível lentidão nas queries ao banco de dados ou processamento pesado na camada de serviço.\n\nThreshold configurado: p(95) < 800 ms.",
+      "description": "Latencia p95 das operacoes de ativos. Usa a metrica customizada assets_duration, publicada quando o fluxo de ativos roda com sucesso.",
       "fieldConfig": {
         "defaults": {
           "unit": "ms",
@@ -332,21 +349,24 @@
       },
       "gridPos": { "h": 6, "w": 8, "x": 8, "y": 22 },
       "id": 10,
-      "options": { "colorMode": "background", "reduceOptions": { "calcs": ["p95"] } },
-      "title": "Latência de Ativos (p95)",
-      "type": "stat",
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
       "targets": [
         {
           "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
           "query": "SELECT percentile(\"value\", 95) FROM \"assets_duration\" WHERE $timeFilter",
           "refId": "A"
         }
-      ]
+      ],
+      "title": "Ativos p95",
+      "type": "stat"
     },
-
     {
       "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-      "description": "Latência específica das operações de manutenção (GET/POST /maintenance) ao longo do teste.\n\nO fluxo de manutenção envolve múltiplas operações encadeadas (criar → iniciar → concluir), o que pode amplificar gargalos de banco de dados.\n\nThreshold configurado: p(95) < 800 ms.",
+      "description": "Latencia p95 das operacoes de manutencao. Usa a metrica customizada maintenance_duration, publicada quando o fluxo completo e executado.",
       "fieldConfig": {
         "defaults": {
           "unit": "ms",
@@ -363,67 +383,84 @@
       },
       "gridPos": { "h": 6, "w": 8, "x": 16, "y": 22 },
       "id": 11,
-      "options": { "colorMode": "background", "reduceOptions": { "calcs": ["p95"] } },
-      "title": "Latência de Manutenção (p95)",
-      "type": "stat",
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
       "targets": [
         {
           "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
           "query": "SELECT percentile(\"value\", 95) FROM \"maintenance_duration\" WHERE $timeFilter",
           "refId": "A"
         }
-      ]
+      ],
+      "title": "Manutencao p95",
+      "type": "stat"
     },
-
     {
       "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-      "description": "Total acumulado de requisições enviadas pela execução do k6, agrupado por cenário de teste.\n\nPermite comparar o volume gerado em cada fase:\n• smoke (1 VU / 30s): baixíssimo volume — apenas validação\n• load (até 20 VUs / 2 min): volume representativo de carga real\n• spike (50 VUs / 40s): volume de pico para estresse\n\nUse para validar se o volume do teste está condizente com o esperado.",
-      "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "palette-classic" } } },
+      "description": "Volume acumulado de requisicoes registradas pelo contador customizado requests_total, separado por scenario.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "palette-classic" }
+        }
+      },
       "gridPos": { "h": 6, "w": 12, "x": 0, "y": 28 },
       "id": 12,
-      "title": "Total de Requisições Enviadas por Cenário",
-      "type": "timeseries",
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
       "targets": [
         {
-          "alias": "Total de requisições",
           "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-          "query": "SELECT cumulative_sum(mean(\"value\")) FROM \"requests_total\" WHERE $timeFilter GROUP BY time($__interval), \"scenario\" fill(null)",
+          "query": "SELECT cumulative_sum(sum(\"value\")) FROM \"requests_total\" WHERE $timeFilter GROUP BY time($__interval), \"scenario\" fill(0)",
           "refId": "A"
         }
-      ]
+      ],
+      "title": "Requisicoes acumuladas por scenario",
+      "type": "timeseries"
     },
-
     {
       "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-      "description": "Quantidade de dados transferidos por segundo entre o k6 e a API durante o teste.\n\n• Dados recebidos: respostas da API para o k6\n• Dados enviados: payloads das requisições do k6 para a API\n\nTráfego de dados muito alto pode indicar respostas excessivamente grandes (payloads sem paginação) ou corpo de requisição muito grande. Use para identificar oportunidades de otimização de payload.",
-      "fieldConfig": { "defaults": { "unit": "Bps", "color": { "mode": "palette-classic" } } },
+      "description": "Volume de bytes recebidos e enviados por segundo. Ajuda a identificar payloads pesados ou respostas grandes demais sob carga.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "color": { "mode": "palette-classic" }
+        }
+      },
       "gridPos": { "h": 6, "w": 12, "x": 12, "y": 28 },
       "id": 13,
-      "title": "Tráfego de Dados (Enviados / Recebidos)",
-      "type": "timeseries",
+      "options": {
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
       "targets": [
         {
-          "alias": "Dados recebidos",
+          "alias": "Recebido",
           "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-          "query": "SELECT mean(\"value\") FROM \"data_received\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "query": "SELECT sum(\"value\") * 1000 / $__interval_ms FROM \"data_received\" WHERE $timeFilter GROUP BY time($__interval) fill(0)",
           "refId": "A"
         },
         {
-          "alias": "Dados enviados",
+          "alias": "Enviado",
           "datasource": { "type": "influxdb", "uid": "influxdb-k6" },
-          "query": "SELECT mean(\"value\") FROM \"data_sent\" WHERE $timeFilter GROUP BY time($__interval) fill(null)",
+          "query": "SELECT sum(\"value\") * 1000 / $__interval_ms FROM \"data_sent\" WHERE $timeFilter GROUP BY time($__interval) fill(0)",
           "refId": "B"
         }
-      ]
+      ],
+      "title": "Trafego de dados",
+      "type": "timeseries"
     }
-
   ],
+  "refresh": "30s",
   "schemaVersion": 38,
-  "tags": ["k6", "performance", "teste-de-carga"],
+  "tags": ["k6", "performance", "load-test"],
   "time": { "from": "now-1h", "to": "now" },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Patrimônio 360 — Testes de Performance (k6)",
+  "title": "Patrimonio 360 - Performance (k6)",
   "uid": "k6-performance",
-  "version": 2
+  "version": 3
 }
