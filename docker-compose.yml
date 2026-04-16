@@ -416,6 +416,21 @@ services:
           cpus: "0.50"
           memory: 512M
 
+  # ─── Provisiona Datasources do Grafana ────────────────────────────────────────
+  # Cria datasources Prometheus e InfluxDB via API após Grafana iniciar
+  provision-grafana:
+    image: curlimages/curl:latest
+    container_name: provision-grafana
+    volumes:
+      - ./infra/grafana/provision-datasources.sh:/provision.sh:ro
+    command: sh /provision.sh
+    depends_on:
+      grafana:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - asset-net
+
   # ─── Testes de Carga com k6 ──────────────────────────────────────────────────
   # Executa testes de performance e envia métricas para InfluxDB (visualiza no Grafana)
   # Dashboard disponível em: http://localhost:3001/d/k6-performance

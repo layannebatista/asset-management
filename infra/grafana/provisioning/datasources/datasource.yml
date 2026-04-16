@@ -20,8 +20,9 @@ datasources:
     type: influxdb
     access: proxy
     url: http://influxdb:8086
+    database: k6
     isDefault: false
-    editable: false
+    editable: true
     jsonData:
       version: InfluxQL
       dbName: k6
