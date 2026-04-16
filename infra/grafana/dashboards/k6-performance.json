@@ -1,6 +1,6 @@
 {
   "annotations": {"list": []},
-  "description": "Dashboard de performance do k6 com métricas do InfluxDB",
+  "description": "Painel de testes de carga do k6 — monitore performance, latência, throughput e taxa de erro em tempo real. Identifique gargalos de capacidade e degradação de performance antes que atinjam produção.",
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
@@ -28,6 +28,7 @@
       },
       "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
       "id": 1,
+      "description": "Proporção de requisições que falharam durante o teste.\n\nComo interpretar:\n• Verde (< 1%) → teste bem-sucedido\n• Amarelo (1–5%) → falhas pontuais aceitáveis\n• Vermelho (> 5%) → investigar logs de erro\n\nUse para detectar problemas de estabilidade sob carga.",
       "options": {
         "colorMode": "background",
         "graphMode": "none",
@@ -70,6 +71,7 @@
       },
       "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
       "id": 2,
+      "description": "95º percentil da latência HTTP — o tempo que 95% das requisições levam para completar.\n\nComo interpretar:\n• Verde (< 500ms) → performance excelente\n• Amarelo (500–1000ms) → aceitável mas monitore\n• Vermelho (> 1000ms) → degradação de performance\n\nEste é o melhor indicador de experiência do usuário. Olhe para p95, não para a média.",
       "options": {
         "colorMode": "background",
         "graphMode": "none",
@@ -124,6 +126,7 @@
       },
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
       "id": 3,
+      "description": "Evolução da latência em três percentis durante o teste.\n\np50 (mediana) → metade das requisições é mais rápida\np95 → 95% das requisições são mais rápidas (melhor indicador de SLA)\np99 → cauda de requests lentas (detecta problemas sérios)\n\nQuando p95 e p99 sobem juntos: degradação sistemática (saturação)\nQuando p99 sobe isolado: outliers ocasionais (aceitável)",
       "options": {
         "legend": {"calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true},
         "tooltip": {"mode": "multi", "sort": "none"}
@@ -190,6 +193,7 @@
       },
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
       "id": 4,
+      "description": "Compara concorrência (VUs) com capacidade (req/s).\n\nInterpretação:\n• Quando VUs sobem e req/s acompanha → API tem capacidade\n• Quando VUs sobem mas req/s não acompanha → API está saturando\n• Queda abrupta de req/s → limite de throughput atingido\n\nIdentifique o ponto de saturação: quanto tráfego a API consegue suportar?",
       "options": {
         "legend": {"calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true},
         "tooltip": {"mode": "multi", "sort": "none"}
@@ -248,6 +252,7 @@
       },
       "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
       "id": 5,
+      "description": "Taxa de erro separada por tipo de teste.\n\nCenários:\n• smoke: teste rápido de sanidade (1 usuário, 30s) — deve ter 0% erro\n• load: teste de carga sustentada (20 VUs, 1m50s) — detecta degradação\n• spike: teste de pico (até 50 VUs, 40s) — simula tráfego inesperado\n\nUse para identificar quais cenários específicos estão falhando.",
       "options": {
         "legend": {"calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true},
         "tooltip": {"mode": "multi", "sort": "none"}
@@ -297,6 +302,7 @@
       },
       "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
       "id": 6,
+      "description": "Tempo total que cada iteração do teste leva para completar (em ms).\n\nCada iteração executa um ciclo completo de requisições:\n• login → autenticação\n• listar assets\n• criar asset\n• buscar asset\n• etc.\n\nAumento na duração indica degradação de performance ou timeout aumentado.",
       "options": {
         "legend": {"calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true},
         "tooltip": {"mode": "multi", "sort": "none"}
@@ -323,7 +329,7 @@
   "time": {"from": "now-1h", "to": "now"},
   "timepicker": {},
   "timezone": "browser",
-  "title": "k6 Load Testing",
+  "title": "Patrimonio 360 - k6 Load Testing",
   "uid": "k6-performance",
   "version": 1,
   "weekStart": ""
