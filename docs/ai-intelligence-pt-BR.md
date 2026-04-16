@@ -40,7 +40,14 @@ O sistema de IA Intelligence fornece análises inteligentes automatizadas para d
 
 ## 📋 Como Usar
 
-### Requisição
+### 1. Obter Token
+```bash
+curl -X POST http://localhost:8080/api/auth/login \
+  -d "username=seu_usuario&password=sua_senha"
+# Resposta: { "token": "eyJhbGc..." }
+```
+
+### 2. Enviar Análise
 ```bash
 curl -X POST http://localhost:8080/api/ai/analysis/observability \
   -H "Authorization: Bearer YOUR_TOKEN" \
@@ -51,6 +58,36 @@ curl -X POST http://localhost:8080/api/ai/analysis/observability \
     },
     "criticality": "HIGH"
   }'
+```
+
+### 3. Criticidade
+- **LOW:** Exploração, tendências
+- **NORMAL:** Investigação padrão
+- **HIGH:** Problema que afeta usuários
+- **CRITICAL:** Outage em produção
+
+### 4. Resposta
+```json
+{
+  "analysisId": "analysis-123",
+  "type": "observability",
+  "result": {
+    "summary": "Latência elevada detectada",
+    "overallHealthScore": 72,
+    "anomalies": [
+      {
+        "title": "Latência p95 elevada",
+        "description": "Endpoint com p95 de 2340ms",
+        "severity": "high"
+      }
+    ],
+    "recommendations": [
+      "Aumentar réplicas de serviço",
+      "Verificar cache hit rate"
+    ],
+    "quality_score": 0.92
+  }
+}
 ```
 
 ### Endpoints
