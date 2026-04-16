@@ -242,45 +242,36 @@ services:
       PGPASSWORD: ${DB_PASSWORD:-asset123}
     command: >
       psql -h postgres -U ${DB_USERNAME:-asset_user} -d asset_management -c "
+        -- Limpar relações sem deletar os ativos (para não quebrar os testes)
         DELETE FROM asset_insurance
         WHERE asset_id IN (
           SELECT id FROM assets
           WHERE asset_tag LIKE 'E2E-%'
-             OR model LIKE 'E2E-Temp-%'
-             OR model LIKE 'Dell K6 %'
         );
         DELETE FROM maintenance_records
         WHERE asset_id IN (
           SELECT id FROM assets
           WHERE asset_tag LIKE 'E2E-%'
-             OR model LIKE 'E2E-Temp-%'
-             OR model LIKE 'Dell K6 %'
         );
         DELETE FROM transfer_requests
         WHERE asset_id IN (
           SELECT id FROM assets
           WHERE asset_tag LIKE 'E2E-%'
-             OR model LIKE 'E2E-Temp-%'
-             OR model LIKE 'Dell K6 %'
         );
         DELETE FROM asset_assignment_history
         WHERE asset_id IN (
           SELECT id FROM assets
           WHERE asset_tag LIKE 'E2E-%'
-             OR model LIKE 'E2E-Temp-%'
-             OR model LIKE 'Dell K6 %'
         );
         DELETE FROM asset_status_history
         WHERE asset_id IN (
           SELECT id FROM assets
           WHERE asset_tag LIKE 'E2E-%'
-             OR model LIKE 'E2E-Temp-%'
-             OR model LIKE 'Dell K6 %'
         );
-        DELETE FROM assets
-        WHERE asset_tag LIKE 'E2E-%'
-           OR model LIKE 'E2E-Temp-%'
-           OR model LIKE 'Dell K6 %';
+        -- Resetar ativos E2E para status AVAILABLE e sem usuário atribuído
+        UPDATE assets
+        SET status = 'AVAILABLE', user_id = NULL
+        WHERE asset_tag LIKE 'E2E-%';
       "
     depends_on:
       asset-management:
