@@ -41,6 +41,8 @@
       "targets": [
         {
           "datasource": {"type": "influxdb", "uid": "influxdb-k6"},
+          "format": "time_series",
+          "rawQuery": true,
           "query": "SELECT mean(value) FROM error_rate",
           "refId": "A"
         }
@@ -81,6 +83,8 @@
       "targets": [
         {
           "datasource": {"type": "influxdb", "uid": "influxdb-k6"},
+          "format": "time_series",
+          "rawQuery": true,
           "query": "SELECT percentile(value, 95) FROM http_req_duration",
           "refId": "A"
         }
@@ -129,18 +133,24 @@
         {
           "alias": "p50",
           "datasource": {"type": "influxdb", "uid": "influxdb-k6"},
+          "format": "time_series",
+          "rawQuery": true,
           "query": "SELECT percentile(value, 50) FROM http_req_duration GROUP BY time(5s)",
           "refId": "A"
         },
         {
           "alias": "p95",
           "datasource": {"type": "influxdb", "uid": "influxdb-k6"},
+          "format": "time_series",
+          "rawQuery": true,
           "query": "SELECT percentile(value, 95) FROM http_req_duration GROUP BY time(5s)",
           "refId": "B"
         },
         {
           "alias": "p99",
           "datasource": {"type": "influxdb", "uid": "influxdb-k6"},
+          "format": "time_series",
+          "rawQuery": true,
           "query": "SELECT percentile(value, 99) FROM http_req_duration GROUP BY time(5s)",
           "refId": "C"
         }
@@ -189,12 +199,16 @@
         {
           "alias": "VUs",
           "datasource": {"type": "influxdb", "uid": "influxdb-k6"},
+          "format": "time_series",
+          "rawQuery": true,
           "query": "SELECT max(value) FROM vus GROUP BY time(5s)",
           "refId": "A"
         },
         {
           "alias": "req/s",
           "datasource": {"type": "influxdb", "uid": "influxdb-k6"},
+          "format": "time_series",
+          "rawQuery": true,
           "query": "SELECT sum(value) FROM http_reqs GROUP BY time(5s)",
           "refId": "B"
         }
@@ -242,6 +256,8 @@
       "targets": [
         {
           "datasource": {"type": "influxdb", "uid": "influxdb-k6"},
+          "format": "time_series",
+          "rawQuery": true,
           "query": "SELECT mean(value) FROM error_rate GROUP BY scenario, time(5s)",
           "refId": "A"
         }
@@ -289,6 +305,8 @@
       "targets": [
         {
           "datasource": {"type": "influxdb", "uid": "influxdb-k6"},
+          "format": "time_series",
+          "rawQuery": true,
           "query": "SELECT mean(value) FROM iteration_duration GROUP BY time(5s)",
           "refId": "A"
         }
