@@ -2,13 +2,8 @@
  * Routing context types and enums
  */
 
-export enum AnalysisType {
-  OBSERVABILITY = 'observability',
-  TEST_INTELLIGENCE = 'test-intelligence',
-  CICD = 'cicd',
-  INCIDENT = 'incident',
-  RISK = 'risk',
-}
+import { AnalysisType } from './analysis.types';
+import { SensitivityLevel } from '../security/SecurityClassifier';
 
 export enum Criticality {
   LOW = 'low',
@@ -26,6 +21,7 @@ export interface RoutingContext {
   requiresLocalModel?: boolean;
   userTier: 'free' | 'pro' | 'enterprise';
   recentCacheMissRate?: number; // 0-1
+  securityLevel?: SensitivityLevel; // Phase 3: Security classification
 }
 
 export interface ModelDecision {
