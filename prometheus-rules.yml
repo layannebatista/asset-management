@@ -1,0 +1,99 @@
+groups:
+  - name: ai_intelligence_alerts
+    interval: 30s
+    rules:
+      # Latency alerts
+      - alert: HighAnalysisLatency
+        expr: histogram_quantile(0.99, ai_intelligence_analysis_duration_ms) > 5000
+        for: 5m
+        annotations:
+          summary: "Analysis p99 latency > 5s"
+          description: "P99 latency is {{ $value }}ms"
+
+      - alert: HighLLMLatency
+        expr: histogram_quantile(0.99, ai_intelligence_llm_call_duration_ms) > 8000
+        for: 5m
+        annotations:
+          summary: "LLM p99 latency > 8s"
+          description: "LLM p99 latency is {{ $value }}ms"
+
+      # Cost alerts
+      - alert: HighCostPerAnalysis
+        expr: rate(ai_intelligence_llm_cost_usd[5m]) > 1.0
+        for: 10m
+        annotations:
+          summary: "LLM cost rate > $1/min"
+          description: "Cost rate is {{ $value }}/min"
+
+      # Quality alerts
+      - alert: LowEvalScore
+        expr: ai_intelligence_analysis_eval_score < 0.70
+        for: 5m
+        annotations:
+          summary: "Analysis eval score < 70%"
+          description: "Last eval score: {{ $value }}"
+
+      - alert: HighEvalScoreVariance
+        expr: |
+          (max(ai_intelligence_analysis_eval_score) - min(ai_intelligence_analysis_eval_score)) > 0.2
+        for: 10m
+        annotations:
+          summary: "High variance in eval scores"
+          description: "Score variance > 0.2"
+
+      # Fallback/Error alerts
+      - alert: HighFallbackRate
+        expr: rate(ai_intelligence_llm_fallback_used[5m]) > 0.2
+        for: 5m
+        annotations:
+          summary: "LLM fallback rate > 20%"
+          description: "Fallback rate: {{ $value }}"
+
+      - alert: HighContextDropRate
+        expr: rate(ai_intelligence_context_chunks_dropped[5m]) > 5
+        for: 5m
+        annotations:
+          summary: "Dropping > 5 chunks/sec"
+          description: "Drop rate: {{ $value }}/sec"
+
+      # Token usage
+      - alert: HighTokenUsage
+        expr: rate(ai_intelligence_llm_tokens_total[5m]) > 50000
+        for: 10m
+        annotations:
+          summary: "Token usage > 50k tokens/sec"
+          description: "Rate: {{ $value }} tokens/sec"
+
+# Recording rules for dashboards
+  - name: ai_intelligence_recording
+    interval: 30s
+    rules:
+      - record: ai:analysis:latency_p50
+        expr: histogram_quantile(0.50, ai_intelligence_analysis_duration_ms)
+
+      - record: ai:analysis:latency_p95
+        expr: histogram_quantile(0.95, ai_intelligence_analysis_duration_ms)
+
+      - record: ai:analysis:latency_p99
+        expr: histogram_quantile(0.99, ai_intelligence_analysis_duration_ms)
+
+      - record: ai:llm:latency_p50
+        expr: histogram_quantile(0.50, ai_intelligence_llm_call_duration_ms)
+
+      - record: ai:llm:latency_p95
+        expr: histogram_quantile(0.95, ai_intelligence_llm_call_duration_ms)
+
+      - record: ai:llm:latency_p99
+        expr: histogram_quantile(0.99, ai_intelligence_llm_call_duration_ms)
+
+      - record: ai:cost:per_hour
+        expr: rate(ai_intelligence_llm_cost_usd[1h]) * 3600
+
+      - record: ai:tokens:per_hour
+        expr: rate(ai_intelligence_llm_tokens_total[1h]) * 3600
+
+      - record: ai:fallback:rate
+        expr: rate(ai_intelligence_llm_fallback_used[5m])
+
+      - record: ai:analysis:count_per_minute
+        expr: rate(ai_intelligence_analysis_total[1m]) * 60
