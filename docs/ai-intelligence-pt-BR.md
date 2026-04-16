@@ -62,103 +62,33 @@ curl -X POST http://localhost:8080/api/ai/analysis/observability \
 | Incident | `/api/ai/analysis/incident` | ADMIN, GESTOR |
 | Risk | `/api/ai/analysis/risk` | ADMIN, GESTOR |
 | Histórico | `/api/ai/analysis/history` | Autenticado |
-| Resultado | `/api/ai/analysis/{id}` | Autenticado |
 
 ---
 
 ## 🔧 Funcionalidades
 
-### Roteamento Automático
-O sistema escolhe automaticamente o melhor modelo:
-- Contexto pequeno → GPT-4o-mini (barato)
-- Contexto médio → GPT-4o (balanceado)
-- Código complexo → GPT-4-Turbo (qualidade)
-- Análise crítica → o1-preview (raciocínio profundo)
+**Roteamento Automático:** Sistema escolhe o melhor modelo baseado no contexto
 
-### Qualidade 3D
-Cada análise é avaliada em:
-- **Quality (50%):** Precisão e completude
-- **Actionability (30%):** Recomendações práticas
-- **Consistency (20%):** Coerência interna
+**Qualidade 3D:** Cada análise é avaliada em Quality (50%), Actionability (30%), Consistency (20%)
 
-Escore: 0-1 (0.8+ é excelente)
+**Caching:** Consultas similares cacheadas por 7 dias (~50% economia de tokens)
 
-### Caching
-Consultas similares são cacheadas por 7 dias (~50% economia de tokens)
-
-### Segurança LGPD
-- Dados sensíveis (CPF, CNPJ, senhas) são automaticamente mascarados
-- Análises críticas usam modelos locais
-- Auditoria completa de todas as requisições
+**Segurança LGPD:** Dados sensíveis mascarados automaticamente, análises críticas em modelos locais
 
 ---
 
-## 📊 SLAs
+## 📊 SLAs e Custo
 
 | Métrica | Target |
 |---------|--------|
-| Latência P99 | < 5 segundos |
+| Latência P99 | < 5s |
 | Disponibilidade | 99.5% |
 | Taxa de Erro | < 2% |
-| Custo Médio | $0.054/análise |
 
----
-
-## 💰 Custo por Tipo
-
-| Tipo | Custo Típico |
-|------|--------------|
+| Tipo | Custo |
+|------|-------|
 | Observability | $0.005-0.010 |
 | Test Intelligence | $0.030-0.050 |
 | CI/CD | $0.010-0.020 |
 | Incident | $0.080-0.150 |
 | Risk | $0.020-0.040 |
-
----
-
-## 🔐 Autenticação e Rate Limit
-
-**Autenticação:** JWT via `/api/auth/login`
-
-**Limites por hora:**
-- Free: 50 análises
-- Pro: 500 análises
-- Enterprise: Ilimitado
-
----
-
-## ✅ Boas Práticas
-
-1. **Contexto claro:** Inclua histórico e especifique o que quer saber
-2. **Criticidade correta:**
-   - LOW: Exploração
-   - NORMAL: Investigação padrão
-   - HIGH: Afeta usuários
-   - CRITICAL: Outage
-
-3. **Confira a confiança:** Resultados < 0.75 podem precisar revisão manual
-4. **Reutilize resultados:** Guarde o `analysisId` para não gastar tokens novamente
-
----
-
-## 🆘 Problemas Comuns
-
-**Rate limit atingido?** Aguarde 1 hora ou contate admin para upgrade
-
-**Confiança baixa?** Forneça mais contexto histórico
-
-**Dados sensíveis detectados?** Foram automaticamente mascarados — análise continua normal
-
-**Timeout?** Contexto muito grande — tente novamente depois
-
----
-
-## 📞 Suporte
-
-- Dashboard: http://localhost:3000
-- Prometheus: http://localhost:9090
-- Admin: contato.layanne.batista@gmail.com
-
----
-
-**Última atualização:** 2026-04-16
