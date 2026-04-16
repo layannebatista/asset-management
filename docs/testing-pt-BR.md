@@ -118,19 +118,72 @@ Arquivo principal:
 
 `k6/test.js`
 
-Execução simples:
+### Via Docker Compose (Recomendado)
+
+O serviço `k6` no `docker-compose.yml` executa automaticamente após toda a stack estar healthy:
+
+```bash
+docker compose up
+# Aguarde todos os containers ficarem healthy (~2-3 minutos)
+# O k6 executará automaticamente após asset-management e influxdb
+```
+
+Métricas em tempo real aparecem em:
+
+- **Grafana**: http://localhost:3001 → Dashboard **k6 Load Testing**
+- **InfluxDB**: http://localhost:8086 → banco de dados `k6`
+
+### Localmente (sem Docker)
+
+Instale k6 primeiro: https://k6.io/docs/getting-started/installation/
+
+Execução simples (sem gravar métricas):
 
 ```bash
 k6 run k6/test.js
 ```
 
-Execução com envio para InfluxDB:
+Execução com envio para InfluxDB (Docker rodando):
 
 ```bash
+# Se Docker estiver rodando e InfluxDB acessível em localhost:8086
 k6 run --out influxdb=http://localhost:8086/k6 k6/test.js
 ```
 
-O Grafana usa o dashboard `k6-performance.json`.
+Com variáveis de ambiente:
+
+```bash
+BASE_URL=http://localhost:8080 \
+ADMIN_EMAIL=admin@empresa.com \
+ADMIN_PASSWORD=Admin@123 \
+  k6 run --out influxdb=http://localhost:8086/k6 k6/test.js
+```
+
+### Parar apenas o k6 (mantém os dados)
+
+```bash
+docker compose stop k6
+```
+
+### Limpar dados de k6
+
+```bash
+docker compose down -v  # Remove todos os volumes, incluindo InfluxDB
+```
+
+### Troubleshooting
+
+**Os dados do k6 não aparecem no Grafana?**
+
+1. Verifique se o k6 completou: `docker compose logs k6`
+2. Verifique InfluxDB: `docker compose exec influxdb influx -execute "SELECT * FROM k6 LIMIT 1"`
+3. Reinicie Grafana: `docker compose restart grafana`
+
+**A conexão com a API falha durante o k6?**
+
+- Verifique se `asset-management` está healthy: `docker compose logs asset-management`
+- Use `BASE_URL=http://asset-management:8080` (nome do serviço) se rodar do host
+- Se rodar k6 local: `BASE_URL=http://localhost:8080`
 
 ---
 

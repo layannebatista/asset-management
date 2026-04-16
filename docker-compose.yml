@@ -416,6 +416,29 @@ services:
           cpus: "0.50"
           memory: 512M
 
+  # ─── Testes de Carga com k6 ──────────────────────────────────────────────────
+  # Executa testes de performance e envia métricas para InfluxDB (visualiza no Grafana)
+  # Dashboard disponível em: http://localhost:3001/d/k6-performance
+  k6:
+    image: grafana/k6:latest
+    container_name: k6
+    volumes:
+      - ./k6/test.js:/app/test.js:ro
+    environment:
+      BASE_URL: ${BASE_URL:-http://asset-management:8080}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@empresa.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@123}
+      TEST_DATA_CLEANUP_KEY: ${TEST_DATA_CLEANUP_KEY:-cleanup-local-key}
+    command: run --out influxdb=http://influxdb:8086/k6 /app/test.js
+    depends_on:
+      asset-management:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+    restart: "no"
+    networks:
+      - asset-net
+
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor

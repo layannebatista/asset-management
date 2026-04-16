@@ -59,8 +59,10 @@ docker compose down -v     # reset completo — apaga banco e volumes
 | **Swagger UI** | http://localhost:8080/swagger-ui.html | Bearer token |
 | **Prometheus** | http://localhost:9090 | — |
 | **Grafana** | http://localhost:3001 | `admin` / `admin123` |
+| **Grafana k6** | http://localhost:3001/d/k6-performance | dashboard de load testing |
 | **Allure UI** | http://localhost:5252 | — |
 | **AI Intelligence** | http://localhost:3100/health | — |
+| **InfluxDB** | http://localhost:8086 | métricas do k6 |
 
 > Credenciais do Grafana são configuráveis via `GRAFANA_USER` e `GRAFANA_PASSWORD` no `.env`.
 
