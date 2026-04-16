@@ -36,6 +36,9 @@ build/
 ### VS Code ###
 .vscode/
 
+### Claude Code ###
+.claude/settings.local.json
+
 ### Allure – resultados e relatórios gerados (não versionar) ###
 backend/allure-results/*
 !backend/allure-results/.gitkeep
