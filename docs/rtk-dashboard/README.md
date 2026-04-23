@@ -19,7 +19,7 @@ O que mudou da versão anterior:
 - Foco em economia de tokens
 - Dados antes vs. depois
 
-### 📖 [Explicação RTK](../RTK-EXPLICACAO-PT-BR.md)
+### 📖 [Explicação RTK](RTK-EXPLICACAO-PT-BR.md)
 Entenda o conceito:
 - O que é RTK e como funciona
 - Casos de uso reais
