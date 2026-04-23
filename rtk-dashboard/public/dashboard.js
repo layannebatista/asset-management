@@ -302,7 +302,7 @@ function renderVisualDashboard(data) {
                 <th>Redução % <span class="tooltip-icon" title="RTK economia">?</span></th>
                 <th>Acurácia <span class="tooltip-icon" title="Qualidade mantida">?</span></th>
                 <th>Custo/Análise <span class="tooltip-icon" title="Preço em R$">?</span></th>
-                <th>Status</th>
+                <th>Status <span class="tooltip-icon" title="RECOMENDADO: ótimo custo-benefício. NÃO REC: revisar uso">?</span></th>
               </tr>
             </thead>
             <tbody>
@@ -314,7 +314,7 @@ function renderVisualDashboard(data) {
                   <td>${(m.avgReductionPercentage || 0).toFixed(1)}%</td>
                   <td>${(m.avgAccuracy || 0).toFixed(1)}%</td>
                   <td>R$ ${(convertUsdToBrl(m.costPerAnalysis) || 0).toFixed(4)}</td>
-                  <td><span class="badge ${m.recommendation === 'RECOMENDADO' ? 'success' : 'warning'}">${m.recommendation}</span></td>
+                  <td><span class="badge ${m.recommendation === 'RECOMENDADO' ? 'success' : 'warning'}">${m.recommendation === 'RECOMENDADO' ? '✓ REC.' : '✗ NÃO'}</span></td>
                 </tr>
               `).join('')}
             </tbody>
@@ -337,7 +337,7 @@ function renderVisualDashboard(data) {
                 <th>Acurácia <span class="tooltip-icon" title="Qualidade mantida">?</span></th>
                 <th>Economizado <span class="tooltip-icon" title="Em reais">?</span></th>
                 <th>ROI % <span class="tooltip-icon" title="Retorno do investimento">?</span></th>
-                <th>Prioridade</th>
+                <th>Prioridade <span class="tooltip-icon" title="ALTA: ROI > 70%, foco máximo. REVISAR: ROI < 70%">?</span></th>
               </tr>
             </thead>
             <tbody>
@@ -354,13 +354,6 @@ function renderVisualDashboard(data) {
               `).join('')}
             </tbody>
           </table>
-        </div>
-        <div class="roi-summary">
-          <div class="roi-card">
-            <h5>💵 Total Economizado</h5>
-            <p class="total-saved">R$ ${(convertUsdToBrl(totalUsdSaved) || 0).toFixed(2)}</p>
-            <p class="roi-detail">${analyses.length} tipos monitorados</p>
-          </div>
         </div>
       </div>
       ` : ''}
