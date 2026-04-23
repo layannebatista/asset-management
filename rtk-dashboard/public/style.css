@@ -348,6 +348,53 @@ body {
   color: #6d829b;
 }
 
+.tooltip-icon {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-left: 0.4rem;
+  background: #e0e7ff;
+  color: #4f46e5;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 18px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: help;
+  transition: all 0.2s;
+}
+
+.tooltip-icon:hover {
+  background: #4f46e5;
+  color: #fff;
+}
+
+.tooltip-popup {
+  position: fixed;
+  display: none;
+  background: #1f2937;
+  color: #fff;
+  padding: 0.6rem 0.9rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  max-width: 200px;
+  white-space: normal;
+  z-index: 1000;
+  transform: translateX(-50%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+}
+
+.tooltip-popup::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #1f2937;
+}
+
 .kpi-tooltip {
   font-size: 0.8rem;
   color: #5f7893;

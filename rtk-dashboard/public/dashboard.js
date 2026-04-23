@@ -224,8 +224,6 @@ function renderVisualDashboard(data) {
 
   const summary = data.execSummary.summary || {};
   const metrics = summary.metrics || {};
-  const tokenMetrics = data.tokenEconomy.tokenEconomy || {};
-  const financialImpact = data.tokenEconomy.financialImpact || {};
   const models = data.modelEfficiency.models || [];
   const analyses = data.analysisRoi.analyses || [];
   const totalUsdSaved = data.analysisRoi.totalUsdSaved || 0;
@@ -236,7 +234,7 @@ function renderVisualDashboard(data) {
       <!-- Alerts Section -->
       ${alerts.length > 0 ? `
       <div class="alerts-section">
-        <h3>🚨 Alertas Automáticos</h3>
+        <h3>🚨 Alertas</h3>
         ${alerts.map(alert => `
           <div class="alert-item ${alert.type}">
             ${alert.message}
@@ -247,95 +245,63 @@ function renderVisualDashboard(data) {
 
       <!-- Executive Summary -->
       <div class="dashboard-section">
-        <h2>📊 Resumo Executivo — Últimos 30 Dias</h2>
+        <h2>📊 RTK Dashboard</h2>
         <div class="kpi-grid">
           <div class="kpi-card">
             <div class="kpi-number">${(metrics.tokensSaved || 0).toLocaleString('pt-BR')}</div>
-            <div class="kpi-label">Tokens Economizados</div>
-            <div class="kpi-tooltip">Diferença entre tokens usados sem otimização e com RTK ativado. Maior número = maior economia.</div>
+            <div class="kpi-label">
+              Tokens Economizados
+              <span class="tooltip-icon" title="Diferença entre tokens sem otimização e com RTK ativado">?</span>
+            </div>
           </div>
           <div class="kpi-card highlight">
             <div class="kpi-number">R$ ${(convertUsdToBrl(metrics.usdSaved) || 0).toFixed(2)}</div>
-            <div class="kpi-label">Economizados em Reais</div>
-            <div class="kpi-tooltip">Valor em reais da economia. Cálculo: Tokens economizados × R$ 0,0025 (taxa de token).</div>
+            <div class="kpi-label">
+              Economizados
+              <span class="tooltip-icon" title="Valor em reais da economia (Tokens × R$ 0,0025)">?</span>
+            </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-number">${(metrics.savingsPercentage || 0).toFixed(1)}%</div>
-            <div class="kpi-label">Redução de Tokens</div>
-            <div class="kpi-tooltip">Percentual de redução obtido com RTK. 62% significa que RTK reduziu os tokens a 38% do original.</div>
+            <div class="kpi-label">
+              Redução
+              <span class="tooltip-icon" title="% de redução obtido com RTK">?</span>
+            </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-number">${(metrics.qualityScore || 0).toFixed(1)}%</div>
-            <div class="kpi-label">Qualidade Mantida</div>
-            <div class="kpi-tooltip">Acurácia do contexto após otimização. 94.5% = RTK mantém qualidade excelente mesmo reduzindo tokens.</div>
+            <div class="kpi-label">
+              Qualidade
+              <span class="tooltip-icon" title="Acurácia mantida após otimização">?</span>
+            </div>
           </div>
           <div class="kpi-card">
             <div class="kpi-number">${(summary.totalAnalysesExecuted || 0).toLocaleString('pt-BR')}</div>
-            <div class="kpi-label">Análises Executadas</div>
-            <div class="kpi-tooltip">Quantidade total de análises processadas neste período. Cada análise economiza tokens com RTK.</div>
+            <div class="kpi-label">
+              Análises
+              <span class="tooltip-icon" title="Análises executadas neste período">?</span>
+            </div>
           </div>
         </div>
         <div class="recommendation-banner ${summary.recommendation.includes('✅') ? 'success' : 'warning'}">
           <p>${summary.recommendation}</p>
-          <small>RTK reduz custos mantendo qualidade da análise</small>
-        </div>
-      </div>
-
-      <!-- Token Economy -->
-      <div class="dashboard-section">
-        <h2>💰 Economia de Tokens Detalhada</h2>
-        <div class="info-box">
-          <p><strong>Como funciona:</strong> Quando você executa uma análise, o sistema usa tokens. RTK reduz a quantidade de tokens necessários sem perder qualidade. Os números abaixo mostram a diferença.</p>
-        </div>
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <div class="metric-value">${(tokenMetrics.tokensWithoutRTK || 0).toLocaleString('pt-BR')}</div>
-            <div class="metric-label">Tokens Sem Otimização</div>
-            <div class="metric-help">Quanto seria gasto sem RTK</div>
-          </div>
-          <div class="metric-card highlight">
-            <div class="metric-value">${(tokenMetrics.tokensWithRTK || 0).toLocaleString('pt-BR')}</div>
-            <div class="metric-label">Tokens Com RTK</div>
-            <div class="metric-help">Quanto realmente foi gasto</div>
-          </div>
-          <div class="metric-card">
-            <div class="metric-value">R$ ${(convertUsdToBrl(financialImpact.costWithoutOptimization) || 0).toFixed(2)}</div>
-            <div class="metric-label">Custo Sem RTK</div>
-            <div class="metric-help">Se não tivéssemos otimizado</div>
-          </div>
-          <div class="metric-card highlight">
-            <div class="metric-value">R$ ${(convertUsdToBrl(financialImpact.costWithOptimization) || 0).toFixed(2)}</div>
-            <div class="metric-label">Custo Com RTK</div>
-            <div class="metric-help">Custo real depois da otimização</div>
-          </div>
         </div>
       </div>
 
       <!-- Model Efficiency -->
       ${models.length > 0 ? `
       <div class="dashboard-section">
-        <h2>🤖 Eficiência dos Modelos de IA</h2>
-        <div class="info-box">
-          <p><strong>O que significa cada coluna:</strong></p>
-          <ul>
-            <li><strong>Execuções:</strong> Quantas vezes cada modelo foi usado</li>
-            <li><strong>Tokens Final:</strong> Média de tokens após otimização</li>
-            <li><strong>Redução %:</strong> Quanto RTK conseguiu economizar com este modelo</li>
-            <li><strong>Acurácia:</strong> Qualidade mantida (mais alto = melhor)</li>
-            <li><strong>Custo/Análise:</strong> Preço em reais por análise</li>
-            <li><strong>Status:</strong> Recomendado se oferece bom custo-benefício</li>
-          </ul>
-        </div>
+        <h2>🤖 Eficiência dos Modelos</h2>
         <div class="table-wrapper">
           <table>
             <thead>
               <tr>
                 <th>Modelo</th>
-                <th>Execuções</th>
-                <th>Tokens Final</th>
-                <th>Redução %</th>
-                <th>Acurácia</th>
-                <th>Custo/Análise</th>
+                <th>Execuções <span class="tooltip-icon" title="Vezes usadas">?</span></th>
+                <th>Tokens Final <span class="tooltip-icon" title="Após otimização">?</span></th>
+                <th>Redução % <span class="tooltip-icon" title="RTK economia">?</span></th>
+                <th>Acurácia <span class="tooltip-icon" title="Qualidade mantida">?</span></th>
+                <th>Custo/Análise <span class="tooltip-icon" title="Preço em R$">?</span></th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -360,20 +326,17 @@ function renderVisualDashboard(data) {
       <!-- ROI Analysis -->
       ${analyses.length > 0 ? `
       <div class="dashboard-section">
-        <h2>📈 ROI Por Tipo de Análise</h2>
-        <div class="info-box">
-          <p><strong>O que significa:</strong> Diferentes tipos de análises economizam diferentes quantidades com RTK. Use esta tabela para priorizar quais análises executar mais frequentemente (as que economizam mais). Foque em análises com ROI > 70%.</p>
-        </div>
+        <h2>📈 ROI Por Análise</h2>
         <div class="table-wrapper">
           <table>
             <thead>
               <tr>
-                <th>Tipo de Análise</th>
-                <th>Execuções</th>
-                <th>Eficiência</th>
-                <th>Acurácia</th>
-                <th>Economizado (R$)</th>
-                <th>ROI %</th>
+                <th>Tipo <span class="tooltip-icon" title="Categoria da análise">?</span></th>
+                <th>Execuções <span class="tooltip-icon" title="Quantas vezes rodou">?</span></th>
+                <th>Eficiência <span class="tooltip-icon" title="% de economia">?</span></th>
+                <th>Acurácia <span class="tooltip-icon" title="Qualidade mantida">?</span></th>
+                <th>Economizado <span class="tooltip-icon" title="Em reais">?</span></th>
+                <th>ROI % <span class="tooltip-icon" title="Retorno do investimento">?</span></th>
                 <th>Prioridade</th>
               </tr>
             </thead>
@@ -394,9 +357,9 @@ function renderVisualDashboard(data) {
         </div>
         <div class="roi-summary">
           <div class="roi-card">
-            <h5>💵 Total Economizado em 30 dias</h5>
+            <h5>💵 Total Economizado</h5>
             <p class="total-saved">R$ ${(convertUsdToBrl(totalUsdSaved) || 0).toFixed(2)}</p>
-            <p class="roi-detail">${analyses.length} tipos de análise monitorados</p>
+            <p class="roi-detail">${analyses.length} tipos monitorados</p>
           </div>
         </div>
       </div>
@@ -405,7 +368,31 @@ function renderVisualDashboard(data) {
   `;
 
   analysisContainer.innerHTML = html;
+  setupTooltips();
   renderCharts(data);
+}
+
+function setupTooltips() {
+  document.querySelectorAll('.tooltip-icon').forEach(icon => {
+    const title = icon.getAttribute('title');
+    icon.addEventListener('mouseenter', function(e) {
+      let tooltip = document.querySelector('.tooltip-popup');
+      if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.className = 'tooltip-popup';
+        document.body.appendChild(tooltip);
+      }
+      tooltip.textContent = title;
+      const rect = icon.getBoundingClientRect();
+      tooltip.style.display = 'block';
+      tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+      tooltip.style.top = (rect.top - 40) + 'px';
+    });
+    icon.addEventListener('mouseleave', function() {
+      const tooltip = document.querySelector('.tooltip-popup');
+      if (tooltip) tooltip.style.display = 'none';
+    });
+  });
 }
 
 function renderCharts(data) {
