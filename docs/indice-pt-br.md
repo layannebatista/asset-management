@@ -37,6 +37,7 @@ Este indice centraliza a navegacao dos documentos tecnicos.
 - **`rtk-dashboard/README.md`** — 📍 Índice da documentação do RTK Dashboard
 - `rtk-dashboard/RTK-EXPLICACAO-PT-BR.md` — O que é RTK, como funciona, exemplos práticos
 - `rtk-dashboard/guia-completo-pt-br.md` — Guia técnico completo (endpoints, API, dados)
+- `rtk-dashboard/coleta-dados-pt-br.md` — Como os dados são coletados, armazenados e consumidos
 - `rtk-dashboard/MIGRACAO-RTK-PT-BR.md` — O que mudou (arquitetura, remoções, simplificação)
 
 ## Projetos
