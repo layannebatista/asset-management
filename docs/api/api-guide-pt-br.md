@@ -13,7 +13,9 @@ A API REST é multi-tenant e usa JSON para entrada e saída. Os módulos atualme
 - ativos e histórico de ativos
 - transferências, inventário e manutenção
 - categorias, auditoria e exportação CSV
-- dashboards, depreciação, seguros, centros de custo e AI Intelligence
+- dashboards, depreciação, seguros, centros de custo
+
+**Nota**: APIs de análise IA foram removidas. Use **RTK Dashboard** (porta 3100) para economias de tokens (ver seção 15).
 
 ---
 
@@ -279,16 +281,27 @@ Acesso: `ADMIN`, `GESTOR`
 - `/api/dashboard/unit` — `GESTOR`
 - `/api/dashboard/personal` — `OPERADOR`
 
-## AI Intelligence
+## RTK Dashboard — Otimização de Tokens
 
-- `POST /api/ai/analysis/observability`
-- `POST /api/ai/analysis/test-intelligence`
-- `POST /api/ai/analysis/cicd`
-- `POST /api/ai/analysis/incident`
-- `POST /api/ai/analysis/risk`
-- `POST /api/ai/analysis/multi-agent`
-- `GET /api/ai/analysis/history`
-- `GET /api/ai/analysis/{id}`
+**Base URL**: `http://localhost:3100`
+
+APIs para economia de tokens (sem custo de IA paga):
+
+- `GET /health` — Health check
+- `GET /api/v1/insights/executive-summary` — Resumo com KPIs
+- `GET /api/v1/insights/token-economy` — Economia detalhada
+- `GET /api/v1/insights/model-efficiency` — Eficiência por modelo
+- `GET /api/v1/insights/analysis-roi` — ROI por tipo de análise
+- `GET /api/v1/insights/history` — Histórico 3 meses
+
+**Dashboard Visual**: `GET /` (interface em http://localhost:3100)
+
+**Documentação OpenAPI**: `http://localhost:3100/swagger-ui.html`
+
+**Exemplo de uso**:
+```bash
+curl http://localhost:3100/api/v1/insights/executive-summary?days=30
+```
 
 ---
 

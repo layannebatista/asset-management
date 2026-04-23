@@ -32,7 +32,7 @@
 ```
 Frontend: React 19 + TypeScript
 Backend: Java 17 + Spring Boot 3 + Clean Architecture
-RTK: Node.js + Otimização de Tokens (100% local, sem APIs pagas)
+RTK: Node.js + Otimização de Tokens (100% local)
 Banco: PostgreSQL 16 + Flyway
 Observabilidade: Prometheus + Grafana
 Testes: JUnit + Cucumber + Playwright + K6
@@ -76,7 +76,6 @@ A sequência de inicialização é gerenciada automaticamente pelos `healthcheck
 Perfis disponíveis no arquivo base (`docker-compose.yml`):
 
 - `observability`: Prometheus, Grafana, InfluxDB, cAdvisor
-- `ai`: serviço AI Intelligence
 - `reports`: Sprint Reporter + Allure
 - `tests`: containers one-shot de testes e utilitários
 
@@ -115,7 +114,7 @@ Disponível em todas as instâncias (local ou Docker).
 
 | Serviço | URL | Função |
 |---|---|---|
-| **🎯 RTK Dashboard** | [http://localhost:3100](http://localhost:3100) | **Dashboard de economia de tokens (100% local, sem APIs pagas)** |
+| **🎯 RTK Dashboard** | [http://localhost:3100](http://localhost:3100) | **Dashboard de economia de tokens (100% local)** |
 | **RTK Insights API** | [http://localhost:3100/api/v1/insights/*](http://localhost:3100/api/v1/insights/) | 5 endpoints: token-economy, model-efficiency, analysis-roi, executive-summary, history |
 | **Health Check** | [http://localhost:3100/health](http://localhost:3100/health) | Status do serviço |
 
@@ -334,22 +333,6 @@ Para guia detalhado, veja: [Sprint Reporter Guide](docs/projects/sprint-reporter
 
 ---
 
-## 🤖 Inteligência Artificial Embarcada
-
-A plataforma inclui um **sidecar IA** que analisa automaticamente:
-
-- ✅ **Testes**: Detecta testes flakey, padrões de falha
-- 🔄 **CI/CD**: Analisa taxa de sucesso, duration anomalies
-- 📊 **Observabilidade**: Identifica anomalias em métricas
-- ⚠️ **Riscos**: Detecta padrões de risco em domínio
-- 💰 **Economia**: Otimiza tokens e custos de IA
-
-**Acesso**: [http://localhost:3100](http://localhost:3100)
-
-**Documentação**: [AI Intelligence Guide](docs/ia-intelligence/ia-intelligence-overview-pt-br.md)
-
----
-
 ## ✅ Testes Automatizados
 
 A plataforma conta com cobertura completa de testes:
@@ -397,7 +380,6 @@ A plataforma conta com cobertura completa de testes:
 | [Banco de Dados](docs/architecture/database-schema-pt-br.md) | Schema, índices e migrações Flyway |
 | [Testes](docs/testing/testing-pt-br.md) | Backend (JUnit/BDD), Frontend (Playwright), k6 |
 | [Observabilidade](docs/operations/observability-pt-br.md) | Prometheus, Grafana, alertas e operação |
-| [AI Intelligence](docs/ia-intelligence/ia-intelligence-overview-pt-br.md) | Camada de IA: analyzers, agentes e orquestração |
 | [Deploy](docs/operations/deployment-pt-br.md) | Variáveis de ambiente e execução |
 | [Workflows](docs/operations/workflows-pt-br.md) | Fluxos operacionais detalhados |
 | [Sprint Reporter](docs/projects/sprint-reporter-pt-br.md) | Dashboard de métricas e exportação PowerPoint |
@@ -533,7 +515,6 @@ docker compose up --build
 | Documento | Conteúdo |
 |---|---|
 | [Sprint Reporter](docs/projects/sprint-reporter-pt-br.md) | Dashboard de métricas e exportação PowerPoint |
-| [AI Intelligence](docs/ia-intelligence/ia-intelligence-overview-pt-br.md) | Análises automáticas com IA |
 | [API Guide](docs/api/api-guide-pt-br.md) | REST endpoints com exemplos |
 | [Testes](docs/testing/testing-pt-br.md) | Estratégia de testes automatizados |
 | [Observabilidade](docs/operations/observability-pt-br.md) | Prometheus, Grafana e alertas |
@@ -636,7 +617,3 @@ MIT License - veja [LICENSE](LICENSE) para detalhes
 - 📚 Documentação: [docs/](docs/) directory
 
 ---
-
-**Última atualização:** 21 de abril de 2026  
-**Versão:** 1.0.0  
-**Status:** ✅ Em produção

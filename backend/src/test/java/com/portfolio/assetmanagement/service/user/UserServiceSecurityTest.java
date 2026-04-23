@@ -46,7 +46,6 @@ class UserServiceSecurityTest {
     Unit unit = new Unit("Sede", org, false);
 
     when(loggedUser.isOperator()).thenReturn(true);
-    when(loggedUser.getOrganizationId()).thenReturn(1L);
 
     assertThatThrownBy(
             () ->
@@ -75,7 +74,6 @@ class UserServiceSecurityTest {
     when(loggedUser.isOperator()).thenReturn(false);
     when(loggedUser.isManager()).thenReturn(true);
     when(loggedUser.getUnitId()).thenReturn(999L);
-    when(loggedUser.getOrganizationId()).thenReturn(1L);
 
     assertThatThrownBy(
             () ->
