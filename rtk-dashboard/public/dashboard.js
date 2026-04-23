@@ -2,7 +2,6 @@ const DEFAULT_AI_SERVICE_KEY = 'local-ai-service-key';
 
 let dashboardCharts = [];
 
-const exportBtn = document.getElementById('exportBtn');
 const refreshDashboardBtn = document.getElementById('refreshDashboardBtn');
 const loadingIndicator = document.getElementById('loadingIndicator');
 const errorAlert = document.getElementById('errorAlert');
@@ -20,7 +19,6 @@ function getAiServiceKey() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  exportBtn.addEventListener('click', exportReport);
   refreshDashboardBtn.addEventListener('click', loadInsightsDashboard);
 
   await checkServiceStatus();
@@ -248,27 +246,22 @@ function renderVisualDashboard(data) {
         <h2>📊 RTK Dashboard</h2>
         <div class="kpi-grid">
           <div class="kpi-card">
-            <span class="tooltip-icon" title="Diferença entre tokens sem otimização e com RTK ativado">?</span>
             <div class="kpi-number">${(metrics.tokensSaved || 0).toLocaleString('pt-BR')}</div>
             <div class="kpi-label">Tokens Economizados</div>
           </div>
           <div class="kpi-card highlight">
-            <span class="tooltip-icon" title="Valor em reais da economia (Tokens × R$ 0,0025)">?</span>
             <div class="kpi-number">R$ ${(convertUsdToBrl(metrics.usdSaved) || 0).toFixed(2)}</div>
             <div class="kpi-label">Economizados</div>
           </div>
           <div class="kpi-card">
-            <span class="tooltip-icon" title="% de redução obtido com RTK">?</span>
             <div class="kpi-number">${(metrics.savingsPercentage || 0).toFixed(1)}%</div>
             <div class="kpi-label">Redução</div>
           </div>
           <div class="kpi-card">
-            <span class="tooltip-icon" title="Acurácia mantida após otimização">?</span>
             <div class="kpi-number">${(metrics.qualityScore || 0).toFixed(1)}%</div>
-            <div class="kpi-label">Qualidade</div>
+            <div class="kpi-label">Qualidade Mantida</div>
           </div>
           <div class="kpi-card">
-            <span class="tooltip-icon" title="Análises executadas neste período">?</span>
             <div class="kpi-number">${(summary.totalAnalysesExecuted || 0).toLocaleString('pt-BR')}</div>
             <div class="kpi-label">Análises</div>
           </div>
@@ -287,12 +280,12 @@ function renderVisualDashboard(data) {
             <thead>
               <tr>
                 <th>Modelo</th>
-                <th>Execuções <span class="tooltip-icon" title="Vezes usadas">?</span></th>
-                <th>Tokens Final <span class="tooltip-icon" title="Após otimização">?</span></th>
-                <th>Redução % <span class="tooltip-icon" title="RTK economia">?</span></th>
-                <th>Acurácia <span class="tooltip-icon" title="Qualidade mantida">?</span></th>
-                <th>Custo/Análise <span class="tooltip-icon" title="Preço em R$">?</span></th>
-                <th>Status <span class="tooltip-icon" title="RECOMENDADO: ótimo custo-benefício. NÃO REC: revisar uso">?</span></th>
+                <th>Execuções</th>
+                <th>Tokens Final</th>
+                <th>Redução %</th>
+                <th>Acurácia</th>
+                <th>Custo/Análise</th>
+                <th>Status <span class="tooltip-icon" title="REC: Ótimo custo-benefício. NÃO: Revisar uso">?</span></th>
               </tr>
             </thead>
             <tbody>
@@ -321,13 +314,13 @@ function renderVisualDashboard(data) {
           <table>
             <thead>
               <tr>
-                <th>Tipo <span class="tooltip-icon" title="Categoria da análise">?</span></th>
-                <th>Execuções <span class="tooltip-icon" title="Quantas vezes rodou">?</span></th>
-                <th>Eficiência <span class="tooltip-icon" title="% de economia">?</span></th>
-                <th>Acurácia <span class="tooltip-icon" title="Qualidade mantida">?</span></th>
-                <th>Economizado <span class="tooltip-icon" title="Em reais">?</span></th>
-                <th>ROI % <span class="tooltip-icon" title="Retorno do investimento">?</span></th>
-                <th>Prioridade <span class="tooltip-icon" title="ALTA: ROI > 70%, foco máximo. REVISAR: ROI < 70%">?</span></th>
+                <th>Tipo</th>
+                <th>Execuções</th>
+                <th>Eficiência</th>
+                <th>Acurácia</th>
+                <th>Economizado</th>
+                <th>ROI %</th>
+                <th>Prioridade <span class="tooltip-icon" title="ALTA: ROI > 70%. REVISAR: ROI < 70%">?</span></th>
               </tr>
             </thead>
             <tbody>
@@ -559,20 +552,3 @@ function showError(message) {
   errorAlert.classList.remove('alert-hidden');
 }
 
-function exportReport() {
-  const timestamp = new Date().toISOString().split('T')[0];
-  const element = document.querySelector('.insights-dashboard') || document.body;
-
-  const opt = {
-    margin: 10,
-    filename: `rtk-insights-${timestamp}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2 },
-    jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
-  };
-
-  showLoading(true);
-  html2pdf().set(opt).from(element).save().finally(() => {
-    showLoading(false);
-  });
-}
