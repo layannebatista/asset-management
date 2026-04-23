@@ -41,12 +41,13 @@ ai:
     url: ${AI_SERVICE_URL:http://ai-intelligence:3100}
     api-key: ${AI_SERVICE_API_KEY:}
 
-# ─── Swagger habilitado no Docker (desabilitar em produção real) ──────────────
+# ─── Swagger desabilitado em Docker (segurança) ──────────────────────────────────
+# Para ativar apenas em desenvolvimento, use application-dev.yml
 springdoc:
   api-docs:
-    enabled: true
+    enabled: false
   swagger-ui:
-    enabled: true
+    enabled: false
 
 # ─── Logging estruturado para produção ────────────────────────────────────────
 logging:
