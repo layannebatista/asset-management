@@ -7,6 +7,7 @@ import com.portfolio.assetmanagement.domain.transfer.enums.TransferStatus;
 import io.restassured.http.ContentType;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import io.restassured.module.mockmvc.response.MockMvcResponse;
+import io.restassured.module.mockmvc.specification.MockMvcRequestSpecification;
 import java.util.Map;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.WebApplicationContext;
@@ -335,6 +336,62 @@ public class ApiClient {
         .then()
         .extract()
         .response();
+  }
+
+  // =========================================================
+  // HTTP GENÉRICO — suporte a novos módulos BDD
+  // =========================================================
+
+  /** Executa requisição com bearer token para qualquer endpoint HTTP. */
+  public MockMvcResponse request(String method, String path, Object body, String token) {
+    MockMvcRequestSpecification request =
+        given()
+            .contentType(ContentType.JSON)
+            .header("Authorization", "Bearer " + token);
+
+    if (body != null) {
+      request = request.body(body);
+    }
+
+    return execute(method, path, request);
+  }
+
+  /** Executa requisição sem autenticação para validar cenários 401. */
+  public MockMvcResponse requestWithoutAuth(String method, String path, Object body) {
+    MockMvcRequestSpecification request = given().contentType(ContentType.JSON);
+
+    if (body != null) {
+      request = request.body(body);
+    }
+
+    return execute(method, path, request);
+  }
+
+  /**
+   * Executa requisição com header Authorization bruto.
+   * Útil para validar cenários com JWT inválido/forjado.
+   */
+  public MockMvcResponse requestWithRawAuth(String method, String path, Object body, String rawAuthorization) {
+    MockMvcRequestSpecification request =
+        given().contentType(ContentType.JSON).header("Authorization", rawAuthorization);
+
+    if (body != null) {
+      request = request.body(body);
+    }
+
+    return execute(method, path, request);
+  }
+
+  private MockMvcResponse execute(
+      String method, String path, MockMvcRequestSpecification requestSpecification) {
+    return switch (method.toUpperCase()) {
+      case "GET" -> requestSpecification.when().get(path).then().extract().response();
+      case "POST" -> requestSpecification.when().post(path).then().extract().response();
+      case "PUT" -> requestSpecification.when().put(path).then().extract().response();
+      case "PATCH" -> requestSpecification.when().patch(path).then().extract().response();
+      case "DELETE" -> requestSpecification.when().delete(path).then().extract().response();
+      default -> throw new IllegalArgumentException("Método HTTP não suportado: " + method);
+    };
   }
 
   /** POST /assets/{orgId} — cria ativo com campos válidos. */

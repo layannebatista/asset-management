@@ -30,6 +30,7 @@ export class DataAggregator {
       github: null,
       postgres: null,
       aiapi: null,
+      rtkapi: null,
       k6: null,
     };
 

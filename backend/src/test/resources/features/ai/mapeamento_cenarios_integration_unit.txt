@@ -1,0 +1,25 @@
+================================================================================
+MAPEAMENTO DE CENARIOS DE TESTE - MODULO: AI (INTEGRACAO + UNITARIO)
+Arquivo: src/test/resources/features/ai/mapeamento_cenarios_integration_unit.txt
+Total de cenarios: 10 | Status: 0% AUTOMATIZADO
+================================================================================
+
+SECAO 1 - INTEGRACAO
+| ID   | Cenario                                                | Criticidade | Status   |
+|------|--------------------------------------------------------|-------------|----------|
+| AII01| Fluxo principal de AI retorna 200                      | CRITICAL    | PENDENTE |
+| AII02| Sem autenticacao retorna 401                           | BLOCKER     | PENDENTE |
+| AII03| OPERADOR sem permissao retorna 403                     | CRITICAL    | PENDENTE |
+| AII04| GESTOR fora de escopo retorna 403                      | CRITICAL    | PENDENTE |
+| AII05| Payload invalido retorna 400                           | NORMAL      | PENDENTE |
+
+SECAO 2 - UNITARIO
+| ID   | Cenario                                                | Criticidade | Status   |
+|------|--------------------------------------------------------|-------------|----------|
+| AIU01| Regra principal aplicada corretamente                  | CRITICAL    | PENDENTE |
+| AIU02| Bloqueio fora do escopo de unidade                     | CRITICAL    | PENDENTE |
+| AIU03| Validacao de campos obrigatorios                       | NORMAL      | PENDENTE |
+| AIU04| Tratamento padrao de not found                         | NORMAL      | PENDENTE |
+| AIU05| Query respeita filtros/paginacao                       | NORMAL      | PENDENTE |
+
+PRIORIDADE: AII02, AII03, AII04, AIU01, AIU02

@@ -217,7 +217,57 @@ export interface CollectedData {
   github: GitHubData;
   postgres: PostgreSQLData;
   aiapi?: AIAPIData;
+  rtkapi?: RTKData;
   k6?: K6Data;
+}
+
+export interface RTKData {
+  summary: {
+    period: string;
+    totalAnalysesExecuted: number;
+    metrics: {
+      tokensSaved: number;
+      usdSaved: number;
+      savingsPercentage: number;
+      qualityScore: number;
+    };
+    recommendation: string;
+  };
+  tokenEconomy: {
+    tokensWithoutRTK: number;
+    tokensWithRTK: number;
+    savingsPercentage: number;
+    financialImpact: {
+      costWithoutOptimization: number;
+      costWithOptimization: number;
+      usdSaved: number;
+    };
+  };
+  models: Array<{
+    name: string;
+    executions: number;
+    avgFinalTokens: number;
+    avgReductionPercentage: number;
+    avgAccuracy: number;
+    costPerAnalysis: number;
+    recommendation: string;
+  }>;
+  analyses: Array<{
+    type: string;
+    executions: number;
+    avgEfficiency: number;
+    avgAccuracy: number;
+    totalUsdSaved: number;
+    roiPercentage: number;
+    recommendation: string;
+  }>;
+  history: Array<{
+    week: string;
+    totalAnalyses: number;
+    savingsPercentage: number;
+    usdSaved: number;
+    avgAccuracy: number;
+  }>;
 }
 
 export interface AIAPIData {

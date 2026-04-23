@@ -32,7 +32,7 @@
 ```
 Frontend: React 19 + TypeScript
 Backend: Java 17 + Spring Boot 3 + Clean Architecture
-IA: Node.js + OpenAI
+RTK: Node.js + Otimização de Tokens (100% local, sem APIs pagas)
 Banco: PostgreSQL 16 + Flyway
 Observabilidade: Prometheus + Grafana
 Testes: JUnit + Cucumber + Playwright + K6
@@ -126,7 +126,7 @@ Disponível em todas as instâncias (local ou Docker).
 - 📊 Histórico de últimos 3 meses
 - 🚨 Alertas automáticos quando ROI cai
 - 📄 Export em PDF
-- [Documentação Completa](./docs/ia-intelligence/rtk-dashboard-pt-br.md)
+- [Documentação Completa](./docs/rtk-dashboard/guia-completo-pt-br.md)
 
 ### Relatórios e Métricas
 
@@ -204,13 +204,13 @@ Criadas automaticamente na inicialização:
 └────────┬────────────────────────────┬──────────────────────┘
          │                            │
     ┌────▼──────────┐        ┌────────▼──────────┐
-    │ PostgreSQL 16 │        │  AI Intelligence  │
+    │ PostgreSQL 16 │        │  RTK Dashboard    │
     │ (porta 5433)  │        │  (porta 3100)     │
     │               │        │                   │
-    │ • Ativos      │        │  Node.js + IA    │
-    │ • Usuários    │        │  OpenAI           │
-    │ • Auditoria   │        │  Análises         │
-    │ • Flyway      │        │                   │
+    │ • Ativos      │        │  Node.js + RTK   │
+    │ • Usuários    │        │  Otimização      │
+    │ • Auditoria   │        │  Tokens           │
+    │ • Flyway      │        │  (100% local)     │
     └───────────────┘        └───────────────────┘
 ```
 
@@ -237,7 +237,7 @@ Criadas automaticamente na inicialização:
 └────────────┘  └────────────┘  └────────────┘
 ```
 
-### Sprint Reporter (Agregação de Métricas)
+### Sprint Reporter (Agregação de Métricas com RTK)
 
 ```
 ┌──────────────────────────────────────────────────┐
@@ -245,21 +245,23 @@ Criadas automaticamente na inicialização:
 ├──────────────────────────────────────────────────┤
 │                                                  │
 │  Dashboard Interativo + API de Relatórios      │
+│  (Métricas de QA com economia RTK)             │
 │                                                  │
 │  Coleta Paralela:                              │
-│  ├─ Allure Collector (testes)                  │
-│  ├─ GitHub Collector (CI/CD)                   │
-│  └─ PostgreSQL Collector (IA + Métricas)      │
+│  ├─ Allure Collector (testes / JUnit)          │
+│  ├─ RTK Insights Collector (economia tokens)   │
+│  ├─ PostgreSQL Collector (histórico)           │
+│  └─ K6 Collector (performance testing)         │
 │                                                  │
 │  Processamento:                                 │
-│  ├─ Análise Inteligente                        │
-│  ├─ Detecção de Problemas                      │
+│  ├─ Análise de Qualidade de Testes             │
+│  ├─ Economia de Tokens RTK                     │
 │  └─ Geração de Recomendações                   │
 │                                                  │
 │  Saída:                                         │
 │  ├─ JSON (API)                                 │
 │  ├─ HTML (Dashboard)                           │
-│  └─ PowerPoint (Apresentação)                  │
+│  └─ PowerPoint (Apresentação para Sprint)      │
 │                                                  │
 └──────────────────────────────────────────────────┘
 ```

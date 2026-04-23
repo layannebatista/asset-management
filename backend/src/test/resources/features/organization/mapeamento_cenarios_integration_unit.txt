@@ -1,0 +1,25 @@
+================================================================================
+MAPEAMENTO DE CENARIOS DE TESTE - MODULO: ORGANIZATION (INTEGRACAO + UNITARIO)
+Arquivo: src/test/resources/features/organization/mapeamento_cenarios_integration_unit.txt
+Total de cenarios: 10 | Status: 0% AUTOMATIZADO
+================================================================================
+
+SECAO 1 - INTEGRACAO
+| ID   | Cenario                                                | Criticidade | Status   |
+|------|--------------------------------------------------------|-------------|----------|
+| ORI01| CRUD principal de organizacao retorna sucesso          | CRITICAL    | PENDENTE |
+| ORI02| Sem autenticacao retorna 401                           | BLOCKER     | PENDENTE |
+| ORI03| OPERADOR sem permissao retorna 403                     | CRITICAL    | PENDENTE |
+| ORI04| GESTOR fora de escopo retorna 403                      | CRITICAL    | PENDENTE |
+| ORI05| Payload invalido retorna 400                           | NORMAL      | PENDENTE |
+
+SECAO 2 - UNITARIO
+| ID   | Cenario                                                | Criticidade | Status   |
+|------|--------------------------------------------------------|-------------|----------|
+| ORU01| Regra principal aplicada corretamente                  | CRITICAL    | PENDENTE |
+| ORU02| Bloqueio fora do escopo de unidade                     | CRITICAL    | PENDENTE |
+| ORU03| Validacao de campos obrigatorios                       | NORMAL      | PENDENTE |
+| ORU04| Tratamento padrao de not found                         | NORMAL      | PENDENTE |
+| ORU05| Query respeita filtros/paginacao                       | NORMAL      | PENDENTE |
+
+PRIORIDADE: ORI02, ORI03, ORI04, ORU01, ORU02

@@ -277,6 +277,15 @@ Funcionalidade: Ciclo de Vida de Transferência de Ativos
     Quando solicito transferência do ativo "ASSET-001" para a unidade de destino com motivo "Tentativa indevida de solicitação"
     Então a resposta deve ter status 403
 
+  @criacao @autorizacao
+  @allure.label.suite:Controle_de_Acesso
+  @allure.severity.critical
+  Cenário: GESTOR não pode solicitar transferência para ativo de outra unidade
+    Dado que existe um ativo "ASSET-OUTRA-UNIDADE" disponível em outra unidade dessa organização
+    E que estou autenticado como "gestor@acme.com" com senha "Senha@123"
+    Quando solicito transferência do ativo "ASSET-OUTRA-UNIDADE" para a unidade de destino com motivo "Tentativa fora de escopo da unidade do gestor"
+    Então a resposta deve ter status 403
+
   @criacao @validacao
   @allure.label.suite:Validacao_de_Dados
   @allure.severity.normal

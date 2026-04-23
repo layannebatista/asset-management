@@ -9,8 +9,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import { AllureCollector } from '../collectors/AllureCollector';
-import { AIIntelligenceCICDCollector } from '../collectors/AIIntelligenceCICDCollector';
-import { AIIntelligenceMetricsCollector } from '../collectors/AIIntelligenceMetricsCollector';
+import { RTKInsightsCollector } from '../collectors/RTKInsightsCollector';
 import { PostgreSQLCollector } from '../collectors/PostgreSQLCollector';
 import { K6Collector } from '../collectors/K6Collector';
 import { DataAggregator } from '../aggregators/DataAggregator';
@@ -186,8 +185,7 @@ export async function createServer(): Promise<Express> {
 
       const collectors = [
         new AllureCollector(getAllureResultsPath(), logger),
-        new AIIntelligenceCICDCollector(aiServiceUrl, aiServiceKey, logger),
-        new AIIntelligenceMetricsCollector(aiServiceUrl, aiServiceKey, logger),
+        new RTKInsightsCollector(aiServiceUrl, aiServiceKey, logger),
         new PostgreSQLCollector(pgPool, logger),
         new K6Collector(getK6SummaryPath(), logger),
       ];
@@ -216,8 +214,8 @@ export async function createServer(): Promise<Express> {
 
       const sourceStatus = {
         allure: validation.get('AllureCollector') ?? false,
-        github: validation.get('AIIntelligenceCICDCollector') ?? false,
-        aiapi: validation.get('AIIntelligenceMetricsCollector') ?? false,
+        github: validation.get('RTKInsightsCollector') ?? false,
+        aiapi: validation.get('RTKInsightsCollector') ?? false,
         postgres: validation.get('PostgreSQLCollector') ?? false,
         k6: validation.get('K6Collector') ?? false,
       };
@@ -227,17 +225,14 @@ export async function createServer(): Promise<Express> {
         sourceWarnings.push('Fonte Allure indisponível: métricas de testes podem estar vazias.');
       }
       if (!sourceStatus.github) {
-        sourceWarnings.push('Serviço ai-intelligence indisponível: métricas de CI/CD podem estar vazias.');
-      }
-      if (!sourceStatus.aiapi) {
-        sourceWarnings.push('API de métricas da IA indisponível: alguns dados avançados podem ficar incompletos.');
+        sourceWarnings.push('RTK Dashboard indisponível: métricas de economia de tokens podem estar vazias.');
       }
       if (!sourceStatus.postgres) {
-        sourceWarnings.push('Fonte PostgreSQL indisponível: dados legados podem ficar incompletos (API de IA é a fonte principal).');
+        sourceWarnings.push('Fonte PostgreSQL indisponível: dados históricos podem ficar incompletos.');
       }
 
       if (sourceStatus.aiapi && report.ai.analysesExecuted === 0) {
-        sourceWarnings.push('Sem dados de IA no período selecionado: execute análises no serviço ai-intelligence para preencher as métricas.');
+        sourceWarnings.push('Sem dados de RTK no período selecionado: execute análises para preencher as métricas de economia de tokens.');
       }
       if (!sourceStatus.k6) {
         sourceWarnings.push('Métricas de performance K6 indisponíveis: execute k6 run --summary-export=./k6/k6-summary.json k6/test.js para preencher.');

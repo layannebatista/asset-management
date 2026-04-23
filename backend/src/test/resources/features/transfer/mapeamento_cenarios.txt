@@ -37,7 +37,7 @@ T10  | Solicitação sem autenticação retorna 401                    | SEGURAN
 T11  | OPERADOR não pode solicitar transferência                   | SEGURANCA   | CRITICAL    | AUTOMATIZADO | transfer.feature
 T12  | AssetId inexistente retorna 404                             | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
 T13  | ToUnitId inexistente retorna 404                            | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
-T14  | GESTOR não pode solicitar transferência para ativo de outra unidade (403) | SEGURANCA | CRITICAL | PENDENTE | transfer.feature
+T14  | GESTOR não pode solicitar transferência para ativo de outra unidade (403) | SEGURANCA | CRITICAL | AUTOMATIZADO | transfer.feature
 
 ================================================================================
 SEÇÃO 2 — APROVAÇÃO / REJEIÇÃO  (PATCH /transfers/{id}/approve|reject)
@@ -107,8 +107,8 @@ RESUMO DE COBERTURA
 
 Status                  Contagem  Porcentagem
 ────────────────────────────────────────────
-✓ AUTOMATIZADO          37        97%
-⊗ PENDENTE               1         3%
+✓ AUTOMATIZADO          38        100%
+⊗ PENDENTE               0         0%
 ────────────────────────────────────────────
 TOTAL                   38
 
@@ -118,6 +118,6 @@ Cobertura por Tipo:
   INTEGRAÇÃO:  5 / 38 = 13%
 
 Novo cenário adicionado (2026-04-21): T14 — GESTOR escopo de unidade na solicitação
-Coberto na camada de serviço (TS06/TS13) e integração (TAI04) mas ausente no BDD de feature.
+Status: AUTOMATIZADO em BDD e alinhado com cobertura já existente em serviço (TS06/TS13) e integração (TAI04).
 
 ================================================================================

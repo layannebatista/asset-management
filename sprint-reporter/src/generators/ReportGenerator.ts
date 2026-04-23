@@ -249,6 +249,43 @@ export class ReportGenerator {
   }
 
   private extractAIMetrics(data: CollectedData) {
+    // ─── Try RTK Insights Collector First ──────────────────────────────────
+    const rtkApi = (data as any).rtkapi;
+    if (rtkApi?.data) {
+      const summary = rtkApi.data.summary || {};
+      const tokenEcon = rtkApi.data.tokenEconomy || {};
+      const models = rtkApi.data.models || [];
+      const analyses = rtkApi.data.analyses || [];
+
+      const modelDistribution: Record<string, number> = {};
+      const totalExecutions = models.reduce((sum: number, m: any) => sum + Number(m.executions || 0), 0);
+
+      for (const model of models) {
+        const modelName = String(model.name || 'desconhecido');
+        const executions = Number(model.executions || 0);
+        modelDistribution[modelName] = totalExecutions > 0
+          ? Number(((executions / totalExecutions) * 100).toFixed(1))
+          : 0;
+      }
+
+      return {
+        analysesExecuted: Number(summary.totalAnalysesExecuted || 0),
+        avgQuality: Number(summary.metrics?.qualityScore || 0),
+        avgConfidence: Number(summary.metrics?.qualityScore || 0),
+        tokensEconomized: Number(summary.metrics?.tokensSaved || 0),
+        costSaved: Number(summary.metrics?.usdSaved || 0),
+        modelDistribution,
+        autonomousDecisions: {
+          total: analyses.length,
+          successRate: analyses.length > 0
+            ? (analyses.filter((a: any) => Number(a.roiPercentage || 0) > 70).length / analyses.length) * 100
+            : 0,
+          avgRisk: 0,
+        },
+      };
+    }
+
+    // ─── Fallback: Legacy AI API ──────────────────────────────────────────
     const aiApi = (data as any).aiapi;
     const dashboard = aiApi?.dashboard;
     const tokenSummary = aiApi?.tokenSavingsSummary;
@@ -281,6 +318,7 @@ export class ReportGenerator {
       };
     }
 
+    // ─── Fallback: PostgreSQL ─────────────────────────────────────────────
     const postgres = data.postgres;
     const tokenSavings = (postgres as any)?.tokenSavings;
     const analysesSummary = (postgres as any)?.analysesSummary;
@@ -407,10 +445,10 @@ export class ReportGenerator {
 
     if (ai.analysesExecuted > 0) {
       insights.push({
-        pattern: 'Inteligência Artificial Ativa',
-        description: `${ai.analysesExecuted} análises de IA executadas nesta sprint`,
-        impact: 'Fornece insights automatizados sobre qualidade de testes e performance',
-        recommendation: 'Continue aproveitando a IA para suporte a decisões',
+        pattern: 'Otimização de Tokens RTK Ativa',
+        description: `${ai.analysesExecuted} análises executadas com ${ai.tokensEconomized?.toLocaleString()} tokens economizados`,
+        impact: `Economizou $${ai.costSaved.toFixed(2)} mantendo qualidade de ${ai.avgQuality.toFixed(1)}%`,
+        recommendation: 'Continue monitorando a economia de tokens para otimizar custos de IA',
       });
     }
 

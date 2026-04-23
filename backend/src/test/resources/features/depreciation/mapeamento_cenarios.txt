@@ -1,0 +1,28 @@
+================================================================================
+MAPEAMENTO DE CENARIOS DE TESTE - DOMINIO: DEPRECIATION
+Projeto: Patrimonio 360 | Backend Spring Boot
+Atualizado em: 2026-04-23
+================================================================================
+
+LEGENDA
+  Tipo        : E2E, SEGURANCA, CONTRATO, PERFORMANCE
+  Criticidade : BLOCKER > CRITICAL > NORMAL > LOW
+  Status      : AUTOMATIZADO | PENDENTE | NAO_APLICAVEL
+
+ID    | Cenario                                                   | Tipo      | Criticidade | Status   | Camada / Arquivo
+------|-----------------------------------------------------------|-----------|-------------|----------|-----------------------------
+DE01  | Fluxo principal de depreciacao retorna sucesso            | E2E       | CRITICAL    | PENDENTE | depreciation.feature (a criar)
+DE02  | Endpoint depreciation sem autenticacao retorna 401        | SEGURANCA | BLOCKER     | PENDENTE | depreciation.feature (a criar)
+DE03  | OPERADOR sem permissao em depreciation retorna 403        | SEGURANCA | CRITICAL    | PENDENTE | depreciation.feature (a criar)
+DE04  | GESTOR fora de escopo recebe 403                          | SEGURANCA | CRITICAL    | PENDENTE | depreciation.feature (a criar)
+DE05  | Payload invalido retorna 400                              | E2E       | NORMAL      | PENDENTE | depreciation.feature (a criar)
+DE06  | Recurso inexistente retorna 404                           | E2E       | NORMAL      | PENDENTE | depreciation.feature (a criar)
+DE07  | JWT invalido/forjado retorna 401                          | SEGURANCA | BLOCKER     | PENDENTE | depreciation.feature (a criar)
+DE08  | IDOR entre organizacoes retorna 403/404                   | SEGURANCA | CRITICAL    | PENDENTE | depreciation.feature (a criar)
+DE09  | Contrato de sucesso segue OpenAPI                         | CONTRATO  | NORMAL      | PENDENTE | openapi/ (a criar)
+DE10  | Contrato de erro segue padrao                             | CONTRATO  | NORMAL      | PENDENTE | openapi/ (a criar)
+
+RESUMO
+  AUTOMATIZADO: 0
+  PENDENTE: 10
+  PRIORIDADE: DE02, DE03, DE04, DE07, DE08

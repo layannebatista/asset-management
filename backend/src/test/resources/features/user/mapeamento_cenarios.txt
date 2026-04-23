@@ -1,0 +1,28 @@
+================================================================================
+MAPEAMENTO DE CENARIOS DE TESTE - DOMINIO: USER
+Projeto: Patrimonio 360 | Backend Spring Boot
+Atualizado em: 2026-04-23
+================================================================================
+
+LEGENDA
+  Tipo        : E2E, SEGURANCA, CONTRATO, PERFORMANCE
+  Criticidade : BLOCKER > CRITICAL > NORMAL > LOW
+  Status      : AUTOMATIZADO | PENDENTE | NAO_APLICAVEL
+
+ID    | Cenario                                                   | Tipo      | Criticidade | Status   | Camada / Arquivo
+------|-----------------------------------------------------------|-----------|-------------|----------|-----------------------------
+US01  | CRUD principal de usuario retorna sucesso                 | E2E       | CRITICAL    | PENDENTE | user.feature (a criar)
+US02  | Endpoint user sem autenticacao retorna 401                | SEGURANCA | BLOCKER     | PENDENTE | user.feature (a criar)
+US03  | OPERADOR sem permissao em user retorna 403                | SEGURANCA | CRITICAL    | PENDENTE | user.feature (a criar)
+US04  | GESTOR fora de escopo recebe 403                          | SEGURANCA | CRITICAL    | PENDENTE | user.feature (a criar)
+US05  | Payload invalido retorna 400                              | E2E       | NORMAL      | PENDENTE | user.feature (a criar)
+US06  | Recurso inexistente retorna 404                           | E2E       | NORMAL      | PENDENTE | user.feature (a criar)
+US07  | JWT invalido/forjado retorna 401                          | SEGURANCA | BLOCKER     | PENDENTE | user.feature (a criar)
+US08  | IDOR entre organizacoes retorna 403/404                   | SEGURANCA | CRITICAL    | PENDENTE | user.feature (a criar)
+US09  | Contrato de sucesso segue OpenAPI                         | CONTRATO  | NORMAL      | PENDENTE | openapi/ (a criar)
+US10  | Contrato de erro segue padrao                             | CONTRATO  | NORMAL      | PENDENTE | openapi/ (a criar)
+
+RESUMO
+  AUTOMATIZADO: 0
+  PENDENTE: 10
+  PRIORIDADE: US02, US03, US04, US07, US08

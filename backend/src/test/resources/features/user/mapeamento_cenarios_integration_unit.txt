@@ -1,0 +1,25 @@
+================================================================================
+MAPEAMENTO DE CENARIOS DE TESTE - MODULO: USER (INTEGRACAO + UNITARIO)
+Arquivo: src/test/resources/features/user/mapeamento_cenarios_integration_unit.txt
+Total de cenarios: 10 | Status: 0% AUTOMATIZADO
+================================================================================
+
+SECAO 1 - INTEGRACAO
+| ID   | Cenario                                                | Criticidade | Status   |
+|------|--------------------------------------------------------|-------------|----------|
+| USI01| CRUD principal de usuario retorna sucesso              | CRITICAL    | PENDENTE |
+| USI02| Sem autenticacao retorna 401                           | BLOCKER     | PENDENTE |
+| USI03| OPERADOR sem permissao retorna 403                     | CRITICAL    | PENDENTE |
+| USI04| GESTOR fora de escopo retorna 403                      | CRITICAL    | PENDENTE |
+| USI05| Payload invalido retorna 400                           | NORMAL      | PENDENTE |
+
+SECAO 2 - UNITARIO
+| ID   | Cenario                                                | Criticidade | Status   |
+|------|--------------------------------------------------------|-------------|----------|
+| USU01| Regra principal aplicada corretamente                  | CRITICAL    | PENDENTE |
+| USU02| Bloqueio fora do escopo de unidade                     | CRITICAL    | PENDENTE |
+| USU03| Validacao de campos obrigatorios                       | NORMAL      | PENDENTE |
+| USU04| Tratamento padrao de not found                         | NORMAL      | PENDENTE |
+| USU05| Query respeita filtros/paginacao                       | NORMAL      | PENDENTE |
+
+PRIORIDADE: USI02, USI03, USI04, USU01, USU02

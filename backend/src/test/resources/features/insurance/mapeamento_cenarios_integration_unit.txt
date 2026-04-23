@@ -1,0 +1,25 @@
+================================================================================
+MAPEAMENTO DE CENARIOS DE TESTE - MODULO: INSURANCE (INTEGRACAO + UNITARIO)
+Arquivo: src/test/resources/features/insurance/mapeamento_cenarios_integration_unit.txt
+Total de cenarios: 10 | Status: 0% AUTOMATIZADO
+================================================================================
+
+SECAO 1 - INTEGRACAO
+| ID   | Cenario                                                | Criticidade | Status   |
+|------|--------------------------------------------------------|-------------|----------|
+| INI01| Fluxo principal de seguro retorna sucesso              | CRITICAL    | PENDENTE |
+| INI02| Sem autenticacao retorna 401                           | BLOCKER     | PENDENTE |
+| INI03| OPERADOR sem permissao retorna 403                     | CRITICAL    | PENDENTE |
+| INI04| GESTOR fora de escopo retorna 403                      | CRITICAL    | PENDENTE |
+| INI05| Payload invalido retorna 400                           | NORMAL      | PENDENTE |
+
+SECAO 2 - UNITARIO
+| ID   | Cenario                                                | Criticidade | Status   |
+|------|--------------------------------------------------------|-------------|----------|
+| INU01| Regra principal aplicada corretamente                  | CRITICAL    | PENDENTE |
+| INU02| Bloqueio fora do escopo de unidade                     | CRITICAL    | PENDENTE |
+| INU03| Validacao de campos obrigatorios                       | NORMAL      | PENDENTE |
+| INU04| Tratamento padrao de not found                         | NORMAL      | PENDENTE |
+| INU05| Query respeita filtros/paginacao                       | NORMAL      | PENDENTE |
+
+PRIORIDADE: INI02, INI03, INI04, INU01, INU02

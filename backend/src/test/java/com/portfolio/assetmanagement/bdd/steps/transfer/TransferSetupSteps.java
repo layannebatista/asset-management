@@ -103,4 +103,26 @@ public class TransferSetupSteps {
     Asset ativo = testDataHelper.criarAtivo(assetTag, AssetType.NOTEBOOK, org, unidadeDestino);
     context.setId("ativoId_" + assetTag, ativo.getId());
   }
+
+  @E("que existe um ativo {string} disponível em outra unidade dessa organização")
+  public void queExisteAtivoDisponivelEmOutraUnidadeDaOrganizacao(String assetTag) {
+    Long organizacaoId = context.getId("organizacaoId");
+    Organization organizacao =
+        organizationRepository
+            .findById(organizacaoId)
+            .orElseThrow(
+                () ->
+                    new AssertionError(
+                        "Organização não encontrada no contexto: " + organizacaoId));
+
+    Unit unidadeOrigem = testDataHelper.obterUnidade(context.getId("unidadeId"));
+    Unit outraUnidade = testDataHelper.criarUnidade("Unidade Externa Escopo", organizacao);
+
+    if (outraUnidade.getId().equals(unidadeOrigem.getId())) {
+      throw new AssertionError("Unidade de outra origem não pode ser igual à unidade do gestor");
+    }
+
+    Asset ativo = testDataHelper.criarAtivo(assetTag, AssetType.NOTEBOOK, organizacao, outraUnidade);
+    context.setId("ativoId_" + assetTag, ativo.getId());
+  }
 }

@@ -1,0 +1,28 @@
+================================================================================
+MAPEAMENTO DE CENARIOS DE TESTE - DOMINIO: AUDIT
+Projeto: Patrimonio 360 | Backend Spring Boot
+Atualizado em: 2026-04-23
+================================================================================
+
+LEGENDA
+  Tipo        : E2E, SEGURANCA, CONTRATO, PERFORMANCE
+  Criticidade : BLOCKER > CRITICAL > NORMAL > LOW
+  Status      : AUTOMATIZADO | PENDENTE | NAO_APLICAVEL
+
+ID    | Cenario                                                   | Tipo      | Criticidade | Status   | Camada / Arquivo
+------|-----------------------------------------------------------|-----------|-------------|----------|-----------------------------
+AU01  | Consulta principal de auditoria retorna 200               | E2E       | CRITICAL    | PENDENTE | audit.feature (a criar)
+AU02  | Endpoint audit sem autenticacao retorna 401               | SEGURANCA | BLOCKER     | PENDENTE | audit.feature (a criar)
+AU03  | OPERADOR sem permissao em audit retorna 403               | SEGURANCA | CRITICAL    | PENDENTE | audit.feature (a criar)
+AU04  | GESTOR fora de escopo recebe 403                          | SEGURANCA | CRITICAL    | PENDENTE | audit.feature (a criar)
+AU05  | Filtro invalido retorna 400                               | E2E       | NORMAL      | PENDENTE | audit.feature (a criar)
+AU06  | Recurso inexistente retorna 404                           | E2E       | NORMAL      | PENDENTE | audit.feature (a criar)
+AU07  | JWT invalido/forjado retorna 401                          | SEGURANCA | BLOCKER     | PENDENTE | audit.feature (a criar)
+AU08  | IDOR entre organizacoes retorna 403/404                   | SEGURANCA | CRITICAL    | PENDENTE | audit.feature (a criar)
+AU09  | Contrato de sucesso segue OpenAPI                         | CONTRATO  | NORMAL      | PENDENTE | openapi/ (a criar)
+AU10  | Contrato de erro segue padrao                             | CONTRATO  | NORMAL      | PENDENTE | openapi/ (a criar)
+
+RESUMO
+  AUTOMATIZADO: 0
+  PENDENTE: 10
+  PRIORIDADE: AU02, AU03, AU04, AU07, AU08

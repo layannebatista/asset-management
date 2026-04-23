@@ -1,0 +1,25 @@
+================================================================================
+MAPEAMENTO DE CENARIOS DE TESTE - MODULO: INVENTORY (INTEGRACAO + UNITARIO)
+Arquivo: src/test/resources/features/inventory/mapeamento_cenarios_integration_unit.txt
+Total de cenarios: 10 | Status: 0% AUTOMATIZADO
+================================================================================
+
+SECAO 1 - INTEGRACAO
+| ID   | Cenario                                                | Criticidade | Status   |
+|------|--------------------------------------------------------|-------------|----------|
+| IVI01| Fluxo principal de inventario retorna sucesso          | CRITICAL    | PENDENTE |
+| IVI02| Sem autenticacao retorna 401                           | BLOCKER     | PENDENTE |
+| IVI03| OPERADOR sem permissao retorna 403                     | CRITICAL    | PENDENTE |
+| IVI04| GESTOR fora de escopo retorna 403                      | CRITICAL    | PENDENTE |
+| IVI05| Payload invalido retorna 400                           | NORMAL      | PENDENTE |
+
+SECAO 2 - UNITARIO
+| ID   | Cenario                                                | Criticidade | Status   |
+|------|--------------------------------------------------------|-------------|----------|
+| IVU01| Regra principal aplicada corretamente                  | CRITICAL    | PENDENTE |
+| IVU02| Bloqueio fora do escopo de unidade                     | CRITICAL    | PENDENTE |
+| IVU03| Validacao de campos obrigatorios                       | NORMAL      | PENDENTE |
+| IVU04| Tratamento padrao de not found                         | NORMAL      | PENDENTE |
+| IVU05| Query respeita filtros/paginacao                       | NORMAL      | PENDENTE |
+
+PRIORIDADE: IVI02, IVI03, IVI04, IVU01, IVU02

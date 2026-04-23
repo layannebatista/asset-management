@@ -1,0 +1,25 @@
+================================================================================
+MAPEAMENTO DE CENARIOS DE TESTE - MODULO: EXPORT (INTEGRACAO + UNITARIO)
+Arquivo: src/test/resources/features/export/mapeamento_cenarios_integration_unit.txt
+Total de cenarios: 10 | Status: 0% AUTOMATIZADO
+================================================================================
+
+SECAO 1 - INTEGRACAO
+| ID   | Cenario                                                | Criticidade | Status   |
+|------|--------------------------------------------------------|-------------|----------|
+| EXI01| Exportacao principal retorna sucesso                   | CRITICAL    | PENDENTE |
+| EXI02| Sem autenticacao retorna 401                           | BLOCKER     | PENDENTE |
+| EXI03| OPERADOR sem permissao retorna 403                     | CRITICAL    | PENDENTE |
+| EXI04| GESTOR fora de escopo retorna 403                      | CRITICAL    | PENDENTE |
+| EXI05| Parametros invalidos retornam 400                      | NORMAL      | PENDENTE |
+
+SECAO 2 - UNITARIO
+| ID   | Cenario                                                | Criticidade | Status   |
+|------|--------------------------------------------------------|-------------|----------|
+| EXU01| Regra principal aplicada corretamente                  | CRITICAL    | PENDENTE |
+| EXU02| Bloqueio fora do escopo de unidade                     | CRITICAL    | PENDENTE |
+| EXU03| Validacao de campos obrigatorios                       | NORMAL      | PENDENTE |
+| EXU04| Tratamento padrao de not found                         | NORMAL      | PENDENTE |
+| EXU05| Query respeita filtros/paginacao                       | NORMAL      | PENDENTE |
+
+PRIORIDADE: EXI02, EXI03, EXI04, EXU01, EXU02

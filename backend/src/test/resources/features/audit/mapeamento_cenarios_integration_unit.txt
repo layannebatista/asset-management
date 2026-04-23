@@ -1,0 +1,25 @@
+================================================================================
+MAPEAMENTO DE CENARIOS DE TESTE - MODULO: AUDIT (INTEGRACAO + UNITARIO)
+Arquivo: src/test/resources/features/audit/mapeamento_cenarios_integration_unit.txt
+Total de cenarios: 10 | Status: 0% AUTOMATIZADO
+================================================================================
+
+SECAO 1 - INTEGRACAO
+| ID   | Cenario                                                | Criticidade | Status   |
+|------|--------------------------------------------------------|-------------|----------|
+| AUI01| Consulta principal de auditoria retorna 200            | CRITICAL    | PENDENTE |
+| AUI02| Sem autenticacao retorna 401                           | BLOCKER     | PENDENTE |
+| AUI03| OPERADOR sem permissao retorna 403                     | CRITICAL    | PENDENTE |
+| AUI04| GESTOR fora de escopo retorna 403                      | CRITICAL    | PENDENTE |
+| AUI05| Filtro invalido retorna 400                            | NORMAL      | PENDENTE |
+
+SECAO 2 - UNITARIO
+| ID   | Cenario                                                | Criticidade | Status   |
+|------|--------------------------------------------------------|-------------|----------|
+| AUU01| Regra principal aplicada corretamente                  | CRITICAL    | PENDENTE |
+| AUU02| Bloqueio fora do escopo de unidade                     | CRITICAL    | PENDENTE |
+| AUU03| Validacao de campos obrigatorios                       | NORMAL      | PENDENTE |
+| AUU04| Tratamento padrao de not found                         | NORMAL      | PENDENTE |
+| AUU05| Query respeita filtros/paginacao                       | NORMAL      | PENDENTE |
+
+PRIORIDADE: AUI02, AUI03, AUI04, AUU01, AUU02
