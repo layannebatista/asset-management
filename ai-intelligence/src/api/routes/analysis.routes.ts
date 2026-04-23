@@ -81,7 +81,12 @@ export function createAnalysisRouter(orchestrator: AIOrchestrator, agentCoordina
   router.post('/incident', async (req: Request, res: Response, next: NextFunction) => {
     try {
       const body = IncidentSchema.parse(req.body);
-      const result = await orchestrator.analyze({ type: 'incident', ...body });
+      const result = await orchestrator.analyze({
+        type: 'incident',
+        logs: body.logs,
+        errorMessages: body.errorMessages,
+        timeWindowMinutes: body.timeWindowMinutes,
+      });
       res.json(result);
     } catch (error) {
       next(error);

@@ -24,28 +24,15 @@
       <!-- Sidebar -->
       <aside class="sidebar">
         <div class="sidebar-section">
-          <h2>💡 Insights RTK</h2>
+          <h2>💡 RTK Insights</h2>
 
-          <div class="form-group">
-            <label for="analysisType">Executar Análise Específica</label>
-            <select id="analysisType">
-              <option value="observability">Observabilidade</option>
-              <option value="test-intelligence">Inteligência de Testes</option>
-              <option value="cicd">Pipeline CI/CD</option>
-              <option value="incident">Detecção de Incidentes</option>
-              <option value="risk">Análise de Risco</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label for="dataWindow">Período (minutos)</label>
-            <input type="number" id="dataWindow" value="60" min="5" max="1440" />
-          </div>
+          <p style="font-size: 0.85rem; color: #5f7893; margin-bottom: 0.8rem;">
+            Dashboard com foco em economia de tokens e ROI. Sem dependência de IA paga.
+          </p>
 
           <div class="button-group">
-            <button id="analyzeBtn" class="btn btn-primary">▶ Executar Análise</button>
-            <button id="refreshDashboardBtn" class="btn btn-secondary">🔄 Atualizar Insights</button>
-            <button id="exportBtn" class="btn btn-secondary" disabled>📥 Exportar Dados</button>
+            <button id="refreshDashboardBtn" class="btn btn-primary">🔄 Atualizar Dados</button>
+            <button id="exportBtn" class="btn btn-secondary" disabled>📥 Exportar Relatório</button>
           </div>
 
           <div id="loadingIndicator" class="loading-hidden">

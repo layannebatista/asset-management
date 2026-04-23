@@ -85,7 +85,7 @@ export class CICDAnalyzer {
         durationMs,
         createdAt: new Date().toISOString(),
       },
-      summary: 'No CI/CD runs found in the requested time window.',
+      summary: 'Nenhuma execução de CI/CD encontrada na janela de tempo solicitada.',
       averagePipelineDurationMinutes: 0,
       successRate: 0,
       slowJobs: [],

@@ -1,6 +1,6 @@
 import { Logger } from 'winston';
 import { AgentGraph } from '../AgentGraph';
-import { IAnalyzer } from '../../types/analysis.types';
+import { IAnalyzer } from '../../types/enterprise.types';
 
 /**
  * RiskGraph: Compliance and security risk assessment workflow

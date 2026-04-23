@@ -4,12 +4,11 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { PromptTemplate } from './PromptTemplate';
-import { AnalysisType } from '../routing/RoutingContext';
 
 export const INCIDENT_INVESTIGATION_TEMPLATE: PromptTemplate = {
   id: uuidv4(),
   version: 1,
-  type: AnalysisType.INCIDENT,
+  type: 'incident',
   name: 'investigation',
   description: 'Root cause analysis and mitigation for incidents',
 
@@ -57,7 +56,7 @@ Investigation: Review query execution plan, add indexes`,
 export const OBSERVABILITY_ANALYSIS_TEMPLATE: PromptTemplate = {
   id: uuidv4(),
   version: 1,
-  type: AnalysisType.OBSERVABILITY,
+  type: 'observability',
   name: 'analysis',
   description: 'Pattern detection and trend analysis from metrics',
 
@@ -94,7 +93,7 @@ Recommendation: Monitor for next hour, adjust threshold if sustained`,
 export const RISK_ASSESSMENT_TEMPLATE: PromptTemplate = {
   id: uuidv4(),
   version: 1,
-  type: AnalysisType.RISK,
+  type: 'risk',
   name: 'assessment',
   description: 'Security and compliance risk assessment',
 
@@ -133,7 +132,7 @@ Timeline: 24 hours`,
 export const TEST_INTELLIGENCE_TEMPLATE: PromptTemplate = {
   id: uuidv4(),
   version: 1,
-  type: AnalysisType.TEST_INTELLIGENCE,
+  type: 'test-intelligence',
   name: 'generation',
   description: 'Test case generation and coverage analysis',
 
@@ -173,7 +172,7 @@ Test Case:
 export const CICD_ANALYSIS_TEMPLATE: PromptTemplate = {
   id: uuidv4(),
   version: 1,
-  type: AnalysisType.CICD,
+  type: 'cicd',
   name: 'pipeline',
   description: 'CI/CD pipeline optimization and reliability',
 

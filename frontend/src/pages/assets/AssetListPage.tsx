@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext'
 import type { AssetResponse, AssetInsurance, AssetStatus, AssetType, UnitResponse, UserResponse } from '../../types'
 import {
   ASSET_STATUS_LABELS, ASSET_STATUS_COLORS, ASSET_TYPE_LABELS, ASSET_TYPE_OPTIONS,
-  INPUT_CLS, resolveUnitName, resolveUserName,
+  resolveUnitName, resolveUserName,
   TipButton, Pagination, ErrorBanner, parseCurrency,
 } from '../../shared'
 
@@ -44,10 +44,14 @@ export default function AssetListPage() {
   const urlUnitId = searchParams.get('unitId') ? Number(searchParams.get('unitId')) : undefined
   const urlAssignedUserId = searchParams.get('assignedUserId') ? Number(searchParams.get('assignedUserId')) : undefined
   const urlStatus = searchParams.get('status') as AssetStatus | null
+  const urlType = searchParams.get('type') as AssetType | null
   const insuranceMode = searchParams.get('insurance') === 'expiring'
 
   const initialStatus: AssetStatus | 'ALL' =
     urlStatus && VALID_STATUSES.includes(urlStatus) ? urlStatus : 'ALL'
+
+  const initialType: AssetType | 'ALL' =
+    urlType && ASSET_TYPE_OPTIONS.some(t => t.value === urlType) ? urlType : 'ALL'
 
   const effectiveUnitId = urlUnitId ?? (!isAdmin && isGestor ? user?.unitId : undefined)
   const effectiveAssignedUserId = urlAssignedUserId ?? (!isAdmin && !isGestor ? user?.userId : undefined)
@@ -55,7 +59,7 @@ export default function AssetListPage() {
   const [currentPage, setCurrentPage] = useState(0)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<AssetStatus | 'ALL'>(initialStatus)
-  const [typeFilter, setTypeFilter] = useState<AssetType | 'ALL'>('ALL')
+  const [typeFilter, setTypeFilter] = useState<AssetType | 'ALL'>(initialType)
   const [actionError, setActionError] = useState('')
 
   const [units, setUnits] = useState<UnitResponse[]>([])
@@ -250,11 +254,11 @@ export default function AssetListPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => exportApi.downloadAssets(undefined, undefined)} className="flex items-center gap-[7px] px-4 py-2 rounded-[8px] border-[1.5px] border-slate-200 bg-white text-[13px] font-semibold hover:bg-slate-50 transition">
+          <button data-testid="asset-export-btn" onClick={() => exportApi.downloadAssets(undefined, undefined)} className="flex items-center gap-[7px] px-4 py-2 rounded-[8px] border-[1.5px] border-slate-200 bg-white text-[13px] font-semibold hover:bg-slate-50 transition">
             <Download size={14} /> Exportar CSV
           </button>
           {(isAdmin || isGestor) && (
-            <button onClick={() => setShowCreate(true)} className="flex items-center gap-[7px] px-4 py-2 rounded-[8px] bg-blue-700 text-white text-[13px] font-semibold hover:bg-blue-800 transition">
+            <button data-testid="asset-new-btn" onClick={() => setShowCreate(true)} className="flex items-center gap-[7px] px-4 py-2 rounded-[8px] bg-blue-700 text-white text-[13px] font-semibold hover:bg-blue-800 transition">
               <Plus size={14} /> Novo Ativo
             </button>
           )}
@@ -278,6 +282,7 @@ export default function AssetListPage() {
             <div className="relative flex-1 max-w-[320px]">
               <Search size={14} className="absolute left-[10px] top-1/2 -translate-y-1/2 text-slate-400" />
               <input
+                data-testid="asset-search-input"
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setCurrentPage(0) }}
                 placeholder="Buscar por modelo ou código..."
@@ -293,6 +298,7 @@ export default function AssetListPage() {
             {STATUS_FILTERS.map((f) => (
               <button
                 key={f.value}
+                data-testid={`asset-status-filter-${String(f.value).toLowerCase()}`}
                 onClick={() => { setStatusFilter(f.value); setCurrentPage(0) }}
                 className={`px-3 py-1 rounded-full text-[12px] font-medium border-[1.5px] transition ${
                   statusFilter === f.value
@@ -305,6 +311,7 @@ export default function AssetListPage() {
             ))}
             <div className="ml-2 pl-2 border-l border-slate-200">
               <select
+                data-testid="asset-type-filter"
                 value={typeFilter}
                 onChange={(e) => { setTypeFilter(e.target.value as AssetType | 'ALL'); setCurrentPage(0) }}
                 className="border-[1.5px] border-slate-200 rounded-[7px] px-3 py-[5px] text-[12px] bg-white outline-none text-slate-600 hover:border-blue-400 transition"
@@ -319,7 +326,7 @@ export default function AssetListPage() {
         )}
 
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+          <table data-testid="assets-table" className="w-full border-collapse">
             <thead className="bg-slate-50">
               <tr>
                 {baseHeaders.map((h) => (
@@ -336,7 +343,7 @@ export default function AssetListPage() {
                 const ins = expiringMap.get(asset.id)
                 const days = ins ? daysUntil(ins.expiryDate) : null
                 return (
-                  <tr key={asset.id} className="hover:bg-slate-50 transition-colors">
+                  <tr key={asset.id} data-testid="asset-row" className="hover:bg-slate-50 transition-colors">
                     <td className="px-[14px] py-3 border-b border-slate-50">
                       <span className="font-mono text-[12px] text-blue-700 font-medium">{asset.assetTag}</span>
                     </td>
@@ -385,31 +392,31 @@ export default function AssetListPage() {
 
                     <td className="px-[14px] py-3 border-b border-slate-50">
                       <div className="flex gap-[5px]">
-                        <TipButton tip="Ver detalhes" onClick={() => navigate(`/assets/${asset.id}`)}>
+                        <TipButton testId="asset-action-view" tip="Ver detalhes" onClick={() => navigate(`/assets/${asset.id}`)}>
                           <Eye size={13} />
                         </TipButton>
                         {asset.status === 'AVAILABLE' && (
-                          <TipButton tip="Atribuir usuário" onClick={() => { setShowAssign(asset); setAssignUserId('') }}>
+                          <TipButton testId="asset-action-assign" tip="Atribuir usuário" onClick={() => { setShowAssign(asset); setAssignUserId('') }}>
                             <UserCheck size={13} />
                           </TipButton>
                         )}
                         {asset.status === 'ASSIGNED' && (
-                          <TipButton tip="Remover atribuição" onClick={() => handleUnassign(asset)}>
+                          <TipButton testId="asset-action-unassign" tip="Remover atribuição" onClick={() => handleUnassign(asset)}>
                             <UserX size={13} />
                           </TipButton>
                         )}
                         {asset.status === 'AVAILABLE' && (
-                          <TipButton tip="Solicitar transferência" onClick={() => { setShowTransfer(asset); setTransferForm({ toUnitId: '', reason: '' }) }}>
+                          <TipButton testId="asset-action-transfer" tip="Solicitar transferência" onClick={() => { setShowTransfer(asset); setTransferForm({ toUnitId: '', reason: '' }) }}>
                             <ArrowLeftRight size={13} />
                           </TipButton>
                         )}
                         {['AVAILABLE', 'ASSIGNED'].includes(asset.status) && (
-                          <TipButton tip="Abrir manutenção" onClick={() => { setShowMaint(asset); setMaintDesc('') }}>
+                          <TipButton testId="asset-action-maintenance" tip="Abrir manutenção" onClick={() => { setShowMaint(asset); setMaintDesc('') }}>
                             <Wrench size={13} />
                           </TipButton>
                         )}
                         {(isAdmin || isGestor) && asset.status !== 'RETIRED' && (
-                          <TipButton tip="Aposentar ativo" danger onClick={() => setShowRetire(asset)}>
+                          <TipButton testId="asset-action-retire" tip="Aposentar ativo" danger onClick={() => setShowRetire(asset)}>
                             <Trash2 size={13} />
                           </TipButton>
                         )}

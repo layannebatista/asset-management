@@ -1,11 +1,7 @@
 const DEFAULT_AI_SERVICE_KEY = 'local-ai-service-key';
 
-let currentAnalysis = null;
 let dashboardCharts = [];
 
-const analysisTypeSelect = document.getElementById('analysisType');
-const dataWindowInput = document.getElementById('dataWindow');
-const analyzeBtn = document.getElementById('analyzeBtn');
 const exportBtn = document.getElementById('exportBtn');
 const refreshDashboardBtn = document.getElementById('refreshDashboardBtn');
 const loadingIndicator = document.getElementById('loadingIndicator');
@@ -24,7 +20,6 @@ function getAiServiceKey() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  analyzeBtn.addEventListener('click', executeAnalysis);
   exportBtn.addEventListener('click', exportReport);
   refreshDashboardBtn.addEventListener('click', loadInsightsDashboard);
 
@@ -49,40 +44,6 @@ function updateStatusBadge(element, isUp, label) {
   element.textContent = `${isUp ? '🟢' : '🔴'} ${label}`;
 }
 
-async function executeAnalysis() {
-  const analysisType = analysisTypeSelect.value;
-  const dataWindow = parseInt(dataWindowInput.value, 10);
-
-  if (!analysisType || !dataWindow) {
-    showError('Escolha o tipo e o período para eu rodar a análise.');
-    return;
-  }
-
-  showLoading(true);
-  hideError();
-
-  try {
-    const endpoint = getAnalysisEndpoint(analysisType);
-    const payload = getAnalysisPayload(analysisType, dataWindow);
-    const response = await safeApiFetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-
-    currentAnalysis = await response.json();
-    exportBtn.disabled = false;
-
-    await loadInsightsDashboard();
-  } catch (error) {
-    showError(`Não consegui executar a análise: ${error.message}`);
-    exportBtn.disabled = true;
-  } finally {
-    showLoading(false);
-  }
-}
 
 async function loadInsightsDashboard() {
   showLoading(true);
@@ -554,36 +515,13 @@ function showError(message) {
 }
 
 function exportReport() {
-  if (!currentAnalysis) {
-    showError('Nenhuma análise para exportar');
-    return;
-  }
-
-  const json = JSON.stringify(currentAnalysis, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
+  const timestamp = new Date().toISOString().split('T')[0];
+  const html = document.body.innerHTML;
+  const blob = new Blob([html], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `analise-${Date.now()}.json`;
+  a.download = `rtk-insights-${timestamp}.html`;
   a.click();
   URL.revokeObjectURL(url);
-}
-
-function getAnalysisEndpoint(type) {
-  const endpoints = {
-    'observability': '/api/v1/analysis/observability',
-    'test-intelligence': '/api/v1/analysis/test-intelligence',
-    'cicd': '/api/v1/analysis/cicd',
-    'incident': '/api/v1/analysis/incident',
-    'risk': '/api/v1/analysis/risk',
-  };
-  return endpoints[type] || '/api/v1/analysis/observability';
-}
-
-function getAnalysisPayload(type, window) {
-  return {
-    analysisType: type,
-    dataWindow: window,
-    timestamp: new Date().toISOString(),
-  };
 }

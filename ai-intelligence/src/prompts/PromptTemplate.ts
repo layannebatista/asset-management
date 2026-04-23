@@ -9,7 +9,7 @@
  */
 
 import { Logger } from 'winston';
-import { AnalysisType } from '../routing/RoutingContext';
+import { AnalysisType } from '../types/analysis.types';
 
 export interface PromptTemplate {
   id: string;

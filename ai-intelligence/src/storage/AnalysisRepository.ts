@@ -38,8 +38,9 @@ export class AnalysisRepository {
       await this.pool.query(sql);
       logger.info('AI intelligence schema initialized');
     } catch (error) {
-      logger.error('Failed to initialize schema', { error });
-      throw error;
+      logger.warn('Failed to initialize schema (database may not be available)', {
+        error: error instanceof Error ? error.message : 'unknown',
+      });
     }
   }
 

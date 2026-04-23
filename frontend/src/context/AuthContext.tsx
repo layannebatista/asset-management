@@ -108,7 +108,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const parsed = parseJwt(token)
 
-    if (!parsed?.sub) return
+    if (!parsed?.sub) {
+      tokenService.clear()
+      return
+    }
 
     // ✅ JWT com claims completos (backend atualizado) — rehydrate instantâneo sem chamada API
     if (parsed.role && parsed.userId && parsed.organizationId) {

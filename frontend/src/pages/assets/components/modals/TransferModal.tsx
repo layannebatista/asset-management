@@ -54,6 +54,8 @@ export function TransferModal({
       open={!!asset}
       onClose={onClose}
       title={asset ? `Transferir: ${asset.assetTag}` : 'Transferir ativo'}
+      testId="asset-transfer-modal"
+      closeButtonTestId="asset-transfer-close-btn"
     >
       <Field label="Unidade de Destino *">
         {availableUnits.length === 0 ? (
@@ -62,6 +64,7 @@ export function TransferModal({
           </p>
         ) : (
           <select
+            data-testid="asset-transfer-unit-select"
             value={form.toUnitId}
             onChange={(e) =>
               setForm((f) => ({ ...f, toUnitId: e.target.value }))
@@ -80,6 +83,7 @@ export function TransferModal({
 
       <Field label="Motivo *">
         <textarea
+          data-testid="asset-transfer-reason-input"
           value={form.reason}
           onChange={(e) =>
             setForm((f) => ({ ...f, reason: e.target.value }))
@@ -97,6 +101,8 @@ export function TransferModal({
         loading={saving}
         confirmLabel="Solicitar Transferência"
         disabled={!isValid || saving}
+        cancelTestId="asset-transfer-cancel-btn"
+        confirmTestId="asset-transfer-confirm-btn"
       />
     </Modal>
   )

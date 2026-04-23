@@ -1,0 +1,134 @@
+================================================================================
+MAPEAMENTO DE CENÁRIOS DE TESTE — DOMÍNIO: MAINTENANCE (Manutenção)
+Projeto: Patrimônio 360 | Backend Spring Boot
+Atualizado em: 2026-04-16
+================================================================================
+
+LEGENDA
+  Tipo        : E2E (Cucumber BDD), UNITARIO, INTEGRACAO, CONTRATO, PERFORMANCE, SEGURANCA
+  Criticidade : BLOCKER > CRITICAL > NORMAL > LOW
+  Status      : AUTOMATIZADO | PENDENTE | NAO_APLICAVEL
+  Camada      : indica o arquivo ou ferramenta onde o teste vive (ou deve viver)
+
+NOTAS GERAIS
+  - Todos os cenários E2E usam Spring MockMvc + profile bdd
+  - Manutenção é obrigatória para ativos com status IN_MAINTENANCE
+  - Transições de status: PENDING → INITIATED → COMPLETED/CANCELLED
+  - Apenas ADMIN e GESTOR podem criar/aprovar manutenção
+  - Descrição de manutenção: mínimo 10 caracteres, máximo 500 caracteres
+  - GESTOR só pode criar manutenção para ativos da própria unidade
+  - Conclusão restaura ativo para ASSIGNED se havia usuário atribuído antes (c.f. MS08 na camada de serviço)
+
+================================================================================
+SEÇÃO 1 — CRIAÇÃO  (POST /maintenance)
+================================================================================
+
+ID   | Cenário                                                    | Tipo        | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|-------------|-------------|--------------|---------------------------------------------
+M01  | Criar manutenção com descrição válida retorna 201           | E2E         | CRITICAL    | AUTOMATIZADO | maintenance.feature
+M02  | Criar manutenção com descrição vazia retorna 400            | E2E         | NORMAL      | PENDENTE     | maintenance.feature
+M03  | Criar manutenção com descrição < 10 chars retorna 400       | E2E         | NORMAL      | AUTOMATIZADO | maintenance.feature
+M04  | Criar manutenção com descrição > 500 chars retorna 400      | E2E         | NORMAL      | AUTOMATIZADO | maintenance.feature
+M05  | Criar manutenção sem assetId retorna 400                   | E2E         | NORMAL      | PENDENTE     | maintenance.feature
+M06  | Criar manutenção com assetId inválido retorna 404          | E2E         | NORMAL      | PENDENTE     | maintenance.feature
+M07  | Criar manutenção como OPERADOR retorna 403                 | SEGURANCA   | CRITICAL    | PENDENTE     | maintenance.feature
+M08  | Criar manutenção sem autenticação retorna 401              | SEGURANCA   | CRITICAL    | PENDENTE     | maintenance.feature
+M09  | Criar manutenção para ativo RETIRED retorna 400            | E2E         | CRITICAL    | PENDENTE     | maintenance.feature
+M10  | Criar manutenção para ativo IN_TRANSFER retorna 400        | E2E         | CRITICAL    | PENDENTE     | maintenance.feature
+M11  | Criar segunda manutenção para ativo com manutenção ativa retorna 400 | E2E    | CRITICAL    | PENDENTE     | maintenance.feature
+
+================================================================================
+SEÇÃO 2 — CICLO DE VIDA  (PUT /maintenance/{id}/status)
+================================================================================
+
+ID   | Cenário                                                    | Tipo        | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|-------------|-------------|--------------|---------------------------------------------
+L01  | Iniciar manutenção com status válido retorna 200            | E2E         | CRITICAL    | AUTOMATIZADO | maintenance.feature
+L02  | Iniciar manutenção já iniciada retorna 409                 | E2E         | NORMAL      | PENDENTE     | maintenance.feature
+L03  | Concluir manutenção com resolução válida retorna 200        | E2E         | CRITICAL    | AUTOMATIZADO | maintenance.feature
+L04  | Concluir manutenção sem resolução retorna 400              | E2E         | NORMAL      | AUTOMATIZADO | maintenance.feature
+L05  | Concluir manutenção com resolução inválida retorna 400     | E2E         | NORMAL      | PENDENTE     | maintenance.feature
+L06  | Manutenção concluída alterna status do ativo para AVAILABLE | E2E         | CRITICAL    | PENDENTE     | maintenance.feature
+L07  | Cancelar manutenção em andamento retorna 200               | E2E         | NORMAL      | AUTOMATIZADO | maintenance.feature
+L08  | Cancelar manutenção já concluída retorna 409               | E2E         | NORMAL      | PENDENTE     | maintenance.feature
+L09  | Conclusão restaura ativo para ASSIGNED quando havia usuário atribuído | E2E   | CRITICAL    | PENDENTE     | maintenance.feature
+L10  | Cancelamento de manutenção IN_PROGRESS restaura ativo para AVAILABLE | E2E  | NORMAL      | PENDENTE     | maintenance.feature
+
+================================================================================
+SEÇÃO 3 — CONSULTA / LISTAGEM  (GET /maintenance, GET /maintenance/{id})
+================================================================================
+
+ID   | Cenário                                                    | Tipo        | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|-------------|-------------|--------------|---------------------------------------------
+Q01  | Listar manutenção de um ativo retorna 200                  | E2E         | CRITICAL    | PENDENTE     | maintenance.feature
+Q02  | Listar manutenção sem autenticação retorna 401             | SEGURANCA   | CRITICAL    | PENDENTE     | maintenance.feature
+Q03  | Obter detalhes de manutenção existente retorna 200         | E2E         | NORMAL      | PENDENTE     | maintenance.feature
+Q04  | Obter detalhes de manutenção inexistente retorna 404       | E2E         | NORMAL      | PENDENTE     | maintenance.feature
+Q05  | Filtrar manutenção por status retorna apenas registros do status solicitado | E2E | NORMAL | PENDENTE | maintenance.feature
+Q06  | Escopo GESTOR limita listagem por unitId                    | SEGURANCA   | CRITICAL    | PENDENTE     | maintenance.feature
+Q07  | OPERADOR só vê manutenções de ativos atribuídos a ele       | SEGURANCA   | CRITICAL    | PENDENTE     | maintenance.feature
+
+================================================================================
+SEÇÃO 4 — CONTROLE DE ACESSO
+================================================================================
+
+ID   | Cenário                                                    | Tipo        | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|-------------|-------------|--------------|---------------------------------------------
+A01  | GESTOR pode criar e concluir manutenção                    | SEGURANCA   | CRITICAL    | PENDENTE     | maintenance.feature
+A02  | OPERADOR não pode criar manutenção                         | SEGURANCA   | CRITICAL    | PENDENTE     | maintenance.feature
+A03  | OPERADOR não pode concluir manutenção                      | SEGURANCA   | CRITICAL    | PENDENTE     | maintenance.feature
+A04  | GESTOR só pode criar manutenção para ativo da própria unidade | SEGURANCA | CRITICAL  | PENDENTE     | maintenance.feature
+A05  | GESTOR não pode criar manutenção para ativo de outra unidade (403) | SEGURANCA | CRITICAL | PENDENTE | maintenance.feature
+
+================================================================================
+SEÇÃO 5 — INTEGRAÇÃO COM OUTROS DOMÍNIOS
+================================================================================
+
+ID   | Cenário                                                    | Tipo        | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|-------------|-------------|--------------|---------------------------------------------
+I01  | Ativo em manutenção não pode ser transferido               | INTEGRACAO  | NORMAL      | PENDENTE     | transfer.feature
+I02  | Ativo em manutenção pode ser aposentado                    | INTEGRACAO  | NORMAL      | PENDENTE     | maintenance.feature
+I03  | Histórico de manutenção reflete em auditoria               | INTEGRACAO  | NORMAL      | PENDENTE     | maintenance.feature
+
+================================================================================
+SEÇÃO 6 — TESTES UNITÁRIOS (camada domain/service — JUnit 5)
+================================================================================
+
+ID   | Cenário                                                    | Tipo        | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|-------------|-------------|--------------|---------------------------------------------
+U01  | MaintenanceRecord.start() falha para ativo RETIRED          | UNITARIO    | NORMAL      | PENDENTE     | MaintenanceRecordTest.java (a criar)
+U02  | MaintenanceRecord.complete() restaura status ASSIGNED se havia usuário | UNITARIO | CRITICAL | PENDENTE | MaintenanceRecordTest.java (a criar)
+U03  | MaintenanceService.create() rejeita ativo RETIRED           | UNITARIO    | CRITICAL    | PENDENTE     | MaintenanceServiceTest.java (a criar)
+U04  | MaintenanceService.create() rejeita ativo IN_TRANSFER       | UNITARIO    | CRITICAL    | PENDENTE     | MaintenanceServiceTest.java (a criar)
+U05  | MaintenanceService.create() rejeita ativo com manutenção ativa | UNITARIO | CRITICAL   | PENDENTE     | MaintenanceServiceTest.java (a criar)
+
+================================================================================
+RESUMO DE COBERTURA
+================================================================================
+
+Status                  Contagem  Porcentagem
+────────────────────────────────────────────
+✓ AUTOMATIZADO          5         10%
+⊗ PENDENTE              45        90%
+────────────────────────────────────────────
+TOTAL                   50
+
+Cobertura por Tipo:
+  E2E:        19 / 50 = 38%
+  SEGURANÇA:  10 / 50 = 20%
+  INTEGRAÇÃO:  3 / 50 =  6%
+  UNITÁRIO:    5 / 50 = 10%
+
+Prioridade de Implementação:
+  1. BLOCKER + CRITICAL: M07-M11, A02-A05, Q02, Q06, Q07, L06, L09
+  2. NORMAL (cobertura básica): M02-M06, L02, L04-L05, L08, L10, Q01, Q03-Q05, I01-I03
+  3. Unitários BDD-complementares: U01-U05
+
+Novos cenários adicionados (2026-04-21): M09-M11, L09-L10, Q05-Q07, A04-A05, U01-U05
+Destaques críticos ausentes antes desta revisão:
+  - M09/M10: criação para ativo RETIRED/IN_TRANSFER (regras de negócio sem cobertura BDD)
+  - L09: restauração para ASSIGNED após conclusão (coberto em unit/service mas não em BDD)
+  - A05: GESTOR fora do escopo de unidade (CRITICAL sem BDD)
+  - Q06/Q07: escopo de listagem por papel (CRITICAL sem BDD)
+
+================================================================================

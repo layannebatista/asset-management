@@ -219,10 +219,56 @@ Funcionalidade: Ciclo de Vida de Manutenção de Ativos
   @allure.severity.normal
   Cenário: Resolução contendo apenas espaços é rejeitada
     Dado que estou autenticado como "admin@acme.com" com senha "Senha@123"
-    E que criei uma manutenção para o ativo "ASSET-001" com descrição "Manutenção para testar resolução branca"
+    E que criei uma manutenção para o ativo "ASSET-001" com descrição "Manutenção para testar whitespace"
     E que iniciei essa manutenção
     Quando concluo a manutenção salva com resolução "   "
     Então a resposta deve ter status 400
+
+  @consulta
+  @allure.label.suite:Consulta_de_Dados
+  @allure.severity.critical
+  Cenário: Listar manutenções de um ativo retorna 200
+    Dado que estou autenticado como "admin@acme.com" com senha "Senha@123"
+    E que criei uma manutenção para o ativo "ASSET-001" com descrição "Primeira manutenção para listar"
+    E que cancelei essa manutenção
+    E que criei uma manutenção para o ativo "ASSET-001" com descrição "Segunda manutenção para listar"
+    Quando listo as manutenções do ativo "ASSET-001"
+    Então a resposta deve ter status 200
+    E a resposta deve conter at least 2 manutenções
+
+  @criacao @validacao
+  @allure.label.suite:Validacao_de_Dados
+  @allure.severity.normal
+  Cenário: Descrição vazia é rejeitada
+    Dado que estou autenticado como "admin@acme.com" com senha "Senha@123"
+    Quando solicito manutenção para o ativo "ASSET-001" com descrição ""
+    Então a resposta deve ter status 400
+
+  @criacao @validacao
+  @allure.label.suite:Validacao_de_Dados
+  @allure.severity.normal
+  Cenário: AssetId inválido retorna 404
+    Dado que estou autenticado como "admin@acme.com" com senha "Senha@123"
+    Quando solicito manutenção para o ativo com ID "999999" com descrição "Ativo que não existe"
+    Então a resposta deve ter status 404
+
+  @criacao @autorizacao
+  @allure.label.suite:Controle_de_Acesso
+  @allure.severity.critical
+  Cenário: Criar manutenção sem autenticação retorna 401
+    Quando solicito manutenção para o ativo "ASSET-001" com descrição "Tentativa sem autenticação" sem autenticação
+    Então a resposta deve ter status 401
+
+  @cancelar @autorizacao
+  @allure.label.suite:Controle_de_Acesso
+  @allure.severity.normal
+  Cenário: OPERADOR não pode cancelar manutenção
+    Dado que existe um ativo "ASSET-CANCEL-OP" disponível nessa unidade
+    E que estou autenticado como "admin@acme.com" com senha "Senha@123"
+    E que criei uma manutenção para o ativo "ASSET-CANCEL-OP" com descrição "Manutenção para OPERADOR não cancelar"
+    E que estou autenticado como "operador@acme.com" com senha "Senha@123"
+    Quando cancelo a manutenção salva
+    Então a resposta deve ter status 403
 
   @cancelar @regra-negocio
   @allure.label.suite:Regras_de_Negocio
@@ -244,3 +290,28 @@ Funcionalidade: Ciclo de Vida de Manutenção de Ativos
     E que cancelei essa manutenção
     Quando concluo a manutenção salva com resolução "Tentativa inválida de conclusão"
     Então a resposta deve ter status 400
+    E a mensagem de erro deve conter "não pode ser concluída"
+
+  @fluxo-completo @regra-negocio
+  @allure.label.suite:Fluxo_Completo
+  @allure.severity.critical
+  Cenário: Conclusão de manutenção restaura ativo para ASSIGNED quando havia usuário atribuído
+    Dado que existe um ativo "ASSET-L09" atribuído nessa unidade
+    E que estou autenticado como "admin@acme.com" com senha "Senha@123"
+    Quando solicito manutenção para o ativo "ASSET-L09" com descrição "Manutenção de ativo previamente atribuído"
+    Então a resposta deve ter status 201
+    E salvo o ID da manutenção criada
+    Quando inicio a manutenção salva
+    Então a resposta deve ter status 200
+    Quando concluo a manutenção salva com resolução "Problema resolvido com sucesso"
+    Então a resposta deve ter status 200
+    E o ativo "ASSET-L09" deve ter status "ASSIGNED"
+
+  @criacao @autorizacao
+  @allure.label.suite:Controle_de_Acesso
+  @allure.severity.critical
+  Cenário: GESTOR não pode criar manutenção para ativo de outra unidade
+    Dado que existe um ativo "ASSET-A05" disponível em outra unidade dessa organização
+    E que estou autenticado como "gestor@acme.com" com senha "Senha@123"
+    Quando solicito manutenção para o ativo "ASSET-A05" com descrição "Tentativa em ativo de outra unidade"
+    Então a resposta deve ter status 403

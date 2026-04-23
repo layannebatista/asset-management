@@ -1,5 +1,5 @@
 import { Logger } from 'winston';
-import { IAnalyzer } from '../types/analysis.types';
+import { IAnalyzer } from '../types/enterprise.types';
 
 /**
  * AgentGraph: DAG-based multi-agent orchestration
@@ -291,8 +291,9 @@ export class AgentGraph {
     state: AgentGraphState,
   ): unknown {
     // Merge input with results from dependencies
+    const inputObject = (input && typeof input === 'object') ? (input as Record<string, unknown>) : {};
     const mergedContext: any = {
-      ...input,
+      ...inputObject,
       nodeId: node.id,
       dependencyResults: {},
     };

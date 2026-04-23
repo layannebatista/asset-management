@@ -7,12 +7,15 @@ import { config } from '../../config';
  * which adds the X-AI-Service-Key header.
  */
 export function requireApiKey(req: Request, res: Response, next: NextFunction): void {
-  const key = req.headers['x-ai-service-key'] as string | undefined;
+  const aiServiceKey = req.headers['x-ai-service-key'];
+  const legacyApiKey = req.headers['x-api-key'];
+  const key = (typeof aiServiceKey === 'string' ? aiServiceKey : undefined)
+    ?? (typeof legacyApiKey === 'string' ? legacyApiKey : undefined);
 
   if (!key || key !== config.service.apiKey) {
     res.status(401).json({
       error: 'Unauthorized',
-      message: 'Valid X-AI-Service-Key header required',
+      message: 'Valid X-AI-Service-Key (or X-API-Key) header required',
     });
     return;
   }

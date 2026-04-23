@@ -1,5 +1,5 @@
 import { Logger } from 'winston';
-import { LLMClient } from '../clients/LLMClient';
+import { LLMClient } from '../llm/LLMClient';
 
 export enum SensitivityLevel {
   PUBLIC = 'public',              // OK para modelo cloud
@@ -55,10 +55,9 @@ export class SecurityClassifier {
           level,
           method: 'rule',
           confidence: 0.95,
-          patterns: this.patternNames
-            .entries()
-            .filter(([_, re]) => matches.includes(re as RegExp))
-            .map(([name]) => name)
+          patterns: Array.from(this.patternNames.entries() as any)
+            .filter(([_name, re]: any) => matches.includes(re))
+            .map(([name]: any) => name)
             .slice(0, 3),
         };
       }

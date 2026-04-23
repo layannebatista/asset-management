@@ -26,5 +26,11 @@ module.exports = {
       baseUrl: process.env.BASE_URL || 'http://localhost:5173',
       headless: process.env.PWHEADLESS !== 'false',
     },
+    // ✅ Aumenta timeouts para evitar SIGTERM
+    timeout: 120000, // 2 minutos por step
+    dryRun: false,
+    failFast: false,
+    parallel: 1, // 1 cenário por vez para economizar memória
+    retryTagFilter: '@flaky', // Retry apenas testes marcados como flaky
   },
 };

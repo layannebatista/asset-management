@@ -9,6 +9,12 @@ volumes:
   influxdb_data:
   ai_intelligence_node_modules:
 
+x-default-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
 
   # ─── Banco de dados ────────────────────────────────────────────────────────
@@ -30,6 +36,9 @@ services:
       retries: 10
       start_period: 30s
     restart: unless-stopped
+    cpus: "0.50"
+    mem_limit: 512m
+    logging: *default-logging
     networks:
       - asset-net
     deploy:
@@ -67,6 +76,9 @@ services:
       retries: 5
       start_period: 90s
     restart: unless-stopped
+    cpus: "1.00"
+    mem_limit: 768m
+    logging: *default-logging
     networks:
       - asset-net
     deploy:
@@ -91,6 +103,9 @@ services:
     depends_on:
       - asset-management
     restart: unless-stopped
+    cpus: "0.25"
+    mem_limit: 128m
+    logging: *default-logging
     networks:
       - asset-net
     deploy:
@@ -103,6 +118,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
+    profiles: ["observability"]
     ports:
       - "9090:9090"
     volumes:
@@ -111,7 +127,7 @@ services:
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
-      - "--storage.tsdb.retention.time=15d"
+      - "--storage.tsdb.retention.time=7d"
       - "--web.enable-lifecycle"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
@@ -123,6 +139,9 @@ services:
       asset-management:
         condition: service_healthy
     restart: unless-stopped
+    cpus: "0.30"
+    mem_limit: 256m
+    logging: *default-logging
     networks:
       - asset-net
 
@@ -136,6 +155,7 @@ services:
   influxdb:
     image: influxdb:1.8-alpine
     container_name: influxdb
+    profiles: ["observability"]
     ports:
       - "8086:8086"
     environment:
@@ -150,6 +170,9 @@ services:
       retries: 5
       start_period: 15s
     restart: unless-stopped
+    cpus: "0.30"
+    mem_limit: 256m
+    logging: *default-logging
     networks:
       - asset-net
 
@@ -160,6 +183,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
+    profiles: ["observability"]
     # Porta 3001 para evitar conflito com servidores de dev locais na 3000
     ports:
       - "3001:3000"
@@ -182,6 +206,9 @@ services:
       - prometheus
       - influxdb
     restart: unless-stopped
+    cpus: "0.30"
+    mem_limit: 256m
+    logging: *default-logging
     networks:
       - asset-net
 
@@ -196,6 +223,7 @@ services:
   allure:
     image: frankescobar/allure-docker-service:latest
     container_name: allure
+    profiles: ["reports"]
     ports:
       - "5050:5050"
     environment:
@@ -213,6 +241,9 @@ services:
       retries: 6
       start_period: 20s
     restart: unless-stopped
+    cpus: "0.20"
+    mem_limit: 192m
+    logging: *default-logging
     networks:
       - asset-net
 
@@ -221,6 +252,7 @@ services:
   allure-ui:
     image: frankescobar/allure-docker-service-ui:latest
     container_name: allure-ui
+    profiles: ["reports"]
     ports:
       - "5252:5252"
     environment:
@@ -229,6 +261,9 @@ services:
     depends_on:
       - allure
     restart: unless-stopped
+    cpus: "0.10"
+    mem_limit: 96m
+    logging: *default-logging
     networks:
       - asset-net
 
@@ -238,6 +273,7 @@ services:
   reset-e2e-data:
     image: postgres:16-alpine
     container_name: reset-e2e-data
+    profiles: ["tests"]
     environment:
       PGPASSWORD: ${DB_PASSWORD:-asset123}
     command: >
@@ -363,6 +399,9 @@ services:
       asset-management:
         condition: service_healthy
     restart: "no"
+    cpus: "0.20"
+    mem_limit: 128m
+    logging: *default-logging
     networks:
       - asset-net
 
@@ -372,20 +411,23 @@ services:
   clean-allure-results:
     image: alpine:3.19
     container_name: clean-allure-results
+    profiles: ["tests"]
     volumes:
       - ./allure-results:/allure-results
       - ./frontend/src/automation/playwright/reports:/playwright-reports
     command: >
-      sh -c "find /allure-results -maxdepth 1 -type f -delete &&
-             rm -rf /allure-results/history &&
-             find /playwright-reports -maxdepth 1 -type f -name '*.json' -delete &&
-             find /playwright-reports -maxdepth 1 -type f -name '*.html' -delete &&
-             wget -q -O - 'http://allure:5050/allure-docker-service/clean-history?project_id=default' &&
+      sh -c "find /allure-results -mindepth 1 -maxdepth 1 -exec rm -rf {} + || true;
+             find /playwright-reports -maxdepth 1 -type f -name '*.json' -delete || true;
+             find /playwright-reports -maxdepth 1 -type f -name '*.html' -delete || true;
+             wget -q -O - 'http://allure:5050/allure-docker-service/clean-history?project_id=default' || true;
              echo 'Resultados, histórico e relatórios anteriores removidos.'"
     depends_on:
       allure:
         condition: service_healthy
     restart: "no"
+    cpus: "0.10"
+    mem_limit: 64m
+    logging: *default-logging
     networks:
       - asset-net
 
@@ -398,6 +440,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile.test
     container_name: asset-management-test-backend
+    profiles: ["tests"]
     volumes:
       - ./allure-results:/allure-results
     depends_on:
@@ -408,6 +451,9 @@ services:
       frontend:
         condition: service_healthy
     restart: "no"
+    cpus: "1.00"
+    mem_limit: 1g
+    logging: *default-logging
     networks:
       - asset-net
 
@@ -417,13 +463,17 @@ services:
       context: ./frontend/src/automation/playwright
       dockerfile: Dockerfile
     container_name: asset-management-test-playwright
+    profiles: ["tests"]
     environment:
       BASE_URL: http://frontend:80
       API_URL: http://asset-management:8080
       PWHEADLESS: "true"
       ALLURE_RESULTS_DIR: /allure-results
       TEST_DATA_CLEANUP_KEY: ${TEST_DATA_CLEANUP_KEY:-cleanup-local-key}
-    command: ["npx", "cucumber-js", "features/**/*.feature"]
+      # Otimizações de performance
+      NODE_OPTIONS: "--max-old-space-size=2048 --max-http-header-size=16384"
+      NODE_ENV: production
+    command: ["npm", "test"]
     volumes:
       - ./allure-results:/allure-results
       - ./frontend/src/automation/playwright/cucumber.js:/app/cucumber.js:ro
@@ -439,8 +489,20 @@ services:
       frontend:
         condition: service_healthy
     restart: "no"
+    cpus: "2.0"
+    mem_limit: 2g
+    logging: *default-logging
     networks:
       - asset-net
+    # ✅ Alocação de recursos para evitar SIGTERM
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2g
+        reservations:
+          cpus: "1.5"
+          memory: 1536m
 
   # ─── AI Intelligence Service ──────────────────────────────────────────────────
   # Provides AI-powered observability, test intelligence, CI/CD, incident, and risk analysis.
@@ -450,15 +512,27 @@ services:
       context: ./ai-intelligence
       dockerfile: Dockerfile
     container_name: ai-intelligence
+    profiles: ["ai"]
     env_file:
       - .env
     environment:
       NODE_ENV: production
       AI_SERVICE_PORT: 3100
       AI_SERVICE_API_KEY: ${AI_SERVICE_API_KEY:-local-ai-service-key}
+      LOCAL_ONLY_MODE: ${LOCAL_ONLY_MODE:-true}
+      LLM_PROVIDER_ORDER: ${LLM_PROVIDER_ORDER:-localfree}
+      LOCAL_LLM_ENABLED: ${LOCAL_LLM_ENABLED:-true}
+      LOCAL_LLM_MODEL: ${LOCAL_LLM_MODEL:-local-rule-based-v1}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-local-openai-key}
       OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
       OPENAI_FALLBACK_MODEL: ${OPENAI_FALLBACK_MODEL:-gpt-4o-mini}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-3-5-sonnet-latest}
+      ANTHROPIC_FALLBACK_MODEL: ${ANTHROPIC_FALLBACK_MODEL:-claude-3-5-haiku-latest}
+      GITHUB_MODELS_TOKEN: ${GITHUB_MODELS_TOKEN:-}
+      GITHUB_MODELS_BASE_URL: ${GITHUB_MODELS_BASE_URL:-https://models.inference.ai.azure.com}
+      GITHUB_MODELS_MODEL: ${GITHUB_MODELS_MODEL:-gpt-4o-mini}
+      GITHUB_MODELS_FALLBACK_MODEL: ${GITHUB_MODELS_FALLBACK_MODEL:-gpt-4o-mini}
       AI_DB_HOST: postgres
       AI_DB_PORT: 5432
       AI_DB_NAME: asset_management
@@ -485,6 +559,9 @@ services:
       retries: 3
       start_period: 30s
     restart: unless-stopped
+    cpus: "0.50"
+    mem_limit: 512m
+    logging: *default-logging
     networks:
       - asset-net
     deploy:
@@ -498,6 +575,7 @@ services:
   provision-grafana:
     image: curlimages/curl:latest
     container_name: provision-grafana
+    profiles: ["tests"]
     volumes:
       - ./infra/grafana/provision-datasources.sh:/provision.sh:ro
     command: sh /provision.sh
@@ -505,6 +583,9 @@ services:
       grafana:
         condition: service_healthy
     restart: "no"
+    cpus: "0.10"
+    mem_limit: 64m
+    logging: *default-logging
     networks:
       - asset-net
 
@@ -514,6 +595,7 @@ services:
   k6:
     image: grafana/k6:latest
     container_name: k6
+    profiles: ["tests"]
     volumes:
       - ./k6/test.js:/app/test.js:ro
     environment:
@@ -528,19 +610,76 @@ services:
       influxdb:
         condition: service_healthy
     restart: "no"
+    cpus: "1.00"
+    mem_limit: 1g
+    logging: *default-logging
     networks:
       - asset-net
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:latest
     container_name: cadvisor
+    profiles: ["observability"]
     ports:
       - "8081:8080"
+    command:
+      - "--housekeeping_interval=30s"
+      - "--docker_only=true"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
     restart: unless-stopped
+    cpus: "0.30"
+    mem_limit: 192m
+    logging: *default-logging
     networks:
       - asset-net
+
+  # ─── Sprint Reporter – Gerador de Relatórios ────────────────────────────────
+  # Agrega dados de testes, CI/CD e IA em um relatório estruturado
+  # Acesse a API em: http://localhost:3200/api/reports/sprint
+  # Documentação: docs/projects/sprint-reporter-pt-br.md
+  sprint-reporter:
+    build: ./sprint-reporter
+    container_name: sprint-reporter
+    profiles: ["reports"]
+    ports:
+      - "3200:3200"
+    environment:
+      NODE_ENV: production
+      PORT: 3200
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: asset_management
+      DB_USER: ${DB_USERNAME:-asset_user}
+      DB_PASSWORD: ${DB_PASSWORD:-asset123}
+      AI_SERVICE_URL: http://ai-intelligence:3100
+      AI_SERVICE_API_KEY: ${AI_SERVICE_API_KEY:-local-ai-service-key}
+      ALLURE_RESULTS_PATH: /app/allure-results
+      LOG_LEVEL: info
+    volumes:
+      - ./allure-results:/app/allure-results:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ai-intelligence:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3200/health', r => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    cpus: "0.50"
+    mem_limit: 256m
+    logging: *default-logging
+    networks:
+      - asset-net
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M

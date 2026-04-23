@@ -2,7 +2,7 @@
  * Routing context types and enums
  */
 
-import { AnalysisType } from './analysis.types';
+import { AnalysisType } from '../types/analysis.types';
 import { SensitivityLevel } from '../security/SecurityClassifier';
 
 export enum Criticality {

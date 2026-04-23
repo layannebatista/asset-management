@@ -1,6 +1,6 @@
 import { Logger } from 'winston';
 import { AgentGraph, AgentNode } from '../AgentGraph';
-import { IAnalyzer } from '../../types/analysis.types';
+import { IAnalyzer } from '../../types/enterprise.types';
 
 /**
  * IncidentGraph: Complete incident investigation workflow

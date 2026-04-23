@@ -2,6 +2,7 @@ package com.portfolio.assetmanagement.integration;
 
 import com.portfolio.assetmanagement.bdd.client.ApiClient;
 import com.portfolio.assetmanagement.bdd.support.TestDataHelper;
+import com.portfolio.assetmanagement.config.ratelimit.RateLimitFilter;
 import com.portfolio.assetmanagement.domain.asset.entity.Asset;
 import com.portfolio.assetmanagement.domain.asset.enums.AssetType;
 import com.portfolio.assetmanagement.domain.organization.entity.Organization;
@@ -11,7 +12,12 @@ import io.restassured.module.mockmvc.response.MockMvcResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.ActiveProfiles;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 /**
  * Classe base para testes de integração da camada HTTP.
@@ -19,8 +25,8 @@ import org.springframework.test.context.ActiveProfiles;
  * <p>Utiliza MockMvc via RestAssuredMockMvc (WebEnvironment.MOCK) — sem porta HTTP real.
  * Os filtros de segurança JWT são executados normalmente neste modo.
  *
- * <p>O perfil "test" ativa application-test.yml que configura H2 em memória e
- * desabilita Flyway, permitindo que JPA crie o schema a partir das entidades.
+ * <p>O perfil "test" é complementado via DynamicPropertySource para usar PostgreSQL real com
+ * Testcontainers e Flyway habilitado, aproximando o comportamento de produção.
  *
  * <p>Cada teste parte de um banco limpo via cleanDatabase() no @BeforeEach.
  *
@@ -29,10 +35,30 @@ import org.springframework.test.context.ActiveProfiles;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")
+@Testcontainers
 public abstract class BaseIntegrationTest {
+
+  @Container
+  static final PostgreSQLContainer<?> POSTGRES =
+      new PostgreSQLContainer<>("postgres:16-alpine")
+          .withDatabaseName("asset_management_test")
+          .withUsername("test_user")
+          .withPassword("test_password");
+
+  @DynamicPropertySource
+  static void registerDynamicProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+    registry.add("spring.datasource.username", POSTGRES::getUsername);
+    registry.add("spring.datasource.password", POSTGRES::getPassword);
+    registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+
+    registry.add("spring.flyway.enabled", () -> true);
+    registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
+  }
 
   @Autowired protected ApiClient apiClient;
   @Autowired protected TestDataHelper testDataHelper;
+  @Autowired protected RateLimitFilter rateLimitFilter;
 
   // Entidades criadas no setup de cada teste
   protected Organization organizacao;
@@ -43,6 +69,7 @@ public abstract class BaseIntegrationTest {
 
   @BeforeEach
   void limparEConfigurarBanco() {
+    rateLimitFilter.clearAllBucketsForTests();
     testDataHelper.cleanDatabase();
     organizacao = testDataHelper.criarOrganizacao("Tech Corp");
     unidade = testDataHelper.criarUnidade("Sede", organizacao);

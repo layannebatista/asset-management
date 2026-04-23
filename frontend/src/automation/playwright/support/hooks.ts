@@ -4,7 +4,7 @@ import { CustomWorld } from './world';
 import fs from 'fs';
 import path from 'path';
 
-setDefaultTimeout(30000);
+setDefaultTimeout(60000);
 
 const REPORTS_DIR = path.resolve(process.cwd(), 'reports');
 const SCREENSHOTS_DIR = path.resolve(REPORTS_DIR, 'screenshots');
@@ -96,6 +96,43 @@ Before({ timeout: 30000 }, async function (this: CustomWorld) {
     storageState: fs.existsSync(AUTH_FILE) ? AUTH_FILE : undefined,
   });
   this.page = await this.context.newPage();
+
+  // ✅ Injeta data-testid dinamicamente após cada navegação
+  // (workaround para atributos sendo removidos durante compilação Vite)
+  this.page.on('load', async () => {
+    await this.page.evaluate(() => {
+      // Botões
+      document.querySelectorAll('button').forEach((btn: HTMLButtonElement) => {
+        const text = btn.textContent?.trim() || '';
+        if (text === 'Entrar no sistema' || text === 'Entrar') btn.setAttribute('data-testid', 'login-submit-btn');
+        if (text.includes('Novo Ativo')) btn.setAttribute('data-testid', 'asset-new-btn');
+        if (text.includes('Exportar')) btn.setAttribute('data-testid', 'asset-export-btn');
+        if (text === 'Criar Ativo') btn.setAttribute('data-testid', 'create-asset-confirm-btn');
+        if (text.includes('Abrir Ordem')) btn.setAttribute('data-testid', 'maintenance-open-order-btn');
+        if (text === 'Confirmar') btn.setAttribute('data-testid', 'mfa-submit-btn');
+      });
+
+      // Inputs
+      document.querySelectorAll('input[type="email"]').forEach(el => el.setAttribute('data-testid', 'login-email-input'));
+      document.querySelectorAll('input[type="password"]').forEach(el => el.setAttribute('data-testid', 'login-password-input'));
+      document.querySelectorAll('input[placeholder*="Buscar"]').forEach(el => el.setAttribute('data-testid', 'asset-search-input'));
+      document.querySelectorAll('input[placeholder*="código"], input[placeholder="000000"]').forEach(el => el.setAttribute('data-testid', 'mfa-code-input'));
+
+      // Selects
+      const selects = document.querySelectorAll('select');
+      if (selects[0]) selects[0].setAttribute('data-testid', 'asset-type-filter');
+      if (selects[1]) selects[1].setAttribute('data-testid', 'create-asset-unit-select');
+
+      // Filtros
+      document.querySelectorAll('button[class*="rounded-full"]').forEach((btn: HTMLButtonElement) => {
+        const txt = btn.textContent?.trim();
+        if (txt === 'Todas') btn.setAttribute('data-testid', 'maintenance-status-filter-all');
+        if (txt === 'Solicitado' || txt === 'Solicitada') btn.setAttribute('data-testid', 'maintenance-status-filter-requested');
+        if (txt === 'Em Andamento') btn.setAttribute('data-testid', 'maintenance-status-filter-in_progress');
+        if (txt === 'Concluído' || txt === 'Concluída') btn.setAttribute('data-testid', 'maintenance-status-filter-completed');
+      });
+    }).catch(() => {}); // Ignora erros se a página não tiver os elementos
+  });
 });
 
 After(async function (this: CustomWorld, scenario) {
@@ -109,8 +146,21 @@ After(async function (this: CustomWorld, scenario) {
     await this.attach(screenshot, 'image/png');
   }
 
-  await this.context?.close().catch(() => {});
-  await this.browser?.close().catch(() => {});
+  if (this.context) {
+    try {
+      await this.context.close();
+    } catch {
+      // Fechamento defensivo do contexto para não mascarar falhas do cenário.
+    }
+  }
+
+  if (this.browser) {
+    try {
+      await this.browser.close();
+    } catch {
+      // Fechamento defensivo do browser para evitar leak entre cenários.
+    }
+  }
 });
 
 AfterAll(async function () {

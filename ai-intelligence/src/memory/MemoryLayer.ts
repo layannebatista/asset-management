@@ -2,7 +2,7 @@ import { Logger } from 'winston';
 import { Redis } from 'ioredis';
 import { Pool, PoolClient } from 'pg';
 import { AnalysisType } from '../types/analysis.types';
-import { ContextChunk } from '../context/ContextFilter';
+import { ContextChunk } from '../types/enterprise.types';
 
 export interface AnalysisMemory {
   id: string;
@@ -380,7 +380,14 @@ export class MemoryLayer {
 
       const redisSize = await this.redis.dbsize();
 
-      const byType: Record<AnalysisType, number> = {};
+      const byType: Record<AnalysisType, number> = {
+        observability: 0,
+        'test-intelligence': 0,
+        cicd: 0,
+        incident: 0,
+        risk: 0,
+        'multi-agent': 0,
+      };
 
       stats.rows.forEach((row) => {
         byType[row.type as AnalysisType] = parseInt(row.type_count);

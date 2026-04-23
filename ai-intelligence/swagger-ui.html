@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>IA Intelligence API - Documentação</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui.css">
+    <style>
+        html {
+            box-sizing: border-box;
+            overflow: -moz-scrollbars-vertical;
+            overflow-y: scroll;
+        }
+        *,
+        *:before,
+        *:after {
+            box-sizing: inherit;
+        }
+        body {
+            margin: 0;
+            background: #fafafa;
+        }
+        .topbar {
+            background-color: #1e1e1e !important;
+        }
+        .swagger-ui .topbar .download-url-wrapper {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="swagger-ui"></div>
+
+    <!-- Swagger UI Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui-bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@3/swagger-ui-standalone-preset.js"></script>
+
+    <script>
+        // Função para resolver o caminho do arquivo YAML
+        function getSwaggerURL() {
+            // Tenta diferentes caminhos possíveis
+            const currentPath = window.location.pathname;
+            const basePath = currentPath.substring(0, currentPath.lastIndexOf('/'));
+
+            // Tenta carregar do mesmo diretório
+            return './openapi.yaml';
+        }
+
+        window.onload = function() {
+            try {
+                // Tentar carregar via fetch primeiro para validar
+                fetch(getSwaggerURL())
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.text();
+                    })
+                    .then(yaml => {
+                        // Se conseguiu carregar, inicializar Swagger UI
+                        const ui = SwaggerUIBundle({
+                            url: getSwaggerURL(),
+                            dom_id: '#swagger-ui',
+                            deepLinking: true,
+                            presets: [
+                                SwaggerUIBundle.presets.apis,
+                                SwaggerUIStandalonePreset
+                            ],
+                            plugins: [
+                                SwaggerUIBundle.plugins.DownloadUrl
+                            ],
+                            layout: "StandaloneLayout",
+                            defaultModelsExpandDepth: 1,
+                            defaultModelExpandDepth: 1,
+                            docExpansion: "list",
+                            filter: true,
+                            showRequestHeaders: true,
+                            supportedSubmitMethods: ['get', 'post', 'put', 'delete', 'patch', 'options', 'head'],
+                            requestInterceptor: (request) => {
+                                return request;
+                            },
+                            responseInterceptor: (response) => {
+                                return response;
+                            },
+                            onComplete: function() {
+                                console.log("✅ Swagger UI carregado com sucesso!");
+                                console.log("📚 Documentação em português disponível");
+                            }
+                        });
+
+                        window.ui = ui;
+                    })
+                    .catch(error => {
+                        console.error('❌ Erro ao carregar openapi.yaml:', error);
+                        showErrorMessage(`
+                            <h2>⚠️ Erro ao carregar documentação</h2>
+                            <p>Não foi possível carregar o arquivo openapi.yaml</p>
+                            <p><strong>Verifique:</strong></p>
+                            <ul>
+                                <li>O arquivo openapi.yaml existe no mesmo diretório?</li>
+                                <li>Você está rodando: <code>node serve-swagger.js</code>?</li>
+                                <li>Acesse: <a href="http://localhost:8080">http://localhost:8080</a></li>
+                            </ul>
+                            <p style="color: red;"><strong>Erro:</strong> ${error.message}</p>
+                        `);
+                    });
+            } catch(e) {
+                console.error('❌ Erro:', e);
+                showErrorMessage(`
+                    <h2>⚠️ Erro ao inicializar</h2>
+                    <p>${e.message}</p>
+                `);
+            }
+        };
+
+        function showErrorMessage(html) {
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                right: 20px;
+                background: #fee;
+                border: 2px solid #c33;
+                border-radius: 8px;
+                padding: 20px;
+                z-index: 9999;
+                font-family: system-ui;
+                max-width: 600px;
+            `;
+            errorDiv.innerHTML = html;
+            document.body.appendChild(errorDiv);
+
+            // Também mostrar no console
+            console.log('%c❌ ERRO:', 'color: red; font-weight: bold;', html);
+        }
+    </script>
+</body>
+</html>

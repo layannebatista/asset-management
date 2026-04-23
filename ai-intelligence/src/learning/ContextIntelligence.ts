@@ -1,5 +1,5 @@
 import { Logger } from 'winston';
-import { ContextChunk } from '../context/ContextFilter';
+import { ContextChunk } from '../types/enterprise.types';
 import { AnalysisType } from '../types/analysis.types';
 import { HistoricalSuccessTracker } from './HistoricalSuccessTracker';
 
@@ -275,7 +275,7 @@ export class ContextIntelligence {
     const dataStr = JSON.stringify(data).toLowerCase();
 
     switch (analysisType) {
-      case AnalysisType.OBSERVABILITY:
+      case 'observability':
         // Observability: priorizar métricas, latência, erros
         const obsKeywords = [
           'latency',
@@ -289,7 +289,7 @@ export class ContextIntelligence {
         const obsMatches = obsKeywords.filter((k) => dataStr.includes(k)).length;
         return obsMatches / obsKeywords.length;
 
-      case AnalysisType.INCIDENT:
+      case 'incident':
         // Incident: priorizar stacks, erros, timestamps
         const incidentKeywords = [
           'error',
@@ -304,7 +304,7 @@ export class ContextIntelligence {
         ).length;
         return incidentMatches / incidentKeywords.length;
 
-      case AnalysisType.RISK:
+      case 'risk':
         // Risk: priorizar violações, segurança, compliance
         const riskKeywords = [
           'violation',
@@ -317,14 +317,14 @@ export class ContextIntelligence {
           .length;
         return riskMatches / riskKeywords.length;
 
-      case AnalysisType.TEST_INTELLIGENCE:
+      case 'test-intelligence':
         // Test: priorizar failures, flaky, coverage
         const testKeywords = ['fail', 'flaky', 'coverage', 'test', 'assert'];
         const testMatches = testKeywords.filter((k) => dataStr.includes(k))
           .length;
         return testMatches / testKeywords.length;
 
-      case AnalysisType.CICD:
+      case 'cicd':
         // CI/CD: priorizar builds, deployments, status
         const cicdKeywords = ['build', 'deploy', 'job', 'status', 'workflow'];
         const cicdMatches = cicdKeywords.filter((k) => dataStr.includes(k))

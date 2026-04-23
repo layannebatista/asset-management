@@ -62,3 +62,20 @@ frontend/allure-results/
 ### Relatórios de build gerados ###
 backend/target/cucumber-reports/
 backend/target/site/
+
+### Node/TypeScript build artifacts ###
+**/node_modules/
+ai-intelligence/dist/
+sprint-reporter/dist/
+frontend/dist/
+**/*.tsbuildinfo
+**/coverage/
+frontend/src/automation/playwright/reports/
+
+### Load/perf generated outputs ###
+k6/k6-summary.json
+
+### Temporary logs and diagnostics ###
+*.log
+*.tmp
+*.pid

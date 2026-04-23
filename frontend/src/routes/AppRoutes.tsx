@@ -6,6 +6,8 @@ import Layout from '../components/layout/Layout'
 // Pages
 import LoginPage from '../pages/auth/LoginPage'
 import ActivateAccountPage from '../pages/auth/ActivateAccountPage'
+import TestPage from '../pages/auth/TestPage'
+import DebugPage from '../pages/auth/DebugPage'
 import DashboardPage from '../pages/dashboard/DashboardPage'
 import AssetListPage from '../pages/assets/AssetListPage'
 import AssetDetailsPage from '../pages/assets/AssetDetailsPage'
@@ -36,6 +38,8 @@ export default function AppRoutes() {
       <Routes>
         {/* ───────────── PUBLIC ───────────── */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/test" element={<TestPage />} />
+        <Route path="/debug" element={<DebugPage />} />
         <Route path="/activate" element={<ActivateAccountPage />} />
         <Route path="/ativar" element={<ActivateAccountPage />} />
 
@@ -65,7 +69,14 @@ export default function AppRoutes() {
           <Route path="/assets/:id" element={<AssetDetailsPage />} />
 
           {/* Operations */}
-          <Route path="/transfers" element={<TransfersPage />} />
+          <Route
+            path="/transfers"
+            element={
+              <AdminOrGestor>
+                <TransfersPage />
+              </AdminOrGestor>
+            }
+          />
           <Route path="/maintenance" element={<MaintenancePage />} />
           <Route path="/inventory" element={<InventoryPage />} />
 

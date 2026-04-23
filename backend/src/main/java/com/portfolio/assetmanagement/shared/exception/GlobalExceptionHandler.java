@@ -16,6 +16,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
@@ -76,6 +77,17 @@ public class GlobalExceptionHandler {
         .body(
             ApiResponse.error(
                 new ErrorResponse(ErrorCodes.VALIDATION_ERROR, "Validation failed", details)));
+  }
+
+  @ExceptionHandler(MissingServletRequestParameterException.class)
+  public ResponseEntity<ApiResponse<Void>> handleMissingRequestParameter(
+      MissingServletRequestParameterException ex, HttpServletRequest request) {
+    String detail = ex.getParameterName() + ": parâmetro obrigatório não informado";
+    log.warn("Missing request parameter: {}", detail);
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(
+            ApiResponse.error(
+                new ErrorResponse(ErrorCodes.VALIDATION_ERROR, "Validation failed", List.of(detail))));
   }
 
   @ExceptionHandler(ValidationException.class)

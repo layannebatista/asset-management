@@ -51,6 +51,8 @@ class AssetIntegrationTest extends BaseIntegrationTest {
       MockMvcResponse response = apiClient.listarAtivos(token);
 
       assertThat(response.statusCode()).isEqualTo(200);
+      assertThat((Integer) response.path("totalElements")).isEqualTo(1);
+      assertThat((String) response.path("content[0].assetTag")).isEqualTo("ASSET-INT-002");
     }
 
     @Test

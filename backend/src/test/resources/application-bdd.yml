@@ -1,0 +1,36 @@
+spring:
+  datasource:
+    url: ${BDD_DB_URL:jdbc:postgresql://localhost:5432/asset_management?currentSchema=am_bdd}
+    username: ${BDD_DB_USERNAME:asset_user}
+    password: ${BDD_DB_PASSWORD:asset_password}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    show-sql: false
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: ${BDD_DB_SCHEMA:am_bdd}
+        format_sql: false
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    default-schema: ${BDD_DB_SCHEMA:am_bdd}
+    schemas: ${BDD_DB_SCHEMA:am_bdd}
+    clean-disabled: true
+
+security:
+  jwt:
+    secret: ${BDD_JWT_SECRET:test-secret-key-for-bdd-tests-minimum-32-characters-long}
+    expiration: 3600000
+
+app:
+  test-support:
+    schema: ${BDD_DB_SCHEMA:am_bdd}
+    cleanup:
+      enabled: true
+      key: ${TEST_DATA_CLEANUP_KEY:bdd-cleanup-local-key}

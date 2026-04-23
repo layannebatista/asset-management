@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sprint Reporter - Relatório de Sprint</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="dashboard.css" />
+  </head>
+  <body>
+    <div class="dashboard-container">
+      <!-- Header -->
+      <header class="dashboard-header">
+        <div class="header-content">
+          <h1>📊 Sprint Reporter</h1>
+          <p>Painel executivo da sprint com explicações simples, gráficos e exportação PowerPoint</p>
+        </div>
+      </header>
+
+      <!-- Main Content -->
+      <main class="dashboard-main">
+        <!-- Sidebar: Report Generator -->
+        <aside class="sidebar">
+          <div class="sidebar-section">
+            <h2>Gerar Relatório</h2>
+
+            <div class="form-group">
+              <label for="startDate">Data Inicial</label>
+              <input type="date" id="startDate" />
+            </div>
+
+            <div class="form-group">
+              <label for="endDate">Data Final</label>
+              <input type="date" id="endDate" />
+            </div>
+
+              <div class="button-group">
+              <button id="generateBtn" class="btn btn-primary">Gerar Relatório</button>
+              <button id="downloadPptBtn" class="btn btn-secondary" disabled>
+                Baixar PowerPoint
+              </button>
+            </div>
+
+            <div id="loadingIndicator" class="loading-hidden">
+              <div class="spinner"></div>
+              <p>Gerando relatório...</p>
+            </div>
+
+            <div id="errorAlert" class="alert alert-error alert-hidden"></div>
+          </div>
+        </aside>
+
+        <!-- Content Area: Report Display -->
+        <section class="content-area">
+          <div id="reportContainer" class="report-container">
+            <div class="placeholder">
+              <p>Escolha as datas e clique em "Gerar Relatório". Eu vou mostrar os números mais importantes com gráficos fáceis de entender.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="dashboard.js"></script>
+  </body>
+</html>

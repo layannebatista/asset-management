@@ -1,0 +1,1176 @@
+openapi: 3.0.0
+info:
+  title: IA Intelligence API
+  version: 1.0.0
+  description: |
+    # 🤖 Plataforma de Inteligência Artificial para Análise e Decisões
+
+    A **IA Intelligence API** é uma plataforma completa de análise de dados e tomada de decisões
+    alimentada por inteligência artificial.
+
+    ## 🎯 Capacidades Principais
+
+    - **Análise Multi-Domínio**: Analise observabilidade, testes, CI/CD, incidentes e riscos
+    - **Decisões Autônomas**: Tome decisões automaticamente com 10 camadas de validação
+    - **Learning Contínuo**: Aprenda com feedback para melhorar decisões futuras
+    - **ROI Rastreável**: Quantifique economia de tempo, custo e incidentes
+    - **Execução Segura**: Shadow mode, rollback automático e testes de caos
+    - **Governança**: Compliance, auditoria e relatórios de conformidade
+
+    ## 🔐 Autenticação
+
+    ### APIs Abertas (sem autenticação)
+    - Health check
+    - Análises básicas
+    - Decision engine simples
+
+    ### APIs Corporativas (requerem Bearer Token)
+    ```bash
+    Authorization: Bearer seu-api-key-aqui
+    ```
+
+    Obter token: https://dashboard.ai-intelligence.com/api-keys
+
+  contact:
+    name: Suporte IA Intelligence
+    email: suporte@ai-intelligence.com
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3100
+    description: Desenvolvimento Local
+  - url: https://api.ai-intelligence.com
+    description: Produção
+
+tags:
+  - name: Health
+    description: Verificação de saúde do serviço
+
+  - name: Análises
+    description: |
+      Análises diretas de dados para identificar problemas.
+      Sem autenticação, sem quota tracking.
+
+  - name: Análises Corporativas
+    description: |
+      Análises com segurança corporativa, quota tracking e cache.
+      Requer autenticação via Bearer Token.
+
+  - name: Decisões Simples
+    description: |
+      Motor de decisão simples que retorna uma recomendação.
+      Ideal para decisões rápidas, não-críticas.
+
+  - name: Decisões Autônomas
+    description: |
+      Decisões com validação completa, learning e governança.
+      10 camadas de safeguards para decisões seguras em produção.
+
+  - name: Decisões com Valor
+    description: |
+      Decisões enriquecidas com métricas de negócio.
+      Mostra ROI, economia e impacto em usuários.
+
+  - name: Métricas
+    description: |
+      Visualize performance, economia de tokens e ROI.
+      Dados em tempo real com histórico.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Autenticação via Bearer Token.
+        Obtenha em: https://dashboard.ai-intelligence.com/api-keys
+
+  schemas:
+    ErrorResponse:
+      type: object
+      description: Resposta de erro padrão
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Código do erro
+          example: INVALID_REQUEST
+        message:
+          type: string
+          description: Descrição detalhada
+          example: Campo type é obrigatório
+        correlationId:
+          type: string
+          format: uuid
+          description: ID para rastreamento
+        timestamp:
+          type: string
+          format: date-time
+          description: Quando o erro ocorreu
+
+    HealthStatus:
+      type: object
+      description: Status de saúde do serviço
+      required:
+        - status
+        - service
+      properties:
+        status:
+          type: string
+          enum:
+            - UP
+            - DOWN
+            - DEGRADED
+          description: Status operacional
+        service:
+          type: string
+          example: ai-intelligence
+        version:
+          type: string
+          example: "1.0.0"
+        timestamp:
+          type: string
+          format: date-time
+
+    AnalysisResponse:
+      type: object
+      description: Resposta de análise concluída
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID único da análise
+        type:
+          type: string
+          enum:
+            - observability
+            - test-intelligence
+            - cicd
+            - incident
+            - risk
+          description: Tipo de análise realizada
+        status:
+          type: string
+          enum:
+            - completed
+            - processing
+            - failed
+          description: Status da análise
+        keyPoints:
+          type: array
+          items:
+            type: string
+          description: Principais achados
+        recommendations:
+          type: array
+          items:
+            type: string
+          description: Recomendações de ação
+        qualityScore:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confiabilidade da análise (0-1)
+        processingTimeMs:
+          type: integer
+          description: Tempo de processamento
+        timestamp:
+          type: string
+          format: date-time
+          description: Quando foi concluída
+
+    DecisionResponse:
+      type: object
+      description: Resposta com uma decisão recomendada
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID único da decisão
+        decision:
+          type: object
+          description: A decisão recomendada
+          properties:
+            recommendation:
+              type: string
+              description: Ação recomendada
+            confidence:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 1
+              description: Confiança na recomendação (0-1)
+            rationale:
+              type: string
+              description: Por que essa é a melhor ação
+        metrics:
+          type: object
+          description: Métricas da decisão
+          properties:
+            quality_score:
+              type: number
+              format: float
+              description: Score de qualidade
+            risk_level:
+              type: string
+              enum:
+                - LOW
+                - MEDIUM
+                - HIGH
+                - CRITICAL
+              description: Risco potencial
+            processing_time_ms:
+              type: integer
+              description: Tempo de processamento
+
+    QuotaResponse:
+      type: object
+      description: Status de quota atual
+      properties:
+        quota:
+          type: object
+          properties:
+            dailyRequests:
+              type: object
+              properties:
+                limit:
+                  type: integer
+                remaining:
+                  type: integer
+            monthlyBudget:
+              type: object
+              properties:
+                limitUsd:
+                  type: number
+                remainingUsd:
+                  type: number
+            throttled:
+              type: boolean
+            resetsAt:
+              type: string
+              format: date-time
+
+    ValueImpact:
+      type: object
+      description: Impacto mensurável em termos de negócio
+      properties:
+        time_saved_minutes:
+          type: integer
+          description: Tempo economizado
+        cost_saved_usd:
+          type: number
+          description: Custo economizado
+        incidents_prevented:
+          type: integer
+          description: Incidentes prevenidos
+        performance_improvement_pct:
+          type: number
+          description: Melhoria de performance (%)
+        users_affected_positively:
+          type: integer
+          description: Usuários impactados positivamente
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Verificar se o serviço está rodando
+      description: |
+        Verifica se a API está operacional.
+
+        **Uso:**
+        - Monitoramento contínuo (a cada 30 segundos)
+        - Verificação de status em dashboards
+        - Alerts se o serviço cair
+
+        **Respostas:**
+        - UP: Serviço funcionando normalmente
+        - DOWN: Serviço indisponível
+        - DEGRADED: Performance reduzida
+
+        **Exemplo:**
+        ```bash
+        curl http://localhost:3100/health
+        ```
+      operationId: getHealth
+      responses:
+        "200":
+          description: Serviço está UP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+              example:
+                status: UP
+                service: ai-intelligence
+                version: "1.0.0"
+                timestamp: "2026-04-23T10:30:00Z"
+        "503":
+          description: Serviço está DOWN
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /api/v1/analysis/observability:
+    post:
+      tags:
+        - Análises
+      summary: Analisar observabilidade (logs, métricas)
+      description: |
+        **O que faz:** Analisa logs e métricas para identificar problemas.
+
+        **Quando usar:**
+        - Latência aumentou
+        - Taxa de erro está alta
+        - Comportamento anômalo
+        - Investigar pico de CPU/memória
+
+        **O que retorna:**
+        - Anomalias detectadas
+        - Causa raiz estimada
+        - Recomendações de ação
+
+        **Exemplo de caso de uso:**
+        Você recebe alerta: Latência p99 = 5.5s (normal: 200ms)
+        → Chama essa API com logs dos últimos 60 minutos
+        → IA identifica: "Pool de conexões saturado"
+        → Recomenda: "Aumentar pool de 50 para 100 conexões"
+      operationId: analyzeObservability
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                windowMinutes:
+                  type: integer
+                  minimum: 5
+                  maximum: 1440
+                  default: 60
+                  description: Janela de tempo para análise (em minutos)
+            example:
+              windowMinutes: 60
+      responses:
+        "200":
+          description: Análise concluída com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisResponse"
+              example:
+                id: "550e8400-e29b-41d4-a716-446655440000"
+                type: observability
+                status: completed
+                keyPoints:
+                  - "Latência p99 aumentou 250% nos últimos 15 minutos"
+                  - "Spike correlacionado com query lenta no BD"
+                  - "5000+ timeouts registrados"
+                recommendations:
+                  - "Otimizar query N+1 na API de usuários"
+                  - "Aumentar índice em tabela de transações"
+                  - "Considerar caching para dados de usuário"
+                qualityScore: 0.88
+                processingTimeMs: 2500
+                timestamp: "2026-04-23T10:30:00Z"
+        "400":
+          description: Requisição inválida
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Erro interno
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v1/analysis/incident:
+    post:
+      tags:
+        - Análises
+      summary: Investigar incidente e encontrar causa raiz
+      description: |
+        **O que faz:** Investiga incidente analisando logs para achar causa raiz.
+
+        **Quando usar:**
+        - Sistema ficou down
+        - Erro crítico em produção
+        - Muitos erros em cascata
+        - Precisar entender timeline de eventos
+
+        **O que retorna:**
+        - Causa raiz estimada
+        - Timeline de eventos
+        - Componentes afetados
+        - Ações para resolver e prevenir
+
+        **Exemplo de caso de uso:**
+        ALERTA: API retornando 500 errors
+        Você coleta logs dos últimos 60 minutos e chama essa API
+
+        IA descobre:
+        - 10:25:32: Deploy X iniciado
+        - 10:25:45: Database connection pool saturado
+        - 10:26:00: Cascata de timeouts
+        - 10:30:00: Rollback de deploy X
+
+        Recomenda:
+        - Aumentar pool de conexões
+        - Adicionar health check pré-deploy
+        - Teste de carga com novo pool
+      operationId: analyzeIncident
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - logs
+              properties:
+                logs:
+                  type: array
+                  minItems: 1
+                  maxItems: 200
+                  items:
+                    type: string
+                  description: Logs relevantes do incidente (1-200 linhas)
+                errorMessages:
+                  type: array
+                  maxItems: 50
+                  items:
+                    type: string
+                  description: Mensagens de erro principais (opcional)
+                timeWindowMinutes:
+                  type: integer
+                  minimum: 1
+                  maximum: 1440
+                  default: 60
+                  description: Contexto temporal em minutos
+            example:
+              logs:
+                - "[2026-04-23 10:25:32] INFO: Deployment started (version 2.1.0)"
+                - "[2026-04-23 10:25:45] ERROR: Database connection timeout"
+                - "[2026-04-23 10:25:46] ERROR: Retry attempt 1 failed"
+                - "[2026-04-23 10:25:47] ERROR: Circuit breaker opened for DB"
+              errorMessages:
+                - "Database connection refused"
+                - "Timeout after 30 seconds"
+              timeWindowMinutes: 60
+      responses:
+        "200":
+          description: Análise concluída
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisResponse"
+              example:
+                id: "550e8400-e29b-41d4-a716-446655440000"
+                type: incident
+                status: completed
+                keyPoints:
+                  - "Deploy causou 2x aumento em requisições de BD"
+                  - "Pool de conexões foi saturado em 12 segundos"
+                  - "Sem circuit breaker, cascata durou 5 minutos"
+                recommendations:
+                  - "Revert de deploy ou aumentar pool para 150"
+                  - "Adicionar connection pooling com timeout"
+                  - "Implementar gradual rollout"
+                  - "Teste de carga obrigatório pré-deploy"
+                qualityScore: 0.95
+                processingTimeMs: 3200
+        "400":
+          description: Logs são obrigatórios
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v1/analysis/test-intelligence:
+    post:
+      tags:
+        - Análises
+      summary: Analisar qualidade e cobertura de testes
+      description: |
+        **O que faz:** Avalia qualidade, cobertura e efetividade de testes.
+
+        **Quando usar:**
+        - Cobertura de testes caiu
+        - Testes falhando frequentemente
+        - Antes de um deploy importante
+        - Verificar readiness do projeto
+
+        **O que retorna:**
+        - Gaps de cobertura
+        - Testes fracos ou redundantes
+        - Recomendações de melhorias
+
+        **Exemplo de caso de uso:**
+        Você vê: Cobertura caiu de 85% para 60%
+        → Chama essa API com métricas de testes
+        → IA identifica: "Faltam testes para módulo de pagamento"
+        → Recomenda: "Adicionar 15 testes unitários, 5 testes de integração"
+      operationId: analyzeTestIntelligence
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                projectId:
+                  type: string
+                  description: ID do projeto
+                suite:
+                  type: string
+                  enum:
+                    - backend
+                    - frontend
+                    - all
+                  default: all
+                  description: Qual suite de testes analisar
+            example:
+              projectId: github-123
+              suite: backend
+      responses:
+        "200":
+          description: Análise concluída
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisResponse"
+              example:
+                id: "550e8400-e29b-41d4-a716-446655440000"
+                type: test-intelligence
+                status: completed
+                keyPoints:
+                  - "Cobertura geral: 60% (alvo: 80%)"
+                  - "Módulo de pagamento sem cobertura"
+                  - "200 linhas críticas não testadas"
+                recommendations:
+                  - "Adicionar testes para PaymentService"
+                  - "Aumentar cobertura de integração"
+                  - "Revisar testes redundantes"
+                qualityScore: 0.72
+
+  /api/v1/analysis/cicd:
+    post:
+      tags:
+        - Análises
+      summary: Analisar pipeline CI/CD
+      description: |
+        **O que faz:** Analisa pipeline de CI/CD para otimizações.
+
+        **Quando usar:**
+        - Deploys estão lentos
+        - Muitos builds falhando
+        - Antes de escalar infraestrutura
+        - Melhorar tempo de feedback
+
+        **O que retorna:**
+        - Gargalos no pipeline
+        - Estágios lentos ou instáveis
+        - Oportunidades de otimização
+      operationId: analyzeCICD
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                workflowFile:
+                  type: string
+                  description: Arquivo de workflow
+                lookbackDays:
+                  type: integer
+                  minimum: 1
+                  maximum: 30
+                  default: 7
+                  description: Dias para análise retrógrada
+      responses:
+        "200":
+          description: Análise concluída
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisResponse"
+
+  /api/v1/analysis/risk:
+    post:
+      tags:
+        - Análises
+      summary: Analisar riscos em domínios
+      description: |
+        **O que faz:** Avalia riscos em domínios como ativos, transferência, etc.
+
+        **Quando usar:**
+        - Auditoria de segurança
+        - Compliance check
+        - Antes de grande mudança
+        - Avaliação de fornecedor
+      operationId: analyzeRisk
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                domains:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - asset
+                      - transfer
+                      - maintenance
+                      - depreciation
+                      - insurance
+                      - inventory
+                  description: Domínios de risco a analisar
+                assetIds:
+                  type: array
+                  maxItems: 10
+                  items:
+                    type: string
+                    format: uuid
+                  description: IDs específicos de ativos
+            example:
+              domains:
+                - asset
+                - transfer
+      responses:
+        "200":
+          description: Análise concluída
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisResponse"
+
+  /api/v1/analysis:
+    post:
+      tags:
+        - Análises Corporativas
+      summary: Análise corporativa com segurança, quota e cache
+      description: |
+        **O que faz:** Análise com segurança corporativa, quota tracking e cache.
+
+        **Diferenças vs análises básicas:**
+        - Requer autenticação (Bearer Token)
+        - Quota tracking (requisições/orçamento)
+        - Cache para economizar quota
+        - Billing automático
+        - SLA garantido
+
+        **Quando usar:** Qualquer análise em produção/corporativo
+
+        **Como autenticar:**
+        ```bash
+        curl -H "Authorization: Bearer sk_live_1a2b..." \
+          -X POST https://api.ai-intelligence.com/api/v1/analysis
+        ```
+      operationId: enterpriseAnalysis
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - query
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - observability
+                    - test-intelligence
+                    - cicd
+                    - incident
+                    - risk
+                  description: Tipo de análise
+                query:
+                  type: string
+                  minLength: 1
+                  description: Pergunta ou contexto da análise
+                context:
+                  type: array
+                  items:
+                    type: object
+                  description: Contexto adicional (opcional)
+                criticality:
+                  type: string
+                  enum:
+                    - LOW
+                    - NORMAL
+                    - HIGH
+                    - CRITICAL
+                  description: Nível de criticidade
+            example:
+              type: observability
+              query: "Latência aumentou 250% nos últimos 30 minutos"
+              criticality: HIGH
+      responses:
+        "200":
+          description: Análise concluída
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    description: Resultados da análise
+                  quota:
+                    type: object
+                    properties:
+                      remaining:
+                        type: integer
+                        example: 95
+                      budgetRemaining:
+                        type: number
+                        example: 48.5
+                      throttled:
+                        type: boolean
+                  cached:
+                    type: boolean
+                    description: Se foi retornado do cache
+                  correlationId:
+                    type: string
+                    format: uuid
+        "401":
+          description: Não autorizado (API key inválida)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "429":
+          description: Quota excedida
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v1/quota:
+    get:
+      tags:
+        - Análises Corporativas
+      summary: Verificar sua quota e orçamento
+      description: |
+        **O que faz:** Retorna seu status de quota atual.
+
+        **Por que checar:**
+        - Antes de uma análise importante
+        - Para alertas se quota está perto do limite
+        - Para planejamento de uso
+
+        **Resposta inclui:**
+        - Requisições restantes hoje
+        - Orçamento restante este mês
+        - Quando reseta
+
+        **Exemplo:**
+        ```bash
+        curl -H "Authorization: Bearer sk_live_1a2b..." \
+          https://api.ai-intelligence.com/api/v1/quota
+        ```
+      operationId: getQuota
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Quota recuperada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuotaResponse"
+              example:
+                quota:
+                  dailyRequests:
+                    limit: 100
+                    remaining: 42
+                  monthlyBudget:
+                    limitUsd: 50
+                    remainingUsd: 23.5
+                  throttled: false
+                  resetsAt: "2026-04-24T00:00:00Z"
+        "401":
+          description: Não autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v1/decision:
+    post:
+      tags:
+        - Decisões Simples
+      summary: Tomar uma decisão simples
+      description: |
+        **O que faz:** Toma uma decisão simples sobre o que fazer.
+
+        **Como funciona:**
+        1. Você descreve a situação
+        2. IA analisa a situação
+        3. IA recomenda a melhor ação
+
+        **Quando usar:** Decisões simples, não-críticas
+
+        **Quando NÃO usar:** Decisões críticas (use Autonomous Decision)
+
+        **Exemplo:**
+        Você tem: Latência aumentou de 200ms para 500ms
+
+        Você chama POST /api/v1/decision com:
+        - type: "observability"
+        - criticality: "HIGH"
+        - context: { latency: 500, normal: 200 }
+
+        IA retorna:
+        - recommendation: "Aumente cache em 2x"
+        - confidence: 0.85
+      operationId: executeDecision
+      parameters:
+        - name: x-request-id
+          in: header
+          description: ID único para rastreamento (opcional)
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - observability
+                    - test-intelligence
+                    - cicd
+                    - incident
+                    - risk
+                  description: Tipo de decisão
+                criticality:
+                  type: string
+                  enum:
+                    - LOW
+                    - NORMAL
+                    - HIGH
+                    - CRITICAL
+                  default: NORMAL
+                  description: Nível de criticidade
+                context:
+                  type: object
+                  description: Contexto da situação
+            example:
+              type: observability
+              criticality: HIGH
+              context:
+                latency_p99_ms: 5500
+                error_rate: 0.05
+      responses:
+        "200":
+          description: Decisão gerada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DecisionResponse"
+              example:
+                id: "550e8400-e29b-41d4-a716-446655440000"
+                decision:
+                  recommendation: "Aumentar pool de conexões de 50 para 100"
+                  confidence: 0.92
+                  rationale: "Pool saturado. Aumentando para 100 resolveria por ~2h"
+                metrics:
+                  quality_score: 0.88
+                  risk_level: LOW
+        "400":
+          description: Requisição inválida
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v1/decision/{id}/feedback:
+    post:
+      tags:
+        - Decisões Simples
+      summary: Enviar feedback sobre uma decisão
+      description: |
+        **O que faz:** Registra feedback sobre como a decisão funcionou.
+
+        **Por que fazer:**
+        - Ajuda a IA a aprender
+        - Melhora futuras decisões
+        - Rastreia efetividade
+
+        **O que enviar:**
+        1. Como funcionou (positive, negative, partial)
+        2. O resultado real
+        3. Contexto adicional (opcional)
+
+        **Exemplo:**
+        Você executou: "aumentar pool para 100"
+        Resultado: Latência caiu de 5500ms para 2800ms ✅
+
+        Chama POST /api/v1/decision/{id}/feedback com:
+        - feedback_type: "positive"
+        - actual_outcome: { latency_p99_ms: 2800, resolved: true }
+      operationId: decisionFeedback
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID da decisão
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - feedback_type
+                - actual_outcome
+              properties:
+                feedback_type:
+                  type: string
+                  enum:
+                    - positive
+                    - negative
+                    - partial
+                  description: Como a decisão funcionou
+                actual_outcome:
+                  type: object
+                  description: O resultado real observado
+                notes:
+                  type: string
+                  description: Observações adicionais
+            example:
+              feedback_type: positive
+              actual_outcome:
+                latency_p99_ms: 2800
+                error_rate: 0.01
+                resolved: true
+              notes: "Implementamos, latência caiu imediatamente"
+      responses:
+        "200":
+          description: Feedback registrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+  /api/v1/decision/value:
+    post:
+      tags:
+        - Decisões com Valor
+      summary: Decisão com análise de ROI e valor
+      description: |
+        **O que faz:** Toma uma decisão E quantifica o valor/ROI.
+
+        **Retorna além de recomendação:**
+        - Impact: Tempo economizado, custo, incidentes prevenidos
+        - Value Score: 0-100 (quão valiosa é essa ação)
+        - Executive Summary: Resumo não-técnico para stakeholders
+
+        **Quando usar:** Quando precisa justificar para gerentes
+
+        **Exemplo:**
+        Você descobre: Sistema lento
+
+        Decision Engine diz: "Aumentar pool de conexões"
+
+        Value Decision diz ALÉM DISSO:
+        - Economiza 75 minutos de trabalho
+        - Economia de $225 em overtime
+        - Previne 1 incidente de downtime
+        - Afeta positivamente 50.000 usuários
+        - Value Score: 85/100 → implementar hoje!
+      operationId: executeValueDecision
+      parameters:
+        - name: x-user-id
+          in: header
+          description: ID do usuário (opcional)
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - observability
+                    - test-intelligence
+                    - cicd
+                    - incident
+                    - risk
+                  description: Tipo de decisão
+                criticality:
+                  type: string
+                  enum:
+                    - LOW
+                    - NORMAL
+                    - HIGH
+                    - CRITICAL
+                  description: Nível de criticidade
+                context:
+                  type: object
+                  description: Contexto incluindo métricas de negócio
+            example:
+              type: observability
+              criticality: HIGH
+              context:
+                latency_p99_ms: 5500
+                active_users: 50000
+      responses:
+        "200":
+          description: Decisão com valor gerada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  decisionId:
+                    type: string
+                    format: uuid
+                  decision:
+                    $ref: "#/components/schemas/DecisionResponse"
+                  value:
+                    type: object
+                    properties:
+                      impact:
+                        $ref: "#/components/schemas/ValueImpact"
+                      value_score:
+                        type: object
+                        properties:
+                          score:
+                            type: integer
+                            minimum: 0
+                            maximum: 100
+                          category:
+                            type: string
+                            enum:
+                              - high_value
+                              - medium_value
+                              - low_value
+                      executive_summary:
+                        type: object
+                        properties:
+                          business_impact:
+                            type: string
+                          roi_justification:
+                            type: string
+                          risk_assessment:
+                            type: string
+                          user_impact:
+                            type: string
+              example:
+                decisionId: "550e8400-e29b-41d4-a716-446655440000"
+                decision:
+                  recommendation: "Aumentar pool para 100"
+                  confidence: 0.92
+                value:
+                  impact:
+                    time_saved_minutes: 75
+                    cost_saved_usd: 225
+                    incidents_prevented: 1
+                    performance_improvement_pct: 30
+                    users_affected_positively: 50000
+                  value_score:
+                    score: 85
+                    category: high_value
+                  executive_summary:
+                    business_impact: "Saves $225 and 1.25h of work and prevents 1 incident"
+                    roi_justification: "Prevents incident with 30% performance gain"
+                    risk_assessment: "Low risk, well-tested pattern"
+                    user_impact: "Improves experience for 50K+ users"
+
+  /api/v1/metrics/dashboard:
+    get:
+      tags:
+        - Métricas
+      summary: Dashboard de métricas completo
+      description: |
+        **O que faz:** Retorna um dashboard com todas as métricas.
+
+        **Inclui:**
+        - Saúde geral do sistema
+        - Economia de tokens
+        - ROI
+        - Qualidade das decisões
+        - Issues detectadas
+        - Modelos top performers
+
+        **Quando usar:**
+        - Briefing executivo
+        - Verificação de saúde
+        - Reporting mensal/semanal
+      operationId: getDashboard
+      parameters:
+        - name: days
+          in: query
+          description: Período a analisar em dias
+          schema:
+            type: integer
+            default: 7
+      responses:
+        "200":
+          description: Dashboard retornado
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/v1/metrics/token-savings:
+    get:
+      tags:
+        - Métricas
+      summary: Quanto você economizou em tokens
+      description: |
+        **O que faz:** Retorna economia de tokens do período.
+
+        **Exemplo:**
+        7 dias últimos:
+        - Total tokens salvos: 45.000
+        - Economia: $245.50
+        - Redução de custo: 15%
+      operationId: getTokenSavings
+      parameters:
+        - name: days
+          in: query
+          description: Período em dias
+          schema:
+            type: integer
+            default: 7
+      responses:
+        "200":
+          description: Economia retornada
+          content:
+            application/json:
+              schema:
+                type: object

@@ -57,6 +57,75 @@ public class ApiClient {
         .response();
   }
 
+  public MockMvcResponse loginComIp(String email, String senha, String ip) {
+    return given()
+        .contentType(ContentType.JSON)
+        .header("X-Forwarded-For", ip)
+        .body(Map.of("email", email, "password", senha))
+        .when()
+        .post("/auth/login")
+        .then()
+        .extract()
+        .response();
+  }
+
+  public MockMvcResponse verifyMfa(Long userId, String code) {
+    return given()
+        .contentType(ContentType.JSON)
+        .body(Map.of("userId", userId, "code", code))
+        .when()
+        .post("/auth/mfa/verify")
+        .then()
+        .extract()
+        .response();
+  }
+
+        public MockMvcResponse verifyMfaSemCode(Long userId) {
+          return given()
+          .contentType(ContentType.JSON)
+          .body(Map.of("userId", userId))
+          .when()
+          .post("/auth/mfa/verify")
+          .then()
+          .extract()
+          .response();
+        }
+
+        public MockMvcResponse verifyMfaSemUserId(String code) {
+          return given()
+          .contentType(ContentType.JSON)
+          .body(Map.of("code", code))
+          .when()
+          .post("/auth/mfa/verify")
+          .then()
+          .extract()
+          .response();
+        }
+
+  public MockMvcResponse verifyMfaComIp(Long userId, String code, String ip) {
+    return given()
+        .contentType(ContentType.JSON)
+        .header("X-Forwarded-For", ip)
+        .body(Map.of("userId", userId, "code", code))
+        .when()
+        .post("/auth/mfa/verify")
+        .then()
+        .extract()
+        .response();
+  }
+
+  public MockMvcResponse refreshComIp(String refreshToken, String ip) {
+    return given()
+        .contentType(ContentType.JSON)
+        .header("X-Forwarded-For", ip)
+        .body(Map.of("refreshToken", refreshToken))
+        .when()
+        .post("/auth/refresh")
+        .then()
+        .extract()
+        .response();
+  }
+
   // =========================================================
   // MANUTENÇÃO
   // =========================================================
@@ -144,6 +213,11 @@ public class ApiClient {
         .response();
   }
 
+  /** Alias semântico: solicitar manutenção (equivalent to criarManutencao). */
+  public MockMvcResponse solicitarManutencao(Long assetId, String descricao, String token) {
+    return criarManutencao(assetId, descricao, token);
+  }
+
   // =========================================================
   // ASSET (necessário para setup dos cenários de manutenção)
   // =========================================================
@@ -179,6 +253,17 @@ public class ApiClient {
         .response();
   }
 
+  /** Faz uma requisição PATCH sem header Authorization. */
+  public MockMvcResponse patchSemToken(String path, Object body) {
+    var request = given().contentType(ContentType.JSON);
+
+    if (body != null) {
+      request = request.body(body);
+    }
+
+    return request.when().patch(path).then().extract().response();
+  }
+
   /**
    * Faz uma requisição com token de role insuficiente. Usado nos cenários "Dado que eu sou
    * OPERADOR, Quando tento criar manutenção".
@@ -202,6 +287,18 @@ public class ApiClient {
         .extract()
         .response();
   }
+
+        /** GET /assets — token sem prefixo Bearer (para testar 401). */
+        public MockMvcResponse listarAtivosComHeaderAuthorizationBruto(String token) {
+          return given()
+          .contentType(ContentType.JSON)
+          .header("Authorization", token)
+          .when()
+          .get("/assets")
+          .then()
+          .extract()
+          .response();
+        }
 
   /** GET /assets?status={status} — filtra ativos pelo status. */
   public MockMvcResponse listarAtivosPorStatus(String status, String token) {
@@ -516,5 +613,144 @@ public class ApiClient {
     }
 
     return request.when().get("/transfers").then().extract().response();
+  }
+
+  // =========================================================
+  // OPERAÇÕES COM VERSIONAMENTO (OPTIMISTIC LOCKING)
+  // =========================================================
+
+  /**
+   * Testa operação com versão desatualizada — simula um cenário de conflito de versão.
+   *
+   * <p>Se a API implementa optimistic locking (field @Version), esta operação deve retornar 409
+   * Conflict quando a versão é desatualizada. Se não implementa, retornará outro status.
+   *
+   * <p>Para agora, retorna um erro genérico 409 para testar o comportamento de conflito.
+   */
+  public MockMvcResponse operacaoComVersao(Long assetId, int versaoDesatualizada, String token) {
+    return given()
+        .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
+        .queryParam("version", versaoDesatualizada)
+        .when()
+        .patch("/assets/{id}", String.valueOf(assetId))
+        .then()
+        .extract()
+        .response();
+  }
+
+  // =========================================================
+  // ATIVOS — CRIAÇÃO COM ASSETAG AUTOMÁTICA
+  // =========================================================
+
+  /** POST /assets/{orgId}/auto — cria ativo com assetTag gerada automaticamente. */
+  public MockMvcResponse criarAtivoAutoTag(
+      Long orgId, AssetType type, String model, Long unitId, String token) {
+    return given()
+        .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
+        .body(Map.of("type", type.name(), "model", model, "unitId", unitId))
+        .when()
+        .post("/assets/{orgId}/auto", String.valueOf(orgId))
+        .then()
+        .extract()
+        .response();
+  }
+
+  // =========================================================
+  // ATIVOS — VALIDAÇÕES ADICIONAIS DE CRIAÇÃO
+  // =========================================================
+
+  /** POST /assets/{orgId} — sem campo model (para testar 400). */
+  public MockMvcResponse criarAtivoSemModelo(Long orgId, String assetTag, Long unitId, String token) {
+    return given()
+        .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
+        .body(Map.of("assetTag", assetTag, "type", "NOTEBOOK", "unitId", unitId))
+        .when()
+        .post("/assets/{orgId}", String.valueOf(orgId))
+        .then()
+        .extract()
+        .response();
+  }
+
+  // =========================================================
+  // ATIVOS — DADOS FINANCEIROS
+  // =========================================================
+
+  /** PATCH /assets/{id}/financial — atualiza dados financeiros. */
+  public MockMvcResponse atualizarDadosFinanceiros(
+      Long assetId, java.math.BigDecimal purchaseValue, String supplier, String token) {
+    return given()
+        .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
+        .body(Map.of("purchaseValue", purchaseValue, "supplier", supplier))
+        .when()
+        .patch("/assets/{id}/financial", String.valueOf(assetId))
+        .then()
+        .extract()
+        .response();
+  }
+
+  // =========================================================
+  // ATIVOS — HISTÓRICO
+  // =========================================================
+
+  /** GET /assets/{assetId}/history/status — histórico de mudanças de status. */
+  public MockMvcResponse buscarHistoricoStatus(Long assetId, String token) {
+    return given()
+        .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
+        .when()
+        .get("/assets/{assetId}/history/status", String.valueOf(assetId))
+        .then()
+        .extract()
+        .response();
+  }
+
+  /** GET /assets/{assetId}/history/assignment — histórico de atribuições. */
+  public MockMvcResponse buscarHistoricoAtribuicoes(Long assetId, String token) {
+    return given()
+        .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
+        .when()
+        .get("/assets/{assetId}/history/assignment", String.valueOf(assetId))
+        .then()
+        .extract()
+        .response();
+  }
+
+  // =========================================================
+  // ATIVOS — FILTROS ADICIONAIS
+  // =========================================================
+
+  /** GET /assets?type= — filtra ativos pelo tipo. */
+  public MockMvcResponse listarAtivosPorTipo(String tipo, String token) {
+    return given()
+        .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
+        .queryParam("type", tipo)
+        .when()
+        .get("/assets")
+        .then()
+        .extract()
+        .response();
+  }
+
+  // =========================================================
+  // MANUTENÇÃO — CONSULTAS
+  // =========================================================
+
+  /** GET /maintenance?assetId= — listar manutenções de um ativo com token. */
+  public MockMvcResponse listMaintenancesByAssetWithToken(Long assetId, String token) {
+    return given()
+        .contentType(ContentType.JSON)
+        .header("Authorization", "Bearer " + token)
+        .queryParam("assetId", String.valueOf(assetId))
+        .when()
+        .get("/maintenance")
+        .then()
+        .extract()
+        .response();
   }
 }

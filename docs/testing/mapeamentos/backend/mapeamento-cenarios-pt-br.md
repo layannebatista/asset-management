@@ -1,0 +1,123 @@
+================================================================================
+MAPEAMENTO DE CENÁRIOS DE TESTE — DOMÍNIO: TRANSFER (Transferência)
+Projeto: Patrimônio 360 | Backend Spring Boot
+Atualizado em: 2026-04-16
+================================================================================
+
+LEGENDA
+  Tipo        : E2E (Cucumber BDD), UNITARIO, INTEGRACAO, CONTRATO, PERFORMANCE, SEGURANCA
+  Criticidade : BLOCKER > CRITICAL > NORMAL > LOW
+  Status      : AUTOMATIZADO | PENDENTE | NAO_APLICAVEL
+  Camada      : indica o arquivo ou ferramenta onde o teste vive (ou deve viver)
+
+NOTAS GERAIS
+  - Todos os cenários E2E usam Spring MockMvc + profile bdd
+  - Transferência altera status do ativo para IN_TRANSFER enquanto estiver aberta
+  - Fluxo nominal: PENDING → APPROVED → COMPLETED
+  - Fluxos alternativos: PENDING → REJECTED ou PENDING → CANCELLED
+  - Controller expõe POST /transfers e PATCH /transfers/{id}/approve|reject|complete|cancel
+  - Controller também expõe GET /transfers com filtros e paginação, agora coberto por cenários dedicados no feature
+
+================================================================================
+SEÇÃO 1 — SOLICITAÇÃO  (POST /transfers)
+================================================================================
+
+ID   | Cenário                                                    | Tipo        | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|-------------|-------------|--------------|---------------------------------------------
+T01  | ADMIN solicita transferência com sucesso retorna 201        | E2E         | CRITICAL    | AUTOMATIZADO | transfer.feature
+T02  | Solicitação sem assetId retorna 400                         | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+T03  | Solicitação sem toUnitId retorna 400                        | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+T04  | Solicitação sem reason retorna 400                          | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+T05  | Solicitação com reason em branco retorna 400                | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+T06  | Solicitação para a mesma unidade retorna 400                | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+T07  | Ativo em manutenção não pode ser transferido                | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+T08  | Ativo atribuído não pode ser transferido                    | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+T09  | Ativo aposentado não pode ser transferido                   | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+T10  | Solicitação sem autenticação retorna 401                    | SEGURANCA   | CRITICAL    | AUTOMATIZADO | transfer.feature
+T11  | OPERADOR não pode solicitar transferência                   | SEGURANCA   | CRITICAL    | AUTOMATIZADO | transfer.feature
+T12  | AssetId inexistente retorna 404                             | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+T13  | ToUnitId inexistente retorna 404                            | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+T14  | GESTOR não pode solicitar transferência para ativo de outra unidade (403) | SEGURANCA | CRITICAL | PENDENTE | transfer.feature
+
+================================================================================
+SEÇÃO 2 — APROVAÇÃO / REJEIÇÃO  (PATCH /transfers/{id}/approve|reject)
+================================================================================
+
+ID   | Cenário                                                    | Tipo        | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|-------------|-------------|--------------|---------------------------------------------
+A01  | Aprovar transferência pendente retorna 204                  | E2E         | CRITICAL    | AUTOMATIZADO | transfer.feature
+A02  | Rejeitar transferência pendente retorna 204                 | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+A03  | OPERADOR não pode aprovar transferência                     | SEGURANCA   | CRITICAL    | AUTOMATIZADO | transfer.feature
+A04  | Aprovar transferência já aprovada retorna 400               | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+A05  | Rejeitar transferência já rejeitada retorna 400             | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+A06  | Rejeitar transferência já aprovada retorna 400              | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+A07  | Aprovar transferência inexistente retorna 404               | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+A08  | Rejeitar transferência inexistente retorna 404              | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+A09  | Aprovar transferência sem autenticação retorna 401          | SEGURANCA   | CRITICAL    | AUTOMATIZADO | transfer.feature
+A10  | Rejeitar transferência sem autenticação retorna 401         | SEGURANCA   | CRITICAL    | AUTOMATIZADO | transfer.feature
+
+================================================================================
+SEÇÃO 3 — CONCLUSÃO / CANCELAMENTO  (PATCH /transfers/{id}/complete|cancel)
+================================================================================
+
+ID   | Cenário                                                    | Tipo        | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|-------------|-------------|--------------|---------------------------------------------
+C01  | Concluir transferência aprovada retorna 204                 | E2E         | BLOCKER     | AUTOMATIZADO | transfer.feature
+C02  | Cancelar transferência pendente retorna 204                 | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+C03  | Concluir sem aprovação retorna 400                          | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+C04  | Cancelar transferência já aprovada retorna 400              | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+C05  | Concluir transferência rejeitada retorna 400                | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+C06  | Concluir transferência cancelada retorna 400                | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+C07  | Cancelar transferência já cancelada retorna 400             | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+C08  | Concluir transferência já completada retorna 400            | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+C09  | Ativo volta a AVAILABLE após cancelamento                   | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+C10  | Ativo volta a AVAILABLE após rejeição                       | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+C11  | Ativo muda de unidade após conclusão                        | E2E         | CRITICAL    | AUTOMATIZADO | transfer.feature
+C12  | Concluir transferência inexistente retorna 404              | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+C13  | Cancelar transferência inexistente retorna 404              | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+
+================================================================================
+SEÇÃO 4 — CONSULTA / LISTAGEM  (GET /transfers)
+================================================================================
+
+ID   | Cenário                                                    | Tipo        | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|-------------|-------------|--------------|---------------------------------------------
+Q01  | Listar transferências com paginação retorna 200             | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+Q02  | Filtrar transferências por status retorna 200               | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+Q03  | Filtrar transferências por assetId retorna 200              | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+Q04  | Filtrar transferências por unitId retorna 200               | E2E         | NORMAL      | AUTOMATIZADO | transfer.feature
+Q05  | Listar transferências sem autenticação retorna 401          | SEGURANCA   | CRITICAL    | AUTOMATIZADO | transfer.feature
+Q06  | Escopo de GESTOR limita visibilidade por unidade            | SEGURANCA   | CRITICAL    | AUTOMATIZADO | transfer.feature
+
+================================================================================
+SEÇÃO 5 — INTEGRAÇÃO COM OUTROS DOMÍNIOS
+================================================================================
+
+ID   | Cenário                                                    | Tipo        | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|-------------|-------------|--------------|---------------------------------------------
+I01  | Transferência concluída move ativo para unidade destino     | INTEGRACAO  | CRITICAL    | AUTOMATIZADO | transfer.feature
+I02  | Ativo em manutenção não pode entrar em transferência        | INTEGRACAO  | NORMAL      | AUTOMATIZADO | transfer.feature
+I03  | Ativo atribuído não pode entrar em transferência            | INTEGRACAO  | NORMAL      | AUTOMATIZADO | transfer.feature
+I04  | Ativo aposentado não pode entrar em transferência           | INTEGRACAO  | NORMAL      | AUTOMATIZADO | transfer.feature
+I05  | Ativo em transferência não aceita manutenção                | INTEGRACAO  | NORMAL      | AUTOMATIZADO | maintenance.feature
+
+================================================================================
+RESUMO DE COBERTURA
+================================================================================
+
+Status                  Contagem  Porcentagem
+────────────────────────────────────────────
+✓ AUTOMATIZADO          37        97%
+⊗ PENDENTE               1         3%
+────────────────────────────────────────────
+TOTAL                   38
+
+Cobertura por Tipo:
+  E2E:        27 / 38 = 71%
+  SEGURANÇA:   8 / 38 = 21%
+  INTEGRAÇÃO:  5 / 38 = 13%
+
+Novo cenário adicionado (2026-04-21): T14 — GESTOR escopo de unidade na solicitação
+Coberto na camada de serviço (TS06/TS13) e integração (TAI04) mas ausente no BDD de feature.
+
+================================================================================

@@ -154,7 +154,7 @@ Funcionalidade: Ciclo de Vida de Transferência de Ativos
     E que estou autenticado como "admin@acme.com" com senha "Senha@123"
     Quando solicito transferência do ativo "ASSET-MANUT" para a unidade de destino com motivo "Tentativa de transferência de ativo em manutenção"
     Então a resposta deve ter status 400
-    E a mensagem de erro deve conter "não pode ser transferido"
+    E a mensagem de erro deve conter "não está disponível para transferência"
 
   @criacao @regra-negocio
   @allure.label.suite:Regras_de_Negocio
@@ -164,7 +164,7 @@ Funcionalidade: Ciclo de Vida de Transferência de Ativos
     E que estou autenticado como "admin@acme.com" com senha "Senha@123"
     Quando solicito transferência do ativo "ASSET-ASSIGNED" para a unidade de destino com motivo "Tentativa de transferência de ativo já atribuído"
     Então a resposta deve ter status 400
-    E a mensagem de erro deve conter "não pode ser transferido"
+    E a mensagem de erro deve conter "não está disponível para transferência"
 
   @criacao @regra-negocio
   @allure.label.suite:Regras_de_Negocio
@@ -174,7 +174,7 @@ Funcionalidade: Ciclo de Vida de Transferência de Ativos
     E que estou autenticado como "admin@acme.com" com senha "Senha@123"
     Quando solicito transferência do ativo "ASSET-RETIRED" para a unidade de destino com motivo "Tentativa de transferência de ativo aposentado"
     Então a resposta deve ter status 400
-    E a mensagem de erro deve conter "não pode ser transferido"
+    E a mensagem de erro deve conter "não está disponível para transferência"
 
   @aprovacao @regra-negocio
   @allure.label.suite:Regras_de_Negocio
@@ -261,3 +261,198 @@ Funcionalidade: Ciclo de Vida de Transferência de Ativos
     Então a resposta deve ter status 204
     Quando concluo a transferência salva
     Então a resposta deve ter status 400
+
+  @criacao @autorizacao
+  @allure.label.suite:Controle_de_Acesso
+  @allure.severity.critical
+  Cenário: Criar transferência sem autenticação retorna 401
+    Quando solicito transferência do ativo "ASSET-001" para a unidade de destino com motivo "Tentativa sem autenticação" sem autenticação
+    Então a resposta deve ter status 401
+
+  @criacao @autorizacao
+  @allure.label.suite:Controle_de_Acesso
+  @allure.severity.critical
+  Cenário: OPERADOR não pode solicitar transferência
+    Dado que estou autenticado como "operador@acme.com" com senha "Senha@123"
+    Quando solicito transferência do ativo "ASSET-001" para a unidade de destino com motivo "Tentativa indevida de solicitação"
+    Então a resposta deve ter status 403
+
+  @criacao @validacao
+  @allure.label.suite:Validacao_de_Dados
+  @allure.severity.normal
+  Cenário: AssetId inexistente retorna 404
+    Dado que estou autenticado como "admin@acme.com" com senha "Senha@123"
+    Quando solicito transferência do ativo com ID "999999" para a unidade de destino com motivo "Ativo inexistente"
+    Então a resposta deve ter status 404
+
+  @criacao @validacao
+  @allure.label.suite:Validacao_de_Dados
+  @allure.severity.normal
+  Cenário: ToUnitId inexistente retorna 404
+    Dado que estou autenticado como "admin@acme.com" com senha "Senha@123"
+    Quando solicito transferência do ativo "ASSET-001" para a unidade com ID "999999" com motivo "Unidade inexistente"
+    Então a resposta deve ter status 404
+
+  @aprovacao @autorizacao
+  @allure.label.suite:Controle_de_Acesso
+  @allure.severity.critical
+  Cenário: Aprovar transferência sem autenticação retorna 401
+    Dado que estou autenticado como "admin@acme.com" com senha "Senha@123"
+    Quando solicito transferência do ativo "ASSET-001" para a unidade de destino com motivo "Transferência para teste sem autenticação na aprovação"
+    Então a resposta deve ter status 201
+    Quando aprovo a transferência salva com comentário "Tentativa sem autenticação" sem autenticação
+    Então a resposta deve ter status 401
+
+  @rejeicao @autorizacao
+  @allure.label.suite:Controle_de_Acesso
+  @allure.severity.critical
+  Cenário: Rejeitar transferência sem autenticação retorna 401
+    Dado que estou autenticado como "admin@acme.com" com senha "Senha@123"
+    Quando solicito transferência do ativo "ASSET-001" para a unidade de destino com motivo "Transferência para teste sem autenticação na rejeição"
+    Então a resposta deve ter status 201
+    Quando rejeito a transferência salva com comentário "Tentativa sem autenticação" sem autenticação
+    Então a resposta deve ter status 401
+
+  @aprovacao @validacao
+  @allure.label.suite:Regras_de_Negocio
+  @allure.severity.normal
+  Cenário: Aprovar transferência inexistente retorna 404
+    Dado que estou autenticado como "admin@acme.com" com senha "Senha@123"
+    Quando aprovo a transferência com ID "999999" com comentário "Transferência inexistente"
+    Então a resposta deve ter status 404
+
+  @rejeicao @validacao
+  @allure.label.suite:Regras_de_Negocio
+  @allure.severity.normal
+  Cenário: Rejeitar transferência inexistente retorna 404
+    Dado que estou autenticado como "admin@acme.com" com senha "Senha@123"
+    Quando rejeito a transferência com ID "999999" com comentário "Transferência inexistente"
+    Então a resposta deve ter status 404
+
+  @conclusao @validacao
+  @allure.label.suite:Regras_de_Negocio
+  @allure.severity.normal
+  Cenário: Concluir transferência inexistente retorna 404
+    Dado que estou autenticado como "admin@acme.com" com senha "Senha@123"
+    Quando concluo a transferência com ID "999999"
+    Então a resposta deve ter status 404
+
+  @cancelamento @validacao
+  @allure.label.suite:Cancelamento_de_Transferencia
+  @allure.severity.normal
+  Cenário: Cancelar transferência inexistente retorna 404
+    Dado que estou autenticado como "admin@acme.com" com senha "Senha@123"
+    Quando cancelo a transferência com ID "999999"
+    Então a resposta deve ter status 404
+
+  @consulta
+  @allure.label.suite:Consulta_de_Dados
+  @allure.severity.normal
+  Cenário: Listar transferências retorna 200
+    Dado que existe um ativo "ASSET-002" disponível nessa unidade
+    E que estou autenticado como "admin@acme.com" com senha "Senha@123"
+    Quando solicito transferência do ativo "ASSET-001" para a unidade de destino com motivo "Primeira transferência para listagem"
+    Então a resposta deve ter status 201
+    Quando solicito transferência do ativo "ASSET-002" para a unidade de destino com motivo "Segunda transferência para listagem"
+    Então a resposta deve ter status 201
+    Quando listo as transferências
+    Então a resposta deve ter status 200
+    E a resposta deve conter exatamente 2 transferências
+    E a resposta deve conter transferência do ativo "ASSET-001"
+    E a resposta deve conter transferência do ativo "ASSET-002"
+
+  @consulta
+  @allure.label.suite:Consulta_de_Dados
+  @allure.severity.normal
+  Cenário: Filtrar transferências por status retorna 200
+    Dado que existe um ativo "ASSET-002" disponível nessa unidade
+    E que estou autenticado como "admin@acme.com" com senha "Senha@123"
+    Quando solicito transferência do ativo "ASSET-001" para a unidade de destino com motivo "Transferência que será concluída"
+    Então a resposta deve ter status 201
+    Quando aprovo a transferência salva com comentário "Aprovada para concluir"
+    Então a resposta deve ter status 204
+    Quando concluo a transferência salva
+    Então a resposta deve ter status 204
+    Quando solicito transferência do ativo "ASSET-002" para a unidade de destino com motivo "Transferência que ficará pendente"
+    Então a resposta deve ter status 201
+    Quando listo as transferências com status "PENDING"
+    Então a resposta deve ter status 200
+    E a resposta deve conter exatamente 1 transferências
+    E a resposta deve conter apenas transferências com status "PENDING"
+    E a resposta deve conter transferência do ativo "ASSET-002"
+    E a resposta não deve conter transferência do ativo "ASSET-001"
+
+  @consulta
+  @allure.label.suite:Consulta_de_Dados
+  @allure.severity.normal
+  Cenário: Filtrar transferências por assetId retorna 200
+    Dado que existe um ativo "ASSET-002" disponível nessa unidade
+    E que estou autenticado como "admin@acme.com" com senha "Senha@123"
+    Quando solicito transferência do ativo "ASSET-001" para a unidade de destino com motivo "Transferência do primeiro ativo"
+    Então a resposta deve ter status 201
+    Quando solicito transferência do ativo "ASSET-002" para a unidade de destino com motivo "Transferência do segundo ativo"
+    Então a resposta deve ter status 201
+    Quando listo as transferências do ativo "ASSET-001"
+    Então a resposta deve ter status 200
+    E a resposta deve conter exatamente 1 transferências
+    E a resposta deve conter transferência do ativo "ASSET-001"
+    E a resposta não deve conter transferência do ativo "ASSET-002"
+
+  @consulta
+  @allure.label.suite:Consulta_de_Dados
+  @allure.severity.normal
+  Cenário: Filtrar transferências por unitId retorna 200
+    Dado que existe um ativo "ASSET-002" disponível nessa unidade
+    E que existe uma unidade "Filial RJ" como destino secundário na mesma organização
+    E que estou autenticado como "admin@acme.com" com senha "Senha@123"
+    E que a unidade de destino atual é a unidade principal
+    Quando solicito transferência do ativo "ASSET-001" para a unidade de destino com motivo "Transferência para filial principal"
+    Então a resposta deve ter status 201
+    E que a unidade de destino atual é a unidade secundária
+    Quando solicito transferência do ativo "ASSET-002" para a unidade de destino com motivo "Transferência para filial secundária"
+    Então a resposta deve ter status 201
+    Quando listo as transferências da unidade de destino atual
+    Então a resposta deve ter status 200
+    E a resposta deve conter exatamente 1 transferências
+    E a resposta deve conter transferência do ativo "ASSET-002"
+    E a resposta não deve conter transferência do ativo "ASSET-001"
+
+  @consulta @autorizacao
+  @allure.label.suite:Controle_de_Acesso
+  @allure.severity.critical
+  Cenário: Listar transferências sem autenticação retorna 401
+    Quando listo as transferências sem autenticação
+    Então a resposta deve ter status 401
+
+  @consulta @autorizacao
+  @allure.label.suite:Controle_de_Acesso
+  @allure.severity.critical
+  Cenário: GESTOR vê apenas transferências da sua unidade
+    Dado que existe uma unidade "Filial RJ" como destino secundário na mesma organização
+    E que estou autenticado como "admin@acme.com" com senha "Senha@123"
+    E que a unidade de destino atual é a unidade principal
+    Quando solicito transferência do ativo "ASSET-001" para a unidade de destino com motivo "Transferência visível para gestor da unidade central"
+    Então a resposta deve ter status 201
+    E que existe um ativo "ASSET-DEST-001" disponível na unidade de destino
+    E que existe um usuário GESTOR com email "gestor.filial@acme.com" e senha "Senha@123" na unidade de destino
+    E que a unidade de destino atual é a unidade secundária
+    Dado que estou autenticado como "gestor.filial@acme.com" com senha "Senha@123"
+    Quando solicito transferência do ativo "ASSET-DEST-001" para a unidade de destino com motivo "Transferência apenas da filial"
+    Então a resposta deve ter status 201
+    Dado que estou autenticado como "gestor@acme.com" com senha "Senha@123"
+    Quando listo as transferências
+    Então a resposta deve ter status 200
+    E a resposta deve conter exatamente 1 transferências
+    E a resposta deve conter transferência do ativo "ASSET-001"
+    E a resposta não deve conter transferência do ativo "ASSET-DEST-001"
+
+  @criacao @autorizacao
+  @allure.label.suite:Controle_de_Acesso
+  @allure.severity.critical
+  Cenário: GESTOR não pode solicitar transferência de ativo de outra unidade
+    E que existe uma unidade "Filial RJ" como destino secundário na mesma organização
+    E que existe um ativo "ASSET-T14" disponível na unidade de destino
+    E que a unidade de destino atual é a unidade secundária
+    Dado que estou autenticado como "gestor@acme.com" com senha "Senha@123"
+    Quando solicito transferência do ativo "ASSET-T14" para a unidade de destino com motivo "Tentativa de transferência de ativo de outra unidade"
+    Então a resposta deve ter status 403

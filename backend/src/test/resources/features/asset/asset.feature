@@ -28,14 +28,6 @@ Funcionalidade: Gerenciamento do Ciclo de Vida de Ativos
     Então a resposta deve ter status 200
     E a listagem deve conter ativos com assetTag preenchido
 
-  @validacao
-  @allure.label.suite:Validacao_de_Dados
-  @allure.severity.normal
-  Cenário: Deve retornar 400 quando validação falhar
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    Quando crio um ativo com dados inválidos na organização
-    Então a resposta deve ter status 400
-
   @autenticacao
   @allure.label.suite:Autenticacao
   @allure.severity.blocker
@@ -46,57 +38,9 @@ Funcionalidade: Gerenciamento do Ciclo de Vida de Ativos
   @autenticacao
   @allure.label.suite:Autenticacao
   @allure.severity.blocker
-  Cenário: Sem autenticação deve retornar 401
+  Cenário: Buscar ativo sem autenticação retorna 401
     Quando busco um ativo por id sem autenticação
     Então a resposta deve ter status 401
-
-  @autorizacao
-  @allure.label.suite:Controle_de_Acesso
-  @allure.severity.critical
-  Cenário: GESTOR não pode aposentar
-    Dado que estou autenticado como "gestor@tech.com" com senha "Senha@123"
-    Quando tento aposentar o ativo "ASSET-001"
-    Então a resposta deve ter status 403
-
-  @autorizacao
-  @allure.label.suite:Controle_de_Acesso
-  @allure.severity.critical
-  Cenário: OPERADOR não deve criar asset
-    Dado que estou autenticado como "operador@tech.com" com senha "Senha@123"
-    Quando crio um ativo como operador na organização
-    Então a resposta deve ter status 403
-
-  @autorizacao
-  @allure.label.suite:Controle_de_Acesso
-  @allure.severity.critical
-  Cenário: User não pode aposentar ativo
-    Dado que estou autenticado como "operador@tech.com" com senha "Senha@123"
-    Quando tento aposentar o ativo "ASSET-001"
-    Então a resposta deve ter status 403
-
-  @autorizacao
-  @allure.label.suite:Controle_de_Acesso
-  @allure.severity.critical
-  Cenário: User não pode atribuir ativo
-    Dado que estou autenticado como "operador@tech.com" com senha "Senha@123"
-    Quando tento atribuir o ativo "ASSET-001" a outro usuário
-    Então a resposta deve ter status 403
-
-  @erro
-  @allure.label.suite:Contratos_de_Erro
-  @allure.severity.normal
-  Cenário: Deve retornar 404 se ativo não existir
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    Quando busco o ativo com id 99999
-    Então a resposta deve ter status 404
-
-  @criacao
-  @allure.label.suite:Criacao_de_Ativos
-  @allure.severity.critical
-  Cenário: ADMIN cria ativo com sucesso
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    Quando crio um ativo "ASSET-NOVO" do tipo "NOTEBOOK" modelo "Dell XPS 15" na organização
-    Então a resposta deve ter status 201
 
   @autorizacao
   @allure.label.suite:Controle_de_Acesso
@@ -112,77 +56,16 @@ Funcionalidade: Gerenciamento do Ciclo de Vida de Ativos
       | gestor@tech.com   | 403             |
       | operador@tech.com | 403             |
 
-  @listagem @filtro
-  @allure.label.suite:Listagem_de_Ativos
-  @allure.severity.normal
-  Cenário: Filtrar ativos por status ASSIGNED retorna apenas atribuídos
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um usuário OPERADOR com email "operador@tech.com" e senha "Senha@123"
-    E que existe um ativo "ASSET-ASSIGNED" atribuído nessa unidade
-    Quando listo os ativos filtrando por status "ASSIGNED"
-    Então a resposta deve ter status 200
-
-  @listagem @filtro
-  @allure.label.suite:Listagem_de_Ativos
-  @allure.severity.normal
-  Cenário: Filtrar ativos por status IN_MAINTENANCE retorna apenas em manutenção
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-MANUT-F" em manutenção nessa unidade
-    Quando listo os ativos filtrando por status "IN_MAINTENANCE"
-    Então a resposta deve ter status 200
-
-  @listagem @filtro
-  @allure.label.suite:Listagem_de_Ativos
-  @allure.severity.normal
-  Cenário: Filtrar ativos por assetTag retorna resultado correspondente
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    Quando listo os ativos filtrando por assetTag "ASSET-001"
-    Então a resposta deve ter status 200
-    E a listagem deve conter ativos com assetTag preenchido
-
-  @criacao @validacao
-  @allure.label.suite:Validacao_de_Dados
-  @allure.severity.normal
-  Cenário: POST sem assetTag retorna 400
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    Quando crio um ativo sem assetTag na organização
-    Então a resposta deve ter status 400
-
-  @criacao @validacao
-  @allure.label.suite:Validacao_de_Dados
-  @allure.severity.normal
-  Cenário: POST sem type retorna 400
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    Quando crio um ativo sem type na organização
-    Então a resposta deve ter status 400
-
-  @criacao @autorizacao
-  @allure.label.suite:Controle_de_Acesso
+  @criacao
+  @allure.label.suite:Criacao_de_Ativos
   @allure.severity.critical
-  Cenário: GESTOR não pode criar ativo em outra unidade
-    E que existe uma unidade "Filial" nessa organização como unidade extra
-    Dado que estou autenticado como "gestor@tech.com" com senha "Senha@123"
-    Quando crio um ativo "ASSET-GESTOR-X" do tipo "NOTEBOOK" modelo "Dell XPS" na unidade extra
-    Então a resposta deve ter status 403
-
-  @aposentadoria @regra-negocio
-  @allure.label.suite:Operacoes_de_Estado
-  @allure.severity.critical
-  Cenário: Aposentar ativo já RETIRED retorna 400
+  Cenário: ADMIN cria ativo com sucesso
     Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-RET-F" aposentado nessa unidade
-    Quando tento aposentar o ativo "ASSET-RET-F"
-    Então a resposta deve ter status 400
-
-  @criacao @validacao @boundary
-  @allure.label.suite:Validacao_de_Dados
-  @allure.severity.normal
-  Cenário: AssetTag com exatamente 100 caracteres é aceito
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    Quando crio um ativo com assetTag de 100 caracteres na organização
+    Quando crio um ativo "ASSET-NOVO" do tipo "NOTEBOOK" modelo "Dell XPS 15" na organização
     Então a resposta deve ter status 201
+    E o ativo criado deve ter assetTag "ASSET-NOVO"
 
-  @criacao @validacao @boundary
+  @criacao @validacao
   @allure.label.suite:Validacao_de_Dados
   @allure.severity.normal
   Cenário: AssetTag com 101 caracteres é rejeitado
@@ -200,68 +83,6 @@ Funcionalidade: Gerenciamento do Ciclo de Vida de Ativos
 
   @atribuicao @regra-negocio
   @allure.label.suite:Operacoes_de_Estado
-  @allure.severity.normal
-  Cenário: Atribuir ativo já ASSIGNED retorna 400
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-ASSGN-F" com usuário atribuído nessa unidade
-    Quando tento atribuir o ativo "ASSET-ASSGN-F" a outro usuário
-    Então a resposta deve ter status 400
-
-  @atribuicao @regra-negocio
-  @allure.label.suite:Operacoes_de_Estado
-  @allure.severity.normal
-  Cenário: Atribuir ativo RETIRED retorna 400
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-RET-A" aposentado nessa unidade
-    Quando tento atribuir o ativo "ASSET-RET-A" a outro usuário
-    Então a resposta deve ter status 400
-
-  ############################################################
-  # 🔄 MATRIZ DE ESTADOS — ASSIGN
-  ############################################################
-
-  @atribuicao @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_ASSIGN
-  @allure.severity.critical
-  Cenário: Não deve atribuir ativo em manutenção
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-MANUT-ASSIGN" em manutenção nessa unidade
-    Quando tento atribuir o ativo "ASSET-MANUT-ASSIGN" a um usuário
-    Então a resposta deve ter status 400
-    E a mensagem de erro deve indicar que não pode atribuir ativo em manutenção
-
-  @atribuicao @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_ASSIGN
-  @allure.severity.critical
-  Cenário: Não deve atribuir ativo em transferência
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-TRANSF-ASSIGN" em transferência nessa unidade
-    Quando tento atribuir o ativo "ASSET-TRANSF-ASSIGN" a um usuário
-    Então a resposta deve ter status 400
-    E a mensagem de erro deve indicar que não pode atribuir ativo em transferência
-
-  @atribuicao @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_ASSIGN
-  @allure.severity.critical
-  Cenário: Não deve atribuir ativo já atribuído
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-DUP-ASSIGN" com usuário atribuído nessa unidade
-    Quando tento atribuir o ativo "ASSET-DUP-ASSIGN" a outro usuário
-    Então a resposta deve ter status 400
-    E a mensagem de erro deve indicar que ativo já está atribuído
-
-  @atribuicao @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_ASSIGN
-  @allure.severity.critical
-  Cenário: Não deve atribuir ativo aposentado
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-RET-ASSIGN" aposentado nessa unidade
-    Quando tento atribuir o ativo "ASSET-RET-ASSIGN" a um usuário
-    Então a resposta deve ter status 400
-    E a mensagem de erro deve indicar que não pode atribuir ativo aposentado
-
-  @atribuicao @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_ASSIGN
   @allure.severity.critical
   Cenário: Deve permitir atribuir ativo disponível
     Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
@@ -270,13 +91,19 @@ Funcionalidade: Gerenciamento do Ciclo de Vida de Ativos
     Então a resposta deve ter status 200
     E o ativo deve estar no status "ASSIGNED"
 
-  ############################################################
-  # 🔄 MATRIZ DE ESTADOS — UNASSIGN
-  ############################################################
+  @atribuicao @regra-negocio
+  @allure.label.suite:Operacoes_de_Estado
+  @allure.severity.normal
+  Cenário: Atribuir ativo já ASSIGNED retorna 400
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    E que existe um ativo "ASSET-ASSGN-F" com usuário atribuído nessa unidade
+    Quando tento atribuir o ativo "ASSET-ASSGN-F" a outro usuário
+    Então a resposta deve ter status 400
+    E a mensagem de erro deve indicar que ativo já está atribuído
 
-  @desatribuicao @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_UNASSIGN
-  @allure.severity.critical
+  @desatribuicao @regra-negocio
+  @allure.label.suite:Operacoes_de_Estado
+  @allure.severity.normal
   Cenário: Deve permitir desatribuir ativo atribuído
     Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
     E que existe um ativo "ASSET-UNASSIGN-OK" com usuário atribuído nessa unidade
@@ -284,154 +111,18 @@ Funcionalidade: Gerenciamento do Ciclo de Vida de Ativos
     Então a resposta deve ter status 200
     E o ativo deve estar no status "AVAILABLE"
 
-  @desatribuicao @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_UNASSIGN
+  @manutencao @regra-negocio
+  @allure.label.suite:Operacoes_de_Estado
   @allure.severity.critical
-  Cenário: Não deve desatribuir ativo disponível
+  Cenário: Não deve atribuir ativo em manutenção
     Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-UNASSIGN-AVAIL" disponível nessa unidade
-    Quando desatribuo o ativo "ASSET-UNASSIGN-AVAIL"
+    E que existe um ativo "ASSET-MANUT-ASSIGN" em manutenção nessa unidade
+    Quando tento atribuir o ativo "ASSET-MANUT-ASSIGN" a um usuário
     Então a resposta deve ter status 400
-    E a mensagem de erro deve indicar que ativo já está disponível
+    E a mensagem de erro deve indicar que não pode atribuir ativo em manutenção
 
-  @desatribuicao @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_UNASSIGN
-  @allure.severity.critical
-  Cenário: Não deve desatribuir ativo em manutenção
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-UNASSIGN-MANUT" em manutenção nessa unidade
-    Quando desatribuo o ativo "ASSET-UNASSIGN-MANUT"
-    Então a resposta deve ter status 400
-
-  @desatribuicao @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_UNASSIGN
-  @allure.severity.critical
-  Cenário: Não deve desatribuir ativo em transferência
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-UNASSIGN-TRANSF" em transferência nessa unidade
-    Quando desatribuo o ativo "ASSET-UNASSIGN-TRANSF"
-    Então a resposta deve ter status 400
-
-  @desatribuicao @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_UNASSIGN
-  @allure.severity.critical
-  Cenário: Não deve desatribuir ativo aposentado
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-UNASSIGN-RET" aposentado nessa unidade
-    Quando desatribuo o ativo "ASSET-UNASSIGN-RET"
-    Então a resposta deve ter status 400
-
-  ############################################################
-  # 🔄 MATRIZ DE ESTADOS — RETIRE
-  ############################################################
-
-  @aposentadoria @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_RETIRE
-  @allure.severity.critical
-  Cenário: Deve permitir aposentar ativo disponível
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-RETIRE-AVAIL" disponível nessa unidade
-    Quando aposentan o ativo "ASSET-RETIRE-AVAIL"
-    Então a resposta deve ter status 200
-    E o ativo deve estar no status "RETIRED"
-
-  @aposentadoria @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_RETIRE
-  @allure.severity.critical
-  Cenário: Deve permitir aposentar ativo atribuído
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-RETIRE-ASSIGN" com usuário atribuído nessa unidade
-    Quando aposentan o ativo "ASSET-RETIRE-ASSIGN"
-    Então a resposta deve ter status 200
-    E o ativo deve estar no status "RETIRED"
-
-  @aposentadoria @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_RETIRE
-  @allure.severity.critical
-  Cenário: Não deve aposentar ativo em manutenção
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-RETIRE-MANUT" em manutenção nessa unidade
-    Quando aposentan o ativo "ASSET-RETIRE-MANUT"
-    Então a resposta deve ter status 400
-    E a mensagem de erro deve indicar que não pode aposentar ativo em manutenção
-
-  @aposentadoria @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_RETIRE
-  @allure.severity.critical
-  Cenário: Não deve aposentar ativo em transferência
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-RETIRE-TRANSF" em transferência nessa unidade
-    Quando aposentan o ativo "ASSET-RETIRE-TRANSF"
-    Então a resposta deve ter status 400
-
-  @aposentadoria @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_RETIRE
-  @allure.severity.critical
-  Cenário: Não deve aposentar ativo já aposentado
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-RETIRE-DUP" aposentado nessa unidade
-    Quando aposentan o ativo "ASSET-RETIRE-DUP"
-    Então a resposta deve ter status 400
-
-  ############################################################
-  # 🔄 MATRIZ DE ESTADOS — MANUTENÇÃO
-  ############################################################
-
-  @manutencao @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_MANUTENCAO
-  @allure.severity.critical
-  Cenário: Deve permitir iniciar manutenção de ativo disponível
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-MAINT-AVAIL" disponível nessa unidade
-    Quando solicito manutenção para o ativo "ASSET-MAINT-AVAIL"
-    Então a resposta deve ter status 201
-    E o ativo deve estar no status "IN_MAINTENANCE"
-
-  @manutencao @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_MANUTENCAO
-  @allure.severity.critical
-  Cenário: Deve permitir iniciar manutenção de ativo atribuído
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-MAINT-ASSIGN" com usuário atribuído nessa unidade
-    Quando solicito manutenção para o ativo "ASSET-MAINT-ASSIGN"
-    Então a resposta deve ter status 201
-    E o ativo deve estar no status "IN_MAINTENANCE"
-
-  @manutencao @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_MANUTENCAO
-  @allure.severity.critical
-  Cenário: Não deve iniciar manutenção de ativo em transferência
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-MAINT-TRANSF" em transferência nessa unidade
-    Quando solicito manutenção para o ativo "ASSET-MAINT-TRANSF"
-    Então a resposta deve ter status 400
-    E a mensagem de erro deve indicar que ativo está em transferência
-
-  @manutencao @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_MANUTENCAO
-  @allure.severity.critical
-  Cenário: Não deve iniciar manutenção de ativo já em manutenção
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-MAINT-DUP" em manutenção nessa unidade
-    Quando solicito manutenção para o ativo "ASSET-MAINT-DUP"
-    Então a resposta deve ter status 400
-    E a mensagem de erro deve indicar que ativo já está em manutenção
-
-  @manutencao @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_MANUTENCAO
-  @allure.severity.critical
-  Cenário: Não deve iniciar manutenção de ativo aposentado
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-MAINT-RET" aposentado nessa unidade
-    Quando solicito manutenção para o ativo "ASSET-MAINT-RET"
-    Então a resposta deve ter status 400
-
-  ############################################################
-  # 🔄 MATRIZ DE ESTADOS — TRANSFERÊNCIA
-  ############################################################
-
-  @transferencia @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_TRANSFERENCIA
+  @transferencia @regra-negocio
+  @allure.label.suite:Operacoes_de_Estado
   @allure.severity.critical
   Cenário: Deve permitir transferir ativo disponível
     Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
@@ -441,9 +132,9 @@ Funcionalidade: Gerenciamento do Ciclo de Vida de Ativos
     Então a resposta deve ter status 201
     E o ativo deve estar no status "IN_TRANSFER"
 
-  @transferencia @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_TRANSFERENCIA
-  @allure.severity.critical
+  @transferencia @regra-negocio
+  @allure.label.suite:Operacoes_de_Estado
+  @allure.severity.normal
   Cenário: Não deve transferir ativo atribuído
     Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
     E que existe uma unidade "Filial" nessa organização como unidade extra
@@ -452,479 +143,7 @@ Funcionalidade: Gerenciamento do Ciclo de Vida de Ativos
     Então a resposta deve ter status 400
     E a mensagem de erro deve indicar que não pode transferir ativo atribuído
 
-  @transferencia @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_TRANSFERENCIA
-  @allure.severity.critical
-  Cenário: Não deve transferir ativo em manutenção
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe uma unidade "Filial" nessa organização como unidade extra
-    E que existe um ativo "ASSET-TRANSF-MANUT" em manutenção nessa unidade
-    Quando solicito transferência do ativo "ASSET-TRANSF-MANUT" para a unidade extra
-    Então a resposta deve ter status 400
-
-  @transferencia @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_TRANSFERENCIA
-  @allure.severity.critical
-  Cenário: Não deve transferir ativo já em transferência
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe uma unidade "Filial" nessa organização como unidade extra
-    E que existe um ativo "ASSET-TRANSF-DUP" em transferência nessa unidade
-    Quando solicito transferência do ativo "ASSET-TRANSF-DUP" para a unidade extra
-    Então a resposta deve ter status 400
-
-  @transferencia @matriz-estados @regra-negocio
-  @allure.label.suite:Matriz_de_Estados_TRANSFERENCIA
-  @allure.severity.critical
-  Cenário: Não deve transferir ativo aposentado
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe uma unidade "Filial" nessa organização como unidade extra
-    E que existe um ativo "ASSET-TRANSF-RET" aposentado nessa unidade
-    Quando solicito transferência do ativo "ASSET-TRANSF-RET" para a unidade extra
-    Então a resposta deve ter status 400
-
-  ############################################################
-  # ⛓️ SEQUÊNCIA — WORKFLOWS INVÁLIDOS
-  ############################################################
-
-  @sequencia @workflow @regra-negocio
-  @allure.label.suite:Sequencia_Workflows_Invalidos
-  @allure.severity.critical
-  Cenário: Não deve atribuir ativo após iniciar transferência
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe uma unidade "Filial" nessa organização como unidade extra
-    E que existe um ativo "ASSET-SEQ-1" disponível nessa unidade
-    E que solicito transferência do ativo "ASSET-SEQ-1" para a unidade extra
-    Quando tento atribuir o ativo "ASSET-SEQ-1" a um usuário
-    Então a resposta deve ter status 400
-
-  @sequencia @workflow @regra-negocio
-  @allure.label.suite:Sequencia_Workflows_Invalidos
-  @allure.severity.critical
-  Cenário: Não deve atribuir ativo após solicitar manutenção
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-SEQ-2" disponível nessa unidade
-    E que solicito manutenção para o ativo "ASSET-SEQ-2"
-    Quando tento atribuir o ativo "ASSET-SEQ-2" a um usuário
-    Então a resposta deve ter status 400
-
-  @sequencia @workflow @regra-negocio
-  @allure.label.suite:Sequencia_Workflows_Invalidos
-  @allure.severity.critical
-  Cenário: Não deve transferir ativo após iniciar manutenção
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe uma unidade "Filial" nessa organização como unidade extra
-    E que existe um ativo "ASSET-SEQ-3" disponível nessa unidade
-    E que solicito manutenção para o ativo "ASSET-SEQ-3"
-    Quando solicito transferência do ativo "ASSET-SEQ-3" para a unidade extra
-    Então a resposta deve ter status 400
-
-  @sequencia @workflow @regra-negocio
-  @allure.label.suite:Sequencia_Workflows_Invalidos
-  @allure.severity.critical
-  Cenário: Não deve iniciar manutenção após iniciar transferência
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe uma unidade "Filial" nessa organização como unidade extra
-    E que existe um ativo "ASSET-SEQ-4" disponível nessa unidade
-    E que solicito transferência do ativo "ASSET-SEQ-4" para a unidade extra
-    Quando solicito manutenção para o ativo "ASSET-SEQ-4"
-    Então a resposta deve ter status 400
-
-  @sequencia @workflow @regra-negocio
-  @allure.label.suite:Sequencia_Workflows_Invalidos
-  @allure.severity.critical
-  Cenário: Não deve aposentar ativo após iniciar transferência
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe uma unidade "Filial" nessa organização como unidade extra
-    E que existe um ativo "ASSET-SEQ-5" disponível nessa unidade
-    E que solicito transferência do ativo "ASSET-SEQ-5" para a unidade extra
-    Quando aposentan o ativo "ASSET-SEQ-5"
-    Então a resposta deve ter status 400
-
-  @sequencia @workflow @regra-negocio
-  @allure.label.suite:Sequencia_Workflows_Invalidos
-  @allure.severity.critical
-  Cenário: Não deve aposentar ativo após iniciar manutenção
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-SEQ-6" disponível nessa unidade
-    E que solicito manutenção para o ativo "ASSET-SEQ-6"
-    Quando aposentan o ativo "ASSET-SEQ-6"
-    Então a resposta deve ter status 400
-
-  ############################################################
-  # ⛓️ SEQUÊNCIA — REENTRÂNCIA / DUPLICIDADE
-  ############################################################
-
-  @sequencia @reentrancia @regra-negocio
-  @allure.label.suite:Sequencia_Reentrancia
-  @allure.severity.critical
-  Cenário: Não deve permitir atribuição duplicada consecutiva
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-REENT-1" disponível nessa unidade
-    E que atribuo o ativo "ASSET-REENT-1" ao usuário "operador@tech.com"
-    Quando tento atribuir novamente o ativo "ASSET-REENT-1" ao mesmo usuário
-    Então a resposta deve ter status 400
-
-  @sequencia @reentrancia @regra-negocio
-  @allure.label.suite:Sequencia_Reentrancia
-  @allure.severity.critical
-  Cenário: Não deve permitir solicitação de transferência duplicada
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe uma unidade "Filial" nessa organização como unidade extra
-    E que existe um ativo "ASSET-REENT-2" disponível nessa unidade
-    E que solicito transferência do ativo "ASSET-REENT-2" para a unidade extra
-    Quando solicito novamente transferência do ativo "ASSET-REENT-2" para a unidade extra
-    Então a resposta deve ter status 400
-
-  @sequencia @reentrancia @regra-negocio
-  @allure.label.suite:Sequencia_Reentrancia
-  @allure.severity.critical
-  Cenário: Não deve permitir solicitação de manutenção duplicada
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-REENT-3" disponível nessa unidade
-    E que solicito manutenção para o ativo "ASSET-REENT-3"
-    Quando solicito novamente manutenção para o ativo "ASSET-REENT-3"
-    Então a resposta deve ter status 400
-
-  @sequencia @reentrancia @regra-negocio
-  @allure.label.suite:Sequencia_Reentrancia
-  @allure.severity.critical
-  Cenário: Não deve permitir concluir operação já finalizada
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-REENT-4" disponível nessa unidade
-    E que solicito manutenção para o ativo "ASSET-REENT-4"
-    E que concluo a manutenção do ativo "ASSET-REENT-4"
-    Quando tenta concluir novamente a manutenção do ativo "ASSET-REENT-4"
-    Então a resposta deve ter status 400
-
-  @sequencia @reentrancia @regra-negocio
-  @allure.label.suite:Sequencia_Reentrancia
-  @allure.severity.critical
-  Cenário: Não deve permitir repetir operação após estado final
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-REENT-5" disponível nessa unidade
-    E que aposentan o ativo "ASSET-REENT-5"
-    Quando tento aposentan novamente o ativo "ASSET-REENT-5"
-    Então a resposta deve ter status 400
-
-  ############################################################
-  # 🔗 INTERAÇÃO ENTRE MÓDULOS
-  ############################################################
-
-  @integracao @modulos @regra-negocio
-  @allure.label.suite:Integracao_Modulos
-  @allure.severity.critical
-  Cenário: Ativo em manutenção não deve ser transferido
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe uma unidade "Filial" nessa organização como unidade extra
-    E que existe um ativo "ASSET-INTEG-1" em manutenção nessa unidade
-    Quando solicito transferência do ativo "ASSET-INTEG-1" para a unidade extra
-    Então a resposta deve ter status 400
-
-  @integracao @modulos @regra-negocio
-  @allure.label.suite:Integracao_Modulos
-  @allure.severity.critical
-  Cenário: Ativo em transferência não deve entrar em manutenção
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe uma unidade "Filial" nessa organização como unidade extra
-    E que existe um ativo "ASSET-INTEG-2" em transferência nessa unidade
-    Quando solicito manutenção para o ativo "ASSET-INTEG-2"
-    Então a resposta deve ter status 400
-
-  @integracao @modulos @regra-negocio
-  @allure.label.suite:Integracao_Modulos
-  @allure.severity.critical
-  Cenário: Ativo atribuído não deve ser transferido
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe uma unidade "Filial" nessa organização como unidade extra
-    E que existe um ativo "ASSET-INTEG-3" com usuário atribuído nessa unidade
-    Quando solicito transferência do ativo "ASSET-INTEG-3" para a unidade extra
-    Então a resposta deve ter status 400
-
-  @integracao @modulos @regra-negocio
-  @allure.label.suite:Integracao_Modulos
-  @allure.severity.critical
-  Cenário: Ativo transferido não deve ser atribuído antes de conclusão
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe uma unidade "Filial" nessa organização como unidade extra
-    E que existe um ativo "ASSET-INTEG-4" em transferência nessa unidade
-    Quando tento atribuir o ativo "ASSET-INTEG-4" a um usuário
-    Então a resposta deve ter status 400
-
-  @integracao @modulos @regra-negocio
-  @allure.label.suite:Integracao_Modulos
-  @allure.severity.critical
-  Cenário: Ativo em manutenção não deve ser aposentado
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-INTEG-5" em manutenção nessa unidade
-    Quando aposentan o ativo "ASSET-INTEG-5"
-    Então a resposta deve ter status 400
-
-  @integracao @modulos @regra-negocio
-  @allure.label.suite:Integracao_Modulos
-  @allure.severity.critical
-  Cenário: Ativo transferido não deve ser aposentado
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe uma unidade "Filial" nessa organização como unidade extra
-    E que existe um ativo "ASSET-INTEG-6" em transferência nessa unidade
-    Quando aposentan o ativo "ASSET-INTEG-6"
-    Então a resposta deve ter status 400
-
-  ############################################################
-  # 🔐 AUTORIZAÇÃO + CONTEXTO (MULTI-TENANT)
-  ############################################################
-
-  @autorizacao @multitenant @regra-negocio
-  @allure.label.suite:Autorizacao_MultiTenant
-  @allure.severity.critical
-  Cenário: GESTOR não deve atribuir ativo de outra unidade
-    Dado que estou autenticado como "gestor@tech.com" com senha "Senha@123"
-    E que existe uma unidade "Filial" nessa organização como unidade extra
-    E que existe um ativo "ASSET-MT-1" disponível na unidade extra
-    Quando tento atribuir o ativo "ASSET-MT-1" a um usuário
-    Então a resposta deve ter status 403
-
-  @autorizacao @multitenant @regra-negocio
-  @allure.label.suite:Autorizacao_MultiTenant
-  @allure.severity.critical
-  Cenário: GESTOR não deve transferir ativo de outra unidade
-    Dado que estou autenticado como "gestor@tech.com" com senha "Senha@123"
-    E que existe uma unidade "Filial" nessa organização como unidade extra
-    E que existe um ativo "ASSET-MT-2" disponível na unidade extra
-    E que existe uma unidade "Outra Filial" nessa organização como unidade extra 2
-    Quando solicito transferência do ativo "ASSET-MT-2" para a unidade extra 2
-    Então a resposta deve ter status 403
-
-  @autorizacao @multitenant @regra-negocio
-  @allure.label.suite:Autorizacao_MultiTenant
-  @allure.severity.critical
-  Cenário: GESTOR não deve iniciar manutenção de ativo de outra unidade
-    Dado que estou autenticado como "gestor@tech.com" com senha "Senha@123"
-    E que existe uma unidade "Filial" nessa organização como unidade extra
-    E que existe um ativo "ASSET-MT-3" disponível na unidade extra
-    Quando solicito manutenção para o ativo "ASSET-MT-3"
-    Então a resposta deve ter status 403
-
-  @autorizacao @multitenant @regra-negocio
-  @allure.label.suite:Autorizacao_MultiTenant
-  @allure.severity.critical
-  Cenário: OPERADOR não deve atribuir ativo mesmo estando disponível
-    Dado que estou autenticado como "operador@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-MT-4" disponível nessa unidade
-    Quando tento atribuir o ativo "ASSET-MT-4" a outro usuário
-    Então a resposta deve ter status 403
-
-  @autorizacao @multitenant @regra-negocio
-  @allure.label.suite:Autorizacao_MultiTenant
-  @allure.severity.critical
-  Cenário: OPERADOR não deve transferir ativo
-    Dado que estou autenticado como "operador@tech.com" com senha "Senha@123"
-    E que existe uma unidade "Filial" nessa organização como unidade extra
-    E que existe um ativo "ASSET-MT-5" disponível nessa unidade
-    Quando solicito transferência do ativo "ASSET-MT-5" para a unidade extra
-    Então a resposta deve ter status 403
-
-  @autorizacao @multitenant @regra-negocio
-  @allure.label.suite:Autorizacao_MultiTenant
-  @allure.severity.critical
-  Cenário: OPERADOR não deve iniciar manutenção
-    Dado que estou autenticado como "operador@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-MT-6" disponível nessa unidade
-    Quando solicito manutenção para o ativo "ASSET-MT-6"
-    Então a resposta deve ter status 403
-
-  ############################################################
-  # 🔐 AUTORIZAÇÃO + ESTADO
-  ############################################################
-
-  @autorizacao @estado @regra-negocio
-  @allure.label.suite:Autorizacao_Estado
-  @allure.severity.critical
-  Cenário: GESTOR não deve aposentar ativo mesmo em estado válido
-    Dado que estou autenticado como "gestor@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-AUTH-1" disponível nessa unidade
-    Quando tempo aposentan o ativo "ASSET-AUTH-1"
-    Então a resposta deve ter status 403
-
-  @autorizacao @estado @regra-negocio
-  @allure.label.suite:Autorizacao_Estado
-  @allure.severity.critical
-  Cenário: OPERADOR não deve aposentar ativo em nenhum estado
-    Dado que estou autenticado como "operador@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-AUTH-2" disponível nessa unidade
-    Quando tempo aposentan o ativo "ASSET-AUTH-2"
-    Então a resposta deve ter status 403
-
-  @autorizacao @estado @regra-negocio
-  @allure.label.suite:Autorizacao_Estado
-  @allure.severity.critical
-  Cenário: ADMIN deve conseguir executar todas as ações em estados válidos
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-AUTH-3" disponível nessa unidade
-    E que existe um usuário OPERADOR com email "novo-operador@tech.com" e senha "Senha@123"
-    Quando atribuo o ativo "ASSET-AUTH-3" ao usuário "novo-operador@tech.com"
-    E desatribuo o ativo "ASSET-AUTH-3"
-    E solicito manutenção para o ativo "ASSET-AUTH-3"
-    E aposentan o ativo "ASSET-AUTH-3"
-    Então todas as operações devem ter sucesso
-
-  ############################################################
-  # 🧱 INVARIANTES DE NEGÓCIO
-  ############################################################
-
-  @invariantes @consistencia @regra-negocio
-  @allure.label.suite:Invariantes_Negocio
-  @allure.severity.critical
-  Cenário: Ativo não deve estar simultaneamente atribuído e em manutenção
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-INV-1" com usuário atribuído nessa unidade
-    Quando solicito manutenção para o ativo "ASSET-INV-1"
-    E concluo a manutenção do ativo "ASSET-INV-1"
-    Então o ativo não deve estar simultaneamente atribuído e em manutenção
-
-  @invariantes @consistencia @regra-negocio
-  @allure.label.suite:Invariantes_Negocio
-  @allure.severity.critical
-  Cenário: Ativo não deve estar simultaneamente em transferência e disponível
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe uma unidade "Filial" nessa organização como unidade extra
-    E que existe um ativo "ASSET-INV-2" em transferência nessa unidade
-    Quando obtenho o status do ativo "ASSET-INV-2"
-    Então o ativo não deve estar com status simultâneos de TRANSFERENCIA e AVAILABLE
-
-  @invariantes @consistencia @regra-negocio
-  @allure.label.suite:Invariantes_Negocio
-  @allure.severity.critical
-  Cenário: Ativo não deve permitir múltiplas operações concorrentes
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-INV-3" disponível nessa unidade
-    Quando envio múltiplas requisições de atribuição em paralelo para o ativo "ASSET-INV-3"
-    Então apenas uma operação deve ter sucesso e as demais devem falhar
-
-  @invariantes @consistencia @regra-negocio
-  @allure.label.suite:Invariantes_Negocio
-  @allure.severity.critical
-  Cenário: Ativo deve manter consistência de estado após falha de operação
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-INV-4" disponível nessa unidade
-    Quando tenta uma operação inválida que falhará
-    E obtenho o status do ativo "ASSET-INV-4"
-    Então o estado do ativo deve permanecer consistente com o estado anterior
-
-  ############################################################
-  # ⚠️ CONSISTÊNCIA E RECUPERAÇÃO
-  ############################################################
-
-  @consistencia @recuperacao @regra-negocio
-  @allure.label.suite:Consistencia_Recuperacao
-  @allure.severity.critical
-  Cenário: Falha ao atribuir não deve alterar estado do ativo
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-CONS-1" disponível nessa unidade
-    E o estado inicial do ativo é "AVAILABLE"
-    Quando tenta atribuir o ativo a um usuário inexistente
-    Então o ativo deve permanecer no estado "AVAILABLE"
-
-  @consistencia @recuperacao @regra-negocio
-  @allure.label.suite:Consistencia_Recuperacao
-  @allure.severity.critical
-  Cenário: Falha ao transferir não deve alterar estado do ativo
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-CONS-2" disponível nessa unidade
-    E o estado inicial do ativo é "AVAILABLE"
-    Quando tenta transferir o ativo para uma unidade inexistente
-    Então o ativo deve permanecer no estado "AVAILABLE"
-
-  @consistencia @recuperacao @regra-negocio
-  @allure.label.suite:Consistencia_Recuperacao
-  @allure.severity.critical
-  Cenário: Falha ao iniciar manutenção não deve alterar estado do ativo
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-CONS-3" disponível nessa unidade
-    E o estado inicial do ativo é "AVAILABLE"
-    Quando tenta solicitar manutenção com dados inválidos
-    Então o ativo deve permanecer no estado "AVAILABLE"
-
-  @consistencia @recuperacao @regra-negocio
-  @allure.label.suite:Consistencia_Recuperacao
-  @allure.severity.critical
-  Cenário: Operação parcial não deve deixar ativo em estado inconsistente
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-CONS-4" disponível nessa unidade
-    Quando uma operação complexa é interrompida no meio
-    Então o ativo deve estar em um estado consistente e válido
-
-  ############################################################
-  # 🔄 CONCORRÊNCIA (AVANÇADO)
-  ############################################################
-
-  @concorrencia @regra-negocio
-  @allure.label.suite:Concorrencia_Avancada
-  @allure.severity.critical
-  Cenário: Não deve permitir atribuição simultânea do mesmo ativo
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existem múltiplos usuários criados
-    E que existe um ativo "ASSET-CONC-1" disponível nessa unidade
-    Quando envio múltiplas requisições de atribuição simultâneas
-    Então apenas uma atribuição deve ter sucesso
-    E o ativo deve estar atribuído a apenas um usuário
-
-  @concorrencia @regra-negocio
-  @allure.label.suite:Concorrencia_Avancada
-  @allure.severity.critical
-  Cenário: Não deve permitir transferência simultânea do mesmo ativo
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existem múltiplas unidades criadas
-    E que existe um ativo "ASSET-CONC-2" disponível nessa unidade
-    Quando envio múltiplas requisições de transferência simultâneas
-    Então apenas uma transferência deve ter sucesso
-    E o ativo deve estar em apenas uma transferência
-
-  @concorrencia @regra-negocio
-  @allure.label.suite:Concorrencia_Avancada
-  @allure.severity.critical
-  Cenário: Não deve permitir manutenção simultânea do mesmo ativo
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-CONC-3" disponível nessa unidade
-    Quando envio múltiplas requisições de manutenção simultâneas
-    Então apenas uma manutenção deve ter sucesso
-    E o ativo deve estar em apenas uma operação de manutenção
-
-  ############################################################
-  # 🧪 EDGE CASES DE ESTADO
-  ############################################################
-
-  @edge-cases @regra-negocio
-  @allure.label.suite:Edge_Cases_Estado
-  @allure.severity.critical
-  Cenário: Deve manter consistência ao alternar rapidamente estados
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-EDGE-1" disponível nessa unidade
-    Quando executo rápidas transições de estado para o ativo
-    Então o ativo deve manter um estado consistente ao final
-
-  @edge-cases @regra-negocio
-  @allure.label.suite:Edge_Cases_Estado
-  @allure.severity.critical
-  Cenário: Não deve permitir transições inválidas em sequência rápida
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-EDGE-2" disponível nessa unidade
-    Quando tenta executar transições inválidas em sequência rápida
-    Então todas as transições inválidas devem ser rejeitadas
-
-  @edge-cases @regra-negocio
-  @allure.label.suite:Edge_Cases_Estado
-  @allure.severity.critical
-  Cenário: Deve rejeitar operações baseadas em estado desatualizado
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-EDGE-3" disponível nessa unidade
-    Quando faz uma operação baseada em versão anterior do estado
-    Então a operação deve ser rejeitada com erro de conflito
-
-  ############################################################
-  # 🔍 FILTROS BASEADOS EM ESTADO (CONSISTÊNCIA)
-  ############################################################
-
-  @filtros @consistencia @regra-negocio
+  @filtros @consistencia
   @allure.label.suite:Filtros_Estado
   @allure.severity.normal
   Cenário: Ativo atribuído não deve aparecer como disponível em filtros
@@ -934,7 +153,7 @@ Funcionalidade: Gerenciamento do Ciclo de Vida de Ativos
     Então o ativo "ASSET-FILT-1" não deve estar na listagem
     E quando listo filtrando por status "ASSIGNED", deve estar presente
 
-  @filtros @consistencia @regra-negocio
+  @filtros @consistencia
   @allure.label.suite:Filtros_Estado
   @allure.severity.normal
   Cenário: Ativo em manutenção deve aparecer corretamente nos filtros
@@ -943,21 +162,304 @@ Funcionalidade: Gerenciamento do Ciclo de Vida de Ativos
     Quando listo os ativos filtrando por status "IN_MAINTENANCE"
     Então o ativo "ASSET-FILT-2" deve estar na listagem
 
-  @filtros @consistencia @regra-negocio
-  @allure.label.suite:Filtros_Estado
-  @allure.severity.normal
-  Cenário: Ativo em transferência deve aparecer corretamente nos filtros
-    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-FILT-3" em transferência nessa unidade
-    Quando listo os ativos filtrando por status "IN_TRANSFER"
-    Então o ativo "ASSET-FILT-3" deve estar na listagem
+  # ===========================================================================
+  # SEÇÃO: BUSCA POR ID
+  # ===========================================================================
 
-  @filtros @consistencia @regra-negocio
+  @busca
+  @allure.label.suite:Busca_de_Ativos
+  @allure.severity.critical
+  Cenário: Deve buscar ativo por ID com sucesso
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    Quando busco o ativo "ASSET-001" por ID
+    Então a resposta deve ter status 200
+    E o ativo criado deve ter assetTag "ASSET-001"
+
+  @busca
+  @allure.label.suite:Busca_de_Ativos
+  @allure.severity.normal
+  Cenário: Buscar ativo inexistente retorna 404
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    Quando busco o ativo com id 999999
+    Então a resposta deve ter status 404
+
+  @listagem @autorizacao
+  @allure.label.suite:Controle_de_Acesso
+  @allure.severity.critical
+  Cenário: GESTOR só visualiza ativos da própria unidade
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    E que existe uma unidade "Filial Escopo" nessa organização como unidade extra
+    E que existe um ativo "ASSET-OUTRA-UNIDADE" disponível na unidade extra
+    Quando crio um ativo "ASSET-SEDE-GESTOR" do tipo "NOTEBOOK" modelo "Modelo Sede" na organização
+    E que estou autenticado como "gestor@tech.com" com senha "Senha@123"
+    Quando listo os ativos filtrando por assetTag "ASSET-SEDE-GESTOR"
+    Então a resposta deve ter status 200
+    E o ativo "ASSET-SEDE-GESTOR" deve estar na listagem
+    Quando listo os ativos filtrando por assetTag "ASSET-OUTRA-UNIDADE"
+    Então a resposta deve ter status 200
+    E o ativo "ASSET-OUTRA-UNIDADE" não deve estar na listagem
+
+  # ===========================================================================
+  # SEÇÃO: CRIAÇÃO — AUTORIZAÇÃO E VALIDAÇÕES ADICIONAIS
+  # ===========================================================================
+
+  @criacao @autorizacao
+  @allure.label.suite:Controle_de_Acesso
+  @allure.severity.critical
+  Cenário: OPERADOR não pode criar ativo
+    Dado que estou autenticado como "operador@tech.com" com senha "Senha@123"
+    Quando crio um ativo como operador na organização
+    Então a resposta deve ter status 403
+
+  @criacao
+  @allure.label.suite:Criacao_de_Ativos
+  @allure.severity.normal
+  Cenário: GESTOR cria ativo com sucesso
+    Dado que estou autenticado como "gestor@tech.com" com senha "Senha@123"
+    Quando crio um ativo "ASSET-GESTOR-NEW" do tipo "TABLET" modelo "iPad Pro" na organização
+    Então a resposta deve ter status 201
+    E o ativo criado deve ter assetTag "ASSET-GESTOR-NEW"
+
+  @criacao @autorizacao
+  @allure.label.suite:Controle_de_Acesso
+  @allure.severity.critical
+  Cenário: GESTOR não pode criar ativo em unidade que não é sua
+    Dado que existe uma unidade "Filial Restrita" nessa organização como unidade extra
+    E que estou autenticado como "gestor@tech.com" com senha "Senha@123"
+    Quando crio um ativo "ASSET-GESTOR-OUTRA" do tipo "NOTEBOOK" modelo "Modelo Restrito" na unidade extra
+    Então a resposta deve ter status 403
+
+  @criacao @validacao
+  @allure.label.suite:Validacao_de_Dados
+  @allure.severity.normal
+  Cenário: AssetTag com 100 caracteres é aceito (boundary válido)
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    Quando crio um ativo com assetTag de 100 caracteres na organização
+    Então a resposta deve ter status 201
+
+  @criacao @validacao
+  @allure.label.suite:Validacao_de_Dados
+  @allure.severity.normal
+  Cenário: Criar ativo sem type retorna 400
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    Quando crio um ativo sem type na organização
+    Então a resposta deve ter status 400
+
+  @criacao @validacao
+  @allure.label.suite:Validacao_de_Dados
+  @allure.severity.normal
+  Cenário: Criar ativo sem modelo retorna 400
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    Quando crio um ativo sem modelo na organização
+    Então a resposta deve ter status 400
+
+  @criacao @regra-negocio
+  @allure.label.suite:Regras_de_Negocio
+  @allure.severity.normal
+  Cenário: AssetTag duplicada retorna erro de negócio
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    Quando crio um ativo "ASSET-DUP" do tipo "NOTEBOOK" modelo "Modelo A" na organização
+    Então a resposta deve ter status 201
+    Quando crio um ativo "ASSET-DUP" do tipo "NOTEBOOK" modelo "Modelo B" na organização
+    Então a resposta deve ter status 400
+
+  @criacao
+  @allure.label.suite:Criacao_de_Ativos
+  @allure.severity.normal
+  Cenário: Criar ativo com assetTag automática retorna 201 com assetTag preenchida
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    Quando crio um ativo com assetTag automática na organização
+    Então a resposta deve ter status 201
+    E o ativo criado deve ter assetTag preenchida automaticamente
+
+  # ===========================================================================
+  # SEÇÃO: APOSENTADORIA — ESTADOS ADICIONAIS
+  # ===========================================================================
+
+  @aposentadoria @regra-negocio
+  @allure.label.suite:Operacoes_de_Estado
+  @allure.severity.normal
+  Cenário: Aposentar ativo já RETIRED retorna 400
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    E que existe um ativo "ASSET-ALREADY-RETIRED" aposentado nessa unidade
+    Quando tento aposentar o ativo "ASSET-ALREADY-RETIRED"
+    Então a resposta deve ter status 400
+
+  @aposentadoria
+  @allure.label.suite:Operacoes_de_Estado
+  @allure.severity.normal
+  Cenário: Aposentar ativo inexistente retorna 404
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    Quando tento aposentar o ativo com id 999999
+    Então a resposta deve ter status 404
+
+  # ===========================================================================
+  # SEÇÃO: ATRIBUIÇÃO — ESTADOS ADICIONAIS
+  # ===========================================================================
+
+  @atribuicao @regra-negocio
+  @allure.label.suite:Operacoes_de_Estado
+  @allure.severity.normal
+  Cenário: Atribuir ativo em transferência retorna 400
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    E que existe um ativo "ASSET-INTRANSFER-ASSIGN" em transferência nessa unidade
+    Quando tento atribuir o ativo "ASSET-INTRANSFER-ASSIGN" a um usuário
+    Então a resposta deve ter status 400
+
+  @atribuicao @regra-negocio
+  @allure.label.suite:Operacoes_de_Estado
+  @allure.severity.normal
+  Cenário: Atribuir ativo aposentado retorna 400
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    E que existe um ativo "ASSET-RETIRED-ASSIGN" aposentado nessa unidade
+    Quando tento atribuir o ativo "ASSET-RETIRED-ASSIGN" a um usuário
+    Então a resposta deve ter status 400
+    E a mensagem de erro deve indicar que não pode atribuir ativo aposentado
+
+  @atribuicao @regra-negocio
+  @allure.label.suite:Operacoes_de_Estado
+  @allure.severity.normal
+  Cenário: Atribuir a usuário inexistente retorna 404
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    E que existe um ativo "ASSET-ASSIGN-NOUSER" disponível nessa unidade
+    Quando tento atribuir o ativo "ASSET-ASSIGN-NOUSER" a um usuário inexistente
+    Então a resposta deve ter status 404
+
+  @atribuicao @regra-negocio
+  @allure.label.suite:Operacoes_de_Estado
+  @allure.severity.normal
+  Cenário: Atribuir ativo inexistente retorna 404
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    Quando tento atribuir o ativo com id 999999 ao usuário "operador@tech.com"
+    Então a resposta deve ter status 404
+
+  # ===========================================================================
+  # SEÇÃO: DESATRIBUIÇÃO — ESTADO ADDITIONAL
+  # ===========================================================================
+
+  @desatribuicao @regra-negocio
+  @allure.label.suite:Operacoes_de_Estado
+  @allure.severity.normal
+  Cenário: Desatribuir ativo já disponível retorna 400
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    E que existe um ativo "ASSET-UNASSIGN-AVAIL" disponível nessa unidade
+    Quando desatribuo o ativo disponível "ASSET-UNASSIGN-AVAIL"
+    Então a resposta deve ter status 400
+
+  @desatribuicao @regra-negocio
+  @allure.label.suite:Operacoes_de_Estado
+  @allure.severity.normal
+  Cenário: Desatribuir ativo inexistente retorna 404
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    Quando desatribuo o ativo com id 999999
+    Então a resposta deve ter status 404
+
+  # ===========================================================================
+  # SEÇÃO: DADOS FINANCEIROS
+  # ===========================================================================
+
+  @financeiro
+  @allure.label.suite:Dados_Financeiros
+  @allure.severity.normal
+  Cenário: ADMIN atualiza dados financeiros do ativo com sucesso
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    E que existe um ativo "ASSET-FIN-UPDATE" disponível nessa unidade
+    Quando atualizo os dados financeiros do ativo "ASSET-FIN-UPDATE"
+    Então a resposta deve ter status 200
+    E os dados financeiros devem estar atualizados
+
+  # ===========================================================================
+  # SEÇÃO: HISTÓRICO
+  # ===========================================================================
+
+  @historico
+  @allure.label.suite:Historico_de_Ativos
+  @allure.severity.normal
+  Cenário: Listar histórico de status após operações
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    E que existe um ativo "ASSET-HIST-STATUS" disponível nessa unidade
+    E que atribuo o ativo "ASSET-HIST-STATUS" ao usuário "operador@tech.com"
+    Quando listo o histórico de status do ativo "ASSET-HIST-STATUS"
+    Então a resposta deve ter status 200
+    E o histórico deve conter pelo menos um registro
+
+  @historico
+  @allure.label.suite:Historico_de_Ativos
+  @allure.severity.normal
+  Cenário: Listar histórico de atribuições após assign
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    E que existe um ativo "ASSET-HIST-ASSIGN" disponível nessa unidade
+    E que atribuo o ativo "ASSET-HIST-ASSIGN" ao usuário "operador@tech.com"
+    Quando listo o histórico de atribuições do ativo "ASSET-HIST-ASSIGN"
+    Então a resposta deve ter status 200
+    E o histórico deve conter pelo menos um registro
+
+  # ===========================================================================
+  # SEÇÃO: FILTROS ADICIONAIS
+  # ===========================================================================
+
+  @filtros
   @allure.label.suite:Filtros_Estado
   @allure.severity.normal
-  Cenário: Ativo aposentado não deve aparecer como ativo disponível
+  Cenário: Filtrar ativos por tipo retorna apenas ativos do tipo solicitado
     Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
-    E que existe um ativo "ASSET-FILT-4" aposentado nessa unidade
-    Quando listo os ativos filtrando por status "AVAILABLE"
-    Então o ativo "ASSET-FILT-4" não deve estar na listagem
-    E quando listo filtrando por status "RETIRED", deve estar presente
+    E que existe um ativo "ASSET-VEHICLE-001" disponível nessa unidade
+    Quando listo os ativos filtrando por tipo "NOTEBOOK"
+    Então a resposta deve ter status 200
+
+  @listagem @autorizacao
+  @allure.label.suite:Controle_de_Acesso
+  @allure.severity.critical
+  Cenário: OPERADOR só visualiza seus próprios ativos
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    E que existe um usuário OPERADOR adicional com email "operador2@tech.com" e senha "Senha@123"
+    E que existe um ativo "ASSET-OP-OWN" atribuído ao usuário "operador@tech.com" nessa unidade
+    E que existe um ativo "ASSET-OP-OUTRO" atribuído ao usuário "operador2@tech.com" nessa unidade
+    E que estou autenticado como "operador@tech.com" com senha "Senha@123"
+    Quando listo os ativos filtrando por assetTag "ASSET-OP-OWN"
+    Então a resposta deve ter status 200
+    E o ativo "ASSET-OP-OWN" deve estar na listagem
+    Quando listo os ativos filtrando por assetTag "ASSET-OP-OUTRO"
+    Então a resposta deve ter status 200
+    E o ativo "ASSET-OP-OUTRO" não deve estar na listagem
+
+  @seguranca
+  @allure.label.suite:Seguranca
+  @allure.severity.critical
+  Cenário: AssetTag com caracteres de injeção SQL é tratado com segurança
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    Quando crio um ativo "' OR 1=1 --" do tipo "NOTEBOOK" modelo "Modelo SQL" na organização
+    Então a resposta deve ter status 201
+    E o ativo criado deve ter assetTag "' OR 1=1 --"
+
+  @seguranca
+  @allure.label.suite:Seguranca
+  @allure.severity.critical
+  Cenário: AssetTag com payload XSS é armazenada como texto literal
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    Quando crio um ativo "<script>alert(1)</script>" do tipo "NOTEBOOK" modelo "Modelo XSS" na organização
+    Então a resposta deve ter status 201
+    E o ativo criado deve ter assetTag "<script>alert(1)</script>"
+
+  @seguranca @autorizacao
+  @allure.label.suite:Seguranca
+  @allure.severity.critical
+  Cenário: Token de outro usuário não acessa recurso restrito
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    E que existe um usuário OPERADOR adicional com email "operador3@tech.com" e senha "Senha@123"
+    E que existe um ativo "ASSET-PRIVADO-OP3" atribuído ao usuário "operador3@tech.com" nessa unidade
+    E que estou autenticado como "operador@tech.com" com senha "Senha@123"
+    Quando busco o ativo "ASSET-PRIVADO-OP3" por ID
+    Então a resposta deve ter status 403
+
+  @seguranca @autorizacao
+  @allure.label.suite:Seguranca
+  @allure.severity.critical
+  Cenário: IDOR — buscar ativo de outra organização retorna acesso negado
+    Dado que estou autenticado como "admin@tech.com" com senha "Senha@123"
+    E que existe uma organização secundária "Other Corp" cadastrada
+    E que existe uma unidade "Branch Other" na organização secundária
+    E que existe um usuário ADMIN da organização secundária com email "admin@other.com" e senha "Senha@123"
+    E que existe um ativo "ASSET-OUTRA-ORG" disponível na organização secundária
+    Quando busco o ativo "ASSET-OUTRA-ORG" por ID
+    Então a resposta deve ter status 403

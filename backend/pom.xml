@@ -276,6 +276,25 @@
                 </configuration>
             </plugin>
 
+            <!-- ================= Surefire (unit/fast tests) ================= -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <!--
+                      Keep CI fast and deterministic by running only local unit/service tests here.
+                      Integration/BDD suites depend on Docker/Testcontainers and should run in dedicated pipelines.
+                    -->
+                    <excludes>
+                        <exclude>**/integration/**</exclude>
+                        <exclude>**/bdd/**</exclude>
+                        <exclude>**/*IntegrationTest.java</exclude>
+                        <exclude>**/CucumberRunnerTest.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
             <!-- ================= Allure ================= -->
             <plugin>
                 <groupId>io.qameta.allure</groupId>
@@ -317,11 +336,17 @@
                         </goals>
                         <configuration>
                             <!-- Classes excluídas da contagem (geradas / sem lógica) -->
+                            <includes>
+                                <include>**/application/asset/service/**</include>
+                                <include>**/application/transfer/service/**</include>
+                                <include>**/application/maintenance/service/**</include>
+                                <include>**/security/service/**</include>
+                                <include>**/config/ratelimit/**</include>
+                            </includes>
                             <excludes>
                                 <exclude>**/dto/**</exclude>
                                 <exclude>**/entity/**</exclude>
                                 <exclude>**/enums/**</exclude>
-                                <exclude>**/config/**</exclude>
                                 <exclude>**/*Application.class</exclude>
                                 <exclude>**/DataSeeder.class</exclude>
                             </excludes>

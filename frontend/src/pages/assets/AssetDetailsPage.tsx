@@ -265,6 +265,7 @@ export default function AssetDetailPage() {
       </div>
 
       <ErrorBanner message={actionError} onDismiss={() => setActionError('')} />
+      <ErrorBanner message={transferError} onDismiss={() => setTransferError('')} />
 
       <AssetActionBar
         asset={asset}

@@ -10,7 +10,7 @@
  */
 
 import { Logger } from 'winston';
-import { AnalysisType } from '../routing/RoutingContext';
+import { AnalysisType } from '../types/analysis.types';
 import { LLMClient } from '../llm/LLMClient';
 import { AnalysisRepository } from '../storage/AnalysisRepository';
 
@@ -168,7 +168,12 @@ Return JSON: { "score": <number 0-100> }`;
 Recent conclusions:
 ${recent
   .slice(0, 3)
-  .map((r, i) => `${i + 1}. ${r.summary || 'No summary'}`)
+  .map((r, i) => {
+    const summary = 'summary' in r
+      ? r.summary
+      : ('executiveSummary' in r ? r.executiveSummary : 'No summary');
+    return `${i + 1}. ${summary || 'No summary'}`;
+  })
   .join('\n')}
 
 New recommendation:

@@ -126,8 +126,7 @@ export class CustomWorld extends World {
       .locator('table')
       .or(this.page.locator('text=Nenhum ativo encontrado'))
       .first()
-      .waitFor({ timeout: 15000 })
-      .catch(() => {});
+      .waitFor({ timeout: 15000 });
   }
 
   async ensureAvailableAsset(): Promise<boolean> {
@@ -138,7 +137,7 @@ export class CustomWorld extends World {
     const allBtn = this.page.locator('button:has-text("Todos")');
     if (await allBtn.isVisible()) {
       await allBtn.click();
-      await this.page.waitForLoadState('load', { timeout: 5000 }).catch(() => {});
+      await this.page.waitForLoadState('load', { timeout: 5000 });
       await this.waitForTableLoad();
     }
     return true;
@@ -180,10 +179,17 @@ export class CustomWorld extends World {
     const token = await this.getAccessToken();
 
     if (token) {
-      await this.page.request.patch(
+      const retired = await this.page.request.patch(
         `${this.apiUrl}/assets/${this.createdAssetId}/retire`,
         { headers: { Authorization: `Bearer ${token}` } },
-      ).catch(() => {});
+      ).then(() => true).catch(() => false);
+
+      if (!retired) {
+        await this.page.goto(`${this.baseUrl}/assets`, {
+          waitUntil: 'domcontentloaded',
+          timeout: 10000,
+        });
+      }
     }
 
     this.createdAssetId = undefined;

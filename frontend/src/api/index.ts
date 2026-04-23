@@ -14,7 +14,7 @@ import type {
   AssetInsurance, InsuranceCreateRequest, InsuranceSummary,
   AuditEvent,
   ExecutiveDashboard, UnitDashboard, PersonalDashboard,
-  AssetStatus, AssetType, TransferStatus, MaintenanceStatus, InventoryStatus, UserStatus,
+  AssetStatus, AssetType, TransferStatus, MaintenanceStatus, UserStatus,
 } from '../types'
 
 // ═══════════════════════════════════════════════════════════════════════════════

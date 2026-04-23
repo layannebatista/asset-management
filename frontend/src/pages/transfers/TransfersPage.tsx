@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { transferApi, assetApi, unitApi } from '../../api'
 import { useAuth } from '../../context/AuthContext'
-import type { TransferResponse, AssetResponse, UnitResponse } from '../../types'
+import type { TransferResponse, AssetResponse, UnitResponse, TransferStatus } from '../../types'
 import {
   TRANSFER_STATUS_LABELS,
   TRANSFER_STATUS_COLORS,
@@ -17,14 +16,23 @@ import { CreateTransferModal } from './components/CreateTransferModal'
 
 const PAGE_SIZE = 20
 
+const TRANSFER_STATUS_FILTERS: Array<{ label: string; value: TransferStatus | 'ALL' }> = [
+  { label: 'Todos', value: 'ALL' },
+  { label: 'Pendente', value: 'PENDING' },
+  { label: 'Aprovado', value: 'APPROVED' },
+  { label: 'Rejeitado', value: 'REJECTED' },
+  { label: 'Concluído', value: 'COMPLETED' },
+  { label: 'Cancelado', value: 'CANCELLED' },
+]
+
 export default function TransfersPage() {
-  const [searchParams] = useSearchParams()
   const { user, isGestor, isAdmin } = useAuth()
 
   const effectiveUnitId = !isAdmin && isGestor ? user?.unitId : undefined
 
   const [transfers, setTransfers] = useState<TransferResponse[]>([])
   const [selected, setSelected] = useState<TransferResponse | null>(null)
+  const [statusFilter, setStatusFilter] = useState<TransferStatus | 'ALL'>('ALL')
 
   const [loading, setLoading] = useState(true)
   const [transferPage, setTransferPage] = useState(0)
@@ -77,6 +85,7 @@ export default function TransfersPage() {
         page: pg,
         size: PAGE_SIZE,
         sort: 'requestedAt,desc',
+        ...(statusFilter !== 'ALL' ? { status: statusFilter } : {}),
         ...(effectiveUnitId ? { unitId: effectiveUnitId } : {}),
       })
       .then((p) => {
@@ -97,6 +106,10 @@ export default function TransfersPage() {
       .catch(console.error)
       .finally(() => setLoading(false))
   }
+
+  useEffect(() => {
+    load(0)
+  }, [statusFilter])
 
   useEffect(() => {
     load(transferPage)
@@ -194,6 +207,7 @@ export default function TransfersPage() {
         </div>
 
         <button
+          data-testid="transfer-new-request-btn"
           type="button"
           onClick={openCreate}
           className="flex items-center gap-2 px-4 py-2 rounded-[8px] bg-blue-700 text-white text-[13px] font-semibold hover:bg-blue-800 transition"
@@ -206,6 +220,23 @@ export default function TransfersPage() {
         message={actionError}
         onDismiss={() => setActionError('')}
       />
+
+      <div className="flex gap-[6px] px-4 py-[10px] border-b border-slate-100 flex-wrap items-center">
+        {TRANSFER_STATUS_FILTERS.map((f) => (
+          <button
+            key={f.value}
+            data-testid={`transfer-status-filter-${String(f.value).toLowerCase()}`}
+            onClick={() => { setStatusFilter(f.value); setTransferPage(0) }}
+            className={`px-3 py-1 rounded-full text-[12px] font-medium border-[1.5px] transition ${
+              statusFilter === f.value
+                ? 'bg-blue-100 text-blue-700 border-blue-500'
+                : 'bg-white text-slate-500 border-slate-200 hover:border-blue-400'
+            }`}
+          >
+            {f.label}{f.value === 'ALL' ? ` (${transferTotal})` : ''}
+          </button>
+        ))}
+      </div>
 
       <div
         className="flex rounded-[10px] border border-slate-200 bg-white overflow-hidden shadow-sm"
@@ -235,6 +266,7 @@ export default function TransfersPage() {
               transfers.map((t: TransferResponse) => (
                 <div
                   key={t.id}
+                  data-testid="transfer-card"
                   onClick={() => setSelected(t)}
                   className={`px-[14px] py-3 border-b border-slate-50 cursor-pointer transition border-l-[3px] ${
                     selected?.id === t.id

@@ -1,0 +1,146 @@
+================================================================================
+MAPEAMENTO DE CENÁRIOS DE TESTE — DOMÍNIO: AUTH (Autenticação)
+Projeto: Patrimônio 360 | Backend Spring Boot
+Atualizado em: 2026-04-16
+================================================================================
+
+LEGENDA
+  Tipo        : E2E (Cucumber BDD), UNITARIO, INTEGRACAO, CONTRATO, PERFORMANCE, SEGURANCA
+  Criticidade : BLOCKER > CRITICAL > NORMAL > LOW
+  Status      : AUTOMATIZADO | PENDENTE | NAO_APLICAVEL
+  Camada      : indica o arquivo ou ferramenta onde o teste vive (ou deve viver)
+
+NOTAS GERAIS
+  - Todos os cenários E2E usam Spring MockMvc + profile bdd
+  - Auth possui 4 endpoints principais: /auth/login, /auth/mfa/verify, /auth/refresh, /auth/logout
+  - MFA é obrigatório somente para usuários com phoneNumber preenchido
+  - Refresh token é rotacionado no uso e logout revoga todos os refresh tokens do usuário
+  - Rate limit atual: login 10/min, mfa/verify 5/min, refresh 30/min
+
+================================================================================
+SEÇÃO 1 — LOGIN  (POST /auth/login)
+================================================================================
+
+ID   | Cenário                                                    | Tipo        | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|-------------|-------------|--------------|---------------------------------------------
+L01  | Login com credenciais válidas retorna tokens                | E2E         | CRITICAL    | AUTOMATIZADO | auth.feature
+L02  | Login com senha inválida retorna 401                        | E2E         | NORMAL      | AUTOMATIZADO | auth.feature
+L03  | Login com email inexistente retorna 401                     | E2E         | NORMAL      | PENDENTE     | auth.feature ou AuthE2ETest.java
+L04  | Login com formato de email inválido retorna 400             | E2E         | NORMAL      | AUTOMATIZADO | auth.feature
+L05  | Login com email em branco retorna 400                       | E2E         | NORMAL      | AUTOMATIZADO | auth.feature
+L06  | Login com senha em branco retorna 400                       | E2E         | NORMAL      | AUTOMATIZADO | auth.feature
+L07  | Login com email contendo apenas espaços retorna 400         | E2E         | NORMAL      | AUTOMATIZADO | auth.feature
+L08  | Login com senha contendo apenas espaços retorna 400         | E2E         | NORMAL      | AUTOMATIZADO | auth.feature
+L09  | Login de usuário com telefone retorna challenge MFA         | E2E         | CRITICAL    | AUTOMATIZADO | auth.feature
+L10  | Login com usuário pendente de ativação retorna 401          | E2E         | BLOCKER     | AUTOMATIZADO | auth.feature
+L11  | Login com usuário bloqueado retorna 401                     | E2E         | BLOCKER     | AUTOMATIZADO | auth.feature
+L12  | Login com usuário inativo retorna 401                       | E2E         | BLOCKER     | AUTOMATIZADO | auth.feature
+L13  | Rate limit de login retorna 429                             | SEGURANCA   | BLOCKER     | AUTOMATIZADO | auth.feature
+L14  | Login com payload SQL injection no email retorna 400/401    | SEGURANCA   | NORMAL      | PENDENTE     | auth.feature
+
+================================================================================
+SEÇÃO 2 — MFA  (POST /auth/mfa/verify)
+================================================================================
+
+ID   | Cenário                                                    | Tipo        | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|-------------|-------------|--------------|---------------------------------------------
+M01  | Verificação MFA com código válido retorna tokens            | E2E         | CRITICAL    | AUTOMATIZADO | auth.feature
+M02  | Verificação MFA com código incorreto retorna 400            | E2E         | CRITICAL    | AUTOMATIZADO | auth.feature
+M03  | Verificação MFA sem code retorna 400                        | E2E         | NORMAL      | AUTOMATIZADO | auth.feature
+M04  | Verificação MFA sem userId retorna 400                      | E2E         | NORMAL      | AUTOMATIZADO | auth.feature
+M05  | Código MFA reutilizado retorna 400                          | E2E         | CRITICAL    | AUTOMATIZADO | auth.feature
+M06  | Rate limit de MFA retorna 429                               | SEGURANCA   | BLOCKER     | AUTOMATIZADO | auth.feature
+
+================================================================================
+SEÇÃO 3 — REFRESH TOKEN  (POST /auth/refresh)
+================================================================================
+
+ID   | Cenário                                                    | Tipo        | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|-------------|-------------|--------------|---------------------------------------------
+R01  | Refresh token válido retorna novos tokens                   | E2E         | CRITICAL    | AUTOMATIZADO | auth.feature
+R02  | Refresh com token inválido retorna 400                      | E2E         | CRITICAL    | AUTOMATIZADO | auth.feature
+R03  | Refresh sem token retorna 400                               | E2E         | CRITICAL    | AUTOMATIZADO | auth.feature
+R04  | Refresh com accessToken no lugar do refresh retorna 400     | E2E         | CRITICAL    | AUTOMATIZADO | auth.feature
+R05  | Refresh token rotacionado não pode ser reutilizado          | E2E         | CRITICAL    | AUTOMATIZADO | auth.feature
+R06  | Refresh token revogado por logout retorna 400               | E2E         | CRITICAL    | AUTOMATIZADO | auth.feature
+R07  | Rate limit de refresh retorna 429                           | SEGURANCA   | BLOCKER     | AUTOMATIZADO | auth.feature
+R08  | Refresh token expirado retorna 400                          | E2E         | BLOCKER     | PENDENTE     | AuthServiceTest.java ou integration test
+
+================================================================================
+SEÇÃO 4 — LOGOUT  (POST /auth/logout)
+================================================================================
+
+ID   | Cenário                                                    | Tipo        | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|-------------|-------------|--------------|---------------------------------------------
+O01  | Logout com autenticação retorna 204                         | E2E         | CRITICAL    | AUTOMATIZADO | auth.feature
+O02  | Logout sem autenticação retorna 401                         | E2E         | CRITICAL    | AUTOMATIZADO | auth.feature
+O03  | Logout revoga todos os refresh tokens ativos do usuário     | E2E         | CRITICAL    | AUTOMATIZADO | auth.feature
+
+================================================================================
+SEÇÃO 5 — PROTEÇÃO E SEGURANÇA
+================================================================================
+
+ID   | Cenário                                                    | Tipo        | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|-------------|-------------|--------------|---------------------------------------------
+S01  | Endpoint protegido sem token retorna 401                    | SEGURANCA   | BLOCKER     | AUTOMATIZADO | auth.feature
+S02  | Token JWT inválido retorna 401 em endpoint protegido        | SEGURANCA   | CRITICAL    | AUTOMATIZADO | auth.feature
+S03  | Token sem prefixo Bearer retorna 401                        | SEGURANCA   | NORMAL      | AUTOMATIZADO | auth.feature
+S04  | Refresh de outro usuário não renova sessão alheia           | SEGURANCA   | CRITICAL    | NAO_APLICAVEL | bearer refresh token é a própria credencial; posse do token implica sessão
+S05  | Logout não revoga accessToken atual imediatamente           | SEGURANCA   | NORMAL      | PENDENTE     | auth.feature
+S06  | JWT com algoritmo "none" é rejeitado com 401                | SEGURANCA   | BLOCKER     | PENDENTE     | auth.feature (verificação de alg no JwtUtil)
+S07  | JWT com payload adulterado (assinatura inválida) retorna 401 | SEGURANCA  | BLOCKER     | PENDENTE     | auth.feature
+S08  | Refresh token de usuário desativado/bloqueado retorna 400   | SEGURANCA   | CRITICAL    | PENDENTE     | auth.feature
+
+================================================================================
+SEÇÃO 6 — TESTES UNITÁRIOS
+================================================================================
+
+ID   | Cenário                                                    | Tipo        | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|-------------|-------------|--------------|---------------------------------------------
+U01  | AuthService autentica usuário sem telefone                  | UNITARIO    | CRITICAL    | AUTOMATIZADO | AuthServiceTest.java
+U02  | AuthService retorna challenge MFA para usuário com telefone | UNITARIO    | CRITICAL    | AUTOMATIZADO | AuthServiceTest.java
+U03  | RefreshTokenService valida e rotaciona token                | UNITARIO    | CRITICAL    | AUTOMATIZADO | RefreshTokenServiceTest.java
+U04  | RefreshTokenService revoga todos os tokens do usuário       | UNITARIO    | CRITICAL    | AUTOMATIZADO | RefreshTokenServiceTest.java
+U05  | UserDetailsService bloqueia usuário não ACTIVE              | UNITARIO    | BLOCKER     | AUTOMATIZADO | UserDetailsServiceImplTest.java
+U06  | MfaService marca código como usado após validação           | UNITARIO    | NORMAL      | PENDENTE     | MfaServiceTest.java
+U07  | RateLimitFilter limita login por IP                         | UNITARIO    | BLOCKER     | AUTOMATIZADO | RateLimitFilterTest.java
+U08  | RateLimitFilter reseta bucket após janela                   | UNITARIO    | NORMAL      | PENDENTE     | RateLimitFilterTest.java
+
+================================================================================
+SEÇÃO 7 — TESTES DE INTEGRAÇÃO / CONTRATO / PERFORMANCE
+================================================================================
+
+ID   | Cenário                                                    | Tipo        | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|-------------|-------------|--------------|---------------------------------------------
+I01  | Persistência de refresh token após login                    | INTEGRACAO  | NORMAL      | PENDENTE     | AuthPersistenceIT.java
+I02  | Persistência de MFA code após login com telefone            | INTEGRACAO  | NORMAL      | PENDENTE     | AuthPersistenceIT.java
+C01  | Schema da resposta de login sem MFA                         | CONTRATO    | NORMAL      | PENDENTE     | ContractTest.java
+C02  | Schema da resposta de challenge MFA                         | CONTRATO    | NORMAL      | PENDENTE     | ContractTest.java
+C03  | Schema da resposta de refresh                               | CONTRATO    | NORMAL      | PENDENTE     | ContractTest.java
+P01  | Login sob carga controlada mantém 200/401/429 corretos      | PERFORMANCE | NORMAL      | PENDENTE     | k6/auth_login_test.js
+P02  | Refresh sob carga respeita rotação e rate limit             | PERFORMANCE | NORMAL      | PENDENTE     | k6/auth_refresh_test.js
+
+================================================================================
+RESUMO EXECUTIVO
+================================================================================
+
+Tipo            | Total | Automatizado | Pendente
+----------------|-------|--------------|----------
+E2E (BDD)       |  27   |     25       |    2
+Unitário        |   8   |      6       |    2
+Integração      |   2   |      0       |    2
+Performance     |   2   |      0       |    2
+Segurança       |  12   |      6       |    5
+Contrato        |   3   |      0       |    3
+----------------|-------|--------------|----------
+TOTAL           |  54   |     37       |   16
+
+Novos cenários adicionados (2026-04-21): S06 (JWT alg none), S07 (payload adulterado), S08 (refresh usuário desativado)
+S06/S07 são BLOCKER: ataques de algorithm confusion e signature bypass são vetores reais contra APIs JWT.
+
+Cobertura E2E atual: ~93%
+Prioridade de implementação:
+  1. Expiração real de refresh token (R08)
+  2. Segurança complementar (L14, S05)
+  3. Unitários restantes (U06, U08)
+================================================================================

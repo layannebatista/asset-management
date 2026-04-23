@@ -77,6 +77,7 @@ public class TransferController {
   }
 
   @Operation(summary = "Solicitar transferência")
+  @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
   @PostMapping
   public ResponseEntity<TransferResponseDTO> request(@RequestBody @Valid TransferCreateDTO dto) {
     return ResponseEntity.status(HttpStatus.CREATED)

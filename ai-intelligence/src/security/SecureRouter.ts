@@ -5,11 +5,13 @@ import {
   ClassificationResult,
 } from './SecurityClassifier';
 import { ModelRouter } from '../routing/ModelRouter';
-import { ModelDecision, RoutingContext, Criticality } from '../routing/RoutingContext';
 import { AnalysisType } from '../types/analysis.types';
 
 export interface SecureRoutingDecision {
-  model: ModelDecision;
+  model: {
+    modelName: string;
+    costEstimate: number;
+  };
   sensitivity: SensitivityLevel;
   masked: boolean;
   maskedContext: string;
@@ -86,26 +88,40 @@ export class SecureRouter {
     const maskedContext = shouldMask ? this.classifier.mask(context, sensitivity) : context;
 
     // ── Step 4: Rotear modelo
-    const routingContext: RoutingContext = {
-      type: analysisType,
-      contextSize: maskedContext.length,
-      criticality: Criticality.NORMAL,
-      securityLevel: sensitivity,
+    const routingAnalysisType = analysisType === 'multi-agent' ? 'observability' : analysisType;
+    const privacyLevel: 'PUBLIC' | 'INTERNAL' | 'CONFIDENTIAL' | 'RESTRICTED' =
+      sensitivity === SensitivityLevel.RESTRICTED
+        ? 'RESTRICTED'
+        : sensitivity === SensitivityLevel.CONFIDENTIAL
+          ? 'CONFIDENTIAL'
+          : sensitivity === SensitivityLevel.INTERNAL
+            ? 'INTERNAL'
+            : 'PUBLIC';
+
+    const routingContext = {
+      analysis_type: routingAnalysisType,
+      criticality: 'NORMAL' as const,
+      context_size: contextSize || maskedContext.length,
+      privacy_level: privacyLevel,
+      has_pii: sensitivity === SensitivityLevel.RESTRICTED || sensitivity === SensitivityLevel.CONFIDENTIAL,
     };
 
-    const modelDecision = this.modelRouter.route(routingContext);
+    const modelDecision = await this.modelRouter.route(routingContext);
 
     this.logger.info('Decisão de roteamento seguro', {
       analysisType,
       sensitivity,
-      model: modelDecision.modelName,
+      model: modelDecision.primary_model,
       masked: shouldMask,
       requiresLocalModel,
       reason: decisionReason,
     });
 
     return {
-      model: modelDecision,
+      model: {
+        modelName: modelDecision.primary_model,
+        costEstimate: modelDecision.estimated_cost,
+      },
       sensitivity,
       masked: shouldMask,
       maskedContext,

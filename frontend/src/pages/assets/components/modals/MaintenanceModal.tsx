@@ -43,9 +43,12 @@ export function MaintenanceModal({
       open={!!asset}
       onClose={onClose}
       title={asset ? `Manutenção: ${asset.assetTag}` : 'Manutenção'}
+      testId="maintenance-modal"
+      closeButtonTestId="maintenance-close-btn"
     >
       <Field label="Descrição do problema * (mín. 10 caracteres)">
         <textarea
+          data-testid="maintenance-description-input"
           value={desc}
           onChange={(e) => setDesc(e.target.value)}
           rows={4}
@@ -73,6 +76,7 @@ export function MaintenanceModal({
 
       <Field label="Custo Estimado (opcional)">
         <input
+          data-testid="maintenance-cost-input"
           inputMode="numeric"
           value={cost}
           maxLength={15}
@@ -88,6 +92,8 @@ export function MaintenanceModal({
         loading={saving}
         confirmLabel="Abrir Ordem"
         disabled={!isValid || saving}
+        cancelTestId="maintenance-cancel-btn"
+        confirmTestId="maintenance-confirm-btn"
       />
     </Modal>
   )
