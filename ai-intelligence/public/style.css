@@ -348,6 +348,42 @@ body {
   color: #6d829b;
 }
 
+.kpi-tooltip {
+  font-size: 0.8rem;
+  color: #5f7893;
+  margin-top: 0.5rem;
+  padding: 0.6rem;
+  background: #f3f8fc;
+  border-radius: 6px;
+  border-left: 3px solid var(--primary);
+  line-height: 1.4;
+}
+
+.info-box {
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.info-box p {
+  margin: 0.5rem 0;
+  color: #0369a1;
+  font-size: 0.95rem;
+}
+
+.info-box ul {
+  margin: 0.5rem 0 0 1.5rem;
+  padding: 0;
+}
+
+.info-box li {
+  margin: 0.4rem 0;
+  color: #164e63;
+  font-size: 0.9rem;
+}
+
 /* Recommendation Banner */
 
 .recommendation-banner {

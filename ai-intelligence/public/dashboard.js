@@ -190,6 +190,11 @@ function getDemoData() {
   };
 }
 
+function convertUsdToBrl(usd) {
+  const rate = 5.00; // Câmbio atual: 1 USD = 5.00 BRL
+  return usd * rate;
+}
+
 function renderVisualDashboard(data) {
   destroyCharts();
 
@@ -205,50 +210,66 @@ function renderVisualDashboard(data) {
     <div class="insights-dashboard">
       <!-- Executive Summary -->
       <div class="dashboard-section">
-        <h2>📊 Resumo Executivo</h2>
+        <h2>📊 Resumo Executivo — Últimos 30 Dias</h2>
         <div class="kpi-grid">
           <div class="kpi-card">
             <div class="kpi-number">${(metrics.tokensSaved || 0).toLocaleString('pt-BR')}</div>
             <div class="kpi-label">Tokens Economizados</div>
-            <div class="kpi-subtext">Com RTK ativado</div>
+            <div class="kpi-tooltip">Diferença entre tokens usados sem otimização e com RTK ativado. Maior número = maior economia.</div>
           </div>
           <div class="kpi-card highlight">
-            <div class="kpi-number">$${(metrics.usdSaved || 0).toFixed(2)}</div>
-            <div class="kpi-label">USD Economizados</div>
-            <div class="kpi-subtext">Economia em custos</div>
+            <div class="kpi-number">R$ ${(convertUsdToBrl(metrics.usdSaved) || 0).toFixed(2)}</div>
+            <div class="kpi-label">Economizados em Reais</div>
+            <div class="kpi-tooltip">Valor em reais da economia. Cálculo: Tokens economizados × R$ 0,0025 (taxa de token).</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-number">${(metrics.savingsPercentage || 0).toFixed(1)}%</div>
             <div class="kpi-label">Redução de Tokens</div>
-            <div class="kpi-subtext">Eficiência RTK</div>
+            <div class="kpi-tooltip">Percentual de redução obtido com RTK. 62% significa que RTK reduziu os tokens a 38% do original.</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-number">${(metrics.qualityScore || 0).toFixed(1)}%</div>
             <div class="kpi-label">Qualidade Mantida</div>
-            <div class="kpi-subtext">Acurácia do contexto</div>
+            <div class="kpi-tooltip">Acurácia do contexto após otimização. 94.5% = RTK mantém qualidade excelente mesmo reduzindo tokens.</div>
           </div>
           <div class="kpi-card">
             <div class="kpi-number">${(summary.totalAnalysesExecuted || 0).toLocaleString('pt-BR')}</div>
             <div class="kpi-label">Análises Executadas</div>
-            <div class="kpi-subtext">Últimos 30 dias</div>
+            <div class="kpi-tooltip">Quantidade total de análises processadas neste período. Cada análise economiza tokens com RTK.</div>
           </div>
         </div>
         <div class="recommendation-banner ${summary.recommendation.includes('✅') ? 'success' : 'warning'}">
           <p>${summary.recommendation}</p>
+          <small>RTK reduz custos mantendo qualidade da análise</small>
         </div>
       </div>
 
       <!-- Token Economy -->
       <div class="dashboard-section">
-        <h2>💰 Economia de Tokens</h2>
-        <div class="charts-duo">
-          <div class="chart-wrapper">
-            <h3>Comparação de Tokens</h3>
-            <canvas id="tokenChart"></canvas>
+        <h2>💰 Economia de Tokens Detalhada</h2>
+        <div class="info-box">
+          <p><strong>Como funciona:</strong> Quando você executa uma análise, o sistema usa tokens. RTK reduz a quantidade de tokens necessários sem perder qualidade. Este gráfico mostra a diferença.</p>
+        </div>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-value">${(tokenMetrics.tokensWithoutRTK || 0).toLocaleString('pt-BR')}</div>
+            <div class="metric-label">Tokens Sem Otimização</div>
+            <div class="metric-help">Quanto seria gasto sem RTK</div>
           </div>
-          <div class="chart-wrapper">
-            <h3>Comparação de Custos</h3>
-            <canvas id="costChart"></canvas>
+          <div class="metric-card highlight">
+            <div class="metric-value">${(tokenMetrics.tokensWithRTK || 0).toLocaleString('pt-BR')}</div>
+            <div class="metric-label">Tokens Com RTK</div>
+            <div class="metric-help">Quanto realmente foi gasto</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value">R$ ${(convertUsdToBrl(financialImpact.costWithoutOptimization) || 0).toFixed(2)}</div>
+            <div class="metric-label">Custo Sem RTK</div>
+            <div class="metric-help">Se não tivéssemos otimizado</div>
+          </div>
+          <div class="metric-card highlight">
+            <div class="metric-value">R$ ${(convertUsdToBrl(financialImpact.costWithOptimization) || 0).toFixed(2)}</div>
+            <div class="metric-label">Custo Com RTK</div>
+            <div class="metric-help">Custo real depois da otimização</div>
           </div>
         </div>
       </div>
@@ -256,7 +277,18 @@ function renderVisualDashboard(data) {
       <!-- Model Efficiency -->
       ${models.length > 0 ? `
       <div class="dashboard-section">
-        <h2>🤖 Eficiência dos Modelos</h2>
+        <h2>🤖 Eficiência dos Modelos de IA</h2>
+        <div class="info-box">
+          <p><strong>O que significa cada coluna:</strong></p>
+          <ul>
+            <li><strong>Execuções:</strong> Quantas vezes cada modelo foi usado</li>
+            <li><strong>Tokens Final:</strong> Média de tokens após otimização</li>
+            <li><strong>Redução %:</strong> Quanto RTK conseguiu economizar com este modelo</li>
+            <li><strong>Acurácia:</strong> Qualidade mantida (mais alto = melhor)</li>
+            <li><strong>Custo/Análise:</strong> Preço em reais por análise</li>
+            <li><strong>Status:</strong> Recomendado se oferece bom custo-benefício</li>
+          </ul>
+        </div>
         <div class="table-wrapper">
           <table>
             <thead>
@@ -266,6 +298,7 @@ function renderVisualDashboard(data) {
                 <th>Tokens Final</th>
                 <th>Redução %</th>
                 <th>Acurácia</th>
+                <th>Custo/Análise</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -277,6 +310,7 @@ function renderVisualDashboard(data) {
                   <td>${(m.avgFinalTokens || 0).toLocaleString('pt-BR')}</td>
                   <td>${(m.avgReductionPercentage || 0).toFixed(1)}%</td>
                   <td>${(m.avgAccuracy || 0).toFixed(1)}%</td>
+                  <td>R$ ${(convertUsdToBrl(m.costPerAnalysis) || 0).toFixed(4)}</td>
                   <td><span class="badge ${m.recommendation === 'RECOMENDADO' ? 'success' : 'warning'}">${m.recommendation}</span></td>
                 </tr>
               `).join('')}
@@ -290,25 +324,20 @@ function renderVisualDashboard(data) {
       ${analyses.length > 0 ? `
       <div class="dashboard-section">
         <h2>📈 ROI Por Tipo de Análise</h2>
-        <div class="charts-duo">
-          <div class="chart-wrapper">
-            <h3>ROI por Análise</h3>
-            <canvas id="roiChart"></canvas>
-          </div>
-          <div class="chart-wrapper">
-            <h3>USD Economizado</h3>
-            <canvas id="savingsChart"></canvas>
-          </div>
+        <div class="info-box">
+          <p><strong>O que significa:</strong> Diferentes tipos de análises economizam diferentes quantidades com RTK. Use esta tabela para priorizar quais análises executar mais frequentemente (as que economizam mais).</p>
         </div>
         <div class="table-wrapper">
           <table>
             <thead>
               <tr>
-                <th>Análise</th>
+                <th>Tipo de Análise</th>
                 <th>Execuções</th>
                 <th>Eficiência</th>
-                <th>USD Economizado</th>
+                <th>Acurácia</th>
+                <th>Economizado (R$)</th>
                 <th>ROI %</th>
+                <th>Prioridade</th>
               </tr>
             </thead>
             <tbody>
@@ -317,12 +346,20 @@ function renderVisualDashboard(data) {
                   <td><strong>${a.type}</strong></td>
                   <td>${a.executions}</td>
                   <td>${(a.avgEfficiency || 0).toFixed(1)}%</td>
-                  <td>$${(a.totalUsdSaved || 0).toFixed(2)}</td>
-                  <td>${(a.roiPercentage || 0).toFixed(1)}%</td>
+                  <td>${(a.avgAccuracy || 0).toFixed(1)}%</td>
+                  <td>R$ ${(convertUsdToBrl(a.totalUsdSaved) || 0).toFixed(2)}</td>
+                  <td><strong>${(a.roiPercentage || 0).toFixed(1)}%</strong></td>
+                  <td><span class="badge ${a.recommendation === 'ALTA PRIORIDADE' ? 'success' : 'warning'}">${a.recommendation === 'ALTA PRIORIDADE' ? '🔴 ALTA' : '🟡 REVISAR'}</span></td>
                 </tr>
               `).join('')}
             </tbody>
           </table>
+        </div>
+        <div class="roi-summary">
+          <div class="roi-card">
+            <h5>Total Economizado em 30 dias</h5>
+            <p class="total-saved">R$ ${(convertUsdToBrl(totalUsdSaved) || 0).toFixed(2)}</p>
+          </div>
         </div>
       </div>
       ` : ''}

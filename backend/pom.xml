@@ -337,11 +337,14 @@
                         <configuration>
                             <!-- Classes excluídas da contagem (geradas / sem lógica) -->
                             <includes>
-                                <include>**/application/asset/service/**</include>
-                                <include>**/application/transfer/service/**</include>
-                                <include>**/application/maintenance/service/**</include>
-                                <include>**/security/service/**</include>
-                                <include>**/config/ratelimit/**</include>
+                                <include>**/config/ratelimit/RateLimitFilter*.class</include>
+                                <include>**/application/asset/service/AssetService.class</include>
+                                <include>**/security/service/AuthService.class</include>
+                                <include>**/security/service/RefreshTokenService.class</include>
+                                <include>**/security/service/UserDetailsServiceImpl.class</include>
+                                <include>**/application/transfer/service/TransferService.class</include>
+                                <include>**/application/transfer/service/TransferQueryService.class</include>
+                                <include>**/application/transfer/service/TransferConcurrencyService.class</include>
                             </includes>
                             <excludes>
                                 <exclude>**/dto/**</exclude>

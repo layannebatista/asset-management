@@ -33,12 +33,11 @@ Este indice centraliza a navegacao dos documentos tecnicos.
 - `testing/mapeamentos/backend/`
 - `testing/mapeamentos/frontend/`
 
-## IA Intelligence
-- `ia-intelligence/ia-intelligence-overview-pt-br.md` — Guia principal (foco RTK)
-- **`ia-intelligence/rtk-dashboard-pt-br.md`** — 🆕 Dashboard de economia de tokens (SEM IA paga)
-- `ia-intelligence/ia-operacao-e-dashboard-pt-br.md` — Operação avançada
-- `ia-intelligence/rule-engine-pt-br.md` — Motor de regras
-- `ia-intelligence/resumo-visual-pt-br.md` — Resumo visual
+## RTK — Dashboard de Economia de Tokens
+- **`RTK-EXPLICACAO-PT-BR.md`** — 🆕 O que é RTK, como funciona, casos de uso
+- `ia-intelligence/ia-intelligence-overview-pt-br.md` — Visão geral técnica
+- `ia-intelligence/rtk-dashboard-pt-br.md` — Guia completo do dashboard
+- `ia-intelligence/MIGRACAO-RTK-PT-BR.md` — O que mudou na simplificação
 
 ## Projetos
 - `projects/frontend-setup-pt-br.md`
