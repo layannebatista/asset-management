@@ -65,7 +65,7 @@ backend/target/site/
 
 ### Node/TypeScript build artifacts ###
 **/node_modules/
-ai-intelligence/dist/
+rtk-dashboard/dist/
 sprint-reporter/dist/
 frontend/dist/
 **/*.tsbuildinfo

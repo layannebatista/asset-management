@@ -109,21 +109,23 @@ docker compose down -v     # reset completo — apaga banco e volumes
 | **API REST** | [http://localhost:8080](http://localhost:8080) | Backend Spring Boot |
 | **Swagger/OpenAPI** | [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html) | Documentação interativa da API |
 
-### Inteligência Artificial com RTK
+### RTK Dashboard — Otimização de Tokens
 
 Disponível em todas as instâncias (local ou Docker).
 
 | Serviço | URL | Função |
 |---|---|---|
-| **🎯 RTK Dashboard** | [http://localhost:3100](http://localhost:3100) | **Dashboard de economia de tokens (SEM dependência de IA paga)** |
-| **RTK Insights API** | [http://localhost:3100/api/v1/insights/*](http://localhost:3100/api/v1/insights/) | Endpoints de análise RTK (token-economy, model-efficiency, analysis-roi, executive-summary) |
+| **🎯 RTK Dashboard** | [http://localhost:3100](http://localhost:3100) | **Dashboard de economia de tokens (100% local, sem APIs pagas)** |
+| **RTK Insights API** | [http://localhost:3100/api/v1/insights/*](http://localhost:3100/api/v1/insights/) | 5 endpoints: token-economy, model-efficiency, analysis-roi, executive-summary, history |
 | **Health Check** | [http://localhost:3100/health](http://localhost:3100/health) | Status do serviço |
 
-**📊 O que é RTK Dashboard?**
-- Mostra economia real de tokens com RTK
-- Eficiência de modelos LLM
-- ROI por tipo de análise
-- 100% local (PostgreSQL) - sem APIs externas pagas
+**📊 Recursos do RTK Dashboard:**
+- 📈 Economia real de tokens com visualizações
+- 🤖 Eficiência de modelos LLM (Claude, GPT, etc)
+- 💰 ROI por tipo de análise em Reais
+- 📊 Histórico de últimos 3 meses
+- 🚨 Alertas automáticos quando ROI cai
+- 📄 Export em PDF
 - [Documentação Completa](./docs/ia-intelligence/rtk-dashboard-pt-br.md)
 
 ### Relatórios e Métricas

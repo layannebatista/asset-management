@@ -12,7 +12,7 @@ services:
   cadvisor:
     profiles: !reset []
 
-  ai-intelligence:
+  rtk-dashboard:
     profiles: !reset []
 
   allure:
