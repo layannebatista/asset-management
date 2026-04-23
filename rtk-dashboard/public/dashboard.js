@@ -248,39 +248,29 @@ function renderVisualDashboard(data) {
         <h2>📊 RTK Dashboard</h2>
         <div class="kpi-grid">
           <div class="kpi-card">
+            <span class="tooltip-icon" title="Diferença entre tokens sem otimização e com RTK ativado">?</span>
             <div class="kpi-number">${(metrics.tokensSaved || 0).toLocaleString('pt-BR')}</div>
-            <div class="kpi-label">
-              Tokens Economizados
-              <span class="tooltip-icon" title="Diferença entre tokens sem otimização e com RTK ativado">?</span>
-            </div>
+            <div class="kpi-label">Tokens Economizados</div>
           </div>
           <div class="kpi-card highlight">
+            <span class="tooltip-icon" title="Valor em reais da economia (Tokens × R$ 0,0025)">?</span>
             <div class="kpi-number">R$ ${(convertUsdToBrl(metrics.usdSaved) || 0).toFixed(2)}</div>
-            <div class="kpi-label">
-              Economizados
-              <span class="tooltip-icon" title="Valor em reais da economia (Tokens × R$ 0,0025)">?</span>
-            </div>
+            <div class="kpi-label">Economizados</div>
           </div>
           <div class="kpi-card">
+            <span class="tooltip-icon" title="% de redução obtido com RTK">?</span>
             <div class="kpi-number">${(metrics.savingsPercentage || 0).toFixed(1)}%</div>
-            <div class="kpi-label">
-              Redução
-              <span class="tooltip-icon" title="% de redução obtido com RTK">?</span>
-            </div>
+            <div class="kpi-label">Redução</div>
           </div>
           <div class="kpi-card">
+            <span class="tooltip-icon" title="Acurácia mantida após otimização">?</span>
             <div class="kpi-number">${(metrics.qualityScore || 0).toFixed(1)}%</div>
-            <div class="kpi-label">
-              Qualidade
-              <span class="tooltip-icon" title="Acurácia mantida após otimização">?</span>
-            </div>
+            <div class="kpi-label">Qualidade</div>
           </div>
           <div class="kpi-card">
+            <span class="tooltip-icon" title="Análises executadas neste período">?</span>
             <div class="kpi-number">${(summary.totalAnalysesExecuted || 0).toLocaleString('pt-BR')}</div>
-            <div class="kpi-label">
-              Análises
-              <span class="tooltip-icon" title="Análises executadas neste período">?</span>
-            </div>
+            <div class="kpi-label">Análises</div>
           </div>
         </div>
         <div class="recommendation-banner ${summary.recommendation.includes('✅') ? 'success' : 'warning'}">

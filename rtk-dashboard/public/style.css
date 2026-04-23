@@ -312,11 +312,19 @@ body {
   padding: 1.2rem;
   text-align: center;
   transition: all 0.3s;
+  position: relative;
 }
 
 .kpi-card:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 20px rgba(10, 92, 255, 0.15);
+}
+
+.kpi-card .tooltip-icon {
+  position: absolute;
+  top: 0.8rem;
+  right: 0.8rem;
+  margin: 0;
 }
 
 .kpi-card.highlight {
