@@ -122,14 +122,15 @@
 
 ---
 
-## 📚 Documentação Atualizada
+## 📚 Documentação
 
-| Documento | Status | Descrição |
-|-----------|--------|-----------|
-| `ia-intelligence-overview-pt-br.md` | ✏️ Atualizado | Foco em RTK, opcional menciona analisadores |
-| `rtk-dashboard-pt-br.md` | 🆕 Novo | Guia completo do dashboard |
-| README.md | ✏️ Atualizado | Destaca RTK Dashboard |
-| índice-pt-br.md | ✏️ Atualizado | Hierarquia de docs |
+| Documento | Descrição |
+|-----------|-----------|
+| `README.md` | Índice e visão geral da documentação RTK Dashboard |
+| `guia-completo-pt-br.md` | Guia técnico completo (endpoints, API, dados) |
+| `MIGRACAO-RTK-PT-BR.md` | Este arquivo - mudanças estruturais |
+| `../RTK-EXPLICACAO-PT-BR.md` | Conceitos: o que é RTK, casos de uso, exemplos |
+| `../indice-pt-br.md` | Índice geral de toda a documentação |
 
 ---
 
@@ -277,8 +278,8 @@ Com RTK + Dashboard = **você vê o valor em tempo real**
 
 ## 📝 Referências
 
-- [RTK Dashboard Completo](./rtk-dashboard-pt-br.md)
-- [IA Intelligence Overview](./ia-intelligence-overview-pt-br.md)
+- [Guia Completo do RTK Dashboard](./guia-completo-pt-br.md)
+- [Explicação sobre RTK](../RTK-EXPLICACAO-PT-BR.md)
 - [RTK Guia Unificado](../rtk/rtk-guia-unificado-pt-br.md)
 
 ---

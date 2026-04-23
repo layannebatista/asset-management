@@ -142,7 +142,7 @@ cd ai-intelligence && npm run build
 ```
 
 **Documentação:**
-- [`Rule Engine consolidado`](../ia-intelligence/rule-engine-pt-br.md)
+- Veja seção RTK Dashboard para documentação completa
 
 ---
 
@@ -285,13 +285,6 @@ GITHUB_REPO=...
 ```
 
 ---
-
-## 📚 Arquivos de Documentação
-
-| Arquivo | Propósito |
-|---------|-----------|
-| [`rule-engine-pt-br.md`](../ia-intelligence/rule-engine-pt-br.md) | Rule engine consolidado |
-| [`ia-operacao-e-dashboard-pt-br.md`](../ia-intelligence/ia-operacao-e-dashboard-pt-br.md) | Operação e dashboard IA |
 
 ---
 

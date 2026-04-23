@@ -33,11 +33,11 @@ Este indice centraliza a navegacao dos documentos tecnicos.
 - `testing/mapeamentos/backend/`
 - `testing/mapeamentos/frontend/`
 
-## RTK — Dashboard de Economia de Tokens
-- **`RTK-EXPLICACAO-PT-BR.md`** — 🆕 O que é RTK, como funciona, casos de uso
-- `ia-intelligence/ia-intelligence-overview-pt-br.md` — Visão geral técnica
-- `ia-intelligence/rtk-dashboard-pt-br.md` — Guia completo do dashboard
-- `ia-intelligence/MIGRACAO-RTK-PT-BR.md` — O que mudou na simplificação
+## RTK Dashboard — Otimização de Tokens
+- **`rtk-dashboard/README.md`** — 📍 Índice da documentação do RTK Dashboard
+- `RTK-EXPLICACAO-PT-BR.md` — O que é RTK, como funciona, exemplos práticos
+- `rtk-dashboard/guia-completo-pt-br.md` — Guia técnico completo (endpoints, API, dados)
+- `rtk-dashboard/MIGRACAO-RTK-PT-BR.md` — O que mudou (arquitetura, remoções, simplificação)
 
 ## Projetos
 - `projects/frontend-setup-pt-br.md`
