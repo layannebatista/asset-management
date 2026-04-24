@@ -29,9 +29,10 @@ Este indice centraliza a navegacao dos documentos tecnicos.
 - `security/data-classification-pt-br.md`
 
 ## Testes
-- `testing/testing-pt-br.md`
-- `testing/mapeamentos/backend/`
-- `testing/mapeamentos/frontend/`
+- `testing/testing-pt-br.md` — Visão geral, configuração e orquestração de testes
+- `testing/allure-categorias-pt-br.md` — Categorização simplificada de testes no Allure (E2E, Unit, Integration)
+- `testing/mapeamentos/backend/` — Mapeamentos de cenários de teste backend
+- `testing/mapeamentos/frontend/` — Mapeamentos de cenários de teste frontend
 
 ## RTK Dashboard — Otimização de Tokens
 - **`rtk-dashboard/README.md`** — 📍 Índice da documentação do RTK Dashboard
