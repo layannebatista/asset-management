@@ -19,4 +19,24 @@ RUN mvn -B --no-transfer-progress dependency:resolve dependency:resolve-plugins
 # Código fonte completo (src/main + src/test)
 COPY src ./src
 
-CMD ["mvn", "test", "-B", "--no-transfer-progress", "-Dallure.results.directory=/allure-results"]
+# Script para rodar testes Java + BDD
+RUN echo '#!/bin/bash' > /app/run-all-tests.sh && \
+    echo 'set -e' >> /app/run-all-tests.sh && \
+    echo 'echo "=========================================="' >> /app/run-all-tests.sh && \
+    echo 'echo "Rodando Testes Java (Unit + Integration)..."' >> /app/run-all-tests.sh && \
+    echo 'echo "=========================================="' >> /app/run-all-tests.sh && \
+    echo 'mvn test -B --no-transfer-progress -Dallure.results.directory=/allure-results' >> /app/run-all-tests.sh && \
+    echo '' >> /app/run-all-tests.sh && \
+    echo 'echo ""' >> /app/run-all-tests.sh && \
+    echo 'echo "=========================================="' >> /app/run-all-tests.sh && \
+    echo 'echo "Rodando Testes BDD/Cucumber (E2E)..."' >> /app/run-all-tests.sh && \
+    echo 'echo "=========================================="' >> /app/run-all-tests.sh && \
+    echo 'mvn test -Dtest=CucumberRunnerTest -B --no-transfer-progress -Dallure.results.directory=/allure-results' >> /app/run-all-tests.sh && \
+    echo '' >> /app/run-all-tests.sh && \
+    echo 'echo ""' >> /app/run-all-tests.sh && \
+    echo 'echo "=========================================="' >> /app/run-all-tests.sh && \
+    echo 'echo "✅ Todos os testes concluídos!"' >> /app/run-all-tests.sh && \
+    echo 'echo "=========================================="' >> /app/run-all-tests.sh && \
+    chmod +x /app/run-all-tests.sh
+
+CMD ["/app/run-all-tests.sh"]
