@@ -133,6 +133,10 @@ export async function createServer(): Promise<Express> {
   // ─── Generate Report Endpoint ──────────────────────────────────────────────
   app.post('/api/reports/sprint', async (req: Request<{}, ReportResponse, ReportRequest>, res: Response<ReportResponse>) => {
     try {
+      const fs = require('fs');
+      fs.writeFileSync('/tmp/endpoint-call.log', `[${new Date().toISOString()}] Endpoint called\n`, { flag: 'a' });
+      process.stderr.write('[ENDPOINT] POST /api/reports/sprint called\n');
+      logger.info('📍 POST /api/reports/sprint endpoint called');
       const { startDate, endDate, projectName, format = 'json' } = req.body;
 
       // Validações
@@ -224,22 +228,81 @@ export async function createServer(): Promise<Express> {
       if (!sourceStatus.allure) {
         sourceWarnings.push('Fonte Allure indisponível: métricas de testes podem estar vazias.');
       }
-      if (!sourceStatus.github) {
+      // RTK: só mostrar aviso se validação falhou E não há dados
+      if (!sourceStatus.github && report.ai.analysesExecuted === 0) {
         sourceWarnings.push('RTK Dashboard indisponível: métricas de economia de tokens podem estar vazias.');
       }
       if (!sourceStatus.postgres) {
         sourceWarnings.push('Fonte PostgreSQL indisponível: dados históricos podem ficar incompletos.');
       }
 
-      if (sourceStatus.aiapi && report.ai.analysesExecuted === 0) {
-        sourceWarnings.push('Sem dados de RTK no período selecionado: execute análises para preencher as métricas de economia de tokens.');
-      }
       if (!sourceStatus.k6) {
         sourceWarnings.push('Métricas de performance K6 indisponíveis: execute k6 run --summary-export=./k6/k6-summary.json k6/test.js para preencher.');
       }
 
       (report as any).sourceStatus = sourceStatus;
       (report as any).sourceWarnings = sourceWarnings;
+      (report as any).testField_123456 = 'THIS_IS_A_TEST_FIELD';
+      logger.info('✅ sourceStatus and sourceWarnings assigned', { sourceStatus, sourceWarnings: sourceWarnings.length });
+
+      // ─── Load RTK Data ───────────────────────────────────────────────────
+      try {
+        const fs = require('fs');
+        fs.writeFileSync('/tmp/rtk-debug.log', '[RTK] Starting RTK data loading\n', { flag: 'a' });
+        console.log('🔄 Iniciando carregamento de dados do RTK...');
+        const rtkServiceUrl = process.env.RTK_SERVICE_URL || 'http://localhost:3100';
+        const rtkApiKey = process.env.AI_SERVICE_API_KEY || 'test_key_123456';
+        const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+
+        console.log(`📡 RTK URL: ${rtkServiceUrl}, Chave: ${rtkApiKey}, Dias: ${days}`);
+
+        const rtkRequests = [
+          `${rtkServiceUrl}/api/v1/insights/token-economy?days=${days}`,
+          `${rtkServiceUrl}/api/v1/insights/model-efficiency?days=${days}`,
+          `${rtkServiceUrl}/api/v1/insights/analysis-roi?days=${days}`,
+          `${rtkServiceUrl}/api/v1/insights/executive-summary?days=${days}`,
+          `${rtkServiceUrl}/api/v1/insights/recent-commands?days=${days}&limit=12`,
+          `${rtkServiceUrl}/api/v1/insights/failures?days=${days}`,
+          `${rtkServiceUrl}/api/v1/insights/source-status`,
+        ];
+
+        const rtkResponses = await Promise.allSettled(
+          rtkRequests.map(url =>
+            fetch(url, {
+              headers: { 'X-AI-Service-Key': rtkApiKey },
+            })
+              .then(res => {
+                console.log(`  📡 ${url} -> ${res.status}`);
+                return res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`));
+              })
+          )
+        );
+
+        const rtkData: any = {};
+        const keys = ['tokenEconomy', 'modelEfficiency', 'analysisRoi', 'execSummary', 'recentCommands', 'failures', 'sourceStatus'];
+
+        for (let i = 0; i < rtkResponses.length; i++) {
+          if (rtkResponses[i].status === 'fulfilled') {
+            rtkData[keys[i]] = (rtkResponses[i] as any).value;
+            console.log(`  ✅ ${keys[i]} carregado`);
+          } else {
+            console.log(`  ❌ ${keys[i]} falhou`);
+          }
+        }
+
+        console.log(`✅ Total de chaves RTK carregadas: ${Object.keys(rtkData).length}`);
+
+        if (Object.keys(rtkData).length > 0) {
+          (report as any).rtk = rtkData;
+          logger.info('RTK data loaded successfully', { keysLoaded: Object.keys(rtkData).length });
+          console.log('✅ RTK data adicionado ao report');
+        } else {
+          console.log('⚠️ Nenhum dado RTK foi carregado');
+        }
+      } catch (rtkError) {
+        console.error('❌ Erro ao carregar RTK:', rtkError);
+        logger.warn('Falha ao carregar dados do RTK', { error: rtkError instanceof Error ? rtkError.message : 'unknown' });
+      }
 
       // ─── Format Output ───────────────────────────────────────────────────
       let output: string;

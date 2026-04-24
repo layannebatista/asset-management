@@ -5,17 +5,19 @@ import { ContextFilter } from '../../context/ContextFilter';
 import { ContextPipeline } from '../../context/ContextPipeline';
 import { AllureCollector } from '../../collectors/AllureCollector';
 import { AnalysisRepository } from '../../storage/AnalysisRepository';
+import { TokenSavingsRecorder } from '../../observability/TokenSavingsRecorder';
 import { TestIntelligenceAnalysis, TestIntelligenceRequest } from '../../types/analysis.types';
 import { AllureTestResult } from '../../types/metrics.types';
 import { logger } from '../../api/logger';
 
 export class TestIntelligenceAnalyzer {
-  private readonly pipeline = new ContextPipeline(2000);
+  private readonly pipeline = new ContextPipeline(1200, 0.75);
 
   constructor(
     private readonly llm: LLMClient,
     private readonly collector: AllureCollector,
     private readonly repository: AnalysisRepository,
+    private readonly savingsRecorder: TokenSavingsRecorder,
   ) {}
 
   async analyze(request: TestIntelligenceRequest = {}): Promise<TestIntelligenceAnalysis> {
@@ -76,6 +78,16 @@ export class TestIntelligenceAnalyzer {
     };
 
     await this.repository.save(result);
+
+    // Record token savings metrics
+    await this.savingsRecorder.recordAnalysis({
+      analysisId,
+      analysisType: 'test-intelligence',
+      rawChunks: chunks,
+      budgetResult,
+      llmResponse,
+    });
+
     logger.info('Test intelligence analysis completed', {
       analysisId,
       totalTests: result.totalTests,

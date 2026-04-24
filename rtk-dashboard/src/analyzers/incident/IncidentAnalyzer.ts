@@ -3,6 +3,7 @@ import { LLMClient } from '../../llm/LLMClient';
 import { PromptOptimizer } from '../../llm/PromptOptimizer';
 import { SensitiveDataMasker } from '../../context/SensitiveDataMasker';
 import { AnalysisRepository } from '../../storage/AnalysisRepository';
+import { TokenSavingsRecorder } from '../../observability/TokenSavingsRecorder';
 import { IncidentAnalysis, IncidentRequest } from '../../types/analysis.types';
 import { logger } from '../../api/logger';
 
@@ -10,6 +11,7 @@ export class IncidentAnalyzer {
   constructor(
     private readonly llm: LLMClient,
     private readonly repository: AnalysisRepository,
+    private readonly savingsRecorder: TokenSavingsRecorder,
   ) {}
 
   async analyze(request: IncidentRequest): Promise<IncidentAnalysis> {
@@ -59,6 +61,28 @@ export class IncidentAnalyzer {
     };
 
     await this.repository.save(result);
+
+    // Record token savings metrics (simplified for logs context)
+    const logChunks = [
+      { key: 'logSample', data: maskedLogs, baseRelevance: 0.9 },
+      { key: 'errorMessages', data: maskedErrors, baseRelevance: 0.95 },
+      { key: 'systemContext', data: context.systemContext, baseRelevance: 0.7 },
+    ];
+    const budgetResult = {
+      contextJson: JSON.stringify(context),
+      estimatedTokens: Math.ceil(JSON.stringify(context).length / 4),
+      droppedChunks: [],
+      includedChunks: ['logSample', 'errorMessages', 'systemContext'],
+    };
+
+    await this.savingsRecorder.recordAnalysis({
+      analysisId,
+      analysisType: 'incident',
+      rawChunks: logChunks,
+      budgetResult,
+      llmResponse,
+    });
+
     logger.info('Incident analysis completed', { analysisId, severity: result.severity });
 
     return result;

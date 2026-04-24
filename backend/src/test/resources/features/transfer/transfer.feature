@@ -4,6 +4,8 @@
 # Executar com: mvn test -Dtest=CucumberRunnerTest
 
 @transfer
+@allure.label.testType:E2E
+@allure.label.module:Transfer
 @allure.label.parentSuite:Backend
 @allure.label.epic:Gestao_de_Transferencias
 Funcionalidade: Ciclo de Vida de Transferência de Ativos

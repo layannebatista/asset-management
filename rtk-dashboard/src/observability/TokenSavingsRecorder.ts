@@ -24,13 +24,15 @@ export class TokenSavingsRecorder {
   async recordAnalysis(context: TokenSavingsContext): Promise<void> {
     try {
       // Estimate raw tokens if not already calculated
-      const rawTokens = context.rawChunks.reduce(
+      const rawTokensCalc = context.rawChunks.reduce(
         (sum: number, chunk: unknown) => sum + ContextBudgetManager.estimateTokens(JSON.stringify(chunk)),
         0,
       );
+      const rawTokens = rawTokensCalc as number;
 
       // After SDD tokens - we can estimate from included chunks
-      const afterSddTokens = context.budgetResult.includedChunks.reduce((sum: number) => sum + 1, 0) * 10; // rough estimate
+      const afterSddTokensCalc = context.budgetResult.includedChunks.reduce((sum: number) => sum + 1, 0) * 10; // rough estimate
+      const afterSddTokens = afterSddTokensCalc as number;
 
       const finalTokens = context.budgetResult.estimatedTokens as number;
       const totalTokens = context.llmResponse.tokensUsed as number;
@@ -45,11 +47,11 @@ export class TokenSavingsRecorder {
         analysisId: context.analysisId,
         analysisType: context.analysisType,
         model: context.llmResponse.model,
-        rawTokens,
-        afterSddTokens,
-        finalTokens,
-        promptTokens,
-        totalTokens,
+        rawTokens: rawTokens as number,
+        afterSddTokens: afterSddTokens as number,
+        finalTokens: finalTokens as number,
+        promptTokens: promptTokens as number,
+        totalTokens: totalTokens as number,
         sddReductionPct,
         totalReductionPct,
         contextAccuracyPct: Math.min(100, contextAccuracyPct), // Cap at 100%

@@ -27,13 +27,8 @@ public class AssetSetupSteps {
     Long orgId = context.getId("organizacaoId");
     Long unitId = context.getId("unidadeId");
     Asset saved =
-        testDataHelper.criarAtivoComStatus(
-            assetTag,
-            AssetType.NOTEBOOK,
-            "Modelo Atribuído",
-            orgId,
-            unitId,
-            AssetStatus.ASSIGNED);
+        testDataHelper.criarAtivoComQualquerUsuarioDaOrganizacao(
+            assetTag, AssetType.NOTEBOOK, "Modelo Atribuído", orgId, unitId);
     context.setId("ativoId_" + assetTag, saved.getId());
     context.setValue("ativoTagAtual", assetTag);
   }

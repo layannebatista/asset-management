@@ -3,6 +3,8 @@
 # Dominio: Depreciation
 
 @depreciation
+@allure.label.testType:E2E
+@allure.label.module:Depreciation
 @allure.label.parentSuite:Backend
 @allure.label.epic:Gestao_de_Depreciation
 Funcionalidade: Seguranca e Acesso do Modulo Depreciation

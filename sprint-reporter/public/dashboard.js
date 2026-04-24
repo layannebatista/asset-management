@@ -1,5 +1,7 @@
+const DEFAULT_AI_SERVICE_KEY = 'test_key_123456';
+
 let currentReport = null;
-let charts = [];
+let rtkData = null;
 
 const startDateInput = document.getElementById('startDate');
 const endDateInput = document.getElementById('endDate');
@@ -8,6 +10,11 @@ const downloadPptBtn = document.getElementById('downloadPptBtn');
 const loadingIndicator = document.getElementById('loadingIndicator');
 const errorAlert = document.getElementById('errorAlert');
 const reportContainer = document.getElementById('reportContainer');
+
+function getAiServiceKey() {
+  const saved = localStorage.getItem('aiServiceKey');
+  return saved && saved.trim().length > 0 ? saved : DEFAULT_AI_SERVICE_KEY;
+}
 
 function setDefaultDates() {
   const endDate = new Date();
@@ -40,7 +47,8 @@ async function generateReport() {
   hideError();
 
   try {
-    const response = await fetch('/api/reports/sprint', {
+    // Carregar relatório de sprint
+    const sprintResponse = await fetch('/api/reports/sprint', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -51,11 +59,19 @@ async function generateReport() {
       }),
     });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    if (!sprintResponse.ok) {
+      throw new Error(`HTTP ${sprintResponse.status}: ${sprintResponse.statusText}`);
     }
 
-    currentReport = await response.json();
+    currentReport = await sprintResponse.json();
+
+    // RTK data vem junto com o relatório (carregado no servidor)
+    rtkData = currentReport.rtk || null;
+    console.log('📊 Relatório carregado completo:', currentReport);
+    console.log('🔍 RTK data encontrado?:', !!rtkData);
+    console.log('📦 RTK data:', rtkData);
+    console.log('🔑 Chaves do relatório:', Object.keys(currentReport));
+
     displayReport(currentReport);
     downloadPptBtn.disabled = false;
   } catch (error) {
@@ -66,13 +82,289 @@ async function generateReport() {
   }
 }
 
+
+async function safeApiFetch(url, options = {}) {
+  const key = getAiServiceKey();
+  console.log(`📡 Fetching: ${url} com chave: ${key}`);
+
+  const headers = {
+    ...(options.headers || {}),
+    'X-AI-Service-Key': key,
+  };
+
+  let response = await fetch(url, { ...options, headers });
+  console.log(`📡 Response status: ${response.status} para ${url}`);
+
+  if (response.status === 401) {
+    console.log('⚠️ 401 recebido, tentando com X-API-Key');
+    response = await fetch(url, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        'X-API-Key': key,
+      },
+    });
+  }
+
+  if (response.status === 401) {
+    console.log('⚠️ Ainda 401, pedindo chave ao usuário');
+    const typedKey = prompt('Informe a chave da IA (X-AI-Service-Key):', key);
+    if (!typedKey || !typedKey.trim()) {
+      throw new Error('Chave de acesso não informada.');
+    }
+
+    localStorage.setItem('aiServiceKey', typedKey.trim());
+
+    response = await fetch(url, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        'X-AI-Service-Key': typedKey.trim(),
+      },
+    });
+  }
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`❌ Erro ${response.status}: ${errorText}`);
+    throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+  }
+
+  return response;
+}
+
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString('pt-BR');
+}
+
+function formatPct(value) {
+  return `${Number(value || 0).toFixed(1)}%`;
+}
+
+function formatMs(value) {
+  return `${Number(value || 0).toFixed(0)} ms`;
+}
+
+function formatUsd(value) {
+  return `$${Number(value || 0).toFixed(2)}`;
+}
+
+function formatDate(value) {
+  if (!value) return '-';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString('pt-BR');
+}
+
+function formatCommand(value) {
+  return value && value.trim().length > 0 ? value : '-';
+}
+
+function uniqueAgents(models) {
+  return new Set((models || []).map((item) => item.agent)).size;
+}
+
+function renderMetricCards(summary, metrics, models) {
+  return `
+    <section class="report-section">
+      <div class="section-heading">
+        <div>
+          <p class="section-eyebrow">RTK</p>
+          <h2>Panorama do workspace</h2>
+        </div>
+        <p class="section-note">${summary.recommendation || 'Resumo indisponível.'}</p>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-kicker">Comandos</div>
+          <div class="metric-value">${formatNumber(summary.totalCommandsTracked)}</div>
+          <p style="font-size: 0.9rem; color: var(--muted);">execuções registradas pelo RTK</p>
+        </div>
+        <div class="metric-card">
+          <div class="metric-kicker">Economia</div>
+          <div class="metric-value">${formatNumber(metrics.tokensSaved)}</div>
+          <p style="font-size: 0.9rem; color: var(--muted);">tokens economizados no período</p>
+        </div>
+        <div class="metric-card">
+          <div class="metric-kicker">Redução</div>
+          <div class="metric-value">${formatPct(metrics.savingsPercentage)}</div>
+          <p style="font-size: 0.9rem; color: var(--muted);">média de redução por comando</p>
+        </div>
+        <div class="metric-card">
+          <div class="metric-kicker">Tempo médio</div>
+          <div class="metric-value">${formatMs(metrics.avgExecTimeMs)}</div>
+          <p style="font-size: 0.9rem; color: var(--muted);">latência média observada</p>
+        </div>
+        <div class="metric-card">
+          <div class="metric-kicker">Agentes</div>
+          <div class="metric-value">${formatNumber(uniqueAgents(models))}</div>
+          <p style="font-size: 0.9rem; color: var(--muted);">agentes observados no ambiente</p>
+        </div>
+      </div>
+
+      ${summary.keyInsights && summary.keyInsights.length > 0 ? `
+      <div style="margin-top: 16px; display: flex; flex-wrap: wrap; gap: 10px;">
+        ${summary.keyInsights.map((item) => `<span style="display: inline-flex; align-items: center; border-radius: 999px; padding: 10px 14px; background: #f7fbff; border: 1px solid rgba(13, 99, 243, 0.12); color: var(--slate); font-weight: 700; font-size: 0.9rem;">${item}</span>`).join('')}
+      </div>
+      ` : ''}
+    </section>
+  `;
+}
+
+function renderCommandEfficiency(commandGroups) {
+  return `
+    <section class="report-section">
+      <h2>Eficiência por Comando</h2>
+      ${commandGroups.length > 0 ? `
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Comando</th>
+                <th>Execuções</th>
+                <th>Redução</th>
+                <th>Entrada média</th>
+                <th>Saída média</th>
+                <th>Latência</th>
+                <th>USD est.</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${commandGroups.map((item) => `
+                <tr>
+                  <td><strong>${item.type}</strong></td>
+                  <td>${formatNumber(item.executions)}</td>
+                  <td>${formatPct(item.avgEfficiency)}</td>
+                  <td>${formatNumber(item.avgInputTokens)}</td>
+                  <td>${formatNumber(item.avgOutputTokens)}</td>
+                  <td>${formatMs(item.avgLatencyMs)}</td>
+                  <td>${formatUsd(item.totalUsdSaved)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      ` : '<p class="empty-state">Nenhum comando do RTK foi encontrado para este projeto.</p>'}
+    </section>
+  `;
+}
+
+function renderModels(models) {
+  return `
+    <section class="report-section">
+      <h2>Agentes e Modelos Observados</h2>
+      ${models.length > 0 ? `
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Agente</th>
+                <th>Modelo</th>
+                <th>Provedor</th>
+                <th>Mensagens</th>
+                <th>Sessões</th>
+                <th>Origem</th>
+                <th>Entrypoints</th>
+                <th>Último uso</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${models.map((item) => `
+                <tr>
+                  <td><strong>${item.agent}</strong></td>
+                  <td>${item.model}</td>
+                  <td>${item.provider}</td>
+                  <td>${formatNumber(item.assistantMessages)}</td>
+                  <td>${formatNumber(item.sessions)}</td>
+                  <td>${item.source || '-'}</td>
+                  <td>${(item.entrypoints || []).join(', ') || '-'}</td>
+                  <td>${formatDate(item.lastSeen)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      ` : '<p class="empty-state">Nenhum agente foi observado nas fontes locais disponíveis.</p>'}
+    </section>
+  `;
+}
+
+function renderCommands(commands) {
+  return `
+    <section class="report-section">
+      <h2>Comandos Recentes</h2>
+      ${commands.length > 0 ? `
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Quando</th>
+                <th>Comando</th>
+                <th>Tokens entrada</th>
+                <th>Tokens saída</th>
+                <th>Economizados</th>
+                <th>Redução</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${commands.map((command) => `
+                <tr>
+                  <td>${formatDate(command.timestamp)}</td>
+                  <td><strong>${formatCommand(command.originalCmd)}</strong></td>
+                  <td>${formatNumber(command.inputTokens)}</td>
+                  <td>${formatNumber(command.outputTokens)}</td>
+                  <td>${formatNumber(command.savedTokens)}</td>
+                  <td>${formatPct(command.savingsPct)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      ` : '<p class="empty-state">Nenhum comando recente encontrado.</p>'}
+    </section>
+  `;
+}
+
+function renderFailures(failures) {
+  return `
+    <section class="report-section">
+      <h2>Falhas Registradas</h2>
+      ${failures.length > 0 ? `
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Quando</th>
+                <th>Comando</th>
+                <th>Erro</th>
+                <th>Fallback</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${failures.map((failure) => `
+                <tr>
+                  <td>${formatDate(failure.timestamp)}</td>
+                  <td><strong>${formatCommand(failure.rawCommand)}</strong></td>
+                  <td>${failure.errorMessage || '-'}</td>
+                  <td>${failure.fallbackSucceeded ? 'Recuperado' : 'Não recuperado'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      ` : '<p class="empty-state">Nenhuma falha registrada no período.</p>'}
+    </section>
+  `;
+}
+
 function displayReport(report) {
-  destroyCharts();
+  console.log('🎨 Renderizando relatório...');
+  console.log('📦 rtkData global:', rtkData);
+  console.log('📦 report.rtk:', report.rtk);
 
   const tests = report.tests || {};
   const cicd = report.cicd || {};
-  const ai = report.ai || {};
-  const k6 = report.performance?.k6;
+  const postgres = report.codeQuality || {};
 
   let html = '';
 
@@ -91,7 +383,7 @@ function displayReport(report) {
 
   html += `
     <section class="report-section">
-      <h2>Resumo da Sprint (explicado de forma simples)</h2>
+      <h2>Resumo da Sprint</h2>
       <div class="summary-stats">
         <div class="summary-stat">
           <div class="summary-stat-label">Situação geral</div>
@@ -111,256 +403,95 @@ function displayReport(report) {
           <div class="summary-stat-help">Mostra quantas vezes o pipeline rodou.</div>
         </div>
         <div class="summary-stat">
-          <div class="summary-stat-label">Análises de IA</div>
-          <div class="summary-stat-value">${ai.analysesExecuted || 0}</div>
-          <div class="summary-stat-help">Total de análises automáticas feitas no período.</div>
+          <div class="summary-stat-label">Taxa de sucesso CI/CD</div>
+          <div class="summary-stat-value">${((cicd.successfulRuns || 0) / (cicd.totalRuns || 1) * 100).toFixed(1)}%</div>
+          <div class="summary-stat-help">Percentual de execuções com sucesso.</div>
         </div>
       </div>
     </section>
 
     <section class="report-section">
-      <h2>Testes por tipo</h2>
-      <div class="charts-grid">
-        <div class="chart-card">
-          <h3>Distribuição de tipos</h3>
-          <canvas id="testsTypeChart"></canvas>
-        </div>
-        <div class="chart-card">
-          <h3>Passou x Falhou x Instável</h3>
-          <canvas id="testsStatusChart"></canvas>
-        </div>
-      </div>
+      <h2>Testes (Allure)</h2>
       <div class="metrics-grid">
-        <div class="metric-card"><div class="metric-label">Unitários</div><div class="metric-value">${tests.byType?.unit?.total || 0}</div></div>
-        <div class="metric-card"><div class="metric-label">Integração</div><div class="metric-value">${tests.byType?.integration?.total || 0}</div></div>
-        <div class="metric-card"><div class="metric-label">E2E</div><div class="metric-value">${tests.byType?.e2e?.total || 0}</div></div>
-        <div class="metric-card"><div class="metric-label">Performance</div><div class="metric-value">${tests.byType?.performance?.total || 0}</div></div>
+        <div class="metric-card">
+          <div class="metric-label">Total de testes</div>
+          <div class="metric-value">${tests.total || 0}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Testes aprovados</div>
+          <div class="metric-value">${tests.passed || 0}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Testes falhados</div>
+          <div class="metric-value">${tests.failed || 0}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Testes instáveis</div>
+          <div class="metric-value">${tests.flaky || 0}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Testes unitários</div>
+          <div class="metric-value">${tests.byType?.unit?.total || 0}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Testes de integração</div>
+          <div class="metric-value">${tests.byType?.integration?.total || 0}</div>
+        </div>
       </div>
     </section>
 
     <section class="report-section">
       <h2>Pipeline CI/CD</h2>
-      <div class="charts-grid">
-        <div class="chart-card">
-          <h3>Resultado das execuções</h3>
-          <canvas id="cicdRunsChart"></canvas>
-        </div>
-        <div class="chart-card">
-          <h3>Saúde dos jobs</h3>
-          <canvas id="cicdJobsChart"></canvas>
-        </div>
-      </div>
-    </section>
-
-    <section class="report-section">
-      <h2>Inteligência Artificial + RTK</h2>
       <div class="metrics-grid">
-        <div class="metric-card"><div class="metric-label">Qualidade média da IA</div><div class="metric-value">${(ai.avgQuality || 0).toFixed(1)}%</div></div>
-        <div class="metric-card"><div class="metric-label">Confiança média</div><div class="metric-value">${(ai.avgConfidence || 0).toFixed(1)}%</div></div>
-        <div class="metric-card"><div class="metric-label">Tokens economizados</div><div class="metric-value">${(ai.tokensEconomized || 0).toLocaleString('pt-BR')}</div></div>
-        <div class="metric-card"><div class="metric-label">Economia estimada</div><div class="metric-value">US$ ${(ai.costSaved || 0).toFixed(2)}</div></div>
-      </div>
-      <div class="charts-grid">
-        <div class="chart-card">
-          <h3>Modelos usados</h3>
-          <canvas id="aiModelChart"></canvas>
+        <div class="metric-card">
+          <div class="metric-label">Execuções totais</div>
+          <div class="metric-value">${cicd.totalRuns || 0}</div>
         </div>
-        <div class="chart-card">
-          <h3>Decisões autônomas</h3>
-          <canvas id="aiDecisionChart"></canvas>
+        <div class="metric-card">
+          <div class="metric-label">Execuções com sucesso</div>
+          <div class="metric-value">${cicd.successfulRuns || 0}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Execuções falhadas</div>
+          <div class="metric-value">${cicd.failedRuns || 0}</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Taxa de sucesso</div>
+          <div class="metric-value">${((cicd.successfulRuns || 0) / (cicd.totalRuns || 1) * 100).toFixed(1)}%</div>
         </div>
       </div>
-      <p class="child-note">Explicando simples: RTK ajuda a gastar menos tokens. Isso reduz custo e deixa a IA mais eficiente.</p>
     </section>
 
+    ${postgres?.violations || postgres?.coverage ? `
     <section class="report-section">
-      <h2>Performance do sistema</h2>
-      ${k6 ? `
-      <div class="charts-grid">
-        <div class="chart-card">
-          <h3>Latência (ms)</h3>
-          <canvas id="latencyChart"></canvas>
-        </div>
-        <div class="chart-card">
-          <h3>Requests com erro</h3>
-          <canvas id="errorChart"></canvas>
-        </div>
-      </div>
+      <h2>Qualidade de Código</h2>
       <div class="metrics-grid">
-        <div class="metric-card"><div class="metric-label">RPS</div><div class="metric-value">${(k6.rps || 0).toFixed(1)}</div></div>
-        <div class="metric-card"><div class="metric-label">Erro</div><div class="metric-value">${((k6.errorRate || 0) * 100).toFixed(2)}%</div></div>
-        <div class="metric-card"><div class="metric-label">P95</div><div class="metric-value">${(k6.latency?.p95 || 0).toFixed(0)} ms</div></div>
-        <div class="metric-card"><div class="metric-label">P99</div><div class="metric-value">${(k6.latency?.p99 || 0).toFixed(0)} ms</div></div>
+        ${postgres?.violations ? `
+        <div class="metric-card">
+          <div class="metric-label">Violações</div>
+          <div class="metric-value">${postgres.violations || 0}</div>
+        </div>
+        ` : ''}
+        ${postgres?.coverage ? `
+        <div class="metric-card">
+          <div class="metric-label">Cobertura de teste</div>
+          <div class="metric-value">${(postgres.coverage || 0).toFixed(1)}%</div>
+        </div>
+        ` : ''}
       </div>
-      ` : `
-      <div class="alert alert-warning">Sem dados de K6 ainda. Execute um teste de carga para preencher este bloco.</div>
-      `}
     </section>
+    ` : ''}
 
-    <section class="report-section">
-      <h2>Problemas e recomendações</h2>
-      <div class="dual-list">
-        <div>
-          <h3>Problemas encontrados</h3>
-          <ul class="issues-list">
-            ${(report.issues || []).map((issue) => `
-              <li class="issue-item ${issue.severity}">
-                <div class="issue-title">${issue.title}</div>
-                <div class="issue-description">${issue.description}</div>
-                <div class="issue-recommendation"><strong>O que fazer:</strong> ${issue.recommendation}</div>
-              </li>
-            `).join('') || '<li class="issue-item info">Nenhum problema relevante encontrado.</li>'}
-          </ul>
-        </div>
-        <div>
-          <h3>Plano de ação</h3>
-          <ul class="recommendations-list">
-            ${(report.recommendations || []).map((rec) => `
-              <li class="recommendation-item ${rec.priority}">
-                <div class="recommendation-title">${rec.action}</div>
-                <div class="recommendation-description">${rec.rationale}</div>
-                <div class="recommendation-effort">Esforço: ${getEffortLabel(rec.effort)}</div>
-              </li>
-            `).join('') || '<li class="recommendation-item low">Sem recomendações no momento.</li>'}
-          </ul>
-        </div>
-      </div>
-    </section>
+    ${rtkData ? `
+      ${renderMetricCards(rtkData.execSummary.summary || {}, (rtkData.execSummary.summary?.metrics || {}), rtkData.modelEfficiency.models || [])}
+      ${renderCommandEfficiency(rtkData.analysisRoi.analyses || [])}
+      ${renderModels(rtkData.modelEfficiency.models || [])}
+      ${renderCommands(rtkData.recentCommands.commands || [])}
+      ${renderFailures(rtkData.failures.recentFailures || [])}
+    ` : '<section class="report-section"><p style="color: var(--muted);">Dados do RTK não disponíveis no momento.</p></section>'}
   `;
 
   reportContainer.innerHTML = html;
-  renderCharts(report);
-}
-
-function renderCharts(report) {
-  if (!window.Chart) {
-    return;
-  }
-
-  const tests = report.tests || {};
-  const cicd = report.cicd || {};
-  const ai = report.ai || {};
-  const k6 = report.performance?.k6;
-
-  charts.push(new Chart(document.getElementById('testsTypeChart'), {
-    type: 'doughnut',
-    data: {
-      labels: ['Unitários', 'Integração', 'E2E', 'Performance'],
-      datasets: [{
-        data: [
-          tests.byType?.unit?.total || 0,
-          tests.byType?.integration?.total || 0,
-          tests.byType?.e2e?.total || 0,
-          tests.byType?.performance?.total || 0,
-        ],
-        backgroundColor: ['#355C7D', '#4ECDC4', '#F8B400', '#EF476F'],
-      }],
-    },
-  }));
-
-  charts.push(new Chart(document.getElementById('testsStatusChart'), {
-    type: 'bar',
-    data: {
-      labels: ['Passou', 'Falhou', 'Instável'],
-      datasets: [{
-        label: 'Quantidade',
-        data: [tests.passed || 0, tests.failed || 0, tests.flaky || 0],
-        backgroundColor: ['#3BA55D', '#D90429', '#F77F00'],
-      }],
-    },
-    options: { scales: { y: { beginAtZero: true } } },
-  }));
-
-  charts.push(new Chart(document.getElementById('cicdRunsChart'), {
-    type: 'bar',
-    data: {
-      labels: ['Sucesso', 'Falha'],
-      datasets: [{
-        label: 'Execuções',
-        data: [cicd.successfulRuns || 0, cicd.failedRuns || 0],
-        backgroundColor: ['#2A9D8F', '#E63946'],
-      }],
-    },
-    options: { scales: { y: { beginAtZero: true } } },
-  }));
-
-  const jobs = Object.entries(cicd.byJob || {});
-  charts.push(new Chart(document.getElementById('cicdJobsChart'), {
-    type: 'line',
-    data: {
-      labels: jobs.map(([name]) => name),
-      datasets: [{
-        label: 'Duração média (s)',
-        data: jobs.map(([, row]) => Number((row.avgDuration || 0) / 1000)),
-        borderColor: '#3A86FF',
-        backgroundColor: 'rgba(58,134,255,0.2)',
-        tension: 0.25,
-      }],
-    },
-  }));
-
-  const models = Object.keys(ai.modelDistribution || {});
-  charts.push(new Chart(document.getElementById('aiModelChart'), {
-    type: 'pie',
-    data: {
-      labels: models.length > 0 ? models : ['Sem dados'],
-      datasets: [{
-        data: models.length > 0 ? models.map((m) => ai.modelDistribution[m]) : [100],
-        backgroundColor: ['#0F4C5C', '#2EC4B6', '#F4D35E', '#EE964B', '#F95738'],
-      }],
-    },
-  }));
-
-  charts.push(new Chart(document.getElementById('aiDecisionChart'), {
-    type: 'bar',
-    data: {
-      labels: ['Total', 'Sucesso %', 'Risco médio'],
-      datasets: [{
-        label: 'Decisões IA',
-        data: [
-          ai.autonomousDecisions?.total || 0,
-          ai.autonomousDecisions?.successRate || 0,
-          (ai.autonomousDecisions?.avgRisk || 0) * 100,
-        ],
-        backgroundColor: ['#4361EE', '#06D6A0', '#F94144'],
-      }],
-    },
-    options: { scales: { y: { beginAtZero: true } } },
-  }));
-
-  if (k6) {
-    charts.push(new Chart(document.getElementById('latencyChart'), {
-      type: 'line',
-      data: {
-        labels: ['Min', 'Média', 'P95', 'P99', 'Máx'],
-        datasets: [{
-          label: 'ms',
-          data: [k6.latency?.min || 0, k6.latency?.avg || 0, k6.latency?.p95 || 0, k6.latency?.p99 || 0, k6.latency?.max || 0],
-          borderColor: '#8338EC',
-          backgroundColor: 'rgba(131,56,236,0.15)',
-        }],
-      },
-    }));
-
-    charts.push(new Chart(document.getElementById('errorChart'), {
-      type: 'bar',
-      data: {
-        labels: ['Sucesso', 'Erro'],
-        datasets: [{
-          data: [k6.successfulRequests || 0, k6.failedRequests || 0],
-          backgroundColor: ['#2A9D8F', '#D62828'],
-        }],
-      },
-      options: { scales: { y: { beginAtZero: true } } },
-    }));
-  }
-}
-
-function destroyCharts() {
-  for (const chart of charts) {
-    chart.destroy();
-  }
-  charts = [];
 }
 
 async function downloadPowerPoint() {
@@ -404,7 +535,7 @@ async function downloadPowerPoint() {
 function showLoading(show) {
   if (show) {
     loadingIndicator.classList.remove('loading-hidden');
-    loadingIndicator.querySelector('p').textContent = '⏳ Estou montando os gráficos e os números...';
+    loadingIndicator.querySelector('p').textContent = '⏳ Gerando relatório com os dados...';
     generateBtn.disabled = true;
   } else {
     loadingIndicator.classList.add('loading-hidden');
@@ -429,13 +560,4 @@ function getHealthStatusLabel(status) {
     critical: 'CRÍTICO',
   };
   return labels[status] || String(status || '').toUpperCase();
-}
-
-function getEffortLabel(effort) {
-  const labels = {
-    low: 'Baixo',
-    medium: 'Médio',
-    high: 'Alto',
-  };
-  return labels[effort] || effort;
 }

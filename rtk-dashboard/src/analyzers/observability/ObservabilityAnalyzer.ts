@@ -5,16 +5,18 @@ import { ContextFilter } from '../../context/ContextFilter';
 import { ContextPipeline } from '../../context/ContextPipeline';
 import { PrometheusCollector } from '../../collectors/PrometheusCollector';
 import { AnalysisRepository } from '../../storage/AnalysisRepository';
+import { TokenSavingsRecorder } from '../../observability/TokenSavingsRecorder';
 import { ObservabilityAnalysis, ObservabilityRequest } from '../../types/analysis.types';
 import { logger } from '../../api/logger';
 
 export class ObservabilityAnalyzer {
-  private readonly pipeline = new ContextPipeline(2000);
+  private readonly pipeline = new ContextPipeline(1200, 0.75);
 
   constructor(
     private readonly llm: LLMClient,
     private readonly collector: PrometheusCollector,
     private readonly repository: AnalysisRepository,
+    private readonly savingsRecorder: TokenSavingsRecorder,
   ) {}
 
   async analyze(request: ObservabilityRequest = {}): Promise<ObservabilityAnalysis> {
@@ -65,6 +67,16 @@ export class ObservabilityAnalyzer {
     };
 
     await this.repository.save(result);
+
+    // Record token savings metrics
+    await this.savingsRecorder.recordAnalysis({
+      analysisId,
+      analysisType: 'observability',
+      rawChunks: chunks,
+      budgetResult,
+      llmResponse,
+    });
+
     logger.info('Observability analysis completed', {
       analysisId,
       durationMs: result.metadata.durationMs,

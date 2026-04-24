@@ -1,9 +1,12 @@
+import { Pool } from 'pg';
 import { LLMClient } from '../llm/LLMClient';
 import { AnalysisRepository } from '../storage/AnalysisRepository';
 import { PrometheusCollector } from '../collectors/PrometheusCollector';
 import { AllureCollector } from '../collectors/AllureCollector';
 import { GitHubActionsCollector } from '../collectors/GitHubActionsCollector';
 import { BackendDataCollector } from '../collectors/BackendDataCollector';
+import { TokenSavingsAnalyzer } from '../observability/TokenSavingsAnalyzer';
+import { TokenSavingsRecorder } from '../observability/TokenSavingsRecorder';
 import { ObservabilityAnalyzer } from '../analyzers/observability/ObservabilityAnalyzer';
 import { TestIntelligenceAnalyzer } from '../analyzers/test-intelligence/TestIntelligenceAnalyzer';
 import { CICDAnalyzer } from '../analyzers/cicd/CICDAnalyzer';
@@ -37,6 +40,7 @@ type AnalysisRequest =
 export class AIOrchestrator {
   private readonly llm: LLMClient;
   private readonly repository: AnalysisRepository;
+  private readonly savingsRecorder: TokenSavingsRecorder;
 
   private readonly observabilityAnalyzer: ObservabilityAnalyzer;
   private readonly testIntelligenceAnalyzer: TestIntelligenceAnalyzer;
@@ -44,20 +48,24 @@ export class AIOrchestrator {
   private readonly incidentAnalyzer: IncidentAnalyzer;
   private readonly riskAnalyzer: RiskAnalyzer;
 
-  constructor(repository: AnalysisRepository) {
+  constructor(repository?: AnalysisRepository, pgPool?: Pool) {
     this.llm = new LLMClient();
-    this.repository = repository;
+    this.repository = repository || new AnalysisRepository(pgPool);
+
+    // Initialize token savings tracking
+    const tokenSavingsAnalyzer = new TokenSavingsAnalyzer(pgPool, logger);
+    this.savingsRecorder = new TokenSavingsRecorder(tokenSavingsAnalyzer, logger);
 
     const prometheus = new PrometheusCollector();
     const allure = new AllureCollector();
     const github = new GitHubActionsCollector();
     const backend = new BackendDataCollector();
 
-    this.observabilityAnalyzer = new ObservabilityAnalyzer(this.llm, prometheus, repository);
-    this.testIntelligenceAnalyzer = new TestIntelligenceAnalyzer(this.llm, allure, repository);
-    this.cicdAnalyzer = new CICDAnalyzer(this.llm, github, repository);
-    this.incidentAnalyzer = new IncidentAnalyzer(this.llm, repository);
-    this.riskAnalyzer = new RiskAnalyzer(this.llm, backend, repository);
+    this.observabilityAnalyzer = new ObservabilityAnalyzer(this.llm, prometheus, repository, this.savingsRecorder);
+    this.testIntelligenceAnalyzer = new TestIntelligenceAnalyzer(this.llm, allure, repository, this.savingsRecorder);
+    this.cicdAnalyzer = new CICDAnalyzer(this.llm, github, repository, this.savingsRecorder);
+    this.incidentAnalyzer = new IncidentAnalyzer(this.llm, repository, this.savingsRecorder);
+    this.riskAnalyzer = new RiskAnalyzer(this.llm, backend, repository, this.savingsRecorder);
   }
 
   async analyze(request: AnalysisRequest): Promise<AnalysisResult> {

@@ -3,6 +3,8 @@
 # Dominio: User
 
 @user
+@allure.label.testType:E2E
+@allure.label.module:User
 @allure.label.parentSuite:Backend
 @allure.label.epic:Gestao_de_User
 Funcionalidade: Seguranca e Acesso do Modulo User

@@ -70,13 +70,15 @@ public class AssetListingSteps {
 
   @Então("o ativo {string} não deve estar na listagem")
   public void ativoNaoNaListagem(String assetTag) {
-    String content = String.valueOf(context.getLastResponse().path("content"));
+    Object contentObject = context.getLastResponse().path("content");
+    String content = String.valueOf(contentObject);
     assertThat(content).as("Ativo não deveria estar na listagem filtrada").doesNotContain(assetTag);
   }
 
   @Então("o ativo {string} deve estar na listagem")
   public void ativoDeveEstarNaListagem(String assetTag) {
-    String content = String.valueOf(context.getLastResponse().path("content"));
+    Object contentObject = context.getLastResponse().path("content");
+    String content = String.valueOf(contentObject);
     assertThat(content).as("Ativo deveria estar na listagem filtrada").contains(assetTag);
   }
 
@@ -87,7 +89,8 @@ public class AssetListingSteps {
     context.setLastResponse(response);
     String currentTag = context.getCurrentAssetTag();
     if (currentTag != null) {
-      String content = String.valueOf(response.path("content"));
+      Object contentObject = response.path("content");
+      String content = String.valueOf(contentObject);
       assertThat(content).contains(currentTag);
     }
   }

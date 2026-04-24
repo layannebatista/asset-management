@@ -4,6 +4,8 @@
 # Executar com: mvn test -Dtest=CucumberRunnerTest
 
 @assets
+@allure.label.testType:E2E
+@allure.label.module:Asset
 @allure.label.parentSuite:Backend
 @allure.label.epic:Gestao_de_Ativos
 Funcionalidade: Gerenciamento do Ciclo de Vida de Ativos

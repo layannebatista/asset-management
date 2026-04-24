@@ -106,25 +106,6 @@ public class MaintenanceSetupSteps {
     context.setId("ativoId_" + assetTag, ativo.getId());
   }
 
-  @E("que existe um ativo {string} atribuído nessa unidade")
-  public void queExisteAtivoAtribuido(String assetTag) {
-    Organization org = testDataHelper.obterOrganizacao(mainContext.getOrganizacaoId());
-    Unit unit = testDataHelper.obterUnidade(mainContext.getUnidadeId());
-    Asset ativo =
-        testDataHelper.criarAtivoComStatus(
-            assetTag, AssetType.NOTEBOOK, "Modelo Atribuído", org, unit, AssetStatus.ASSIGNED);
-    mainContext.setAtivoTagAtual(assetTag);
-    context.setId("ativoId_" + assetTag, ativo.getId());
-  }
-
-  @E("que existe um ativo {string} disponível em outra unidade dessa organização")
-  public void queExisteAtivoEmOutraUnidade(String assetTag) {
-    Organization org = testDataHelper.obterOrganizacao(mainContext.getOrganizacaoId());
-    Unit outraUnidade = testDataHelper.criarUnidade("Outra Unidade - " + assetTag, org);
-    Asset ativo = testDataHelper.criarAtivo(assetTag, AssetType.NOTEBOOK, org, outraUnidade);
-    context.setId("ativoId_" + assetTag, ativo.getId());
-  }
-
   @E("que estou autenticado como {string} com senha {string}")
   public void queEstouAutenticado(String email, String senha) {
     MockMvcResponse response = apiClient.login(email, senha);

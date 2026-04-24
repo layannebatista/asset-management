@@ -8,11 +8,13 @@ import static org.mockito.Mockito.when;
 import com.portfolio.assetmanagement.application.insurance.dto.InsuranceCreateDTO;
 import com.portfolio.assetmanagement.application.insurance.service.InsuranceService;
 import com.portfolio.assetmanagement.application.whatsapp.service.WhatsAppService;
+import com.portfolio.assetmanagement.domain.organization.entity.Organization;
 import com.portfolio.assetmanagement.domain.insurance.entity.AssetInsurance;
 import com.portfolio.assetmanagement.infrastructure.persistence.asset.repository.AssetRepository;
 import com.portfolio.assetmanagement.infrastructure.persistence.insurance.repository.InsuranceRepository;
 import com.portfolio.assetmanagement.infrastructure.persistence.user.repository.UserRepository;
 import com.portfolio.assetmanagement.security.context.LoggedUserContext;
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -40,10 +42,7 @@ class InsuranceServiceTest {
   void novaApoliceDesativaAnteriorAtiva() {
     Long assetId = 10L;
 
-    com.portfolio.assetmanagement.domain.organization.entity.Organization organization =
-        org.mockito.Mockito.mock(
-            com.portfolio.assetmanagement.domain.organization.entity.Organization.class);
-    when(organization.getId()).thenReturn(1L);
+        Organization organization = organizationWithId(1L);
     com.portfolio.assetmanagement.domain.unit.entity.Unit unit =
         new com.portfolio.assetmanagement.domain.unit.entity.Unit("Sede", organization, true);
     com.portfolio.assetmanagement.domain.asset.entity.Asset asset =
@@ -84,5 +83,17 @@ class InsuranceServiceTest {
     assertThat(created.getPolicyNumber()).isEqualTo("NEW-1");
     verify(insuranceRepository).save(old);
   }
+
+    private Organization organizationWithId(Long id) {
+        Organization organization = new Organization("Org " + id);
+        try {
+            Field field = Organization.class.getDeclaredField("id");
+            field.setAccessible(true);
+            field.set(organization, id);
+            return organization;
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("Falha ao preparar Organization de teste", e);
+    }
+    }
 
 }

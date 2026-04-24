@@ -26,6 +26,7 @@ import com.portfolio.assetmanagement.shared.exception.ForbiddenException;
 import com.portfolio.assetmanagement.application.asset.mapper.AssetMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -37,6 +38,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("AssetService — Criação de ativo")
+@Tag("testType=Integration")
+@Tag("module=Asset")
 class AssetCreateServiceTest {
 
   @Mock private AssetRepository repository;

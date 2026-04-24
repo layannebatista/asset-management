@@ -3,6 +3,8 @@
 # Dominio: Audit
 
 @audit
+@allure.label.testType:E2E
+@allure.label.module:Audit
 @allure.label.parentSuite:Backend
 @allure.label.epic:Gestao_de_Audit
 Funcionalidade: Seguranca e Acesso do Modulo Audit

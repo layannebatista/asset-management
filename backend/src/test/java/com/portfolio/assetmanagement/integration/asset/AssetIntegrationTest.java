@@ -12,11 +12,14 @@ import io.qameta.allure.Story;
 import io.restassured.module.mockmvc.response.MockMvcResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 @Epic("Backend")
 @Feature("Integração — Assets")
 @DisplayName("Assets — Ciclo de Vida Completo")
+@Tag("testType=Integration")
+@Tag("module=Asset")
 class AssetIntegrationTest extends BaseIntegrationTest {
 
   // =========================================================

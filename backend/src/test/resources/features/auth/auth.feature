@@ -4,6 +4,8 @@
 # Executar com: mvn test -Dtest=CucumberRunnerTest
 
 @auth
+@allure.label.testType:E2E
+@allure.label.module:Auth
 @allure.label.parentSuite:Backend
 @allure.label.epic:Gestao_de_Autenticacao
 Funcionalidade: Autenticação e Sessão

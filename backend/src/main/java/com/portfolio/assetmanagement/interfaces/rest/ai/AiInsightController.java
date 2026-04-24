@@ -1,6 +1,7 @@
 package com.portfolio.assetmanagement.interfaces.rest.ai;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.portfolio.assetmanagement.application.ai.dto.AiAnalysisRequest;
 import com.portfolio.assetmanagement.application.ai.service.AiInsightService;
 import com.portfolio.assetmanagement.application.ai.service.AiInsightService.AiServiceException;
@@ -27,9 +28,11 @@ import org.springframework.web.bind.annotation.*;
 public class AiInsightController {
 
   private final AiInsightService service;
+  private final ObjectMapper objectMapper;
 
-  public AiInsightController(AiInsightService service) {
+  public AiInsightController(AiInsightService service, ObjectMapper objectMapper) {
     this.service = service;
+    this.objectMapper = objectMapper;
   }
 
   @Operation(summary = "Run observability analysis", description = "Analyzes JVM, HTTP, and system metrics for anomalies and bottlenecks")
@@ -80,7 +83,12 @@ public class AiInsightController {
   public ResponseEntity<JsonNode> history(
       @RequestParam(required = false) String type,
       @RequestParam(defaultValue = "20") int limit) {
-    return respond(() -> service.getHistory(type, Math.min(limit, 100)));
+    try {
+      JsonNode history = service.getHistory(type, Math.min(limit, 100));
+      return ResponseEntity.ok(history != null ? history : objectMapper.createArrayNode());
+    } catch (AiServiceException ex) {
+      return ResponseEntity.ok(objectMapper.createArrayNode());
+    }
   }
 
   @Operation(summary = "Get analysis by ID")

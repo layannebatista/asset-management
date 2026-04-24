@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import path from 'path';
 
 function required(key: string): string {
   const value = process.env[key];
@@ -105,5 +106,17 @@ export const config = {
   rateLimit: {
     windowMs: parseInt(optional('RATE_LIMIT_WINDOW_MS', '60000'), 10),
     maxRequests: parseInt(optional('RATE_LIMIT_MAX_REQUESTS', '30'), 10),
+  },
+
+  rtk: {
+    historyDbPath: optional(
+      'RTK_HISTORY_DB_PATH',
+      path.join(process.env.LOCALAPPDATA ?? path.join(process.env.USERPROFILE ?? '', 'AppData', 'Local'), 'rtk', 'history.db'),
+    ),
+    claudeProjectsPath: optional(
+      'RTK_CLAUDE_PROJECTS_PATH',
+      path.join(process.env.USERPROFILE ?? '', '.claude', 'projects'),
+    ),
+    projectRoot: optional('RTK_PROJECT_ROOT', path.resolve(process.cwd(), '..')),
   },
 } as const;

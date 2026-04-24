@@ -11,23 +11,30 @@ import { AnalysisResult, AnalysisType } from '../types/analysis.types';
  */
 export class AnalysisRepository {
   private readonly pool: Pool;
+  private readonly ownedPool: boolean;
 
-  constructor() {
-    const poolConfig: PoolConfig = {
-      host: config.db.host,
-      port: config.db.port,
-      database: config.db.database,
-      user: config.db.user,
-      password: config.db.password,
-      max: 5,
-      idleTimeoutMillis: 30_000,
-      connectionTimeoutMillis: 5_000,
-    };
-    this.pool = new Pool(poolConfig);
+  constructor(pool?: Pool) {
+    if (pool) {
+      this.pool = pool;
+      this.ownedPool = false;
+    } else {
+      const poolConfig: PoolConfig = {
+        host: config.db.host,
+        port: config.db.port,
+        database: config.db.database,
+        user: config.db.user,
+        password: config.db.password,
+        max: 5,
+        idleTimeoutMillis: 30_000,
+        connectionTimeoutMillis: 5_000,
+      };
+      this.pool = new Pool(poolConfig);
+      this.ownedPool = true;
 
-    this.pool.on('error', (err) => {
-      logger.error('PostgreSQL pool error', { error: err.message });
-    });
+      this.pool.on('error', (err) => {
+        logger.error('PostgreSQL pool error', { error: err.message });
+      });
+    }
   }
 
   async initialize(): Promise<void> {
@@ -91,6 +98,8 @@ export class AnalysisRepository {
   }
 
   async close(): Promise<void> {
-    await this.pool.end();
+    if (this.ownedPool) {
+      await this.pool.end();
+    }
   }
 }

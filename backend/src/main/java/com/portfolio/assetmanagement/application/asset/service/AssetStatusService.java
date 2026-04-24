@@ -24,6 +24,14 @@ public class AssetStatusService {
       throw new BusinessException("Ativo aposentado não pode ser atribuído");
     }
 
+    if (asset.getStatus() == AssetStatus.IN_MAINTENANCE) {
+      throw new BusinessException("Ativo em manutenção não pode ser atribuído");
+    }
+
+    if (asset.getStatus() == AssetStatus.IN_TRANSFER) {
+      throw new BusinessException("Ativo em transferência não pode ser atribuído");
+    }
+
     if (asset.getAssignedUser() != null) {
       throw new BusinessException("Ativo já está atribuído");
     }

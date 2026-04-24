@@ -1,92 +1,79 @@
 import 'dotenv/config';
+import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
-import cors from 'cors';
-import { Pool } from 'pg';
 import path from 'path';
 
-import { config } from '../config';
+import { RtkLocalDataSource } from '../observability/RtkLocalDataSource';
 import { logger } from './logger';
-import { requireApiKey } from './middleware/auth';
 import { errorHandler } from './middleware/errorHandler';
+import { requireApiKey } from './middleware/auth';
 import healthRouter from './routes/health.routes';
 import { createInsightsRouter } from './routes/insights.routes';
-import { TokenSavingsAnalyzer } from '../observability/TokenSavingsAnalyzer';
-
-function optional(key: string, fallback: string): string {
-  return process.env[key] ?? fallback;
-}
+import { createAnalysisRouter } from './routes/analysis.routes';
+import { AIOrchestrator } from '../orchestrator/AIOrchestrator';
+import { AgentCoordinator } from '../agents/AgentCoordinator';
+import { LLMClient } from '../llm/LLMClient';
+import { AnalysisRepository } from '../storage/AnalysisRepository';
+import { PrometheusCollector } from '../collectors/PrometheusCollector';
+import { AllureCollector } from '../collectors/AllureCollector';
+import { GitHubActionsCollector } from '../collectors/GitHubActionsCollector';
+import { BackendDataCollector } from '../collectors/BackendDataCollector';
 
 async function bootstrap(): Promise<void> {
   const app = express();
   logger.info('Setting up RTK Dashboard service...');
 
   app.use(helmet());
-  app.use(cors({ origin: config.service.nodeEnv === 'development' ? '*' : false }));
+  app.use(cors({ origin: true }));
   app.use(express.json({ limit: '2mb' }));
 
-  // Serve dashboard on root path
   app.get('/', (_req, res) => {
     res.sendFile(path.join(__dirname, '../../public/index.html'));
   });
 
-  logger.info('Dashboard route configured');
-
-  // Serve static files from public directory
   app.use(express.static(path.join(__dirname, '../../public')));
-
-  // Health endpoints (no auth)
   app.use('/', healthRouter);
 
-  // Database setup
-  const pgPool = new Pool({
-    host: config.db.host,
-    port: config.db.port,
-    database: config.db.database,
-    user: config.db.user,
-    password: config.db.password,
-  });
+  const rtkDataSource = new RtkLocalDataSource(logger);
+  logger.info('RTK local data source configured', rtkDataSource.getStatus());
 
-  // Test database connection
-  try {
-    await pgPool.query('SELECT 1');
-    logger.info('PostgreSQL connected', { host: config.db.host, port: config.db.port });
-  } catch (error) {
-    logger.warn('PostgreSQL connection failed', {
-      error: error instanceof Error ? error.message : 'unknown',
-    });
-  }
-
-  // Initialize TokenSavingsAnalyzer for insights
-  const tokenSavingsAnalyzer = new TokenSavingsAnalyzer(pgPool, logger);
-  try {
-    await tokenSavingsAnalyzer.initialize();
-  } catch (error) {
-    logger.warn('TokenSavingsAnalyzer initialization failed', {
-      error: error instanceof Error ? error.message : 'unknown',
-    });
-  }
-
-  // RTK Insights routes - protected by API key
   app.use(
     '/api/v1/insights',
     requireApiKey,
-    createInsightsRouter(pgPool, logger),
+    createInsightsRouter(rtkDataSource, logger),
+  );
+
+  // Initialize dependencies for orchestrator and agents
+  const repository = new AnalysisRepository();
+  const orchestrator = new AIOrchestrator(repository);
+  
+  const llm = new LLMClient();
+  const prometheus = new PrometheusCollector();
+  const allure = new AllureCollector();
+  const github = new GitHubActionsCollector();
+  const backend = new BackendDataCollector();
+  const agentCoordinator = new AgentCoordinator(llm, repository, prometheus, allure, github, backend);
+
+  // Analysis routes (for running real analyses)
+  app.use(
+    '/api/v1/analysis',
+    requireApiKey,
+    createAnalysisRouter(orchestrator, agentCoordinator),
   );
 
   logger.info('API routes initialized', {
-    routes: ['/api/v1/insights'],
+    routes: ['/api/v1/insights', '/api/v1/analysis'],
   });
 
-  // Global error handler
   app.use(errorHandler);
 
-  // Start server
-  logger.info('Starting RTK Dashboard service', { port: config.service.port });
-  const server = app.listen(config.service.port, () => {
+  const port = parseInt(process.env.AI_SERVICE_PORT ?? '3100', 10);
+  logger.info('Starting RTK Dashboard service', { port });
+  const server = app.listen(port, () => {
     logger.info('RTK Dashboard Service started', {
-      port: config.service.port,
-      env: config.service.nodeEnv,
+      port,
+      env: process.env.NODE_ENV ?? 'development',
     });
   });
 
@@ -94,11 +81,9 @@ async function bootstrap(): Promise<void> {
     logger.error('Server error', { error: err.message });
   });
 
-  // Graceful shutdown
   const shutdown = async (signal: string): Promise<void> => {
-    logger.info(`${signal} received – shutting down gracefully`);
-    server.close(async () => {
-      await pgPool.end();
+    logger.info(`${signal} received - shutting down gracefully`);
+    server.close(() => {
       logger.info('All connections closed');
       process.exit(0);
     });

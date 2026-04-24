@@ -3,6 +3,7 @@ import { LLMClient } from '../../llm/LLMClient';
 import { PromptOptimizer } from '../../llm/PromptOptimizer';
 import { BackendDataCollector } from '../../collectors/BackendDataCollector';
 import { AnalysisRepository } from '../../storage/AnalysisRepository';
+import { TokenSavingsRecorder } from '../../observability/TokenSavingsRecorder';
 import { RiskAnalysis, RiskRequest } from '../../types/analysis.types';
 import { logger } from '../../api/logger';
 
@@ -11,6 +12,7 @@ export class RiskAnalyzer {
     private readonly llm: LLMClient,
     private readonly collector: BackendDataCollector,
     private readonly repository: AnalysisRepository,
+    private readonly savingsRecorder: TokenSavingsRecorder,
   ) {}
 
   async analyze(request: RiskRequest = {}): Promise<RiskAnalysis> {
@@ -56,6 +58,24 @@ export class RiskAnalyzer {
     };
 
     await this.repository.save(result);
+
+    // Record token savings metrics (simplified for direct context)
+    const contextChunk = [{ key: 'riskContext', data: context, baseRelevance: 1.0 }];
+    const budgetResult = {
+      contextJson: JSON.stringify(context),
+      estimatedTokens: Math.ceil(JSON.stringify(context).length / 4),
+      droppedChunks: [],
+      includedChunks: ['riskContext'],
+    };
+
+    await this.savingsRecorder.recordAnalysis({
+      analysisId,
+      analysisType: 'risk',
+      rawChunks: contextChunk,
+      budgetResult,
+      llmResponse,
+    });
+
     logger.info('Risk analysis completed', {
       analysisId,
       riskScore: result.overallRiskScore,

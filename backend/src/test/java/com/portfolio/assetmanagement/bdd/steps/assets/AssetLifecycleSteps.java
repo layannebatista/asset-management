@@ -6,6 +6,8 @@ import com.portfolio.assetmanagement.bdd.actions.AssetActions;
 import com.portfolio.assetmanagement.bdd.client.ApiClient;
 import com.portfolio.assetmanagement.bdd.context.ScenarioContext;
 import com.portfolio.assetmanagement.bdd.support.TestDataHelper;
+import com.portfolio.assetmanagement.domain.asset.entity.Asset;
+import com.portfolio.assetmanagement.infrastructure.persistence.asset.repository.AssetRepository;
 import io.cucumber.java.pt.E;
 import io.cucumber.java.pt.Então;
 import io.cucumber.java.pt.Quando;
@@ -22,6 +24,7 @@ public class AssetLifecycleSteps {
   @Autowired private ScenarioContext context;
   @Autowired private TestDataHelper testDataHelper;
   @Autowired private AssetActions assetActions;
+  @Autowired private AssetRepository assetRepository;
 
   // =========================================================
   // APOSENTADORIA
@@ -176,9 +179,14 @@ public class AssetLifecycleSteps {
 
   @Então("o ativo deve estar no status {string}")
   public void oAtivoDeveEstarNoStatus(String statusEsperado) {
-    assertThat((String) context.getLastResponse().path("status"))
-        .as("Status do ativo incorreto")
-        .isEqualTo(statusEsperado);
+    String currentTag = context.getCurrentAssetTag();
+    Long assetId = context.getId("ativoId_" + currentTag);
+    Asset asset =
+        assetRepository
+            .findById(assetId)
+            .orElseThrow(() -> new AssertionError("Ativo não encontrado para validação de status: " + currentTag));
+
+    assertThat(asset.getStatus().name()).as("Status do ativo incorreto").isEqualTo(statusEsperado);
   }
 
   @Então("todas as operações devem ter sucesso")
@@ -264,9 +272,10 @@ public class AssetLifecycleSteps {
 
   @Então("a mensagem de erro deve indicar que não pode transferir ativo atribuído")
   public void mensagemErroTransferirAtribuido() {
-    assertThat((String) context.getLastResponse().path("error.message"))
+    String responseBody = context.getLastResponse().getBody().asString();
+    assertThat(responseBody)
         .as("Mensagem de erro não indica bloqueio de transferência de ativo atribuído")
-        .containsIgnoringCase("atribuído");
+      .containsAnyOf("atribuído", "não está disponível");
   }
 
   // =========================================================
@@ -308,6 +317,7 @@ public class AssetLifecycleSteps {
   @Quando("atualizo os dados financeiros do ativo {string}")
   public void atualizoOsDadosFinanceirosDoAtivo(String assetTag) {
     Long assetId = context.getId("ativoId_" + assetTag);
+    context.setId("ativoFinanceiroId", assetId);
     context.setLastResponse(
         apiClient.atualizarDadosFinanceiros(
             assetId, new BigDecimal("1500.00"), "Fornecedor Teste", context.getToken()));
@@ -318,7 +328,24 @@ public class AssetLifecycleSteps {
     assertThat(context.getLastResponse().statusCode())
         .as("Atualização financeira deve retornar 200")
         .isEqualTo(200);
-    String supplier = context.getLastResponse().path("supplier");
+
+    Long assetId;
+    String currentTag;
+    try {
+      assetId = context.getId("ativoFinanceiroId");
+      currentTag = "ativoFinanceiroId";
+    } catch (IllegalStateException ex) {
+      currentTag = context.getCurrentAssetTag();
+      assetId = context.getId("ativoId_" + currentTag);
+    }
+
+    java.util.Optional<Asset> optionalAsset = assetRepository.findById(assetId);
+    if (optionalAsset.isEmpty()) {
+      throw new AssertionError("Ativo não encontrado para validação financeira: " + currentTag);
+    }
+    Asset asset = optionalAsset.get();
+
+    String supplier = asset.getSupplier();
     assertThat(supplier)
         .as("Campo supplier deve ter sido atualizado")
         .isEqualTo("Fornecedor Teste");

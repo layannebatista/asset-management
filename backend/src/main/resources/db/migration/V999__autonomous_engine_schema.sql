@@ -14,11 +14,12 @@ CREATE TABLE IF NOT EXISTS decision_validations (
   should_reexecute BOOLEAN DEFAULT FALSE,
   reexecution_strategy VARCHAR(50),
   timestamp TIMESTAMP DEFAULT NOW(),
-  created_at TIMESTAMP DEFAULT NOW(),
-  INDEX idx_decision_validations_type (analysis_type),
-  INDEX idx_decision_validations_valid (is_valid),
-  INDEX idx_decision_validations_timestamp (timestamp)
+  created_at TIMESTAMP DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS idx_decision_validations_type ON decision_validations (analysis_type);
+CREATE INDEX IF NOT EXISTS idx_decision_validations_valid ON decision_validations (is_valid);
+CREATE INDEX IF NOT EXISTS idx_decision_validations_timestamp ON decision_validations (timestamp);
 
 -- ============================================================================
 -- 2. DECISION RISK ANALYSES
@@ -33,11 +34,12 @@ CREATE TABLE IF NOT EXISTS decision_risk_analyses (
   approval_level VARCHAR(50), -- manager, director, executive
   analysis_details JSONB,
   timestamp TIMESTAMP DEFAULT NOW(),
-  created_at TIMESTAMP DEFAULT NOW(),
-  INDEX idx_risk_analyses_level (risk_level),
-  INDEX idx_risk_analyses_score (risk_score),
-  INDEX idx_risk_analyses_timestamp (timestamp)
+  created_at TIMESTAMP DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS idx_risk_analyses_level ON decision_risk_analyses (risk_level);
+CREATE INDEX IF NOT EXISTS idx_risk_analyses_score ON decision_risk_analyses (risk_score);
+CREATE INDEX IF NOT EXISTS idx_risk_analyses_timestamp ON decision_risk_analyses (timestamp);
 
 -- ============================================================================
 -- 3. STRATEGY COMPARISONS & EXECUTIONS
@@ -52,11 +54,12 @@ CREATE TABLE IF NOT EXISTS strategy_comparisons (
   winner_cost FLOAT NOT NULL,
   all_results JSONB,
   timestamp TIMESTAMP DEFAULT NOW(),
-  created_at TIMESTAMP DEFAULT NOW(),
-  INDEX idx_strategies_type (analysis_type),
-  INDEX idx_strategies_winner (winner_strategy_id),
-  INDEX idx_strategies_timestamp (timestamp)
+  created_at TIMESTAMP DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS idx_strategies_type ON strategy_comparisons (analysis_type);
+CREATE INDEX IF NOT EXISTS idx_strategies_winner ON strategy_comparisons (winner_strategy_id);
+CREATE INDEX IF NOT EXISTS idx_strategies_timestamp ON strategy_comparisons (timestamp);
 
 CREATE TABLE IF NOT EXISTS strategy_executions (
   id BIGSERIAL PRIMARY KEY,
@@ -69,12 +72,13 @@ CREATE TABLE IF NOT EXISTS strategy_executions (
   cost_usd FLOAT NOT NULL,
   composite_score FLOAT NOT NULL,
   timestamp TIMESTAMP DEFAULT NOW(),
-  created_at TIMESTAMP DEFAULT NOW(),
-  INDEX idx_executions_type (analysis_type),
-  INDEX idx_executions_strategy (strategy_id),
-  INDEX idx_executions_score (composite_score),
-  INDEX idx_executions_timestamp (timestamp)
+  created_at TIMESTAMP DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS idx_executions_type ON strategy_executions (analysis_type);
+CREATE INDEX IF NOT EXISTS idx_executions_strategy ON strategy_executions (strategy_id);
+CREATE INDEX IF NOT EXISTS idx_executions_score ON strategy_executions (composite_score);
+CREATE INDEX IF NOT EXISTS idx_executions_timestamp ON strategy_executions (timestamp);
 
 -- ============================================================================
 -- 4. DRIFT DETECTIONS
@@ -90,12 +94,13 @@ CREATE TABLE IF NOT EXISTS drift_detections (
   intervention_level VARCHAR(50), -- logging, alert, investigate, emergency
   recommendations JSONB,
   timestamp TIMESTAMP DEFAULT NOW(),
-  created_at TIMESTAMP DEFAULT NOW(),
-  INDEX idx_drift_drifting (is_drifting),
-  INDEX idx_drift_score (drift_score),
-  INDEX idx_drift_intervention (intervention_level),
-  INDEX idx_drift_timestamp (timestamp)
+  created_at TIMESTAMP DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS idx_drift_drifting ON drift_detections (is_drifting);
+CREATE INDEX IF NOT EXISTS idx_drift_score ON drift_detections (drift_score);
+CREATE INDEX IF NOT EXISTS idx_drift_intervention ON drift_detections (intervention_level);
+CREATE INDEX IF NOT EXISTS idx_drift_timestamp ON drift_detections (timestamp);
 
 -- ============================================================================
 -- 5. DECISION AUDIT LOG (Governance)
@@ -122,13 +127,14 @@ CREATE TABLE IF NOT EXISTS decision_audit_log (
   feedback_at TIMESTAMP,
   feedback_type VARCHAR(50),
   feedback_details JSONB,
-  created_at TIMESTAMP DEFAULT NOW(),
-  INDEX idx_audit_decision_id (decision_id),
-  INDEX idx_audit_type (analysis_type),
-  INDEX idx_audit_user (user_id),
-  INDEX idx_audit_executed (executed),
-  INDEX idx_audit_timestamp (timestamp)
+  created_at TIMESTAMP DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS idx_audit_decision_id ON decision_audit_log (decision_id);
+CREATE INDEX IF NOT EXISTS idx_audit_type ON decision_audit_log (analysis_type);
+CREATE INDEX IF NOT EXISTS idx_audit_user ON decision_audit_log (user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_executed ON decision_audit_log (executed);
+CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON decision_audit_log (timestamp);
 
 -- ============================================================================
 -- 6. VALIDATION REEXECUTIONS
@@ -143,11 +149,12 @@ CREATE TABLE IF NOT EXISTS validation_reexecutions (
   cost_delta FLOAT,
   success BOOLEAN DEFAULT FALSE,
   timestamp TIMESTAMP DEFAULT NOW(),
-  created_at TIMESTAMP DEFAULT NOW(),
-  INDEX idx_reexec_decision (original_decision_id),
-  INDEX idx_reexec_strategy (strategy),
-  INDEX idx_reexec_timestamp (timestamp)
+  created_at TIMESTAMP DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS idx_reexec_decision ON validation_reexecutions (original_decision_id);
+CREATE INDEX IF NOT EXISTS idx_reexec_strategy ON validation_reexecutions (strategy);
+CREATE INDEX IF NOT EXISTS idx_reexec_timestamp ON validation_reexecutions (timestamp);
 
 -- ============================================================================
 -- 7. AUTONOMOUS DECISION LOG
@@ -168,12 +175,13 @@ CREATE TABLE IF NOT EXISTS autonomous_decision_log (
   auto_executed BOOLEAN DEFAULT FALSE,
   approval_status VARCHAR(50), -- pending, approved, rejected
   timestamp TIMESTAMP DEFAULT NOW(),
-  created_at TIMESTAMP DEFAULT NOW(),
-  INDEX idx_autonomous_type (analysis_type),
-  INDEX idx_autonomous_exec (execution_recommended),
-  INDEX idx_autonomous_auto (auto_executed),
-  INDEX idx_autonomous_timestamp (timestamp)
+  created_at TIMESTAMP DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS idx_autonomous_type ON autonomous_decision_log (analysis_type);
+CREATE INDEX IF NOT EXISTS idx_autonomous_exec ON autonomous_decision_log (execution_recommended);
+CREATE INDEX IF NOT EXISTS idx_autonomous_auto ON autonomous_decision_log (auto_executed);
+CREATE INDEX IF NOT EXISTS idx_autonomous_timestamp ON autonomous_decision_log (timestamp);
 
 -- ============================================================================
 -- 8. SYSTEM EVOLUTION LOG
@@ -188,11 +196,12 @@ CREATE TABLE IF NOT EXISTS system_evolution_log (
   model_weights_before JSONB,
   model_weights_after JSONB,
   timestamp TIMESTAMP DEFAULT NOW(),
-  created_at TIMESTAMP DEFAULT NOW(),
-  INDEX idx_evolution_type (improvement_type),
-  INDEX idx_evolution_decision (decision_id),
-  INDEX idx_evolution_timestamp (timestamp)
+  created_at TIMESTAMP DEFAULT NOW()
 );
+
+CREATE INDEX IF NOT EXISTS idx_evolution_type ON system_evolution_log (improvement_type);
+CREATE INDEX IF NOT EXISTS idx_evolution_decision ON system_evolution_log (decision_id);
+CREATE INDEX IF NOT EXISTS idx_evolution_timestamp ON system_evolution_log (timestamp);
 
 -- ============================================================================
 -- ANALYTICAL VIEWS

@@ -3,6 +3,8 @@
 # Dominio: Dashboard
 
 @dashboard
+@allure.label.testType:E2E
+@allure.label.module:Dashboard
 @allure.label.parentSuite:Backend
 @allure.label.epic:Gestao_de_Dashboard
 Funcionalidade: Seguranca e Acesso do Modulo Dashboard

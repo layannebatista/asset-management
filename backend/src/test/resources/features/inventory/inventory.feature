@@ -3,6 +3,8 @@
 # Dominio: Inventory
 
 @inventory
+@allure.label.testType:E2E
+@allure.label.module:Inventory
 @allure.label.parentSuite:Backend
 @allure.label.epic:Gestao_de_Inventory
 Funcionalidade: Seguranca e Acesso do Modulo Inventory

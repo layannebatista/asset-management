@@ -1,16 +1,17 @@
 const DEFAULT_AI_SERVICE_KEY = 'local-ai-service-key';
 
-let dashboardCharts = [];
-
 const refreshDashboardBtn = document.getElementById('refreshDashboardBtn');
 const loadingIndicator = document.getElementById('loadingIndicator');
 const errorAlert = document.getElementById('errorAlert');
 const analysisContainer = document.getElementById('analysisContainer');
+const alertsCard = document.getElementById('alertsCard');
 
 const statusElements = {
   api: document.getElementById('apiStatus'),
-  db: document.getElementById('dbStatus'),
-  cache: document.getElementById('cacheStatus'),
+  history: document.getElementById('dbStatus'),
+  claude: document.getElementById('claudeStatus'),
+  codex: document.getElementById('codexStatus'),
+  copilot: document.getElementById('copilotStatus'),
 };
 
 function getAiServiceKey() {
@@ -19,11 +20,53 @@ function getAiServiceKey() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  refreshDashboardBtn.addEventListener('click', loadInsightsDashboard);
-
-  await checkServiceStatus();
-  await loadInsightsDashboard();
+  refreshDashboardBtn.addEventListener('click', loadDashboard);
+  await loadDashboard();
 });
+
+async function loadDashboard() {
+  showLoading(true);
+  hideError();
+
+  try {
+    await checkServiceStatus();
+
+    const days = 30;
+    const [
+      tokenEconomyRes,
+      modelEfficiencyRes,
+      analysisRoiRes,
+      execSummaryRes,
+      recentCommandsRes,
+      failuresRes,
+      sourceStatusRes,
+    ] = await Promise.all([
+      safeApiFetch(`/api/v1/insights/token-economy?days=${days}`),
+      safeApiFetch(`/api/v1/insights/model-efficiency?days=${days}`),
+      safeApiFetch(`/api/v1/insights/analysis-roi?days=${days}`),
+      safeApiFetch(`/api/v1/insights/executive-summary?days=${days}`),
+      safeApiFetch(`/api/v1/insights/recent-commands?days=${days}&limit=12`),
+      safeApiFetch(`/api/v1/insights/failures?days=${days}`),
+      safeApiFetch('/api/v1/insights/source-status'),
+    ]);
+
+    const data = {
+      tokenEconomy: await tokenEconomyRes.json(),
+      modelEfficiency: await modelEfficiencyRes.json(),
+      analysisRoi: await analysisRoiRes.json(),
+      execSummary: await execSummaryRes.json(),
+      recentCommands: await recentCommandsRes.json(),
+      failures: await failuresRes.json(),
+      sourceStatus: await sourceStatusRes.json(),
+    };
+
+    renderVisualDashboard(data);
+  } catch (error) {
+    showError(`Nao foi possivel carregar o painel: ${error instanceof Error ? error.message : 'unknown error'}`);
+  } finally {
+    showLoading(false);
+  }
+}
 
 async function checkServiceStatus() {
   try {
@@ -33,467 +76,373 @@ async function checkServiceStatus() {
     updateStatusBadge(statusElements.api, false, 'Offline');
   }
 
-  updateStatusBadge(statusElements.db, true, 'Conectado via API');
-  updateStatusBadge(statusElements.cache, true, 'RTK + cache local');
+  try {
+    const source = await safeApiFetch('/api/v1/insights/source-status');
+    const sourceStatus = await source.json();
+    updateStatusBadge(statusElements.history, !!sourceStatus.historyAvailable, sourceStatus.historyAvailable ? 'Disponivel' : 'Ausente');
+    updateStatusBadge(statusElements.claude, !!sourceStatus.claudeProjectsAvailable, sourceStatus.claudeProjectsAvailable ? 'Disponivel' : 'Ausente');
+    updateStatusBadge(statusElements.codex, !!sourceStatus.codexSessionsAvailable, sourceStatus.codexSessionsAvailable ? 'Disponivel' : 'Ausente');
+    updateStatusBadge(statusElements.copilot, !!sourceStatus.copilotAvailable, sourceStatus.copilotAvailable ? 'Disponivel' : 'Ausente');
+  } catch {
+    updateStatusBadge(statusElements.history, false, 'Erro');
+    updateStatusBadge(statusElements.claude, false, 'Erro');
+    updateStatusBadge(statusElements.codex, false, 'Erro');
+    updateStatusBadge(statusElements.copilot, false, 'Erro');
+  }
 }
 
 function updateStatusBadge(element, isUp, label) {
   element.className = `status-badge ${isUp ? 'status-up' : 'status-down'}`;
-  element.textContent = `${isUp ? '🟢' : '🔴'} ${label}`;
+  element.textContent = `${isUp ? 'OK' : 'ERRO'} ${label}`;
 }
 
-
-async function loadInsightsDashboard() {
-  showLoading(true);
-  hideError();
-
-  try {
-    const days = 30;
-    let data = null;
-
-    try {
-      const [tokenEconomyRes, modelEfficiencyRes, analysisRoiRes, execSummaryRes] = await Promise.all([
-        safeApiFetch(`/api/v1/insights/token-economy?days=${days}`),
-        safeApiFetch(`/api/v1/insights/model-efficiency?days=${days}`),
-        safeApiFetch(`/api/v1/insights/analysis-roi?days=${days}`),
-        safeApiFetch(`/api/v1/insights/executive-summary?days=${days}`),
-      ]);
-
-      const tokenEconomy = await tokenEconomyRes.json();
-      const modelEfficiency = await modelEfficiencyRes.json();
-      const analysisRoi = await analysisRoiRes.json();
-      const execSummary = await execSummaryRes.json();
-
-      data = {
-        tokenEconomy,
-        modelEfficiency,
-        analysisRoi,
-        execSummary
-      };
-    } catch (dbError) {
-      console.warn('Usando dados de exemplo - banco não disponível:', dbError.message);
-      data = getDemoData();
-    }
-
-    renderVisualDashboard(data);
-  } catch (error) {
-    showError(`Erro ao carregar dashboard: ${error.message}`);
-  } finally {
-    showLoading(false);
-  }
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString('pt-BR');
 }
 
-function getDemoData() {
-  return {
-    tokenEconomy: {
-      period: { days: 30, startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), endDate: new Date() },
-      tokenEconomy: {
-        totalAnalyses: 1250,
-        tokensWithoutRTK: 2500000,
-        tokensWithRTK: 950000,
-        totalTokensSaved: 1550000,
-        savingsPercentage: 62.0
-      },
-      financialImpact: {
-        costWithoutOptimization: 1250.00,
-        costWithOptimization: 475.00,
-        usdSaved: 775.00
-      },
-      quality: {
-        avgReductionPercentage: 62.0,
-        avgContextAccuracy: 94.5
-      }
-    },
-    modelEfficiency: {
-      period: { days: 30 },
-      models: [
-        {
-          model: 'claude-3-5-sonnet-latest',
-          executions: 520,
-          avgInputTokens: 3200,
-          avgFinalTokens: 1200,
-          avgReductionPercentage: 62.5,
-          avgAccuracy: 95.2,
-          costPerAnalysis: 0.0006,
-          totalCost: 312.00,
-          efficiencyRatio: 158.7,
-          recommendation: 'RECOMENDADO'
-        },
-        {
-          model: 'gpt-4o',
-          executions: 380,
-          avgInputTokens: 2800,
-          avgFinalTokens: 1100,
-          avgReductionPercentage: 60.7,
-          avgAccuracy: 93.8,
-          costPerAnalysis: 0.0008,
-          totalCost: 304.00,
-          efficiencyRatio: 117.25,
-          recommendation: 'RECOMENDADO'
-        }
-      ],
-      bestModel: 'claude-3-5-sonnet-latest',
-      recommendation: 'Use claude-3-5-sonnet-latest para melhor custo-benefício'
-    },
-    analysisRoi: {
-      period: { days: 30 },
-      analyses: [
-        {
-          type: 'Observabilidade',
-          executions: 450,
-          avgEfficiency: 64.2,
-          avgAccuracy: 96.1,
-          totalUsdSaved: 285.75,
-          avgUsdSavedPerAnalysis: 0.635,
-          roiPercentage: 78.5,
-          recommendation: 'ALTA PRIORIDADE'
-        },
-        {
-          type: 'Inteligência de Testes',
-          executions: 380,
-          avgEfficiency: 61.8,
-          avgAccuracy: 93.7,
-          totalUsdSaved: 242.40,
-          avgUsdSavedPerAnalysis: 0.638,
-          roiPercentage: 72.3,
-          recommendation: 'ALTA PRIORIDADE'
-        }
-      ],
-      topROI: {
-        type: 'Observabilidade',
-        roiPercentage: 78.5,
-        totalUsdSaved: 285.75
-      },
-      totalUsdSaved: 775.00
-    },
-    execSummary: {
-      summary: {
-        period: 'Últimos 30 dias',
-        totalAnalysesExecuted: 1250,
-        metrics: {
-          tokensSaved: 1550000,
-          usdSaved: 775.00,
-          savingsPercentage: 62.0,
-          qualityScore: 94.5
-        },
-        keyInsights: [
-          'RTK economizou $775.00 em custos de API',
-          'Redução de 62% em tokens consumidos',
-          '1.250 análises executadas com sucesso',
-          'Qualidade mantida em 94.5%'
-        ],
-        recommendation: '✅ RTK está gerando excelente valor - manter em produção'
-      }
-    }
-  };
+function formatPct(value) {
+  return `${Number(value || 0).toFixed(1)}%`;
 }
 
-function convertUsdToBrl(usd) {
-  const rate = 5.00; // Câmbio atual: 1 USD = 5.00 BRL
-  return usd * rate;
+function formatMs(value) {
+  return `${Number(value || 0).toFixed(0)} ms`;
+}
+
+function formatUsd(value) {
+  return `$${Number(value || 0).toFixed(2)}`;
+}
+
+function formatDate(value) {
+  if (!value) return '-';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString('pt-BR');
+}
+
+function formatCommand(value) {
+  return value && value.trim().length > 0 ? value : '-';
+}
+
+function uniqueAgents(models) {
+  return new Set((models || []).map((item) => item.agent)).size;
 }
 
 function checkAlerts(data) {
   const alerts = [];
-
-  const analyses = data.analysisRoi.analyses || [];
-  analyses.forEach(a => {
-    if (a.roiPercentage < 70) {
-      alerts.push({
-        type: 'warning',
-        message: `⚠️ ${a.type}: ROI caiu para ${a.roiPercentage.toFixed(1)}% (esperado > 70%)`
-      });
-    }
-  });
-
   const metrics = data.execSummary.summary.metrics || {};
-  if ((metrics.qualityScore || 0) < 90) {
-    alerts.push({
-      type: 'warning',
-      message: `⚠️ Qualidade em risco: ${metrics.qualityScore.toFixed(1)}% (esperado > 90%)`
-    });
+  const failures = data.failures || {};
+  const models = data.modelEfficiency.models || [];
+
+  if ((metrics.parseFailures || 0) > 0) {
+    alerts.push(`${metrics.parseFailures} falhas de parse foram registradas no periodo.`);
+  }
+
+  if ((metrics.savingsPercentage || 0) < 20 && (data.execSummary.summary.totalCommandsTracked || 0) > 0) {
+    alerts.push(`Reducao media baixa para os comandos observados: ${formatPct(metrics.savingsPercentage)}.`);
+  }
+
+  if ((data.execSummary.summary.totalCommandsTracked || 0) === 0) {
+    alerts.push('Nenhum comando do RTK foi encontrado para este projeto nos ultimos 30 dias.');
+  }
+
+  if (uniqueAgents(models) < 3) {
+    alerts.push('Nem todos os agentes esperados apareceram nas fontes locais do periodo atual.');
+  }
+
+  if ((failures.unresolvedFailures || 0) > 0) {
+    alerts.push(`${failures.unresolvedFailures} falhas nao foram recuperadas pelo fallback do RTK.`);
   }
 
   return alerts;
 }
 
-function renderVisualDashboard(data) {
-  destroyCharts();
+function renderAlertsCard(alerts) {
+  if (alerts.length === 0) {
+    alertsCard.innerHTML = '<p class="no-alerts">Sem alertas no momento.</p>';
+    return;
+  }
 
+  alertsCard.innerHTML = alerts.map((alert) => `
+    <div class="alert-item warning">${alert}</div>
+  `).join('');
+}
+
+function renderMetricCards(summary, metrics, models) {
+  return `
+    <section class="section-card">
+      <div class="section-heading">
+        <div>
+          <p class="section-eyebrow">Resumo</p>
+          <h2>Panorama do workspace</h2>
+        </div>
+        <p class="section-note">${summary.recommendation || 'Resumo indisponivel.'}</p>
+      </div>
+
+      <div class="metric-grid">
+        <article class="metric-card accent-blue">
+          <span class="metric-kicker">Comandos</span>
+          <strong>${formatNumber(summary.totalCommandsTracked)}</strong>
+          <p>execucoes registradas pelo RTK</p>
+        </article>
+        <article class="metric-card accent-green">
+          <span class="metric-kicker">Economia</span>
+          <strong>${formatNumber(metrics.tokensSaved)}</strong>
+          <p>tokens economizados no periodo</p>
+        </article>
+        <article class="metric-card accent-amber">
+          <span class="metric-kicker">Reducao</span>
+          <strong>${formatPct(metrics.savingsPercentage)}</strong>
+          <p>media de reducao por comando</p>
+        </article>
+        <article class="metric-card accent-slate">
+          <span class="metric-kicker">Tempo medio</span>
+          <strong>${formatMs(metrics.avgExecTimeMs)}</strong>
+          <p>latencia media observada</p>
+        </article>
+        <article class="metric-card accent-pink">
+          <span class="metric-kicker">Agentes</span>
+          <strong>${formatNumber(uniqueAgents(models))}</strong>
+          <p>agentes observados no ambiente</p>
+        </article>
+      </div>
+
+      <div class="insight-strip">
+        ${(summary.keyInsights || []).map((item) => `<span>${item}</span>`).join('')}
+      </div>
+    </section>
+  `;
+}
+
+function renderSourceSummary(sourceStatus, models) {
+  const sourceItems = [
+    { label: 'RTK History DB', ok: sourceStatus.historyAvailable, detail: 'historico de comandos e falhas' },
+    { label: 'Claude', ok: sourceStatus.claudeProjectsAvailable, detail: 'sessoes locais da pasta .claude' },
+    { label: 'Codex', ok: sourceStatus.codexSessionsAvailable, detail: 'sessoes locais da pasta .codex' },
+    { label: 'GitHub Copilot', ok: sourceStatus.copilotAvailable, detail: 'artefatos locais da pasta .copilot' },
+  ];
+
+  return `
+    <section class="section-card two-column">
+      <div>
+        <div class="section-heading compact">
+          <div>
+            <p class="section-eyebrow">Cobertura</p>
+            <h2>Fontes conectadas</h2>
+          </div>
+        </div>
+        <div class="source-grid">
+          ${sourceItems.map((item) => `
+            <article class="source-card ${item.ok ? 'source-up' : 'source-down'}">
+              <strong>${item.label}</strong>
+              <p>${item.detail}</p>
+              <span>${item.ok ? 'Disponivel' : 'Ausente'}</span>
+            </article>
+          `).join('')}
+        </div>
+      </div>
+      <div>
+        <div class="section-heading compact">
+          <div>
+            <p class="section-eyebrow">Agentes</p>
+            <h2>Leitura do painel</h2>
+          </div>
+        </div>
+        <div class="explain-card">
+          <p>O bloco de agentes mostra quem apareceu nas fontes locais encontradas para este workspace.</p>
+          <p>Claude e Codex sao filtrados pelo caminho do projeto. Copilot usa os artefatos locais associados ao workspace.</p>
+          <p>Agentes observados agora: <strong>${formatNumber(uniqueAgents(models))}</strong>.</p>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderCommandEfficiency(commandGroups) {
+  return `
+    <section class="section-card">
+      <div class="section-heading compact">
+        <div>
+          <p class="section-eyebrow">Efetividade</p>
+          <h2>Eficiência por comando</h2>
+        </div>
+      </div>
+      ${commandGroups.length > 0 ? `
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Comando</th>
+                <th>Execucoes</th>
+                <th>Reducao</th>
+                <th>Entrada media</th>
+                <th>Saida media</th>
+                <th>Latencia</th>
+                <th>USD est.</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${commandGroups.map((item) => `
+                <tr>
+                  <td><strong>${item.type}</strong></td>
+                  <td>${formatNumber(item.executions)}</td>
+                  <td>${formatPct(item.avgEfficiency)}</td>
+                  <td>${formatNumber(item.avgInputTokens)}</td>
+                  <td>${formatNumber(item.avgOutputTokens)}</td>
+                  <td>${formatMs(item.avgLatencyMs)}</td>
+                  <td>${formatUsd(item.totalUsdSaved)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      ` : '<p class="empty-state">Nenhum comando do RTK foi encontrado para este projeto.</p>'}
+    </section>
+  `;
+}
+
+function renderModels(models) {
+  return `
+    <section class="section-card">
+      <div class="section-heading compact">
+        <div>
+          <p class="section-eyebrow">Agentes</p>
+          <h2>Agentes e modelos observados</h2>
+        </div>
+      </div>
+      ${models.length > 0 ? `
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Agente</th>
+                <th>Modelo</th>
+                <th>Provedor</th>
+                <th>Mensagens</th>
+                <th>Sessoes</th>
+                <th>Origem</th>
+                <th>Entrypoints</th>
+                <th>Ultimo uso</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${models.map((item) => `
+                <tr>
+                  <td><strong>${item.agent}</strong></td>
+                  <td>${item.model}</td>
+                  <td>${item.provider}</td>
+                  <td>${formatNumber(item.assistantMessages)}</td>
+                  <td>${formatNumber(item.sessions)}</td>
+                  <td>${item.source || '-'}</td>
+                  <td>${(item.entrypoints || []).join(', ') || '-'}</td>
+                  <td>${formatDate(item.lastSeen)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      ` : '<p class="empty-state">Nenhum agente foi observado nas fontes locais disponiveis.</p>'}
+    </section>
+  `;
+}
+
+function renderCommands(commands) {
+  return `
+    <section class="section-card">
+      <div class="section-heading compact">
+        <div>
+          <p class="section-eyebrow">Timeline</p>
+          <h2>Comandos recentes</h2>
+        </div>
+      </div>
+      ${commands.length > 0 ? `
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Quando</th>
+                <th>Comando</th>
+                <th>Tokens entrada</th>
+                <th>Tokens saida</th>
+                <th>Economizados</th>
+                <th>Reducao</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${commands.map((command) => `
+                <tr>
+                  <td>${formatDate(command.timestamp)}</td>
+                  <td><strong>${formatCommand(command.originalCmd)}</strong></td>
+                  <td>${formatNumber(command.inputTokens)}</td>
+                  <td>${formatNumber(command.outputTokens)}</td>
+                  <td>${formatNumber(command.savedTokens)}</td>
+                  <td>${formatPct(command.savingsPct)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      ` : '<p class="empty-state">Nenhum comando recente encontrado.</p>'}
+    </section>
+  `;
+}
+
+function renderFailures(failures) {
+  return `
+    <section class="section-card">
+      <div class="section-heading compact">
+        <div>
+          <p class="section-eyebrow">Qualidade</p>
+          <h2>Falhas registradas</h2>
+        </div>
+      </div>
+      ${failures.length > 0 ? `
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Quando</th>
+                <th>Comando</th>
+                <th>Erro</th>
+                <th>Fallback</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${failures.map((failure) => `
+                <tr>
+                  <td>${formatDate(failure.timestamp)}</td>
+                  <td><strong>${formatCommand(failure.rawCommand)}</strong></td>
+                  <td>${failure.errorMessage || '-'}</td>
+                  <td>${failure.fallbackSucceeded ? 'Recuperado' : 'Nao recuperado'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      ` : '<p class="empty-state">Nenhuma falha registrada no periodo.</p>'}
+    </section>
+  `;
+}
+
+function renderVisualDashboard(data) {
   const summary = data.execSummary.summary || {};
   const metrics = summary.metrics || {};
+  const commands = data.recentCommands.commands || [];
+  const commandGroups = data.analysisRoi.analyses || [];
   const models = data.modelEfficiency.models || [];
-  const analyses = data.analysisRoi.analyses || [];
-  const totalUsdSaved = data.analysisRoi.totalUsdSaved || 0;
+  const failures = data.failures.recentFailures || [];
   const alerts = checkAlerts(data);
 
-  const html = `
-    <div class="insights-dashboard">
-      <!-- Alerts Section -->
-      ${alerts.length > 0 ? `
-      <div class="alerts-section">
-        <h3>🚨 Alertas</h3>
-        ${alerts.map(alert => `
-          <div class="alert-item ${alert.type}">
-            ${alert.message}
-          </div>
-        `).join('')}
-      </div>
-      ` : ''}
+  renderAlertsCard(alerts);
 
-      <!-- Executive Summary -->
-      <div class="dashboard-section">
-        <h2>📊 RTK Dashboard</h2>
-        <div class="kpi-grid">
-          <div class="kpi-card">
-            <div class="kpi-number">${(metrics.tokensSaved || 0).toLocaleString('pt-BR')}</div>
-            <div class="kpi-label">Tokens Economizados</div>
-          </div>
-          <div class="kpi-card highlight">
-            <div class="kpi-number">R$ ${(convertUsdToBrl(metrics.usdSaved) || 0).toFixed(2)}</div>
-            <div class="kpi-label">Economizados</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-number">${(metrics.savingsPercentage || 0).toFixed(1)}%</div>
-            <div class="kpi-label">Redução</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-number">${(metrics.qualityScore || 0).toFixed(1)}%</div>
-            <div class="kpi-label">Qualidade Mantida</div>
-          </div>
-          <div class="kpi-card">
-            <div class="kpi-number">${(summary.totalAnalysesExecuted || 0).toLocaleString('pt-BR')}</div>
-            <div class="kpi-label">Análises</div>
-          </div>
-        </div>
-        <div class="recommendation-banner ${summary.recommendation.includes('✅') ? 'success' : 'warning'}">
-          <p>${summary.recommendation}</p>
-        </div>
-      </div>
-
-      <!-- Model Efficiency -->
-      ${models.length > 0 ? `
-      <div class="dashboard-section">
-        <h2>🤖 Eficiência dos Modelos</h2>
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Modelo</th>
-                <th>Execuções</th>
-                <th>Tokens Final</th>
-                <th>Redução %</th>
-                <th>Acurácia</th>
-                <th>Custo/Análise</th>
-                <th>Status <span class="tooltip-icon" title="REC: Ótimo custo-benefício. NÃO: Revisar uso">?</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              ${models.map(m => `
-                <tr>
-                  <td><strong>${m.model}</strong></td>
-                  <td>${m.executions}</td>
-                  <td>${(m.avgFinalTokens || 0).toLocaleString('pt-BR')}</td>
-                  <td>${(m.avgReductionPercentage || 0).toFixed(1)}%</td>
-                  <td>${(m.avgAccuracy || 0).toFixed(1)}%</td>
-                  <td>R$ ${(convertUsdToBrl(m.costPerAnalysis) || 0).toFixed(4)}</td>
-                  <td><span class="badge ${m.recommendation === 'RECOMENDADO' ? 'success' : 'warning'}">${m.recommendation === 'RECOMENDADO' ? '✓ REC.' : '✗ NÃO'}</span></td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      ` : ''}
-
-      <!-- ROI Analysis -->
-      ${analyses.length > 0 ? `
-      <div class="dashboard-section">
-        <h2>📈 ROI Por Análise</h2>
-        <div class="table-wrapper">
-          <table>
-            <thead>
-              <tr>
-                <th>Tipo</th>
-                <th>Execuções</th>
-                <th>Eficiência</th>
-                <th>Acurácia</th>
-                <th>Economizado</th>
-                <th>ROI %</th>
-                <th>Prioridade <span class="tooltip-icon" title="ALTA: ROI > 70%. REVISAR: ROI < 70%">?</span></th>
-              </tr>
-            </thead>
-            <tbody>
-              ${analyses.map(a => `
-                <tr>
-                  <td><strong>${a.type}</strong></td>
-                  <td>${a.executions}</td>
-                  <td>${(a.avgEfficiency || 0).toFixed(1)}%</td>
-                  <td>${(a.avgAccuracy || 0).toFixed(1)}%</td>
-                  <td>R$ ${(convertUsdToBrl(a.totalUsdSaved) || 0).toFixed(2)}</td>
-                  <td><strong>${(a.roiPercentage || 0).toFixed(1)}%</strong></td>
-                  <td><span class="badge ${a.recommendation === 'ALTA PRIORIDADE' ? 'success' : 'warning'}">${a.recommendation === 'ALTA PRIORIDADE' ? '🔴 ALTA' : '🟡 REVISAR'}</span></td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      </div>
-      ` : ''}
+  analysisContainer.innerHTML = `
+    <div class="dashboard-stack">
+      ${renderMetricCards(summary, metrics, models)}
+      ${renderSourceSummary(data.sourceStatus || {}, models)}
+      ${renderCommandEfficiency(commandGroups)}
+      ${renderModels(models)}
+      ${renderCommands(commands)}
+      ${renderFailures(failures)}
     </div>
   `;
-
-  analysisContainer.innerHTML = html;
-  setupTooltips();
-  renderCharts(data);
-}
-
-function setupTooltips() {
-  document.querySelectorAll('.tooltip-icon').forEach(icon => {
-    const title = icon.getAttribute('title');
-    icon.addEventListener('mouseenter', function(e) {
-      let tooltip = document.querySelector('.tooltip-popup');
-      if (!tooltip) {
-        tooltip = document.createElement('div');
-        tooltip.className = 'tooltip-popup';
-        document.body.appendChild(tooltip);
-      }
-      tooltip.textContent = title;
-      const rect = icon.getBoundingClientRect();
-      tooltip.style.display = 'block';
-      tooltip.style.left = (rect.left + rect.width / 2) + 'px';
-      tooltip.style.top = (rect.top - 40) + 'px';
-    });
-    icon.addEventListener('mouseleave', function() {
-      const tooltip = document.querySelector('.tooltip-popup');
-      if (tooltip) tooltip.style.display = 'none';
-    });
-  });
-}
-
-function renderCharts(data) {
-  const tokenMetrics = data.tokenEconomy.tokenEconomy || {};
-  const financialImpact = data.tokenEconomy.financialImpact || {};
-  const models = data.modelEfficiency.models || [];
-  const analyses = data.analysisRoi.analyses || [];
-
-  setTimeout(() => {
-    // Token Chart
-    const tokenCtx = document.getElementById('tokenChart');
-    if (tokenCtx && Chart) {
-      dashboardCharts.push(new Chart(tokenCtx, {
-        type: 'bar',
-        data: {
-          labels: ['Sem RTK', 'Com RTK'],
-          datasets: [{
-            label: 'Tokens',
-            data: [
-              tokenMetrics.tokensWithoutRTK || 0,
-              tokenMetrics.tokensWithRTK || 0
-            ],
-            backgroundColor: ['#ef4444', '#22c55e'],
-            borderRadius: 8,
-          }],
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            y: { beginAtZero: true }
-          },
-        },
-      }));
-    }
-
-    // Cost Chart
-    const costCtx = document.getElementById('costChart');
-    if (costCtx && Chart) {
-      dashboardCharts.push(new Chart(costCtx, {
-        type: 'bar',
-        data: {
-          labels: ['Sem Otimização', 'Com RTK'],
-          datasets: [{
-            label: 'Custo (USD)',
-            data: [
-              financialImpact.costWithoutOptimization || 0,
-              financialImpact.costWithOptimization || 0
-            ],
-            backgroundColor: ['#f87171', '#4ade80'],
-            borderRadius: 8,
-          }],
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            y: { beginAtZero: true }
-          },
-        },
-      }));
-    }
-
-    // ROI Chart
-    const roiCtx = document.getElementById('roiChart');
-    if (roiCtx && Chart && analyses.length > 0) {
-      dashboardCharts.push(new Chart(roiCtx, {
-        type: 'doughnut',
-        data: {
-          labels: analyses.map(a => a.type),
-          datasets: [{
-            data: analyses.map(a => a.roiPercentage),
-            backgroundColor: ['#3b82f6', '#ec4899', '#f59e0b', '#8b5cf6'],
-          }],
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { position: 'bottom' }
-          },
-        },
-      }));
-    }
-
-    // Savings Chart
-    const savingsCtx = document.getElementById('savingsChart');
-    if (savingsCtx && Chart && analyses.length > 0) {
-      dashboardCharts.push(new Chart(savingsCtx, {
-        type: 'bar',
-        data: {
-          labels: analyses.map(a => a.type),
-          datasets: [{
-            label: 'USD Economizado',
-            data: analyses.map(a => a.totalUsdSaved),
-            backgroundColor: '#10b981',
-            borderRadius: 8,
-          }],
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false }
-          },
-          scales: {
-            y: { beginAtZero: true }
-          },
-        },
-      }));
-    }
-  }, 100);
-}
-
-function destroyCharts() {
-  dashboardCharts.forEach(chart => {
-    try {
-      chart.destroy();
-    } catch (e) {
-      console.error('Erro ao destruir gráfico:', e);
-    }
-  });
-  dashboardCharts = [];
 }
 
 async function safeApiFetch(url, options = {}) {
@@ -518,7 +467,7 @@ async function safeApiFetch(url, options = {}) {
   if (response.status === 401) {
     const typedKey = prompt('Informe a chave da IA (X-AI-Service-Key):', key);
     if (!typedKey || !typedKey.trim()) {
-      throw new Error('Chave de acesso não informada.');
+      throw new Error('Chave de acesso nao informada.');
     }
 
     localStorage.setItem('aiServiceKey', typedKey.trim());
@@ -551,4 +500,3 @@ function showError(message) {
   errorAlert.textContent = message;
   errorAlert.classList.remove('alert-hidden');
 }
-

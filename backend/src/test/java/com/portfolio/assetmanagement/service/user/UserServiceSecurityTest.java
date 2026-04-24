@@ -2,7 +2,6 @@ package com.portfolio.assetmanagement.service.user;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -18,6 +17,7 @@ import com.portfolio.assetmanagement.infrastructure.persistence.user.repository.
 import com.portfolio.assetmanagement.security.context.LoggedUserContext;
 import com.portfolio.assetmanagement.security.enums.UserRole;
 import com.portfolio.assetmanagement.shared.exception.BusinessException;
+import java.lang.reflect.Field;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,8 +41,7 @@ class UserServiceSecurityTest {
   @Test
   @DisplayName("USER-S01 - operador não pode criar usuário")
   void operadorNaoPodeCriarUsuario() {
-    Organization org = mock(Organization.class);
-    when(org.getId()).thenReturn(1L);
+    Organization org = organizationWithId(1L);
     Unit unit = new Unit("Sede", org, false);
 
     when(loggedUser.isOperator()).thenReturn(true);
@@ -67,8 +66,7 @@ class UserServiceSecurityTest {
   @Test
   @DisplayName("USER-S02 - gestor só cria usuário na própria unidade")
   void gestorForaDaUnidadeLancaBusinessException() {
-    Organization org = mock(Organization.class);
-    when(org.getId()).thenReturn(1L);
+    Organization org = organizationWithId(1L);
     Unit unit = new Unit("Filial", org, false);
 
     when(loggedUser.isOperator()).thenReturn(false);
@@ -93,8 +91,7 @@ class UserServiceSecurityTest {
   @Test
   @DisplayName("USER-S03 - bloqueia criação em organização diferente da sessão")
   void organizacaoDiferenteDaSessao() {
-    Organization org = mock(Organization.class);
-    when(org.getId()).thenReturn(1L);
+    Organization org = organizationWithId(1L);
     Unit unit = new Unit("Sede", org, false);
 
     when(loggedUser.isOperator()).thenReturn(false);
@@ -114,5 +111,17 @@ class UserServiceSecurityTest {
                     null))
         .isInstanceOf(BusinessException.class)
         .hasMessageContaining("não pertence a esta organização");
+  }
+
+  private Organization organizationWithId(Long id) {
+    Organization organization = new Organization("Org " + id);
+    try {
+      Field field = Organization.class.getDeclaredField("id");
+      field.setAccessible(true);
+      field.set(organization, id);
+      return organization;
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException("Falha ao preparar Organization de teste", e);
+    }
   }
 }

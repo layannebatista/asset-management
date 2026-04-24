@@ -2,7 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 
 import "./index.css";
-import "./utils/injectTestIds"; // Workaround para injetar data-testid
 
 import AppRoutes from "./routes/AppRoutes";
 import { AuthProvider } from "./context/AuthContext";

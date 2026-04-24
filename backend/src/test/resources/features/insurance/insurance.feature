@@ -3,6 +3,8 @@
 # Dominio: Insurance
 
 @insurance
+@allure.label.testType:E2E
+@allure.label.module:Insurance
 @allure.label.parentSuite:Backend
 @allure.label.epic:Gestao_de_Insurance
 Funcionalidade: Seguranca e Acesso do Modulo Insurance

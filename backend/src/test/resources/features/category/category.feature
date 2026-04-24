@@ -3,6 +3,8 @@
 # Dominio: Category
 
 @category
+@allure.label.testType:E2E
+@allure.label.module:Category
 @allure.label.parentSuite:Backend
 @allure.label.epic:Gestao_de_Category
 Funcionalidade: Seguranca e Acesso do Modulo Category

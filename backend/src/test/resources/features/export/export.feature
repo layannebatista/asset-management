@@ -3,6 +3,8 @@
 # Dominio: Export
 
 @export
+@allure.label.testType:E2E
+@allure.label.module:Export
 @allure.label.parentSuite:Backend
 @allure.label.epic:Gestao_de_Export
 Funcionalidade: Seguranca e Acesso do Modulo Export

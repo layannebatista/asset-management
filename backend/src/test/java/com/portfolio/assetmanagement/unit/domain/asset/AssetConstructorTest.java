@@ -16,12 +16,15 @@ import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.Story;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 @Epic("Backend")
 @Feature("Domínio — Asset")
 @Story("Criação de ativo")
 @DisplayName("Asset — Construtor")
+@Tag("testType=Unit")
+@Tag("module=Asset")
 class AssetConstructorTest {
 
   private Organization org;

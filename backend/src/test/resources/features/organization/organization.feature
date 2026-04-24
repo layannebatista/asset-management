@@ -3,6 +3,8 @@
 # Dominio: Organization
 
 @organization
+@allure.label.testType:E2E
+@allure.label.module:Organization
 @allure.label.parentSuite:Backend
 @allure.label.epic:Gestao_de_Organization
 Funcionalidade: Seguranca e Acesso do Modulo Organization

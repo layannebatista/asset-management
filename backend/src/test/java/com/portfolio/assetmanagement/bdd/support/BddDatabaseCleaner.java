@@ -1,6 +1,7 @@
 package com.portfolio.assetmanagement.bdd.support;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +19,40 @@ public class BddDatabaseCleaner {
   }
 
   public void resetScenarioData() {
+    String[] tables = {
+      "audit_events",
+      "asset_assignment_history",
+      "asset_status_history",
+      "asset_insurance",
+      "transfer_requests",
+      "maintenance_records",
+      "inventory_items",
+      "inventory_sessions",
+      "refresh_tokens",
+      "mfa_codes",
+      "user_activation_tokens",
+      "user_consents",
+      "assets",
+      "users",
+      "units",
+      "organizations"
+    };
+
     String prefix = schema + ".";
+    String databaseProduct =
+        jdbcTemplate.execute(
+        (ConnectionCallback<String>)
+          connection -> connection.getMetaData().getDatabaseProductName().toLowerCase());
+
+    if (databaseProduct != null && databaseProduct.contains("h2")) {
+      jdbcTemplate.execute("SET REFERENTIAL_INTEGRITY FALSE");
+      for (String table : tables) {
+        jdbcTemplate.execute("TRUNCATE TABLE " + prefix + table);
+      }
+      jdbcTemplate.execute("SET REFERENTIAL_INTEGRITY TRUE");
+      return;
+    }
+
     jdbcTemplate.execute(
         "TRUNCATE TABLE "
             + prefix

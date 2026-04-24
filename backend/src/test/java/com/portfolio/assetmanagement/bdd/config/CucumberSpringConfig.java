@@ -26,5 +26,5 @@ import org.springframework.test.context.ActiveProfiles;
 @SpringBootTest(
     classes = AssetManagementApplication.class,
     webEnvironment = SpringBootTest.WebEnvironment.MOCK)
-@ActiveProfiles("bdd")
+@ActiveProfiles("test")
 public class CucumberSpringConfig {}

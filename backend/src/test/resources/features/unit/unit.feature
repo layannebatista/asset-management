@@ -3,6 +3,8 @@
 # Dominio: Unit
 
 @unit
+@allure.label.testType:E2E
+@allure.label.module:Unit
 @allure.label.parentSuite:Backend
 @allure.label.epic:Gestao_de_Unit
 Funcionalidade: Seguranca e Acesso do Modulo Unit

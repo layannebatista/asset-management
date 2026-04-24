@@ -10,12 +10,22 @@
     <link rel="stylesheet" href="dashboard.css" />
   </head>
   <body>
-    <div class="dashboard-container">
+    <div class="page-shell">
       <!-- Header -->
-      <header class="dashboard-header">
+      <header class="hero">
         <div class="header-content">
-          <h1>📊 Sprint Reporter</h1>
+          <h1>Sprint Reporter</h1>
           <p>Painel executivo da sprint com explicações simples, gráficos e exportação PowerPoint</p>
+        </div>
+        <div class="hero-panel">
+          <div style="font-size: 0.82rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted);">Ação rápida</div>
+          <button id="generateBtn" class="btn btn-primary">Gerar Relatório</button>
+          <button id="downloadPptBtn" class="btn btn-secondary" disabled>Baixar PowerPoint</button>
+          <div id="loadingIndicator" class="loading-hidden">
+            <div class="spinner"></div>
+            <p style="margin: 8px 0 0; color: var(--muted);">Gerando relatório...</p>
+          </div>
+          <div id="errorAlert" class="alert alert-error alert-hidden"></div>
         </div>
       </header>
 
@@ -23,8 +33,8 @@
       <main class="dashboard-main">
         <!-- Sidebar: Report Generator -->
         <aside class="sidebar">
-          <div class="sidebar-section">
-            <h2>Gerar Relatório</h2>
+          <div class="sidebar-card">
+            <h2>Datas</h2>
 
             <div class="form-group">
               <label for="startDate">Data Inicial</label>
@@ -35,20 +45,6 @@
               <label for="endDate">Data Final</label>
               <input type="date" id="endDate" />
             </div>
-
-              <div class="button-group">
-              <button id="generateBtn" class="btn btn-primary">Gerar Relatório</button>
-              <button id="downloadPptBtn" class="btn btn-secondary" disabled>
-                Baixar PowerPoint
-              </button>
-            </div>
-
-            <div id="loadingIndicator" class="loading-hidden">
-              <div class="spinner"></div>
-              <p>Gerando relatório...</p>
-            </div>
-
-            <div id="errorAlert" class="alert alert-error alert-hidden"></div>
           </div>
         </aside>
 
@@ -62,8 +58,8 @@
         </section>
       </main>
     </div>
+    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="dashboard.js"></script>
   </body>
 </html>

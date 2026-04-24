@@ -5,16 +5,18 @@ import { ContextFilter } from '../../context/ContextFilter';
 import { ContextPipeline } from '../../context/ContextPipeline';
 import { GitHubActionsCollector } from '../../collectors/GitHubActionsCollector';
 import { AnalysisRepository } from '../../storage/AnalysisRepository';
+import { TokenSavingsRecorder } from '../../observability/TokenSavingsRecorder';
 import { CICDAnalysis, CICDRequest } from '../../types/analysis.types';
 import { logger } from '../../api/logger';
 
 export class CICDAnalyzer {
-  private readonly pipeline = new ContextPipeline(2000);
+  private readonly pipeline = new ContextPipeline(1200, 0.75);
 
   constructor(
     private readonly llm: LLMClient,
     private readonly collector: GitHubActionsCollector,
     private readonly repository: AnalysisRepository,
+    private readonly savingsRecorder: TokenSavingsRecorder,
   ) {}
 
   async analyze(request: CICDRequest = {}): Promise<CICDAnalysis> {
@@ -66,6 +68,16 @@ export class CICDAnalyzer {
     };
 
     await this.repository.save(result);
+
+    // Record token savings metrics
+    await this.savingsRecorder.recordAnalysis({
+      analysisId,
+      analysisType: 'cicd',
+      rawChunks: chunks,
+      budgetResult,
+      llmResponse,
+    });
+
     logger.info('CI/CD analysis completed', {
       analysisId,
       runsAnalyzed: runs.length,

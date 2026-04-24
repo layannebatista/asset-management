@@ -4,6 +4,8 @@
 # Executar com: mvn test -Dtest=CucumberRunnerTest
 
 @maintenance
+@allure.label.testType:E2E
+@allure.label.module:Maintenance
 @allure.label.parentSuite:Backend
 @allure.label.epic:Gestao_de_Manutencao
 Funcionalidade: Ciclo de Vida de Manutenção de Ativos

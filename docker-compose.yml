@@ -440,8 +440,12 @@ services:
       dockerfile: Dockerfile.test
     container_name: asset-management-test-backend
     profiles: ["tests"]
+    environment:
+      SPRING_PROFILES_ACTIVE: test
     volumes:
       - ./allure-results:/allure-results
+      - ./backend/src:/app/src:ro
+      - ./backend/pom.xml:/app/pom.xml:ro
     depends_on:
       clean-allure-results:
         condition: service_completed_successfully
@@ -505,7 +509,7 @@ services:
 
   # ─── RTK Dashboard Service ────────────────────────────────────────────────────
   # Token optimization dashboard showing real business metrics (token savings, ROI).
-  # Docs: http://localhost:3100
+  # Docs: http://localhost:3101
   rtk-dashboard:
     build:
       context: ./rtk-dashboard
@@ -545,7 +549,7 @@ services:
       GITHUB_OWNER: ${GITHUB_OWNER:-}
       GITHUB_REPO: ${GITHUB_REPO:-}
     ports:
-      - "3100:3100"
+      - "3101:3100"
     depends_on:
       asset-management:
         condition: service_healthy

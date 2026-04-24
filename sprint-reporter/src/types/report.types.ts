@@ -209,6 +209,9 @@ export interface SprintReport {
   issues: Issue[];
   insights: Insight[];
   recommendations: Recommendation[];
+  rtk?: any;
+  sourceStatus?: any;
+  sourceWarnings?: string[];
 }
 
 // ─── Dados Coletados (interno) ───────────────────────────────────────────
