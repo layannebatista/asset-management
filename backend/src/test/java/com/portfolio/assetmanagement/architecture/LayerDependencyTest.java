@@ -37,6 +37,8 @@ import org.junit.jupiter.api.Test;
 @Epic("Backend")
 @Feature("Arquitetura — Camadas")
 @DisplayName("Dependências entre Camadas")
+@Tag("testType=Architecture")
+@Tag("module=General")
 class LayerDependencyTest {
 
   private static final String PACOTE_BASE = "com.portfolio.assetmanagement";

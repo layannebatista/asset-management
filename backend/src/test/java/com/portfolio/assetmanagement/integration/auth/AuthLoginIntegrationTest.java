@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Test;
 @Feature("Integração — Auth")
 @Story("Login")
 @DisplayName("Auth — Login")
+@Tag("testType=Integration")
+@Tag("module=Auth")
 class AuthLoginIntegrationTest extends BaseIntegrationTest {
 
   @Test

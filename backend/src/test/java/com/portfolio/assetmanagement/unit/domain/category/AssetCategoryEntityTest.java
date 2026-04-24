@@ -8,6 +8,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("AssetCategory — domínio")
+@Tag("testType=Unit")
+@Tag("module=Domain")
 class AssetCategoryEntityTest {
 
   @Test

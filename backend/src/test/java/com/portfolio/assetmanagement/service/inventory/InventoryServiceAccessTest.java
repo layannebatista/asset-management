@@ -22,6 +22,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("InventoryService — controle de acesso")
+@Tag("testType=Integration")
+@Tag("module=Inventory")
 class InventoryServiceAccessTest {
 
   @Mock private InventorySessionRepository repository;

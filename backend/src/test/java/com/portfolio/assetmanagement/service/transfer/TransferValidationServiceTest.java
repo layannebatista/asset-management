@@ -33,6 +33,8 @@ import org.mockito.quality.Strictness;
 @Feature("Serviços — Transfer")
 @Story("Validação")
 @DisplayName("TransferValidationService")
+@Tag("testType=Integration")
+@Tag("module=Transfer")
 class TransferValidationServiceTest {
 
   @Mock private TransferRepository transferRepository;

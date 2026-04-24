@@ -14,6 +14,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("User — domínio")
+@Tag("testType=Unit")
+@Tag("module=Domain")
 class UserEntityTest {
 
   @Test

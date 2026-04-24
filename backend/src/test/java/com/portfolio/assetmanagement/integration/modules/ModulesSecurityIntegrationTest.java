@@ -20,6 +20,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 @Epic("Backend")
 @Feature("Integração — Novos módulos")
 @DisplayName("Matriz de Segurança (BLOCKER/CRITICAL)")
+@Tag("testType=Integration")
+@Tag("module=Modules")
 class ModulesSecurityIntegrationTest extends BaseIntegrationTest {
 
   @ParameterizedTest(name = "{0} sem autenticação retorna 401")

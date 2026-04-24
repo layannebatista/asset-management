@@ -35,6 +35,8 @@ import org.mockito.quality.Strictness;
 @Feature("Serviços — Transfer")
 @Story("Concorrência")
 @DisplayName("TransferConcurrencyService")
+@Tag("testType=Integration")
+@Tag("module=Transfer")
 class TransferConcurrencyServiceTest {
 
   @Mock private AssetRepository assetRepository;

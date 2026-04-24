@@ -23,6 +23,8 @@ import org.junit.jupiter.api.Test;
 @Feature("Domínio — Manutenção")
 @Story("Execução de manutenção")
 @DisplayName("MaintenanceRecord — Cancelar e Estados")
+@Tag("testType=Unit")
+@Tag("module=Domain")
 class MaintenanceRecordCancelTest {
 
   private Asset buildAsset(Long orgId, Long unitId) {

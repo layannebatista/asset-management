@@ -19,6 +19,8 @@ import org.junit.jupiter.api.Test;
 @Epic("Backend")
 @Feature("Integração — Assets")
 @DisplayName("Criação de Ativos")
+@Tag("testType=Integration")
+@Tag("module=Asset")
 class AssetCreateIntegrationTest extends BaseIntegrationTest {
 
 @Test

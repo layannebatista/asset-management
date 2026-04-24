@@ -23,6 +23,8 @@ import org.junit.jupiter.api.Test;
 @Feature("Domínio — Asset")
 @Story("Mudança de status e atribuição")
 @DisplayName("Asset — Status e Atribuição")
+@Tag("testType=Unit")
+@Tag("module=Domain")
 class AssetStatusTest {
 
   private Organization org;

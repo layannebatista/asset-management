@@ -9,6 +9,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("AiInsightService — resiliência")
+@Tag("testType=Integration")
+@Tag("module=Ai")
 class AiInsightServiceTest {
 
   @Test

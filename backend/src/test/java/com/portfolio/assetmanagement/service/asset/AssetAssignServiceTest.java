@@ -36,6 +36,8 @@ import org.mockito.quality.Strictness;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("AssetService — Atribuição e desatribuição")
+@Tag("testType=Integration")
+@Tag("module=Asset")
 class AssetAssignServiceTest {
 
   @Mock private AssetRepository repository;

@@ -16,6 +16,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("DashboardQueryService — segurança")
+@Tag("testType=Integration")
+@Tag("module=Dashboard")
 class DashboardQueryServiceTest {
 
   @Mock private DashboardQueryRepository repository;

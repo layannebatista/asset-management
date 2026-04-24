@@ -11,6 +11,8 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 @DisplayName("RateLimitFilter")
+@Tag("testType=Config")
+@Tag("module=Ratelimit")
 class RateLimitFilterTest {
 
   @Test

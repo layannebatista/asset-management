@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test;
 @Feature("Integração — Auth")
 @Story("Proteção de endpoints")
 @DisplayName("Auth — Proteção e Acesso")
+@Tag("testType=Integration")
+@Tag("module=Auth")
 class AuthAccessIntegrationTest extends BaseIntegrationTest {
 
   @Test

@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Test;
 @Feature("Integração — Auth")
 @Story("MFA")
 @DisplayName("Auth — MFA")
+@Tag("testType=Integration")
+@Tag("module=Auth")
 class AuthMfaIntegrationTest extends BaseIntegrationTest {
 
   private Long criarUsuarioComMfaEObterUserId() {

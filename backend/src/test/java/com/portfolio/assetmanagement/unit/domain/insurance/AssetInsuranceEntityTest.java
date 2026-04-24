@@ -10,6 +10,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("AssetInsurance — domínio")
+@Tag("testType=Unit")
+@Tag("module=Domain")
 class AssetInsuranceEntityTest {
 
   @Test

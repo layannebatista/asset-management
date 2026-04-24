@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Test;
 @Epic("Backend")
 @Feature("Integração — Transfer")
 @DisplayName("Solicitação de Transferência")
+@Tag("testType=Integration")
+@Tag("module=Transfer")
 class TransferRequestIntegrationTest extends BaseIntegrationTest {
 
   private Unit criarOutraUnidade(String nome) {

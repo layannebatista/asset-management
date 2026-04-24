@@ -8,6 +8,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("CostCenter — domínio")
+@Tag("testType=Unit")
+@Tag("module=Domain")
 class CostCenterEntityTest {
 
   @Test

@@ -36,6 +36,8 @@ import org.mockito.quality.Strictness;
 @Epic("Backend")
 @Feature("Serviços — Depreciação")
 @DisplayName("Serviço de Depreciação")
+@Tag("testType=Integration")
+@Tag("module=Depreciation")
 class DepreciationServiceTest {
 
 @Mock private AssetRepository assetRepository;
@@ -72,6 +74,8 @@ return asset;
 @Nested
 @DisplayName("Depreciação Linear (Quotas Constantes)")
 @Story("Cálculo Linear")
+@Tag("testType=Integration")
+@Tag("module=Depreciation")
 class Linear {
 
 @Test
@@ -153,6 +157,8 @@ void linearFullyDepreciatedAt100Percent() {
 @Nested
 @DisplayName("Depreciação Saldo Decrescente")
 @Story("Cálculo Acelerado")
+@Tag("testType=Integration")
+@Tag("module=Depreciation")
 class DecliningBalance {
 
 @Test
@@ -187,6 +193,8 @@ void decliningFasterThanLinearInFirstYear() {
 @Nested
 @DisplayName("Depreciação Soma dos Dígitos dos Anos")
 @Story("Cálculo Acelerado")
+@Tag("testType=Integration")
+@Tag("module=Depreciation")
 class SumOfYears {
 
 @Test
@@ -221,6 +229,8 @@ void sydFasterThanLinearInitially() {
 @Nested
 @DisplayName("ValidaçÃµes")
 @Story("Validação de dados")
+@Tag("testType=Integration")
+@Tag("module=Depreciation")
 class Validations {
 
 @Test

@@ -41,6 +41,8 @@ import org.springframework.data.jpa.domain.Specification;
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("AssetService — Busca e escopo")
+@Tag("testType=Integration")
+@Tag("module=Asset")
 class AssetSearchServiceTest {
 
   @Mock private AssetRepository repository;

@@ -19,6 +19,8 @@ import org.junit.jupiter.api.Test;
 @Epic("Backend")
 @Feature("Integração — Assets")
 @DisplayName("Isolamento Multi-Organização")
+@Tag("testType=Integration")
+@Tag("module=Asset")
 class AssetMultiTenantIntegrationTest extends BaseIntegrationTest {
 
   @Test

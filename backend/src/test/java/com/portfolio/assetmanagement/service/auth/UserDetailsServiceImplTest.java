@@ -30,6 +30,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 @Feature("Serviços — Auth")
 @Story("Carregamento de usuário")
 @DisplayName("UserDetailsServiceImpl")
+@Tag("testType=Integration")
+@Tag("module=Auth")
 class UserDetailsServiceImplTest {
 
   @Mock private UserRepository userRepository;

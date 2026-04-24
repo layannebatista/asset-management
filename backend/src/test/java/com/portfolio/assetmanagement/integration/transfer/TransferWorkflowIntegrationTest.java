@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Test;
 @Epic("Backend")
 @Feature("Integração — Transfer")
 @DisplayName("Fluxo de Transferência")
+@Tag("testType=Integration")
+@Tag("module=Transfer")
 class TransferWorkflowIntegrationTest extends BaseIntegrationTest {
 
   private Long criarTransferenciaPendente(String assetTag, String token, Unit destino) {

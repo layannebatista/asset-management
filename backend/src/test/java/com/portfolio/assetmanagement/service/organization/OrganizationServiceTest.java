@@ -22,6 +22,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("OrganizationService — regras críticas")
+@Tag("testType=Integration")
+@Tag("module=Organization")
 class OrganizationServiceTest {
 
   @Mock private OrganizationRepository organizationRepository;

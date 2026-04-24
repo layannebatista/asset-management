@@ -32,6 +32,8 @@ import org.mockito.quality.Strictness;
 @Feature("Serviços — Auth")
 @Story("Refresh token")
 @DisplayName("RefreshTokenService")
+@Tag("testType=Integration")
+@Tag("module=Auth")
 class RefreshTokenServiceTest {
 
   @Mock private RefreshTokenRepository repository;

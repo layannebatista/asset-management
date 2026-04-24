@@ -21,6 +21,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("CostCenterService — regras críticas")
+@Tag("testType=Integration")
+@Tag("module=Costcenter")
 class CostCenterServiceTest {
 
   @Mock private CostCenterRepository repository;

@@ -46,6 +46,8 @@ import org.mockito.quality.Strictness;
 @Feature("Serviços — Transfer")
 @Story("Conclusão e cancelamento")
 @DisplayName("TransferService — Conclusão e Cancelamento")
+@Tag("testType=Integration")
+@Tag("module=Transfer")
 class TransferLifecycleServiceTest {
 
   @Mock private TransferRepository repository;

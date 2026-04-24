@@ -20,6 +20,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AssetCategoryService — regras críticas")
+@Tag("testType=Integration")
+@Tag("module=Category")
 class AssetCategoryServiceTest {
 
   @Mock private AssetCategoryRepository repository;

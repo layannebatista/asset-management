@@ -19,6 +19,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AuditQueryService — segurança e validações")
+@Tag("testType=Integration")
+@Tag("module=Audit")
 class AuditQueryServiceTest {
 
   @Mock private AuditEventRepository repository;

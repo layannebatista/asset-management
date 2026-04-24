@@ -9,6 +9,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 @DisplayName("Organization — domínio")
+@Tag("testType=Unit")
+@Tag("module=Domain")
 class OrganizationEntityTest {
 
   @Test

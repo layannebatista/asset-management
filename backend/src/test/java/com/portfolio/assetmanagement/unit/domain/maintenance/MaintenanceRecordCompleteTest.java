@@ -25,6 +25,8 @@ import org.junit.jupiter.api.Test;
 @Feature("Domínio — Manutenção")
 @Story("Execução de manutenção")
 @DisplayName("MaintenanceRecord — Concluir")
+@Tag("testType=Unit")
+@Tag("module=Domain")
 class MaintenanceRecordCompleteTest {
 
   private Asset buildAsset(Long orgId, Long unitId) {

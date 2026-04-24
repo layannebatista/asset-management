@@ -47,6 +47,8 @@ import org.mockito.quality.Strictness;
 @Feature("Serviços — Manutenção")
 @Story("Execução de manutenção")
 @DisplayName("MaintenanceService — Concluir")
+@Tag("testType=Integration")
+@Tag("module=Maintenance")
 class MaintenanceCompleteServiceTest {
 
   @Mock private MaintenanceRepository maintenanceRepository;

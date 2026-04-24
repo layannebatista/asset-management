@@ -25,6 +25,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UnitService — regras críticas")
+@Tag("testType=Unit")
+@Tag("module=Unit")
 class UnitServiceTest {
 
   @Mock private UnitRepository unitRepository;

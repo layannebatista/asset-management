@@ -15,6 +15,8 @@ import org.junit.jupiter.api.Test;
 @Feature("Domínio — Auth")
 @Story("Refresh token")
 @DisplayName("RefreshToken — Estado")
+@Tag("testType=Unit")
+@Tag("module=Domain")
 class RefreshTokenStateTest {
 
   @Test

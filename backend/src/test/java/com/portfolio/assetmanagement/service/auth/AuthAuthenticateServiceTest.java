@@ -45,6 +45,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 @Feature("Serviços — Auth")
 @Story("Autenticação")
 @DisplayName("AuthService — Authenticate")
+@Tag("testType=Integration")
+@Tag("module=Auth")
 class AuthAuthenticateServiceTest {
 
   @Mock private AuthenticationManager authenticationManager;

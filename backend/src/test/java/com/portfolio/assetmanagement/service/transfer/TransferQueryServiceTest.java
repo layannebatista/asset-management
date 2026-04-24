@@ -37,6 +37,8 @@ import org.springframework.data.jpa.domain.Specification;
 @Feature("Serviços — Transfer")
 @Story("Consulta")
 @DisplayName("TransferQueryService")
+@Tag("testType=Integration")
+@Tag("module=Transfer")
 class TransferQueryServiceTest {
 
   @Mock private TransferRepository repository;

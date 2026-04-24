@@ -42,6 +42,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 @Feature("Serviços — Auth")
 @Story("Sessão")
 @DisplayName("AuthService — Sessão")
+@Tag("testType=Integration")
+@Tag("module=Auth")
 class AuthSessionServiceTest {
 
   @Mock private AuthenticationManager authenticationManager;

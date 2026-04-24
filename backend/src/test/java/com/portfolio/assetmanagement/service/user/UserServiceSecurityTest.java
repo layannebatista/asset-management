@@ -27,6 +27,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("UserService — segurança de criação")
+@Tag("testType=Integration")
+@Tag("module=User")
 class UserServiceSecurityTest {
 
   @Mock private UserRepository userRepository;

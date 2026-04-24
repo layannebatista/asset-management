@@ -22,6 +22,8 @@ import org.junit.jupiter.api.Test;
 @Feature("Domínio — Asset")
 @Story("Aposentadoria de ativo")
 @DisplayName("Asset — Retire")
+@Tag("testType=Unit")
+@Tag("module=Domain")
 class AssetRetireTest {
 
   private Organization org;

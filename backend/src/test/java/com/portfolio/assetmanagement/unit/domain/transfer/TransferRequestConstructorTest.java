@@ -22,6 +22,8 @@ import org.junit.jupiter.api.Test;
 @Feature("Domínio — Transfer")
 @Story("Construção")
 @DisplayName("TransferRequest — Construtor")
+@Tag("testType=Unit")
+@Tag("module=Domain")
 class TransferRequestConstructorTest {
 
   @Test

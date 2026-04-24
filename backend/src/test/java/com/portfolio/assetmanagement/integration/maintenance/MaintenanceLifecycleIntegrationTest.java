@@ -15,6 +15,8 @@ import org.junit.jupiter.api.Test;
 @Epic("Backend")
 @Feature("Integração — Manutenção")
 @DisplayName("Ciclo de Vida da Manutenção")
+@Tag("testType=Integration")
+@Tag("module=Maintenance")
 class MaintenanceLifecycleIntegrationTest extends BaseIntegrationTest {
 
   private Long criarManutencaoEObterIdComoAdmin(String assetTag) {

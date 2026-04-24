@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 @Story("Criação de ativo")
 @DisplayName("Asset — Construtor")
 @Tag("testType=Unit")
-@Tag("module=Asset")
+@Tag("module=Domain")
 class AssetConstructorTest {
 
   private Organization org;

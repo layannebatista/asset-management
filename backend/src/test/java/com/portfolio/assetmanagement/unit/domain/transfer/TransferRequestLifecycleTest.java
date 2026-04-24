@@ -22,6 +22,8 @@ import org.junit.jupiter.api.Test;
 @Feature("Domínio — Transfer")
 @Story("Conclusão e estados")
 @DisplayName("TransferRequest — Lifecycle")
+@Tag("testType=Unit")
+@Tag("module=Domain")
 class TransferRequestLifecycleTest {
 
   @Test

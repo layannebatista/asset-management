@@ -27,6 +27,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("InsuranceService — regras críticas")
+@Tag("testType=Integration")
+@Tag("module=Insurance")
 class InsuranceServiceTest {
 
   @Mock private InsuranceRepository insuranceRepository;

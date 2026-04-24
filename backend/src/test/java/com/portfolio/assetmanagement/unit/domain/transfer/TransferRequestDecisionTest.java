@@ -22,6 +22,8 @@ import org.junit.jupiter.api.Test;
 @Feature("Domínio — Transfer")
 @Story("Aprovação e rejeição")
 @DisplayName("TransferRequest — Decisão")
+@Tag("testType=Unit")
+@Tag("module=Domain")
 class TransferRequestDecisionTest {
 
   @Test

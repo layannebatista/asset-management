@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Test;
 @Epic("Backend")
 @Feature("Integração — Transfer")
 @DisplayName("Controle de Acesso em Transfer")
+@Tag("testType=Integration")
+@Tag("module=Transfer")
 class TransferAccessIntegrationTest extends BaseIntegrationTest {
 
   @Test

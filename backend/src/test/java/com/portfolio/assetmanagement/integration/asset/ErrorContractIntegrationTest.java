@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test;
 @Epic("Backend")
 @Feature("Integração — Contratos de Erro")
 @DisplayName("Contratos de Resposta de Erro")
+@Tag("testType=Integration")
+@Tag("module=Asset")
 class ErrorContractIntegrationTest extends BaseIntegrationTest {
 
   @Test

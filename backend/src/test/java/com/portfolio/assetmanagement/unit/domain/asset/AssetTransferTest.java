@@ -22,6 +22,8 @@ import org.junit.jupiter.api.Test;
 @Feature("Domínio — Asset")
 @Story("Transferência de unidade")
 @DisplayName("Asset — Transferência")
+@Tag("testType=Unit")
+@Tag("module=Domain")
 class AssetTransferTest {
 
   private Organization org;

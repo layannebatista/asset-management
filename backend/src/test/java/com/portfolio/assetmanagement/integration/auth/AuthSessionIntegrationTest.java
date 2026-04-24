@@ -19,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Feature("Integração — Auth")
 @Story("Sessão")
 @DisplayName("Auth — Sessão")
+@Tag("testType=Integration")
+@Tag("module=Auth")
 class AuthSessionIntegrationTest extends BaseIntegrationTest {
 
   @Autowired private UserRepository userRepository;

@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Epic("Backend")
 @Feature("Integração — Manutenção")
 @DisplayName("Controle de Acesso Multi-Tenant — Manutenção")
+@Tag("testType=Integration")
+@Tag("module=Maintenance")
 class MaintenanceAccessIntegrationTest extends BaseIntegrationTest {
 
   @Autowired private TestDataHelper testDataHelper;
