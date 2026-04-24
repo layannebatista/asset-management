@@ -11,7 +11,9 @@ import com.portfolio.assetmanagement.domain.user.entity.User;
 import com.portfolio.assetmanagement.domain.user.enums.UserStatus;
 import com.portfolio.assetmanagement.security.enums.UserRole;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 
 @DisplayName("User — domínio")
 @Tag("testType=Unit")

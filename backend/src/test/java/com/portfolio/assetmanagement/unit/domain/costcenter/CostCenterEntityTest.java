@@ -5,7 +5,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.portfolio.assetmanagement.domain.costcenter.entity.CostCenter;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 
 @DisplayName("CostCenter — domínio")
 @Tag("testType=Unit")

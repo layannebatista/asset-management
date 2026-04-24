@@ -9,7 +9,9 @@ import com.portfolio.assetmanagement.domain.organization.entity.Organization;
 import com.portfolio.assetmanagement.domain.unit.entity.Unit;
 import com.portfolio.assetmanagement.domain.unit.enums.UnitStatus;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 
 @DisplayName("Unit — domínio")
 @Tag("testType=Unit")

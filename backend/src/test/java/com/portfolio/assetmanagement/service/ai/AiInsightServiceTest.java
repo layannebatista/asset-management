@@ -6,7 +6,9 @@ import com.portfolio.assetmanagement.application.ai.dto.AiAnalysisRequest;
 import com.portfolio.assetmanagement.application.ai.service.AiInsightService;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 
 @DisplayName("AiInsightService — resiliência")
 @Tag("testType=Integration")

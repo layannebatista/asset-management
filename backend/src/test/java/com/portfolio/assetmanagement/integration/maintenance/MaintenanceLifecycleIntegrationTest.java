@@ -10,7 +10,9 @@ import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.Story;
 import io.restassured.module.mockmvc.response.MockMvcResponse;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 
 @Epic("Backend")
 @Feature("Integração — Manutenção")
