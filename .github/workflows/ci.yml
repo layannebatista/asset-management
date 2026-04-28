@@ -175,6 +175,32 @@ jobs:
     name: API Contract - OpenAPI e Postman
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: asset_management
+          POSTGRES_USER: asset_user
+          POSTGRES_PASSWORD: ci_password
+        ports:
+          - 5432:5432
+        options: >
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DB_URL: jdbc:postgresql://localhost:5432/asset_management
+      DB_USERNAME: asset_user
+      DB_PASSWORD: ci_password
+      JWT_SECRET: ci-test-jwt-secret-must-be-at-least-64-characters-long-padding-here
+      MAIL_HOST: localhost
+      MAIL_PORT: "1025"
+      MAIL_USERNAME: ci@test.com
+      MAIL_PASSWORD: ci-password
+      MAIL_FROM: ci@test.com
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -198,7 +224,7 @@ jobs:
         run: git diff --exit-code -- openapi/openapi.yaml postman/collection.json
 
   # ─────────────────────────────────────────────────────────────────────────────
-  # Job 5: Testes E2E Frontend (Playwright via Docker Compose)
+  # Job 4: Testes E2E Frontend (Playwright via Docker Compose)
   # Executa a suite e2e com reset de massa e publica artefatos de relatorio
   # ─────────────────────────────────────────────────────────────────────────────
   playwright-e2e:
@@ -241,7 +267,7 @@ jobs:
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Job 6: Build Docker + Scan de vulnerabilidades (Trivy)
-  # Depende do backend, frontend e sprint-reporter para garantir que todos passaram
+  # Depende do backend, frontend e ai-intelligence para garantir que todos passaram
   # ─────────────────────────────────────────────────────────────────────────────
   docker:
     name: Docker – Build & Scan
