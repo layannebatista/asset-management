@@ -66,6 +66,7 @@ export default function AssetDetailPage() {
 
   const [showMaint, setShowMaint] = useState(false)
   const [maintDesc, setMaintDesc] = useState('')
+  const [maintCost, setMaintCost] = useState('')
   const [maintSaving, setMaintSaving] = useState(false)
 
   const handleTransferSubmit = async () => {
@@ -85,9 +86,11 @@ export default function AssetDetailPage() {
     if (!asset || maintDesc.length < 10) return
     setMaintSaving(true)
     try {
-      await maintenanceApi.create({ assetId: asset.id, description: maintDesc })
+      const costValue = maintCost ? parseCurrency(maintCost) : undefined
+      await maintenanceApi.create({ assetId: asset.id, description: maintDesc, estimatedCost: costValue })
       setShowMaint(false)
       setMaintDesc('')
+      setMaintCost('')
       await refreshAsset()
     } catch (e: any) {
       console.error(e)
@@ -262,6 +265,7 @@ export default function AssetDetailPage() {
       </div>
 
       <ErrorBanner message={actionError} onDismiss={() => setActionError('')} />
+      <ErrorBanner message={transferError} onDismiss={() => setTransferError('')} />
 
       <AssetActionBar
         asset={asset}
@@ -300,7 +304,7 @@ export default function AssetDetailPage() {
       )}
 
       {tab === 'depreciation' && (
-        <TabDepreciation dep={dep} onEdit={() => setShowFinancial(true)} canEdit={isAdmin || isGestor} />
+        <TabDepreciation dep={dep} onEdit={() => setShowFinancial(true)} canEdit={(isAdmin || isGestor) && asset.status !== 'RETIRED'} />
       )}
 
       {tab === 'insurance' && (
@@ -310,6 +314,7 @@ export default function AssetDetailPage() {
           setInsurance={setInsurance}
           isAdmin={isAdmin}
           isGestor={isGestor}
+          retired={asset.status === 'RETIRED'}
         />
       )}
 
@@ -355,9 +360,11 @@ export default function AssetDetailPage() {
       {showMaint && (
         <MaintenanceModal
           asset={asset}
-          onClose={() => setShowMaint(false)}
+          onClose={() => { setShowMaint(false); setMaintCost('') }}
           desc={maintDesc}
           setDesc={setMaintDesc}
+          cost={maintCost}
+          setCost={setMaintCost}
           onConfirm={handleMaintenanceSubmit}
           saving={maintSaving}
         />

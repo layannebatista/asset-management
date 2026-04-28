@@ -30,6 +30,7 @@ export function CompleteMaintenanceModal({
 
   return (
     <div
+      data-testid="complete-maintenance-modal"
       className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-5"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
@@ -63,6 +64,7 @@ export function CompleteMaintenanceModal({
             </label>
 
             <textarea
+              data-testid="complete-maintenance-resolution-input"
               rows={4}
               value={form.resolution}
               onChange={(e) => {
@@ -92,6 +94,7 @@ export function CompleteMaintenanceModal({
             </label>
 
             <input
+              data-testid="complete-maintenance-cost-input"
               inputMode="numeric"
               value={form.actualCost}
               onChange={(e) =>
@@ -108,6 +111,7 @@ export function CompleteMaintenanceModal({
           <div className="flex gap-2 justify-end pt-2 border-t border-slate-100">
             <button
               type="button"
+              data-testid="complete-maintenance-cancel-btn"
               onClick={onClose}
               className="px-4 py-[8px] rounded-[8px] border-[1.5px] border-slate-200 text-[13px] font-semibold hover:bg-slate-50"
             >
@@ -116,6 +120,7 @@ export function CompleteMaintenanceModal({
 
             <button
               type="button"
+              data-testid="complete-maintenance-confirm-btn"
               onClick={onConfirm}
               disabled={saving || !form.resolution.trim()}
               className="px-4 py-[8px] rounded-[8px] bg-blue-700 text-white text-[13px] font-semibold hover:bg-blue-800 disabled:opacity-50"

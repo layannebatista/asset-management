@@ -1,0 +1,133 @@
+================================================================================
+MAPEAMENTO DE CENARIOS DE TESTE - DOMINIO: MAINTENANCE (Frontend)
+Projeto: Patrimonio 360 | Frontend Playwright + Cucumber
+Atualizado em: 2026-04-16
+================================================================================
+
+LEGENDA
+  Tipo        : E2E, SEGURANCA, USABILIDADE, RESILIENCIA, ACESSIBILIDADE
+  Criticidade : BLOCKER > CRITICAL > NORMAL > LOW
+  Status      : AUTOMATIZADO | PENDENTE | NAO_APLICAVEL
+  Camada      : feature/steps do dominio
+
+NOTAS GERAIS
+  - Cobre fluxo completo da tela de manutencao: criar, iniciar, concluir e cancelar.
+  - Inclui validacoes de formulario (descricao/custo), filtros e visibilidade por papel.
+  - Cenarios PENDENTE sao recomendacao QA para endurecer cobertura de frontend.
+
+================================================================================
+SECAO 1 - TELA, LISTAGEM E FILTROS
+================================================================================
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+MN01 | Exibir tela de manutencao com acoes principais             | USABILIDADE   | NORMAL      | AUTOMATIZADO | maintenance/maintenance-management.feature
+MN02 | Exibir estado vazio "Nenhuma ordem encontrada"             | USABILIDADE   | NORMAL      | PENDENTE     | maintenance/maintenance-management.feature
+MN03 | Lista mostra codigo, ativo, descricao, status e data       | E2E           | NORMAL      | PENDENTE     | pages/maintenance/MaintenancePage.tsx
+MN04 | Filtrar por status REQUESTED                                | E2E           | NORMAL      | AUTOMATIZADO | maintenance/maintenance-management.feature
+MN05 | Filtrar por status IN_PROGRESS                              | E2E           | NORMAL      | AUTOMATIZADO | maintenance/maintenance-management.feature
+MN06 | Filtrar por status COMPLETED                                | E2E           | NORMAL      | PENDENTE     | maintenance/maintenance-management.feature
+MN07 | Filtrar por status CANCELLED                                | E2E           | NORMAL      | PENDENTE     | maintenance/maintenance-management.feature
+MN08 | Paginacao mantem filtro e navegacao                         | E2E           | NORMAL      | PENDENTE     | pages/maintenance/MaintenancePage.tsx
+MN09 | Lista atualiza sem reload apos criar/iniciar/concluir/cancelar| USABILIDADE  | NORMAL      | PENDENTE     | pages/maintenance/MaintenancePage.tsx
+
+================================================================================
+SECAO 2 - ABERTURA DE ORDEM
+================================================================================
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+MC01 | Validar descricao minima ao abrir ordem                     | E2E           | NORMAL      | AUTOMATIZADO | maintenance/maintenance-management.feature
+MC02 | Criar nova manutencao com sucesso                           | E2E           | CRITICAL    | AUTOMATIZADO | maintenance/maintenance-management.feature
+MC03 | Validar descricao maxima (1000 chars)                       | E2E           | NORMAL      | PENDENTE     | components/CreateMaintenanceModal.tsx
+MC04 | Bloquear submit sem ativo selecionado                       | E2E           | NORMAL      | PENDENTE     | components/CreateMaintenanceModal.tsx
+MC05 | Bloquear submit com descricao em branco/espacos             | E2E           | NORMAL      | PENDENTE     | components/CreateMaintenanceModal.tsx
+MC06 | Permitir custo estimado opcional                            | E2E           | LOW         | PENDENTE     | components/CreateMaintenanceModal.tsx
+MC07 | Falha API ao abrir ordem exibe mensagem                     | RESILIENCIA   | NORMAL      | PENDENTE     | pages/maintenance/MaintenancePage.tsx
+MC08 | Lista de ativos no modal inclui apenas AVAILABLE/ASSIGNED   | E2E           | NORMAL      | PENDENTE     | components/CreateMaintenanceModal.tsx
+MC09 | Ativo RETIRED nao aparece disponivel no seletor de ativos   | SEGURANCA     | CRITICAL    | PENDENTE     | components/CreateMaintenanceModal.tsx
+MC10 | Ativo IN_TRANSFER aparece desabilitado no seletor de ativos | E2E           | NORMAL      | PENDENTE     | components/CreateMaintenanceModal.tsx
+
+================================================================================
+SECAO 3 - CICLO DE VIDA (START, COMPLETE, CANCEL)
+================================================================================
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+ML01 | Criar e cancelar manutencao                                 | E2E           | CRITICAL    | AUTOMATIZADO | maintenance/maintenance-management.feature
+ML02 | Criar, iniciar e concluir manutencao                        | E2E           | BLOCKER     | AUTOMATIZADO | maintenance/maintenance-management.feature
+ML03 | Cancelar manutencao em IN_PROGRESS                          | E2E           | CRITICAL    | AUTOMATIZADO | maintenance/maintenance-management.feature
+ML04 | Confirm dialog de cancelamento respeitado                   | USABILIDADE   | NORMAL      | PENDENTE     | pages/maintenance/MaintenancePage.tsx
+ML05 | Campo resolucao obrigatorio no modal de conclusao           | E2E           | NORMAL      | AUTOMATIZADO | maintenance/maintenance-management.feature
+ML06 | Resolucao minima invalida bloqueia conclusao                | E2E           | NORMAL      | PENDENTE     | components/CompleteMaintenanceModal.tsx
+ML07 | Limite maximo de resolucao (2000 chars) respeitado          | E2E           | LOW         | PENDENTE     | components/CompleteMaintenanceModal.tsx
+ML08 | Custo real opcional na conclusao                            | E2E           | LOW         | PENDENTE     | components/CompleteMaintenanceModal.tsx
+ML09 | Falha API ao iniciar manutencao exibe erro                  | RESILIENCIA   | NORMAL      | PENDENTE     | pages/maintenance/MaintenancePage.tsx
+ML10 | Falha API ao concluir manutencao exibe erro                 | RESILIENCIA   | NORMAL      | PENDENTE     | pages/maintenance/MaintenancePage.tsx
+ML11 | Falha API ao cancelar manutencao exibe erro                 | RESILIENCIA   | NORMAL      | PENDENTE     | pages/maintenance/MaintenancePage.tsx
+ML12 | Duplo clique nos botoes de acao nao dispara operacao duplicada| RESILIENCIA  | CRITICAL    | PENDENTE     | pages/maintenance/MaintenancePage.tsx
+
+================================================================================
+SECAO 4 - ORCAMENTO E DADOS AGREGADOS
+================================================================================
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+BG01 | Cards de orcamento exibem total ordens e custos            | E2E           | NORMAL      | PENDENTE     | pages/maintenance/MaintenancePage.tsx
+BG02 | Sem custo estimado exibicao de placeholder                 | USABILIDADE   | LOW         | PENDENTE     | pages/maintenance/MaintenancePage.tsx
+BG03 | Sem custo real exibicao de placeholder                      | USABILIDADE   | LOW         | PENDENTE     | pages/maintenance/MaintenancePage.tsx
+BG04 | Destacar custo real acima do estimado em vermelho           | E2E           | NORMAL      | PENDENTE     | pages/maintenance/MaintenancePage.tsx
+BG05 | Campo de custo aceita apenas valores numericos (letras bloqueadas) | USABILIDADE | NORMAL | PENDENTE  | components/CreateMaintenanceModal.tsx
+BG06 | Valor de custo negativo e rejeitado antes do envio do formulario | E2E        | NORMAL      | PENDENTE     | components/CreateMaintenanceModal.tsx
+
+================================================================================
+SECAO 5 - CONTROLE DE ACESSO E ESCOPOS
+================================================================================
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+AX01 | ADMIN acessa manutencao global                              | SEGURANCA     | CRITICAL    | AUTOMATIZADO | maintenance/maintenance-management.feature
+AX02 | GESTOR acessa manutencao escopada por unitId               | SEGURANCA     | CRITICAL    | AUTOMATIZADO | maintenance/maintenance-management.feature
+AX03 | OPERADOR visualiza manutencao escopada por requestedByUserId| SEGURANCA    | CRITICAL    | AUTOMATIZADO | maintenance/maintenance-management.feature
+AX04 | Usuario sem sessao redireciona para login                  | SEGURANCA     | BLOCKER     | AUTOMATIZADO | maintenance/maintenance-management.feature
+AX05 | Erro 403 em acao de manutencao exibe feedback              | SEGURANCA     | CRITICAL    | AUTOMATIZADO | maintenance/maintenance-management.feature
+
+================================================================================
+SECAO 6 - ACESSIBILIDADE
+================================================================================
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+AA01 | Modais abrem com foco no primeiro campo                     | ACESSIBILIDADE| LOW         | PENDENTE     | components/*.tsx
+AA02 | Ordem de tab valida em formularios de criar/concluir        | ACESSIBILIDADE| NORMAL      | PENDENTE     | components/*.tsx
+AA03 | Mensagens de erro visiveis e legiveis                       | ACESSIBILIDADE| NORMAL      | PENDENTE     | maintenance/maintenance-management.feature
+
+================================================================================
+SECAO 7 - CROSS-DOMAIN E CONSISTENCIA DE ESTADO
+================================================================================
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+CD01 | Manutencao concluida reflete status AVAILABLE no modulo de ativos | E2E       | CRITICAL    | PENDENTE     | pages/assets/AssetListPage.tsx
+CD02 | Manutencao cancelada libera ativo para transferencia/atribuicao | E2E       | NORMAL      | PENDENTE     | pages/assets/AssetListPage.tsx
+CD03 | Ativo RETIRED permanece inacessivel para nova manutencao (UI)| SEGURANCA    | CRITICAL    | PENDENTE     | components/CreateMaintenanceModal.tsx
+
+================================================================================
+RESUMO DE COBERTURA
+================================================================================
+
+Status                  Contagem  Porcentagem
+---------------------------------------------
+AUTOMATIZADO            14        29%
+PENDENTE                34        71%
+NAO_APLICAVEL           0         0%
+---------------------------------------------
+TOTAL                   48
+
+Novos cenarios adicionados (2026-04-21): MN09, MC09, MC10, ML12, BG05, BG06, CD01-CD03
+Cenarios de filtragem no seletor, double-click, validacao de custo e cross-domain nao estavam mapeados.
+
+Arquivos de referencia do dominio:
+  - features/maintenance/maintenance-management.feature
+  - step-definitions/maintenance/maintenance-management.steps.ts
+================================================================================

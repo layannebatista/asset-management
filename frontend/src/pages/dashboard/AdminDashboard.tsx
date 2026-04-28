@@ -52,49 +52,57 @@ function MetricCard({ label, value, sub, accent, icon, alert, onClick }: MetricC
   )
 }
 
-interface AlertItem { key: string; level: 'critical' | 'warning'; message: string; action?: string; onAction?: () => void }
 
-function AlertCard({ items }: { items: AlertItem[] }) {
-  if (items.length === 0) {
+interface OperationalGap {
+  key: string
+  label: string
+  count: number
+  accent: string
+  action?: { label: string; handler: () => void }
+}
+
+function OperationalGapsCard({ gaps }: { gaps: OperationalGap[] }) {
+  const hasGaps = gaps.some(g => g.count > 0)
+
+  if (!hasGaps) {
     return (
       <div className="bg-white rounded-[12px] border border-slate-200 p-[18px] shadow-sm h-full flex items-center justify-center">
         <div className="text-center">
           <CheckCircle size={28} className="text-emerald-500 mx-auto mb-2" />
-          <p className="text-[13px] font-semibold text-slate-700">Nenhum alerta ativo</p>
-          <p className="text-[12px] text-slate-400 mt-1">Tudo em ordem na organização</p>
+          <p className="text-[13px] font-semibold text-slate-700">Operações normais</p>
+          <p className="text-[12px] text-slate-400 mt-1">Nenhum gargalo identificado</p>
         </div>
       </div>
     )
   }
+
   return (
     <div className="bg-white rounded-[12px] border border-slate-200 p-[18px] shadow-sm">
-      <h3 className="text-[14px] font-bold mb-3">Alertas ativos</h3>
+      <h3 className="text-[14px] font-bold mb-3">Gargalos operacionais</h3>
       <div className="space-y-2">
-        {items.map((a) => (
-          <div
-            key={a.key}
-            className={`flex items-center justify-between gap-3 rounded-[8px] px-3 py-[10px] text-[12.5px] ${
-              a.level === 'critical'
-                ? 'bg-red-50 border border-red-200 text-red-800'
-                : 'bg-amber-50 border border-amber-200 text-amber-800'
-            }`}
-          >
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <AlertTriangle size={13} className="flex-shrink-0" />
-              <span className="truncate">{a.message}</span>
-            </div>
-            {a.action && a.onAction && (
-              <button type="button" onClick={a.onAction}
-                className={`text-[11px] font-semibold px-2 py-[3px] rounded-full flex-shrink-0 transition ${
-                  a.level === 'critical'
-                    ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                    : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                }`}
-              >
-                {a.action}
-              </button>
-            )}
-          </div>
+        {gaps.map((gap) => (
+          gap.count > 0 && (
+            <button
+              key={gap.key}
+              onClick={gap.action?.handler}
+              type="button"
+              className="w-full text-left flex items-center justify-between gap-3 rounded-[8px] px-3 py-[10px] text-[12.5px] border transition hover:bg-slate-50"
+              style={{
+                borderColor: gap.accent === 'red' ? '#fca5a5' : gap.accent === 'amber' ? '#fcd34d' : '#e2e8f0',
+                backgroundColor: gap.accent === 'red' ? '#fef2f2' : gap.accent === 'amber' ? '#fffbeb' : '#f8fafc',
+                color: gap.accent === 'red' ? '#7f1d1d' : gap.accent === 'amber' ? '#78350f' : '#334155',
+              }}
+            >
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <AlertTriangle size={13} className="flex-shrink-0" />
+                <span className="truncate">{gap.label}</span>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="font-bold text-[13px]">{gap.count}</span>
+                {gap.action && <span className="text-[10px] text-slate-500">→</span>}
+              </div>
+            </button>
+          )
         ))}
       </div>
     </div>
@@ -161,37 +169,44 @@ export function AdminDashboard() {
 
   const byType = Object.entries(data.assetsByType ?? {}).sort((a, b) => b[1] - a[1]).slice(0, 4)
 
-  const alerts: AlertItem[] = []
-  if ((data.insuranceExpiringCount ?? 0) > 0) {
-    const n = data.insuranceExpiringCount
-    alerts.push({
-      key: 'insurance', level: 'critical',
-      message: `${n} apólice${n > 1 ? 's' : ''} de seguro vence${n > 1 ? 'm' : ''} em até 30 dias`,
-      action: 'Ver ativos', onAction: () => navigate('/assets?insurance=expiring'),
-    })
-  }
-  if ((data.assetsIdleCount ?? 0) > 0) {
-    const n = data.assetsIdleCount
-    alerts.push({
-      key: 'idle', level: 'warning',
-      message: `${n} ativo${n > 1 ? 's' : ''} disponível há mais de 30 dias sem atribuição`,
-      action: 'Atribuir', onAction: () => navigate('/assets?status=AVAILABLE'),
-    })
-  }
-  if (pendingCount > 0) {
-    alerts.push({
-      key: 'transfers', level: 'warning',
-      message: `${pendingCount} transferência${pendingCount > 1 ? 's' : ''} aguardando aprovação`,
-      action: 'Aprovar', onAction: () => navigate('/transfers'),
-    })
-  }
-  if ((data.totalMaintenance ?? 0) > 5) {
-    alerts.push({
-      key: 'maintenance', level: 'warning',
-      message: `${data.totalMaintenance} ordens de manutenção em aberto`,
-      action: 'Ver', onAction: () => navigate('/maintenance'),
-    })
-  }
+  const gaps: OperationalGap[] = [
+    {
+      key: 'insurance',
+      label: 'Seguros a vencer',
+      count: data.insuranceExpiringCount ?? 0,
+      accent: (data.insuranceExpiringCount ?? 0) > 0 ? 'red' : 'slate',
+      action: (data.insuranceExpiringCount ?? 0) > 0
+        ? { label: 'Ver', handler: () => navigate('/assets?insurance=expiring') }
+        : undefined,
+    },
+    {
+      key: 'idle',
+      label: 'Ativos ociosos (30+ dias)',
+      count: data.assetsIdleCount ?? 0,
+      accent: (data.assetsIdleCount ?? 0) > 0 ? 'amber' : 'slate',
+      action: (data.assetsIdleCount ?? 0) > 0
+        ? { label: 'Atribuir', handler: () => navigate('/assets?status=AVAILABLE') }
+        : undefined,
+    },
+    {
+      key: 'transfers',
+      label: 'Transferências pendentes',
+      count: pendingCount,
+      accent: pendingCount > 0 ? 'amber' : 'slate',
+      action: pendingCount > 0
+        ? { label: 'Aprovar', handler: () => navigate('/transfers') }
+        : undefined,
+    },
+    {
+      key: 'maintenance',
+      label: 'Manutenções abertas',
+      count: data.totalMaintenance ?? 0,
+      accent: (data.totalMaintenance ?? 0) > 10 ? 'red' : (data.totalMaintenance ?? 0) > 5 ? 'amber' : 'slate',
+      action: (data.totalMaintenance ?? 0) > 0
+        ? { label: 'Ver', handler: () => navigate('/maintenance?status=OPEN') }
+        : undefined,
+    },
+  ]
 
   return (
     <div className="space-y-5">
@@ -251,7 +266,6 @@ export function AdminDashboard() {
           value={data.assetsRetiredThisMonth ?? 0}
           sub="ativos retirados de uso no mês"
           accent="slate" icon={<Package size={20} />}
-          onClick={() => navigate('/assets?status=RETIRED')}
         />
         <MetricCard
           label="Ativos ociosos"
@@ -301,7 +315,7 @@ export function AdminDashboard() {
             </ul>
           )}
         </div>
-        <AlertCard items={alerts} />
+        <OperationalGapsCard gaps={gaps} />
       </div>
 
       {/* Linha 4 — composição por tipo */}

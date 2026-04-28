@@ -115,4 +115,15 @@ public class RateLimitFilter extends OncePerRequestFilter {
         || path.startsWith("/swagger-ui")
         || path.equals("/actuator/health");
   }
+
+  /**
+   * Utilizado pelos testes BDD para garantir isolamento entre cenários. Em produção, os buckets
+   * devem persistir durante a janela de rate limit.
+   */
+  public void clearAllBucketsForTests() {
+    loginBuckets.clear();
+    mfaBuckets.clear();
+    refreshBuckets.clear();
+    globalBuckets.clear();
+  }
 }

@@ -6,6 +6,7 @@ import Layout from '../components/layout/Layout'
 // Pages
 import LoginPage from '../pages/auth/LoginPage'
 import ActivateAccountPage from '../pages/auth/ActivateAccountPage'
+import TestPage from '../pages/auth/TestPage'
 import DashboardPage from '../pages/dashboard/DashboardPage'
 import AssetListPage from '../pages/assets/AssetListPage'
 import AssetDetailsPage from '../pages/assets/AssetDetailsPage'
@@ -17,6 +18,7 @@ import AuditPage from '../pages/audit/AuditPage'
 import ReportsPage from '../pages/reports/ReportsPage'
 import OrganizationsPage from '../pages/organizations/OrganizationsPage'
 import UnitsPage from '../pages/units/UnitsPage'
+import AIInsightsPage from '../pages/ai-insights/AIInsightsPage'
 
 // ─────────────────────────────────────────────────────────
 // Role wrappers (elimina repetição)
@@ -35,7 +37,10 @@ export default function AppRoutes() {
       <Routes>
         {/* ───────────── PUBLIC ───────────── */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/test" element={<TestPage />} />
+        <Route path="/debug" element={<TestPage />} />
         <Route path="/activate" element={<ActivateAccountPage />} />
+        <Route path="/ativar" element={<ActivateAccountPage />} />
 
         {/* FIX: proteger root */}
         <Route
@@ -63,7 +68,14 @@ export default function AppRoutes() {
           <Route path="/assets/:id" element={<AssetDetailsPage />} />
 
           {/* Operations */}
-          <Route path="/transfers" element={<TransfersPage />} />
+          <Route
+            path="/transfers"
+            element={
+              <AdminOrGestor>
+                <TransfersPage />
+              </AdminOrGestor>
+            }
+          />
           <Route path="/maintenance" element={<MaintenancePage />} />
           <Route path="/inventory" element={<InventoryPage />} />
 
@@ -110,6 +122,16 @@ export default function AppRoutes() {
             element={
               <AdminOrGestor>
                 <ReportsPage />
+              </AdminOrGestor>
+            }
+          />
+
+          {/* AI Intelligence – ADMIN + GESTOR */}
+          <Route
+            path="/ai-insights"
+            element={
+              <AdminOrGestor>
+                <AIInsightsPage />
               </AdminOrGestor>
             }
           />

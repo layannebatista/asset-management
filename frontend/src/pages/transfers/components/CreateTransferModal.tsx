@@ -32,12 +32,13 @@ export function CreateTransferModal({
 
   const selectedAsset = assets.find((a) => String(a.id) === form.assetId)
 
-  const destUnits = selectedAsset
-    ? units.filter((u) => u.id !== selectedAsset.unitId)
-    : units
+  const destUnits = units
+    .filter((u) => u.status === 'ACTIVE')
+    .filter((u) => !selectedAsset || u.id !== selectedAsset.unitId)
 
   return (
     <div
+      data-testid="transfer-create-modal"
       className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-5"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
@@ -48,6 +49,7 @@ export function CreateTransferModal({
           </h2>
 
           <button
+            data-testid="transfer-create-close-btn"
             type="button"
             onClick={onClose}
             className="w-7 h-7 rounded-[6px] border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-50"
@@ -63,6 +65,7 @@ export function CreateTransferModal({
             </label>
 
             <select
+              data-testid="transfer-create-asset-select"
               value={form.assetId}
               onChange={(e) =>
                 setForm((f) => ({
@@ -90,6 +93,7 @@ export function CreateTransferModal({
             </label>
 
             <select
+              data-testid="transfer-create-destination-select"
               value={form.toUnitId}
               onChange={(e) =>
                 setForm((f) => ({
@@ -122,6 +126,7 @@ export function CreateTransferModal({
             </label>
 
             <textarea
+              data-testid="transfer-create-reason-input"
               value={form.reason}
               onChange={(e) => {
                 setForm((f) => ({
@@ -163,6 +168,7 @@ export function CreateTransferModal({
 
         <div className="flex justify-end gap-2 px-6 pb-5">
           <button
+            data-testid="transfer-create-cancel-btn"
             type="button"
             onClick={onClose}
             className="px-4 py-2 rounded-[8px] border-[1.5px] border-slate-200 text-[13px] font-semibold hover:bg-slate-50"
@@ -171,6 +177,7 @@ export function CreateTransferModal({
           </button>
 
           <button
+            data-testid="transfer-create-submit-btn"
             type="button"
             onClick={onConfirm}
             disabled={

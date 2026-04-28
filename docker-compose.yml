@@ -1,5 +1,3 @@
-version: "3.8"
-
 networks:
   asset-net:
     driver: bridge
@@ -9,6 +7,12 @@ volumes:
   prometheus_data:
   grafana_data:
   influxdb_data:
+
+x-default-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
 
 services:
 
@@ -31,6 +35,9 @@ services:
       retries: 10
       start_period: 30s
     restart: unless-stopped
+    cpus: "0.50"
+    mem_limit: 512m
+    logging: *default-logging
     networks:
       - asset-net
     deploy:
@@ -53,6 +60,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD:-asset123}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:5173}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      TEST_DATA_CLEANUP_ENABLED: ${TEST_DATA_CLEANUP_ENABLED:-true}
+      TEST_DATA_CLEANUP_KEY: ${TEST_DATA_CLEANUP_KEY:-cleanup-local-key}
 
     ports:
       - "8080:8080"
@@ -66,6 +75,9 @@ services:
       retries: 5
       start_period: 90s
     restart: unless-stopped
+    cpus: "1.00"
+    mem_limit: 768m
+    logging: *default-logging
     networks:
       - asset-net
     deploy:
@@ -80,13 +92,19 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080}
+        # /api → Nginx proxy reverso encaminha para http://asset-management:8080
+        # Funciona no Docker E2E (browser resolve pela mesma origem) e via localhost:5173
+        # Para dev local sem Docker, use: npm run dev (usa VITE_API_URL do .env diretamente)
+        VITE_API_URL: /api
     container_name: asset-management-frontend
     ports:
       - "5173:80"
     depends_on:
       - asset-management
     restart: unless-stopped
+    cpus: "0.25"
+    mem_limit: 128m
+    logging: *default-logging
     networks:
       - asset-net
     deploy:
@@ -99,6 +117,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
+    profiles: ["observability"]
     ports:
       - "9090:9090"
     volumes:
@@ -107,27 +126,35 @@ services:
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
       - "--storage.tsdb.path=/prometheus"
-      - "--storage.tsdb.retention.time=15d"
+      - "--storage.tsdb.retention.time=7d"
       - "--web.enable-lifecycle"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
       interval: 30s
       timeout: 10s
       retries: 5
-      start_period: 90s
+      start_period: 30s
     depends_on:
       asset-management:
         condition: service_healthy
     restart: unless-stopped
+    cpus: "0.30"
+    mem_limit: 256m
+    logging: *default-logging
     networks:
       - asset-net
 
   # ─── InfluxDB — banco de séries temporais para métricas do k6 ─────────────
-  # k6 envia métricas em tempo real via: k6 run --out influxdb=http://localhost:8086/k6
+  # k6 envia métricas em tempo real — execute o comando abaixo do host:
+  #   k6 run --out influxdb=http://localhost:8086/k6 k6/test.js
+  # Para sobrescrever URL ou credenciais:
+  #   BASE_URL=http://localhost:8080 ADMIN_EMAIL=admin@empresa.com ADMIN_PASSWORD=Admin@123 \
+  #     k6 run --out influxdb=http://localhost:8086/k6 k6/test.js
   # Acesse os dados via Grafana (datasource InfluxDB já provisionado)
   influxdb:
     image: influxdb:1.8-alpine
     container_name: influxdb
+    profiles: ["observability"]
     ports:
       - "8086:8086"
     environment:
@@ -142,6 +169,9 @@ services:
       retries: 5
       start_period: 15s
     restart: unless-stopped
+    cpus: "0.30"
+    mem_limit: 256m
+    logging: *default-logging
     networks:
       - asset-net
 
@@ -152,6 +182,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
+    profiles: ["observability"]
     # Porta 3001 para evitar conflito com servidores de dev locais na 3000
     ports:
       - "3001:3000"
@@ -174,6 +205,9 @@ services:
       - prometheus
       - influxdb
     restart: unless-stopped
+    cpus: "0.30"
+    mem_limit: 256m
+    logging: *default-logging
     networks:
       - asset-net
 
@@ -183,11 +217,12 @@ services:
   #
   # A separação Backend / Frontend no painel é feita pelas labels:
   #   @allure.label.parentSuite:Backend  → nos testes Java (feature files)
-  #   @allure.label.parentSuite:Frontend → nos testes Cypress (feature files)
+  #   @allure.label.parentSuite:Frontend → nos testes Playwright (feature files)
   # Na aba "Suites" do Allure ambos aparecem como grupos separados dentro do mesmo projeto.
   allure:
     image: frankescobar/allure-docker-service:latest
     container_name: allure
+    profiles: ["reports"]
     ports:
       - "5050:5050"
     environment:
@@ -197,10 +232,17 @@ services:
       MAKE_VIEWER_ENDPOINTS_PUBLIC: "true"
       SECURITY_ENABLED: "false"
     volumes:
-      # Volume único: backend/allure-results é onde o Maven e o Cypress gravam os JSONs
-      - ./backend/allure-results:/app/allure-results
-      - ./backend/allure-reports:/app/default-reports
+      - ./allure-results:/app/allure-results
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5050/allure-docker-service/version"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
     restart: unless-stopped
+    cpus: "0.20"
+    mem_limit: 192m
+    logging: *default-logging
     networks:
       - asset-net
 
@@ -209,6 +251,7 @@ services:
   allure-ui:
     image: frankescobar/allure-docker-service-ui:latest
     container_name: allure-ui
+    profiles: ["reports"]
     ports:
       - "5252:5252"
     environment:
@@ -217,5 +260,429 @@ services:
     depends_on:
       - allure
     restart: unless-stopped
+    cpus: "0.10"
+    mem_limit: 96m
+    logging: *default-logging
     networks:
       - asset-net
+
+  # ─── Reset dos dados E2E no banco ────────────────────────────────────────────
+  # Restaura os assets de seed (E2E-AVAIL-*) para AVAILABLE antes de cada
+  # execução de testes, garantindo que os cenários sempre encontrem dados frescos.
+  reset-e2e-data:
+    image: postgres:16-alpine
+    container_name: reset-e2e-data
+    profiles: ["tests"]
+    environment:
+      PGPASSWORD: ${DB_PASSWORD:-asset123}
+    command: >
+      psql -h postgres -U ${DB_USERNAME:-asset_user} -d asset_management -c "
+        -- Limpar relações sem deletar os ativos (para não quebrar os testes)
+        DELETE FROM asset_insurance
+        WHERE asset_id IN (
+          SELECT id FROM assets
+          WHERE asset_tag LIKE 'E2E-%'
+        );
+        DELETE FROM maintenance_records
+        WHERE asset_id IN (
+          SELECT id FROM assets
+          WHERE asset_tag LIKE 'E2E-%'
+        );
+        DELETE FROM transfer_requests
+        WHERE asset_id IN (
+          SELECT id FROM assets
+          WHERE asset_tag LIKE 'E2E-%'
+        );
+        DELETE FROM asset_assignment_history
+        WHERE asset_id IN (
+          SELECT id FROM assets
+          WHERE asset_tag LIKE 'E2E-%'
+        );
+        DELETE FROM asset_status_history
+        WHERE asset_id IN (
+          SELECT id FROM assets
+          WHERE asset_tag LIKE 'E2E-%'
+        );
+        -- Resetar ativos E2E para status AVAILABLE e sem usuário atribuído
+        UPDATE assets
+        SET status = 'AVAILABLE', user_id = NULL
+        WHERE asset_tag LIKE 'E2E-%';
+
+        -- Garantir que os ativos E2E foram criados (fallback para seeds não executadas)
+        INSERT INTO public.assets (asset_tag, type, model, status, organization_id, unit_id, user_id, version)
+        SELECT 'E2E-AVAIL-001', 'NOTEBOOK', 'Dell Latitude E2E 01', 'AVAILABLE', o.id, u.id, NULL, 0
+        FROM public.organizations o JOIN public.units u ON u.organization_id = o.id AND u.name = 'Matriz SP'
+        WHERE o.name = 'Empresa Demo Ltda' ON CONFLICT (asset_tag) DO NOTHING;
+
+        INSERT INTO public.assets (asset_tag, type, model, status, organization_id, unit_id, user_id, version)
+        SELECT 'E2E-AVAIL-002', 'DESKTOP', 'HP EliteDesk E2E 02', 'AVAILABLE', o.id, u.id, NULL, 0
+        FROM public.organizations o JOIN public.units u ON u.organization_id = o.id AND u.name = 'Matriz SP'
+        WHERE o.name = 'Empresa Demo Ltda' ON CONFLICT (asset_tag) DO NOTHING;
+
+        INSERT INTO public.assets (asset_tag, type, model, status, organization_id, unit_id, user_id, version)
+        SELECT 'E2E-AVAIL-003', 'TABLET', 'iPad Air E2E 03', 'AVAILABLE', o.id, u.id, NULL, 0
+        FROM public.organizations o JOIN public.units u ON u.organization_id = o.id AND u.name = 'Matriz SP'
+        WHERE o.name = 'Empresa Demo Ltda' ON CONFLICT (asset_tag) DO NOTHING;
+
+        INSERT INTO public.assets (asset_tag, type, model, status, organization_id, unit_id, user_id, version)
+        SELECT 'E2E-AVAIL-004', 'NOTEBOOK', 'Lenovo ThinkPad E2E 04', 'AVAILABLE', o.id, u.id, NULL, 0
+        FROM public.organizations o JOIN public.units u ON u.organization_id = o.id AND u.name = 'Filial RJ'
+        WHERE o.name = 'Empresa Demo Ltda' ON CONFLICT (asset_tag) DO NOTHING;
+
+        INSERT INTO public.assets (asset_tag, type, model, status, organization_id, unit_id, user_id, version)
+        SELECT 'E2E-AVAIL-005', 'DESKTOP', 'Dell OptiPlex E2E 05', 'AVAILABLE', o.id, u.id, NULL, 0
+        FROM public.organizations o JOIN public.units u ON u.organization_id = o.id AND u.name = 'Filial RJ'
+        WHERE o.name = 'Empresa Demo Ltda' ON CONFLICT (asset_tag) DO NOTHING;
+
+        INSERT INTO public.assets (asset_tag, type, model, status, organization_id, unit_id, user_id, version)
+        SELECT 'E2E-AVAIL-006', 'MOBILE_PHONE', 'iPhone 14 E2E 06', 'AVAILABLE', o.id, u.id, NULL, 0
+        FROM public.organizations o JOIN public.units u ON u.organization_id = o.id AND u.name = 'Filial RJ'
+        WHERE o.name = 'Empresa Demo Ltda' ON CONFLICT (asset_tag) DO NOTHING;
+
+        INSERT INTO public.assets (asset_tag, type, model, status, organization_id, unit_id, user_id, version)
+        SELECT 'E2E-AVAIL-007', 'NOTEBOOK', 'Acer Aspire E2E 07', 'AVAILABLE', o.id, u.id, NULL, 0
+        FROM public.organizations o JOIN public.units u ON u.organization_id = o.id AND u.name = 'Filial BH'
+        WHERE o.name = 'Empresa Demo Ltda' ON CONFLICT (asset_tag) DO NOTHING;
+
+        INSERT INTO public.assets (asset_tag, type, model, status, organization_id, unit_id, user_id, version)
+        SELECT 'E2E-AVAIL-008', 'TABLET', 'Samsung Tab S8 E2E 08', 'AVAILABLE', o.id, u.id, NULL, 0
+        FROM public.organizations o JOIN public.units u ON u.organization_id = o.id AND u.name = 'Filial BH'
+        WHERE o.name = 'Empresa Demo Ltda' ON CONFLICT (asset_tag) DO NOTHING;
+
+        INSERT INTO public.assets (asset_tag, type, model, status, organization_id, unit_id, user_id, version)
+        SELECT 'E2E-AVAIL-009', 'DESKTOP', 'Positivo Master E2E 09', 'AVAILABLE', o.id, u.id, NULL, 0
+        FROM public.organizations o JOIN public.units u ON u.organization_id = o.id AND u.name = 'Filial BH'
+        WHERE o.name = 'Empresa Demo Ltda' ON CONFLICT (asset_tag) DO NOTHING;
+
+        INSERT INTO public.assets (asset_tag, type, model, status, organization_id, unit_id, user_id, version)
+        SELECT 'E2E-AVAIL-010', 'NOTEBOOK', 'Asus ZenBook E2E 10', 'AVAILABLE', o.id, u.id, NULL, 0
+        FROM public.organizations o JOIN public.units u ON u.organization_id = o.id AND u.name = 'Matriz SP'
+        WHERE o.name = 'Empresa Demo Ltda' ON CONFLICT (asset_tag) DO NOTHING;
+
+        INSERT INTO public.assets (asset_tag, type, model, status, organization_id, unit_id, user_id, version)
+        SELECT 'E2E-ASSIGN-001', 'NOTEBOOK', 'Dell XPS E2E Assign 01', 'ASSIGNED', o.id, u.id, usr.id, 0
+        FROM public.organizations o
+        JOIN public.units u ON u.organization_id = o.id AND u.name = 'Matriz SP'
+        JOIN public.users usr ON usr.email = 'admin@empresa.com'
+        WHERE o.name = 'Empresa Demo Ltda' ON CONFLICT (asset_tag) DO NOTHING;
+
+        INSERT INTO public.assets (asset_tag, type, model, status, organization_id, unit_id, user_id, version)
+        SELECT 'E2E-ASSIGN-002', 'MOBILE_PHONE', 'Samsung S22 E2E Assign 02', 'ASSIGNED', o.id, u.id, usr.id, 0
+        FROM public.organizations o
+        JOIN public.units u ON u.organization_id = o.id AND u.name = 'Filial RJ'
+        JOIN public.users usr ON usr.email = 'gestor@empresa.com'
+        WHERE o.name = 'Empresa Demo Ltda' ON CONFLICT (asset_tag) DO NOTHING;
+
+        INSERT INTO public.assets (asset_tag, type, model, status, organization_id, unit_id, user_id, version)
+        SELECT 'E2E-ASSIGN-003', 'TABLET', 'iPad Mini E2E Assign 03', 'ASSIGNED', o.id, u.id, usr.id, 0
+        FROM public.organizations o
+        JOIN public.units u ON u.organization_id = o.id AND u.name = 'Filial BH'
+        JOIN public.users usr ON usr.email = 'operador@empresa.com'
+        WHERE o.name = 'Empresa Demo Ltda' ON CONFLICT (asset_tag) DO NOTHING;
+
+        INSERT INTO public.assets (asset_tag, type, model, status, organization_id, unit_id, user_id, version)
+        SELECT 'E2E-ASSIGN-004', 'DESKTOP', 'HP ProDesk E2E Assign 04', 'ASSIGNED', o.id, u.id, usr.id, 0
+        FROM public.organizations o
+        JOIN public.units u ON u.organization_id = o.id AND u.name = 'Matriz SP'
+        JOIN public.users usr ON usr.email = 'admin@empresa.com'
+        WHERE o.name = 'Empresa Demo Ltda' ON CONFLICT (asset_tag) DO NOTHING;
+
+        INSERT INTO public.assets (asset_tag, type, model, status, organization_id, unit_id, user_id, version)
+        SELECT 'E2E-ASSIGN-005', 'NOTEBOOK', 'MacBook Pro E2E Assign 05', 'ASSIGNED', o.id, u.id, usr.id, 0
+        FROM public.organizations o
+        JOIN public.units u ON u.organization_id = o.id AND u.name = 'Filial RJ'
+        JOIN public.users usr ON usr.email = 'gestor@empresa.com'
+        WHERE o.name = 'Empresa Demo Ltda' ON CONFLICT (asset_tag) DO NOTHING;
+      "
+    depends_on:
+      asset-management:
+        condition: service_healthy
+    restart: "no"
+    cpus: "0.20"
+    mem_limit: 128m
+    logging: *default-logging
+    networks:
+      - asset-net
+
+  # ─── Limpeza de resultados anteriores ────────────────────────────────────────
+  # Aguarda o Allure estar healthy antes de limpar, garantindo que o serviço
+  # já está de pé quando os resultados novos chegarem.
+  clean-allure-results:
+    image: alpine:3.19
+    container_name: clean-allure-results
+    profiles: ["tests"]
+    volumes:
+      - ./allure-results:/allure-results
+      - ./frontend/src/automation/playwright/reports:/playwright-reports
+    command: >
+      sh -c "find /allure-results -mindepth 1 -maxdepth 1 -exec rm -rf {} + || true;
+             find /playwright-reports -maxdepth 1 -type f -name '*.json' -delete || true;
+             find /playwright-reports -maxdepth 1 -type f -name '*.html' -delete || true;
+             wget -q -O - 'http://allure:5050/allure-docker-service/clean-history?project_id=default' || true;
+             echo 'Resultados, histórico e relatórios anteriores removidos.'"
+    depends_on:
+      allure:
+        condition: service_healthy
+    restart: "no"
+    cpus: "0.10"
+    mem_limit: 64m
+    logging: *default-logging
+    networks:
+      - asset-net
+
+  # ─── Testes Backend (Maven + H2 em memória) ──────────────────────────────────
+  # Usa H2 — não precisa do PostgreSQL nem da API deployada para rodar.
+  # Aguarda o sistema completo (backend, frontend, allure) antes de iniciar
+  # para garantir ordem e que os resultados serão processados pelo Allure.
+  test-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.test
+    container_name: asset-management-test-backend
+    profiles: ["tests"]
+    environment:
+      SPRING_PROFILES_ACTIVE: test
+    volumes:
+      - ./allure-results:/allure-results
+      - ./backend/src:/app/src:ro
+      - ./backend/pom.xml:/app/pom.xml:ro
+    depends_on:
+      clean-allure-results:
+        condition: service_completed_successfully
+      asset-management:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    restart: "no"
+    cpus: "1.00"
+    mem_limit: 1g
+    logging: *default-logging
+    networks:
+      - asset-net
+
+  # ─── Testes E2E Playwright ───────────────────────────────────────────────────
+  test-playwright:
+    build:
+      context: ./frontend/src/automation/playwright
+      dockerfile: Dockerfile
+    container_name: asset-management-test-playwright
+    profiles: ["tests"]
+    environment:
+      BASE_URL: http://frontend:80
+      API_URL: http://asset-management:8080
+      PWHEADLESS: "true"
+      ALLURE_RESULTS_DIR: /allure-results
+      TEST_DATA_CLEANUP_KEY: ${TEST_DATA_CLEANUP_KEY:-cleanup-local-key}
+      # Otimizações de performance
+      NODE_OPTIONS: "--max-old-space-size=2048 --max-http-header-size=16384"
+      NODE_ENV: production
+    command: ["npm", "test"]
+    volumes:
+      - ./allure-results:/allure-results
+      - ./frontend/src/automation/playwright/cucumber.js:/app/cucumber.js:ro
+      - ./frontend/src/automation/playwright/tsconfig.json:/app/tsconfig.json:ro
+      - ./frontend/src/automation/playwright/features:/app/features:ro
+      - ./frontend/src/automation/playwright/step-definitions:/app/step-definitions:ro
+      - ./frontend/src/automation/playwright/support:/app/support:ro
+    depends_on:
+      clean-allure-results:
+        condition: service_completed_successfully
+      reset-e2e-data:
+        condition: service_completed_successfully
+      frontend:
+        condition: service_healthy
+    restart: "no"
+    cpus: "2.0"
+    mem_limit: 2g
+    logging: *default-logging
+    networks:
+      - asset-net
+    # ✅ Alocação de recursos para evitar SIGTERM
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2g
+        reservations:
+          cpus: "1.5"
+          memory: 1536m
+
+  # ─── RTK Dashboard Service ────────────────────────────────────────────────────
+  # Token optimization dashboard showing real business metrics (token savings, ROI).
+  # Docs: http://localhost:3101
+  rtk-dashboard:
+    build:
+      context: ./rtk-dashboard
+      dockerfile: Dockerfile
+    container_name: rtk-dashboard
+    profiles: ["ai"]
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      AI_SERVICE_PORT: 3100
+      AI_SERVICE_API_KEY: ${AI_SERVICE_API_KEY:-local-ai-service-key}
+      LOCAL_ONLY_MODE: ${LOCAL_ONLY_MODE:-true}
+      LLM_PROVIDER_ORDER: ${LLM_PROVIDER_ORDER:-localfree}
+      LOCAL_LLM_ENABLED: ${LOCAL_LLM_ENABLED:-true}
+      LOCAL_LLM_MODEL: ${LOCAL_LLM_MODEL:-local-rule-based-v1}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-local-openai-key}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
+      OPENAI_FALLBACK_MODEL: ${OPENAI_FALLBACK_MODEL:-gpt-4o-mini}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-claude-3-5-sonnet-latest}
+      ANTHROPIC_FALLBACK_MODEL: ${ANTHROPIC_FALLBACK_MODEL:-claude-3-5-haiku-latest}
+      GITHUB_MODELS_TOKEN: ${GITHUB_MODELS_TOKEN:-}
+      GITHUB_MODELS_BASE_URL: ${GITHUB_MODELS_BASE_URL:-https://models.inference.ai.azure.com}
+      GITHUB_MODELS_MODEL: ${GITHUB_MODELS_MODEL:-gpt-4o-mini}
+      GITHUB_MODELS_FALLBACK_MODEL: ${GITHUB_MODELS_FALLBACK_MODEL:-gpt-4o-mini}
+      AI_DB_HOST: postgres
+      AI_DB_PORT: 5432
+      AI_DB_NAME: asset_management
+      AI_DB_USER: ${DB_USERNAME:-asset_user}
+      AI_DB_PASSWORD: ${DB_PASSWORD:-asset123}
+      PROMETHEUS_URL: http://prometheus:9090
+      ALLURE_URL: http://allure:5050
+      BACKEND_URL: http://asset-management:8080
+      GRAFANA_URL: http://grafana:3000
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GITHUB_OWNER: ${GITHUB_OWNER:-}
+      GITHUB_REPO: ${GITHUB_REPO:-}
+    ports:
+      - "3101:3100"
+    depends_on:
+      asset-management:
+        condition: service_healthy
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3100/health', r => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    cpus: "0.50"
+    mem_limit: 512m
+    logging: *default-logging
+    networks:
+      - asset-net
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 512M
+
+  # ─── Provisiona Datasources do Grafana ────────────────────────────────────────
+  # Cria datasources Prometheus e InfluxDB via API após Grafana iniciar
+  provision-grafana:
+    image: curlimages/curl:latest
+    container_name: provision-grafana
+    profiles: ["tests"]
+    volumes:
+      - ./infra/grafana/provision-datasources.sh:/provision.sh:ro
+    command: sh /provision.sh
+    depends_on:
+      grafana:
+        condition: service_healthy
+    restart: "no"
+    cpus: "0.10"
+    mem_limit: 64m
+    logging: *default-logging
+    networks:
+      - asset-net
+
+  # ─── Testes de Carga com k6 ──────────────────────────────────────────────────
+  # Executa testes de performance e envia métricas para InfluxDB (visualiza no Grafana)
+  # Dashboard disponível em: http://localhost:3001/d/k6-performance
+  k6:
+    image: grafana/k6:latest
+    container_name: k6
+    profiles: ["tests"]
+    volumes:
+      - ./k6/test.js:/app/test.js:ro
+    environment:
+      BASE_URL: ${BASE_URL:-http://asset-management:8080}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@empresa.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-Admin@123}
+      TEST_DATA_CLEANUP_KEY: ${TEST_DATA_CLEANUP_KEY:-cleanup-local-key}
+    command: run --out influxdb=http://influxdb:8086/k6 /app/test.js
+    depends_on:
+      asset-management:
+        condition: service_healthy
+      influxdb:
+        condition: service_healthy
+    restart: "no"
+    cpus: "1.00"
+    mem_limit: 1g
+    logging: *default-logging
+    networks:
+      - asset-net
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    profiles: ["observability"]
+    ports:
+      - "8081:8080"
+    command:
+      - "--housekeeping_interval=30s"
+      - "--docker_only=true"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    restart: unless-stopped
+    cpus: "0.30"
+    mem_limit: 192m
+    logging: *default-logging
+    networks:
+      - asset-net
+
+  # ─── Sprint Reporter – Gerador de Relatórios ────────────────────────────────
+  # Agrega dados de testes, CI/CD e IA em um relatório estruturado
+  # Acesse a API em: http://localhost:3200/api/reports/sprint
+  # Documentação: docs/projects/sprint-reporter-pt-br.md
+  sprint-reporter:
+    build: ./sprint-reporter
+    container_name: sprint-reporter
+    profiles: ["reports"]
+    ports:
+      - "3200:3200"
+    environment:
+      NODE_ENV: production
+      PORT: 3200
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: asset_management
+      DB_USER: ${DB_USERNAME:-asset_user}
+      DB_PASSWORD: ${DB_PASSWORD:-asset123}
+      AI_SERVICE_URL: http://rtk-dashboard:3100
+      AI_SERVICE_API_KEY: ${AI_SERVICE_API_KEY:-local-ai-service-key}
+      ALLURE_RESULTS_PATH: /app/allure-results
+      LOG_LEVEL: info
+    volumes:
+      - ./allure-results:/app/allure-results:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rtk-dashboard:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3200/health', r => process.exit(r.statusCode === 200 ? 0 : 1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    cpus: "0.50"
+    mem_limit: 256m
+    logging: *default-logging
+    networks:
+      - asset-net
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M

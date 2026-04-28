@@ -32,6 +32,8 @@ interface ModalFooterProps {
   /** Texto do botão de confirmação */
   confirmLabel: string
   disabled?: boolean
+  cancelTestId?: string
+  confirmTestId?: string
 }
 
 /** Rodapé padronizado para modais: botão Cancelar + botão de confirmação */
@@ -41,6 +43,8 @@ export function ModalFooter({
   loading,
   confirmLabel,
   disabled,
+  cancelTestId,
+  confirmTestId,
 }: ModalFooterProps) {
   const isDisabled = loading || disabled
 
@@ -48,6 +52,7 @@ export function ModalFooter({
     <div className="flex gap-2 justify-end pt-3 border-t border-slate-100 mt-3">
       <button
         type="button"
+        data-testid={cancelTestId}
         onClick={onCancel}
         className="px-4 py-[8px] rounded-[8px] border-[1.5px] border-slate-200 text-[13px] font-semibold text-slate-700 hover:bg-slate-50 transition"
       >
@@ -56,6 +61,7 @@ export function ModalFooter({
 
       <button
         type="button"
+        data-testid={confirmTestId}
         onClick={() => {
           if (!isDisabled) onConfirm()
         }}

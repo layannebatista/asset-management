@@ -74,10 +74,6 @@ export function Pagination({
 
   const range = getRange()
 
-  // FIX: evitar range inválido quando não há dados
-  const displayFrom = totalElements === 0 ? 0 : currentPage * pageSize + 1
-  const displayTo = Math.min((currentPage + 1) * pageSize, totalElements)
-
   // FIX: cálculo correto do range exibido
   const from = totalElements === 0
     ? 0

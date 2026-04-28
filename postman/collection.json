@@ -6,7 +6,7 @@
     "description": "Collection completa gerada a partir do Swagger oficial."
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:8080/api/v1" },
+    { "key": "baseUrl", "value": "http://localhost:8080" },
     { "key": "token", "value": "" }
   ],
   "auth": {
@@ -117,9 +117,75 @@
     {
       "name": "Dashboard",
       "item": [
-        { "name": "Executive Dashboard (ADMIN)", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/executive" } },
-        { "name": "Unit Dashboard (MANAGER)", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/unit" } },
-        { "name": "Personal Dashboard (OPERATOR)", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/personal" } }
+        { "name": "Executive Dashboard (ADMIN)", "request": { "method": "GET", "url": "{{baseUrl}}/api/dashboard/executive" } },
+        { "name": "Unit Dashboard (MANAGER)", "request": { "method": "GET", "url": "{{baseUrl}}/api/dashboard/unit" } },
+        { "name": "Personal Dashboard (OPERATOR)", "request": { "method": "GET", "url": "{{baseUrl}}/api/dashboard/personal" } }
+      ]
+    },
+
+    {
+      "name": "RTK Dashboard — Token Optimization",
+      "description": "APIs para economia de tokens. Base URL: http://localhost:3100",
+      "variable": [
+        { "key": "rtkUrl", "value": "http://localhost:3100" }
+      ],
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": "{{rtkUrl}}/health",
+            "description": "Verificar se o serviço está rodando"
+          }
+        },
+        {
+          "name": "Executive Summary (KPIs)",
+          "request": {
+            "method": "GET",
+            "url": "{{rtkUrl}}/api/v1/insights/executive-summary?days=30",
+            "description": "Resumo executivo com economia, qualidade, ROI. Use para: briefing executivo, relatório de sprint"
+          }
+        },
+        {
+          "name": "Token Economy (Detailed)",
+          "request": {
+            "method": "GET",
+            "url": "{{rtkUrl}}/api/v1/insights/token-economy?days=30",
+            "description": "Análise detalhada: tokens with/without RTK, economia em USD"
+          }
+        },
+        {
+          "name": "Model Efficiency (por modelo)",
+          "request": {
+            "method": "GET",
+            "url": "{{rtkUrl}}/api/v1/insights/model-efficiency?days=30",
+            "description": "Eficiência de cada modelo (Claude, GPT, etc) - qualidade, custo, recomendação"
+          }
+        },
+        {
+          "name": "Analysis ROI (por tipo)",
+          "request": {
+            "method": "GET",
+            "url": "{{rtkUrl}}/api/v1/insights/analysis-roi?days=30",
+            "description": "ROI por tipo de análise - qual traz mais valor"
+          }
+        },
+        {
+          "name": "History (últimos 3 meses)",
+          "request": {
+            "method": "GET",
+            "url": "{{rtkUrl}}/api/v1/insights/history?months=3",
+            "description": "Dados históricos agrupados por semana - para gráficos de tendência"
+          }
+        },
+        {
+          "name": "Dashboard Visual",
+          "request": {
+            "method": "GET",
+            "url": "{{rtkUrl}}/",
+            "description": "Abrir interface gráfica do RTK Dashboard (em HTML)"
+          }
+        }
       ]
     }
   ]

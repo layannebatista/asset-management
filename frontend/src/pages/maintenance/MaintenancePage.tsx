@@ -197,6 +197,7 @@ export default function MaintenancePage() {
           </p>
         </div>
         <button
+          data-testid="maintenance-open-order-btn"
           onClick={() => {
             setForm({ assetId: '', description: '', estimatedCost: '' })
             setDescError('')
@@ -273,6 +274,7 @@ export default function MaintenancePage() {
           {(['ALL', 'REQUESTED', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const).map((s) => (
             <button
               key={s}
+              data-testid={`maintenance-status-filter-${String(s).toLowerCase()}`}
               onClick={() => { setStatusFilter(s); setCurrentPage(0) }}
               className={`px-3 py-1 rounded-full text-[12px] font-medium border-[1.5px] transition ${
                 statusFilter === s
@@ -300,7 +302,7 @@ export default function MaintenancePage() {
               ) : (page?.content ?? []).length === 0 ? (
                 <tr><td colSpan={6} className="text-center py-12 text-slate-400">Nenhuma ordem encontrada</td></tr>
               ) : (page?.content ?? []).map((m) => (
-                <tr key={m.id} className="hover:bg-slate-50 transition-colors">
+                <tr key={m.id} data-testid="maintenance-row" className="hover:bg-slate-50 transition-colors">
                   <td className="px-[14px] py-3 border-b border-slate-50">
                     <span className="font-mono text-[12px] text-blue-700">{formatCode('MNT', m.id)}</span>
                   </td>
@@ -323,12 +325,12 @@ export default function MaintenancePage() {
                   <td className="px-[14px] py-3 border-b border-slate-50">
                     <div className="flex gap-[5px]">
                       {m.status === 'REQUESTED' && (
-                        <TipButton tip="Iniciar" loading={actionLoadingId === m.id} onClick={() => handleStart(m)}>
+                        <TipButton testId="maintenance-action-start" tip="Iniciar" loading={actionLoadingId === m.id} onClick={() => handleStart(m)}>
                           <Play size={13} />
                         </TipButton>
                       )}
                       {m.status === 'IN_PROGRESS' && (
-                        <TipButton tip="Concluir" onClick={() => {
+                        <TipButton testId="maintenance-action-complete" tip="Concluir" onClick={() => {
                           setCompleteForm({ resolution: '', actualCost: '' })
                           setShowComplete(m)
                         }}>
@@ -336,7 +338,7 @@ export default function MaintenancePage() {
                         </TipButton>
                       )}
                       {['REQUESTED', 'IN_PROGRESS'].includes(m.status) && (
-                        <TipButton tip="Cancelar" danger loading={actionLoadingId === m.id} onClick={() => handleCancel(m)}>
+                        <TipButton testId="maintenance-action-cancel" tip="Cancelar" danger loading={actionLoadingId === m.id} onClick={() => handleCancel(m)}>
                           <X size={13} />
                         </TipButton>
                       )}

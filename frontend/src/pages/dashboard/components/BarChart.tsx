@@ -1,5 +1,3 @@
-import React from 'react'
-
 interface BarChartProps {
   items: [string, number][]
   colorMap: Record<string, string>

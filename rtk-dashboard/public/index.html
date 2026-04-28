@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RTK Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page-shell">
+    <header class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">RTK Observability</p>
+        <h1>Visao clara do RTK neste workspace</h1>
+        <p class="hero-text">
+          O painel combina historico local do RTK com sinais reais das sessoes de agentes detectadas no seu ambiente.
+        </p>
+      </div>
+      <div class="hero-panel">
+        <div class="hero-panel-label">Atualizacao manual</div>
+        <button id="refreshDashboardBtn" class="btn btn-primary">Atualizar painel</button>
+        <div id="loadingIndicator" class="loading-hidden">
+          <div class="spinner"></div>
+          <p>Atualizando dados...</p>
+        </div>
+        <div id="errorAlert" class="alert alert-error alert-hidden"></div>
+      </div>
+    </header>
+
+    <main class="dashboard-layout">
+      <aside class="sidebar">
+        <section class="sidebar-card">
+          <h2>Fontes locais</h2>
+          <p class="sidebar-text">Status de cada origem usada para montar o painel.</p>
+          <div class="status-stack">
+            <div class="status-line">
+              <span>API</span>
+              <span id="apiStatus" class="status-badge status-up">OK Online</span>
+            </div>
+            <div class="status-line">
+              <span>RTK History DB</span>
+              <span id="dbStatus" class="status-badge status-down">ERRO Offline</span>
+            </div>
+            <div class="status-line">
+              <span>Claude</span>
+              <span id="claudeStatus" class="status-badge status-down">ERRO Offline</span>
+            </div>
+            <div class="status-line">
+              <span>Codex</span>
+              <span id="codexStatus" class="status-badge status-down">ERRO Offline</span>
+            </div>
+            <div class="status-line">
+              <span>GitHub Copilot</span>
+              <span id="copilotStatus" class="status-badge status-down">ERRO Offline</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="sidebar-card">
+          <h2>Como ler</h2>
+          <div class="hint-list">
+            <p><strong>Comandos:</strong> o que o RTK registrou para este projeto.</p>
+            <p><strong>Economia:</strong> tokens poupados e reducao media observada.</p>
+            <p><strong>Agentes:</strong> modelos vistos nas fontes locais de Claude, Codex e Copilot.</p>
+          </div>
+        </section>
+
+        <section class="sidebar-card">
+          <h2>Alertas</h2>
+          <div id="alertsCard" class="alerts-card">
+            <p class="no-alerts">Sem alertas no momento.</p>
+          </div>
+        </section>
+      </aside>
+
+      <section class="content-area">
+        <div id="analysisContainer" class="analysis-container">
+          <div class="placeholder">
+            <h2>Painel pronto para leitura</h2>
+            <p>Atualize para carregar o resumo do RTK, os comandos recentes e os agentes observados.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="dashboard.js?v=20260423-agents-ui"></script>
+</body>
+</html>

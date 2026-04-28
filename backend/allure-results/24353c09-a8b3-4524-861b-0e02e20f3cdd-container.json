@@ -1,1 +1,0 @@
-{"uuid":"24353c09-a8b3-4524-861b-0e02e20f3cdd","name":"deve lançar BusinessException quando resolução é obrigatória mas ausente","children":["4a611dab-2d09-440e-8af1-d9896cb9c88b"],"befores":[],"afters":[],"start":1772838944530,"stop":1772838944567}

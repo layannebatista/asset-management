@@ -1,0 +1,66 @@
+# =============================================================================
+# Perfil de teste — application-test.yml
+# Ativado por @ActiveProfiles("test") no CucumberSpringConfig e BaseIntegrationTest
+#
+# Estratégia: H2 em memória (PostgreSQL mode) + Flyway desabilitado + JPA create-drop
+# Isso elimina dependência de Docker/Testcontainers e garante testes rápidos e portáveis.
+# =============================================================================
+
+spring:
+  datasource:
+    # H2 em modo PostgreSQL: compatibilidade máxima com entidades JPA que usam tipos ANSI
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    # Hibernate cria o schema a partir das entidades — Flyway é desabilitado abaixo
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  flyway:
+    # Flyway usa SQL PostgreSQL-específico — desabilitado; JPA cria o schema
+    enabled: false
+
+  mail:
+    host: localhost
+    port: 25
+    username: test
+    password: test
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+            required: false
+
+# ─── Segurança / JWT ──────────────────────────────────────────────────────────
+security:
+  jwt:
+    # Secret fixo para testes — valor estável garante tokens válidos entre execuções
+    secret: test-secret-key-for-jwt-tests-minimum-32-characters-long
+    expiration: 3600000
+
+# ─── Actuator ─────────────────────────────────────────────────────────────────
+management:
+  health:
+    mail:
+      enabled: false
+
+# ─── Configurações da aplicação ───────────────────────────────────────────────
+app:
+  mail:
+    from: test@test.com
+    from-name: Test
+  frontend:
+    url: http://localhost:5173
+  mfa:
+    expiration-seconds: 300
+    code-length: 6

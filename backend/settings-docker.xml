@@ -1,0 +1,20 @@
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                              http://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+  <mirrors>
+    <!--
+      Bloqueia o repositório privado do Flyway (nexus.flywaydb.org) que é
+      inacessível de dentro de containers Docker.
+      As dependências do Flyway Community estão disponíveis no Maven Central.
+    -->
+    <mirror>
+      <id>block-flyway-nexus</id>
+      <name>Block Flyway Nexus (unavailable in Docker)</name>
+      <url>https://repo.maven.apache.org/maven2</url>
+      <mirrorOf>flyway-repo</mirrorOf>
+    </mirror>
+  </mirrors>
+
+</settings>

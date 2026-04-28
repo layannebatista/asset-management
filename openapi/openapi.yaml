@@ -79,15 +79,15 @@ components:
 
     AssetStatus:
       type: string
-      enum: [ACTIVE, RETIRED, IN_MAINTENANCE]
+      enum: [AVAILABLE, ASSIGNED, IN_TRANSFER, IN_MAINTENANCE, UNAVAILABLE, RETIRED]
 
     AssetType:
       type: string
-      enum: [EQUIPMENT, VEHICLE, FURNITURE, IT]
+      enum: [MOBILE_PHONE, NOTEBOOK, TABLET, DESKTOP, VEHICLE, OTHER]
 
     UserRole:
       type: string
-      enum: [ADMIN, MANAGER, OPERATOR]
+      enum: [ADMIN, GESTOR, OPERADOR]
 
     ############################################
     # ASSET

@@ -81,7 +81,7 @@ export default function LoginPage() {
         <div className="bg-white rounded-[14px] p-9 shadow-[0_20px_60px_rgba(0,0,0,0.4)]">
           {authStep === 'mfa' ? (
             <>
-              <h1 className="text-[20px] font-bold text-center mb-1">Verificação MFA</h1>
+              <h1 data-testid="mfa-step-title" className="text-[20px] font-bold text-center mb-1">Verificação MFA</h1>
               <p className="text-[13px] text-slate-500 text-center mb-6">Digite o código enviado via WhatsApp</p>
 
               <form onSubmit={handleMfa} className="space-y-4">
@@ -90,6 +90,7 @@ export default function LoginPage() {
                     Código de 6 dígitos
                   </label>
                   <input
+                    data-testid="mfa-code-input"
                     className="w-full border-[1.5px] border-slate-200 rounded-[7px] px-3 py-[10px] text-[20px] font-mono tracking-[.5em] text-center outline-none bg-slate-50 focus:border-blue-600 focus:bg-white transition"
                     maxLength={6}
                     value={mfaCode}
@@ -102,6 +103,7 @@ export default function LoginPage() {
                 {error && <p className="text-[12px] text-red-600">{error}</p>}
 
                 <button
+                  data-testid="mfa-submit-btn"
                   type="submit"
                   disabled={loading || mfaCode.length < 6}
                   className="w-full py-[11px] bg-blue-700 text-white rounded-[8px] text-[14px] font-bold hover:bg-blue-800 transition disabled:opacity-50"
@@ -112,7 +114,7 @@ export default function LoginPage() {
             </>
           ) : (
             <>
-              <h1 className="text-[20px] font-bold text-center mb-1">Bem-vindo de volta</h1>
+              <h1 data-testid="login-step-title" className="text-[20px] font-bold text-center mb-1">Bem-vindo de volta</h1>
               <p className="text-[13px] text-slate-500 text-center mb-6">
                 Entre com sua conta ou use um perfil de demonstração
               </p>
@@ -125,6 +127,7 @@ export default function LoginPage() {
                 <div className="grid grid-cols-3 gap-2">
                   {DEMO_USERS.map((u) => (
                     <button
+                      data-testid={`demo-profile-${u.role.toLowerCase()}`}
                       key={u.role}
                       type="button"
                       onClick={() => {
@@ -150,6 +153,7 @@ export default function LoginPage() {
                     Email
                   </label>
                   <input
+                    data-testid="login-email-input"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -164,6 +168,7 @@ export default function LoginPage() {
                     Senha
                   </label>
                   <input
+                    data-testid="login-password-input"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -176,6 +181,7 @@ export default function LoginPage() {
                 {error && <p className="text-[12px] text-red-600">{error}</p>}
 
                 <button
+                  data-testid="login-submit-btn"
                   type="submit"
                   disabled={loading}
                   className="w-full py-[11px] bg-blue-700 text-white rounded-[8px] text-[14px] font-bold hover:bg-blue-800 transition disabled:opacity-50 mt-1"
