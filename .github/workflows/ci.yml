@@ -236,7 +236,19 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Criar .env para testes E2E
-        run: cp .env.example .env
+        run: |
+          cp .env.example .env
+          {
+            echo "DB_USERNAME=asset_user"
+            echo "DB_PASSWORD=ci_password"
+            echo "JWT_SECRET=ci-test-jwt-secret-at-least-thirty-two-characters"
+            echo "MAIL_HOST=localhost"
+            echo "MAIL_PORT=1025"
+            echo "MAIL_USERNAME=ci@test.com"
+            echo "MAIL_PASSWORD=ci-password"
+            echo "MAIL_FROM=ci@test.com"
+            echo "TEST_DATA_CLEANUP_KEY=ci-cleanup-key"
+          } >> .env
 
       - name: Executar suite E2E Playwright
         run: |
