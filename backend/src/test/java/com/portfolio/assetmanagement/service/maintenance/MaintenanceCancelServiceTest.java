@@ -31,13 +31,10 @@ import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.Story;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -98,7 +95,7 @@ class MaintenanceCancelServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("MS10 - Deve cancelar manutenção e liberar ativo para AVAILABLE")
+  @DisplayName("[INTEGRACAO][ASSET] MS10 - Deve cancelar manutenção e liberar ativo para AVAILABLE")
   void ms10DeveCancelarELiberarAtivo() {
     MaintenanceRecord record = buildRecordMock(MaintenanceStatus.REQUESTED);
     Asset asset = record.getAsset();
@@ -116,7 +113,8 @@ class MaintenanceCancelServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("MS11 - Deve lançar BusinessException ao cancelar manutenção já concluída")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] MS11 - Deve lançar BusinessException ao cancelar manutenção já concluída")
   void ms11DeveLancarAoCancelarConcluida() {
     MaintenanceRecord record = buildRecordMock(MaintenanceStatus.COMPLETED);
     when(maintenanceRepository.findById(55L)).thenReturn(Optional.of(record));
@@ -130,4 +128,3 @@ class MaintenanceCancelServiceTest {
     verify(record, never()).cancel();
   }
 }
-

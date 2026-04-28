@@ -25,13 +25,10 @@ import com.portfolio.assetmanagement.security.context.LoggedUserContext;
 import com.portfolio.assetmanagement.shared.exception.NotFoundException;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -72,7 +69,8 @@ class AssetAssignServiceTest {
   }
 
   @Test
-  @DisplayName("AA01 - ADMIN atribui ativo com sucesso — verifica status, histórico e audit")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AA01 - ADMIN atribui ativo com sucesso — verifica status, histórico e audit")
   void aa01AdminAtribuiAtivoComSucesso() {
     Asset asset = mock(Asset.class);
     Organization org = mock(Organization.class);
@@ -102,7 +100,8 @@ class AssetAssignServiceTest {
   }
 
   @Test
-  @DisplayName("AA02 - Usuário não encontrado ao atribuir — lança NotFoundException")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AA02 - Usuário não encontrado ao atribuir — lança NotFoundException")
   void aa02UsuarioNaoEncontradoLancaNotFoundException() {
     Asset asset = mock(Asset.class);
     Organization org = mock(Organization.class);
@@ -114,12 +113,12 @@ class AssetAssignServiceTest {
     when(loggedUser.isAdmin()).thenReturn(true);
     when(loggedUser.getOrganizationId()).thenReturn(10L);
 
-    assertThatThrownBy(() -> service.assignAsset(1L, 999L))
-        .isInstanceOf(NotFoundException.class);
+    assertThatThrownBy(() -> service.assignAsset(1L, 999L)).isInstanceOf(NotFoundException.class);
   }
 
   @Test
-  @DisplayName("AA03 - ADMIN desatribui ativo com sucesso — verifica unassign, histórico e audit")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AA03 - ADMIN desatribui ativo com sucesso — verifica unassign, histórico e audit")
   void aa03AdminDesatribuiAtivoComSucesso() {
     Asset asset = mock(Asset.class);
     Organization org = mock(Organization.class);
@@ -146,4 +145,3 @@ class AssetAssignServiceTest {
         .registerEvent(AuditEventType.ASSET_UNASSIGNED, 5L, 10L, 20L, 1L, "Ativo desatribuido");
   }
 }
-

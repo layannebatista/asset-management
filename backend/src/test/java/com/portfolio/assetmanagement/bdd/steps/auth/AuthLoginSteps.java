@@ -36,7 +36,8 @@ public class AuthLoginSteps {
   // AÇÕES — RATE LIMIT DE LOGIN
   // =========================================================
 
-  @Quando("realizo login com email {string} e senha {string} a partir do IP {string} por {int} tentativas")
+  @Quando(
+      "realizo login com email {string} e senha {string} a partir do IP {string} por {int} tentativas")
   public void realizoLoginComMesmoIpPorTentativas(
       String email, String senha, String ip, int tentativas) {
     setLastResponse(executarTentativasLogin(email, senha, ip, tentativas));

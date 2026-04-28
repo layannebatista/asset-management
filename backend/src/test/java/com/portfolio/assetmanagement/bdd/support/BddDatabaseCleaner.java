@@ -12,8 +12,7 @@ public class BddDatabaseCleaner {
   private final String schema;
 
   public BddDatabaseCleaner(
-      JdbcTemplate jdbcTemplate,
-      @Value("${app.test-support.schema:public}") String schema) {
+      JdbcTemplate jdbcTemplate, @Value("${app.test-support.schema:public}") String schema) {
     this.jdbcTemplate = jdbcTemplate;
     this.schema = schema;
   }
@@ -41,8 +40,8 @@ public class BddDatabaseCleaner {
     String prefix = schema + ".";
     String databaseProduct =
         jdbcTemplate.execute(
-        (ConnectionCallback<String>)
-          connection -> connection.getMetaData().getDatabaseProductName().toLowerCase());
+            (ConnectionCallback<String>)
+                connection -> connection.getMetaData().getDatabaseProductName().toLowerCase());
 
     if (databaseProduct != null && databaseProduct.contains("h2")) {
       jdbcTemplate.execute("SET REFERENTIAL_INTEGRITY FALSE");

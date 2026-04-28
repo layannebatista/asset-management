@@ -1,5 +1,5 @@
 import { Logger } from 'winston';
-import { ICollector, CollectionResult } from '../collectors/ICollector';
+import { ICollector } from '../collectors/ICollector';
 import { CollectedData, SprintPeriod } from '../types/report.types';
 
 /**
@@ -49,7 +49,7 @@ export class DataAggregator {
           });
         }
       } else {
-        this.logger.error(`Collector promise rejected`, {
+        this.logger.error('Collector promise rejected', {
           reason: result.reason,
         });
       }

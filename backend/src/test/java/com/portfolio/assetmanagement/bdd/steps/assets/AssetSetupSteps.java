@@ -8,7 +8,6 @@ import com.portfolio.assetmanagement.domain.asset.enums.AssetType;
 import com.portfolio.assetmanagement.domain.organization.entity.Organization;
 import com.portfolio.assetmanagement.domain.unit.entity.Unit;
 import com.portfolio.assetmanagement.domain.user.entity.User;
-import io.cucumber.java.pt.Dado;
 import io.cucumber.java.pt.E;
 import org.springframework.beans.factory.annotation.Autowired;
 

@@ -8,7 +8,6 @@ import com.portfolio.assetmanagement.domain.organization.enums.OrganizationStatu
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 
 @DisplayName("Organization — domínio")
 @Tag("testType=Unit")

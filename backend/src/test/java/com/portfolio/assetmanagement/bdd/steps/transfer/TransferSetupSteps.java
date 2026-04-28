@@ -30,8 +30,7 @@ public class TransferSetupSteps {
             .findById(organizacaoId)
             .orElseThrow(
                 () ->
-                    new AssertionError(
-                        "Organização não encontrada no contexto: " + organizacaoId));
+                    new AssertionError("Organização não encontrada no contexto: " + organizacaoId));
 
     Unit unidadeDestino = testDataHelper.criarUnidade(nome, organizacao);
     transferContext.setUnidadeDestinoId(unidadeDestino.getId());
@@ -47,8 +46,7 @@ public class TransferSetupSteps {
             .findById(organizacaoId)
             .orElseThrow(
                 () ->
-                    new AssertionError(
-                        "Organização não encontrada no contexto: " + organizacaoId));
+                    new AssertionError("Organização não encontrada no contexto: " + organizacaoId));
 
     Unit unidadeDestino = testDataHelper.criarUnidade(nome, organizacao);
     context.setId("unidadeDestinoSecundariaId", unidadeDestino.getId());
@@ -83,7 +81,8 @@ public class TransferSetupSteps {
             .orElseThrow(
                 () ->
                     new AssertionError(
-                        "Organização não encontrada no contexto: " + context.getId("organizacaoId")));
+                        "Organização não encontrada no contexto: "
+                            + context.getId("organizacaoId")));
     Long unidadeDestinoId = context.getId("unidadeDestinoId");
     Unit unidadeDestino = testDataHelper.obterUnidade(unidadeDestinoId);
     testDataHelper.criarGestor(email, senha, org, unidadeDestino);
@@ -97,7 +96,8 @@ public class TransferSetupSteps {
             .orElseThrow(
                 () ->
                     new AssertionError(
-                        "Organização não encontrada no contexto: " + context.getId("organizacaoId")));
+                        "Organização não encontrada no contexto: "
+                            + context.getId("organizacaoId")));
     Long unidadeDestinoId = context.getId("unidadeDestinoId");
     Unit unidadeDestino = testDataHelper.obterUnidade(unidadeDestinoId);
     Asset ativo = testDataHelper.criarAtivo(assetTag, AssetType.NOTEBOOK, org, unidadeDestino);
@@ -112,8 +112,7 @@ public class TransferSetupSteps {
             .findById(organizacaoId)
             .orElseThrow(
                 () ->
-                    new AssertionError(
-                        "Organização não encontrada no contexto: " + organizacaoId));
+                    new AssertionError("Organização não encontrada no contexto: " + organizacaoId));
 
     Unit unidadeOrigem = testDataHelper.obterUnidade(context.getId("unidadeId"));
     Unit outraUnidade = testDataHelper.criarUnidade("Unidade Externa Escopo", organizacao);
@@ -122,7 +121,8 @@ public class TransferSetupSteps {
       throw new AssertionError("Unidade de outra origem não pode ser igual à unidade do gestor");
     }
 
-    Asset ativo = testDataHelper.criarAtivo(assetTag, AssetType.NOTEBOOK, organizacao, outraUnidade);
+    Asset ativo =
+        testDataHelper.criarAtivo(assetTag, AssetType.NOTEBOOK, organizacao, outraUnidade);
     context.setId("ativoId_" + assetTag, ativo.getId());
   }
 }

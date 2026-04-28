@@ -30,7 +30,8 @@ class ModulesSecurityIntegrationTest extends BaseIntegrationTest {
   @Story("Autenticação obrigatória")
   @Severity(SeverityLevel.BLOCKER)
   void semAutenticacaoRetorna401(String module, RequestPlan plan) {
-    MockMvcResponse response = apiClient.requestWithoutAuth(plan.method(), plan.path(), plan.body());
+    MockMvcResponse response =
+        apiClient.requestWithoutAuth(plan.method(), plan.path(), plan.body());
     assertThat(response.statusCode()).isEqualTo(401);
   }
 
@@ -84,7 +85,8 @@ class ModulesSecurityIntegrationTest extends BaseIntegrationTest {
         Arguments.of("audit", new RequestPlan("GET", "/audit", null)),
         Arguments.of("costcenter", new RequestPlan("GET", "/cost-centers", null)),
         Arguments.of("dashboard", new RequestPlan("GET", "/api/dashboard/executive", null)),
-        Arguments.of("depreciation", new RequestPlan("GET", "/assets/depreciation/portfolio", null)),
+        Arguments.of(
+            "depreciation", new RequestPlan("GET", "/assets/depreciation/portfolio", null)),
         Arguments.of("export", new RequestPlan("GET", "/export/audit", null)),
         Arguments.of("insurance", new RequestPlan("GET", "/assets/insurance/summary", null)),
         Arguments.of("inventory", new RequestPlan("GET", "/inventory", null)),
@@ -96,15 +98,23 @@ class ModulesSecurityIntegrationTest extends BaseIntegrationTest {
         Arguments.of("organization", new RequestPlan("GET", "/organizations", null), "GESTOR"),
         Arguments.of("user", new RequestPlan("POST", "/users", userBody(1L, 1L)), "GESTOR"),
         Arguments.of("unit", new RequestPlan("GET", "/units/1", null), "OPERADOR"),
-        Arguments.of("category", new RequestPlan("POST", "/categories", categoryBody()), "OPERADOR"),
+        Arguments.of(
+            "category", new RequestPlan("POST", "/categories", categoryBody()), "OPERADOR"),
         Arguments.of("audit", new RequestPlan("GET", "/audit", null), "OPERADOR"),
         Arguments.of("costcenter", new RequestPlan("GET", "/cost-centers", null), "GESTOR"),
-        Arguments.of("dashboard", new RequestPlan("GET", "/api/dashboard/executive", null), "GESTOR"),
-        Arguments.of("depreciation", new RequestPlan("GET", "/assets/depreciation/portfolio", null), "OPERADOR"),
+        Arguments.of(
+            "dashboard", new RequestPlan("GET", "/api/dashboard/executive", null), "GESTOR"),
+        Arguments.of(
+            "depreciation",
+            new RequestPlan("GET", "/assets/depreciation/portfolio", null),
+            "OPERADOR"),
         Arguments.of("export", new RequestPlan("GET", "/export/audit", null), "GESTOR"),
-        Arguments.of("insurance", new RequestPlan("GET", "/assets/insurance/summary", null), "OPERADOR"),
-        Arguments.of("inventory", new RequestPlan("PATCH", "/inventory/999999/start", null), "OPERADOR"),
-        Arguments.of("ai", new RequestPlan("POST", "/api/ai/analysis/multi-agent", aiBody()), "GESTOR"));
+        Arguments.of(
+            "insurance", new RequestPlan("GET", "/assets/insurance/summary", null), "OPERADOR"),
+        Arguments.of(
+            "inventory", new RequestPlan("PATCH", "/inventory/999999/start", null), "OPERADOR"),
+        Arguments.of(
+            "ai", new RequestPlan("POST", "/api/ai/analysis/multi-agent", aiBody()), "GESTOR"));
   }
 
   static Stream<Arguments> modulesForInvalidJwt() {
@@ -116,13 +126,20 @@ class ModulesSecurityIntegrationTest extends BaseIntegrationTest {
         Arguments.of("organization", new RequestPlan("GET", "/organizations", null), "ADMIN", 200),
         Arguments.of("user", new RequestPlan("POST", "/users", userBody(1L, 1L)), "ADMIN", 201),
         Arguments.of("unit", new RequestPlan("GET", "/units/1", null), "GESTOR", 200),
-        Arguments.of("category", new RequestPlan("POST", "/categories", categoryBody()), "ADMIN", 200),
+        Arguments.of(
+            "category", new RequestPlan("POST", "/categories", categoryBody()), "ADMIN", 200),
         Arguments.of("audit", new RequestPlan("GET", "/audit", null), "GESTOR", 200),
         Arguments.of("costcenter", new RequestPlan("GET", "/cost-centers", null), "ADMIN", 200),
-        Arguments.of("dashboard", new RequestPlan("GET", "/api/dashboard/executive", null), "ADMIN", 200),
-        Arguments.of("depreciation", new RequestPlan("GET", "/assets/depreciation/portfolio", null), "ADMIN", 200),
+        Arguments.of(
+            "dashboard", new RequestPlan("GET", "/api/dashboard/executive", null), "ADMIN", 200),
+        Arguments.of(
+            "depreciation",
+            new RequestPlan("GET", "/assets/depreciation/portfolio", null),
+            "ADMIN",
+            200),
         Arguments.of("export", new RequestPlan("GET", "/export/audit", null), "ADMIN", 200),
-        Arguments.of("insurance", new RequestPlan("GET", "/assets/insurance/summary", null), "ADMIN", 200),
+        Arguments.of(
+            "insurance", new RequestPlan("GET", "/assets/insurance/summary", null), "ADMIN", 200),
         Arguments.of("inventory", new RequestPlan("GET", "/inventory", null), "GESTOR", 200));
   }
 

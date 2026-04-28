@@ -27,13 +27,10 @@ import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.Story;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -67,7 +64,7 @@ class AuthSessionServiceTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("AU05 - verifyMfa valida código e retorna tokens")
+  @DisplayName("[INTEGRACAO][ASSET] AU05 - verifyMfa valida código e retorna tokens")
   void au05VerifyMfaValidaCodigoERetornaTokens() {
     MfaVerifyRequestDTO request = new MfaVerifyRequestDTO();
     request.setUserId(1L);
@@ -90,7 +87,8 @@ class AuthSessionServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("AU06 - verifyMfa lança NotFoundException para usuário inexistente")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AU06 - verifyMfa lança NotFoundException para usuário inexistente")
   void au06VerifyMfaLancaNotFoundParaUsuarioInexistente() {
     MfaVerifyRequestDTO request = new MfaVerifyRequestDTO();
     request.setUserId(999L);
@@ -105,7 +103,7 @@ class AuthSessionServiceTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("AU07 - refresh rotaciona token e emite nova sessão")
+  @DisplayName("[INTEGRACAO][ASSET] AU07 - refresh rotaciona token e emite nova sessão")
   void au07RefreshRotacionaTokenEEmiteNovaSessao() {
     RefreshRequestDTO request = new RefreshRequestDTO();
     request.setRefreshToken("refresh-antigo");
@@ -128,7 +126,7 @@ class AuthSessionServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("AU08 - logout revoga todos os refresh tokens do usuário")
+  @DisplayName("[INTEGRACAO][ASSET] AU08 - logout revoga todos os refresh tokens do usuário")
   void au08LogoutRevogaTodosOsRefreshTokensDoUsuario() {
     authService.logout(99L);
 

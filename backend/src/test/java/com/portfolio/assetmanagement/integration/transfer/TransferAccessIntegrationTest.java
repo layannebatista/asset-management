@@ -17,7 +17,6 @@ import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 
 @Epic("Backend")
 @Feature("Integração — Transfer")
@@ -29,7 +28,7 @@ class TransferAccessIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Proteção de endpoints")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("TAI01 - Listagem sem autenticação retorna 401")
+  @DisplayName("[INTEGRACAO][ASSET] TAI01 - Listagem sem autenticação retorna 401")
   void tai01ListagemSemAutenticacaoRetorna401() {
     MockMvcResponse response = apiClient.getSemToken("/transfers");
 
@@ -39,7 +38,7 @@ class TransferAccessIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Proteção de endpoints")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("TAI02 - Aprovação sem autenticação retorna 401")
+  @DisplayName("[INTEGRACAO][ASSET] TAI02 - Aprovação sem autenticação retorna 401")
   void tai02AprovacaoSemAutenticacaoRetorna401() {
     MockMvcResponse response =
         given()
@@ -57,7 +56,7 @@ class TransferAccessIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Controle de acesso")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("TAI03 - OPERADOR não pode aprovar transferência")
+  @DisplayName("[INTEGRACAO][ASSET] TAI03 - OPERADOR não pode aprovar transferência")
   void tai03OperadorNaoPodeAprovarTransferencia() {
     Unit destino = testDataHelper.criarUnidade("Filial TAI03", organizacao);
     Asset asset = criarAtivo("TRANSFER-ACC-03");
@@ -65,7 +64,8 @@ class TransferAccessIntegrationTest extends BaseIntegrationTest {
     Long transferId =
         ((Number)
                 apiClient
-                    .solicitarTransferencia(asset.getId(), destino.getId(), "Aguardando decisão", adminToken)
+                    .solicitarTransferencia(
+                        asset.getId(), destino.getId(), "Aguardando decisão", adminToken)
                     .path("id"))
             .longValue();
 
@@ -78,20 +78,24 @@ class TransferAccessIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Controle de acesso")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("TAI04 - GESTOR de outra unidade não pode aprovar transferência alheia")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TAI04 - GESTOR de outra unidade não pode aprovar transferência alheia")
   void tai04GestorDeOutraUnidadeNaoPodeAprovarTransferenciaAlheia() {
     Unit outraUnidade = testDataHelper.criarUnidade("Filial TAI04", organizacao);
     Unit terceiraUnidade = testDataHelper.criarUnidade("Filial TAI04-B", organizacao);
-    testDataHelper.criarGestor("gestor-outra-transfer@test.com", "Senha@123", organizacao, outraUnidade);
+    testDataHelper.criarGestor(
+        "gestor-outra-transfer@test.com", "Senha@123", organizacao, outraUnidade);
     Asset asset = criarAtivo("TRANSFER-ACC-04");
     String adminToken = loginComoAdmin();
     Long transferId =
         ((Number)
                 apiClient
-                    .solicitarTransferencia(asset.getId(), terceiraUnidade.getId(), "Escopo alheio", adminToken)
+                    .solicitarTransferencia(
+                        asset.getId(), terceiraUnidade.getId(), "Escopo alheio", adminToken)
                     .path("id"))
             .longValue();
-    String outroGestorToken = apiClient.login("gestor-outra-transfer@test.com", "Senha@123").path("accessToken");
+    String outroGestorToken =
+        apiClient.login("gestor-outra-transfer@test.com", "Senha@123").path("accessToken");
 
     MockMvcResponse response =
         apiClient.aprovarTransferencia(transferId, "Sem acesso à unidade", outroGestorToken);

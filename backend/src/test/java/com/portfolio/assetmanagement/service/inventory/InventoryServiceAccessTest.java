@@ -16,9 +16,7 @@ import com.portfolio.assetmanagement.shared.exception.ForbiddenException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -38,7 +36,7 @@ class InventoryServiceAccessTest {
   @InjectMocks private InventoryService service;
 
   @Test
-  @DisplayName("INV-S01 - operador não pode criar inventário")
+  @DisplayName("[INTEGRACAO][ASSET] INV-S01 - operador não pode criar inventário")
   void operadorNaoPodeCriarInventario() {
     Organization org = mock(Organization.class);
     when(org.getId()).thenReturn(1L);

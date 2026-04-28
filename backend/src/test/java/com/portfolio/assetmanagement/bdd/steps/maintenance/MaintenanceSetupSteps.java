@@ -46,8 +46,7 @@ public class MaintenanceSetupSteps {
   public void queExisteUmAtivoDisponivel(String assetTag) {
     Organization org = testDataHelper.obterOrganizacao(mainContext.getOrganizacaoId());
     Unit unit = testDataHelper.obterUnidade(mainContext.getUnidadeId());
-    Asset ativo =
-        testDataHelper.criarAtivo(assetTag, AssetType.NOTEBOOK, org, unit);
+    Asset ativo = testDataHelper.criarAtivo(assetTag, AssetType.NOTEBOOK, org, unit);
     mainContext.setAtivoTagAtual(assetTag);
     context.setId("ativoId_" + assetTag, ativo.getId());
   }
@@ -79,7 +78,12 @@ public class MaintenanceSetupSteps {
     Unit unit = testDataHelper.obterUnidade(mainContext.getUnidadeId());
     Asset ativo =
         testDataHelper.criarAtivoComStatus(
-            assetTag, AssetType.NOTEBOOK, "Modelo Em Manutenção", org, unit, AssetStatus.IN_MAINTENANCE);
+            assetTag,
+            AssetType.NOTEBOOK,
+            "Modelo Em Manutenção",
+            org,
+            unit,
+            AssetStatus.IN_MAINTENANCE);
     mainContext.setAtivoTagAtual(assetTag);
     context.setId("ativoId_" + assetTag, ativo.getId());
   }
@@ -101,7 +105,12 @@ public class MaintenanceSetupSteps {
     Unit unit = testDataHelper.obterUnidade(mainContext.getUnidadeId());
     Asset ativo =
         testDataHelper.criarAtivoComStatus(
-            assetTag, AssetType.NOTEBOOK, "Modelo Em Transferência", org, unit, AssetStatus.IN_TRANSFER);
+            assetTag,
+            AssetType.NOTEBOOK,
+            "Modelo Em Transferência",
+            org,
+            unit,
+            AssetStatus.IN_TRANSFER);
     mainContext.setAtivoTagAtual(assetTag);
     context.setId("ativoId_" + assetTag, ativo.getId());
   }
@@ -109,10 +118,8 @@ public class MaintenanceSetupSteps {
   @E("que estou autenticado como {string} com senha {string}")
   public void queEstouAutenticado(String email, String senha) {
     MockMvcResponse response = apiClient.login(email, senha);
-    
-    assertThat(response.statusCode())
-        .as("Login falhou para o usuário %s", email)
-        .isEqualTo(200);
+
+    assertThat(response.statusCode()).as("Login falhou para o usuário %s", email).isEqualTo(200);
 
     String token = response.path("accessToken");
     context.setToken(token);

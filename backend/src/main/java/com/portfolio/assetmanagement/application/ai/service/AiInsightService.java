@@ -18,9 +18,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 /**
  * Proxy service that delegates AI analysis requests to the ai-intelligence Node.js service.
  *
- * <p>Uses {@link RestClient} (Spring Boot 3.2+, synchronous) — no WebFlux dependency needed.
- * The frontend calls Spring Boot (JWT + RBAC enforced), which forwards to the AI sidecar
- * using the internal API key, keeping the AI service unreachable from external clients.
+ * <p>Uses {@link RestClient} (Spring Boot 3.2+, synchronous) — no WebFlux dependency needed. The
+ * frontend calls Spring Boot (JWT + RBAC enforced), which forwards to the AI sidecar using the
+ * internal API key, keeping the AI service unreachable from external clients.
  */
 @Service
 public class AiInsightService {
@@ -28,7 +28,7 @@ public class AiInsightService {
   private static final Logger log = LoggerFactory.getLogger(AiInsightService.class);
 
   private static final int ANALYSIS_TIMEOUT_MS = 180_000; // 3 min — LLM calls are slow
-  private static final int QUERY_TIMEOUT_MS     = 10_000;
+  private static final int QUERY_TIMEOUT_MS = 10_000;
 
   private final RestClient analysisClient;
   private final RestClient queryClient;
@@ -38,7 +38,7 @@ public class AiInsightService {
       @Value("${ai.service.api-key:}") String apiKey) {
 
     this.analysisClient = buildClient(aiServiceUrl, apiKey, ANALYSIS_TIMEOUT_MS);
-    this.queryClient    = buildClient(aiServiceUrl, apiKey, QUERY_TIMEOUT_MS);
+    this.queryClient = buildClient(aiServiceUrl, apiKey, QUERY_TIMEOUT_MS);
   }
 
   // ─── Public API ───────────────────────────────────────────────────────────
@@ -53,18 +53,21 @@ public class AiInsightService {
           .contentType(MediaType.APPLICATION_JSON)
           .body(request)
           .retrieve()
-          .onStatus(HttpStatusCode::isError, (req, res) -> {
-            int code = res.getStatusCode().value();
-            log.error("AI service error: status={} uri={}", code, req.getURI());
-            throw new AiServiceException("AI analysis failed with status " + code, code);
-          })
+          .onStatus(
+              HttpStatusCode::isError,
+              (req, res) -> {
+                int code = res.getStatusCode().value();
+                log.error("AI service error: status={} uri={}", code, req.getURI());
+                throw new AiServiceException("AI analysis failed with status " + code, code);
+              })
           .body(JsonNode.class);
 
     } catch (AiServiceException ex) {
       throw ex;
     } catch (RestClientResponseException ex) {
       log.error("AI service HTTP error: status={}", ex.getStatusCode().value(), ex);
-      throw new AiServiceException("AI analysis failed: " + ex.getStatusCode(), ex.getStatusCode().value());
+      throw new AiServiceException(
+          "AI analysis failed: " + ex.getStatusCode(), ex.getStatusCode().value());
     } catch (Exception ex) {
       log.error("AI service unreachable", ex);
       throw new AiServiceException("AI service unavailable", 503);
@@ -74,20 +77,23 @@ public class AiInsightService {
   public JsonNode getHistory(String type, int limit) {
     try {
       // Build URI explicitly to avoid null template-variable bugs
-      String uri = UriComponentsBuilder
-          .fromUriString("/api/v1/analysis/history")
-          .queryParamIfPresent("type", java.util.Optional.ofNullable(type))
-          .queryParam("limit", limit)
-          .build()
-          .toUriString();
+      String uri =
+          UriComponentsBuilder.fromUriString("/api/v1/analysis/history")
+              .queryParamIfPresent("type", java.util.Optional.ofNullable(type))
+              .queryParam("limit", limit)
+              .build()
+              .toUriString();
 
       return queryClient
           .get()
           .uri(uri)
           .retrieve()
-          .onStatus(HttpStatusCode::isError, (req, res) -> {
-            throw new AiServiceException("Failed to fetch history", res.getStatusCode().value());
-          })
+          .onStatus(
+              HttpStatusCode::isError,
+              (req, res) -> {
+                throw new AiServiceException(
+                    "Failed to fetch history", res.getStatusCode().value());
+              })
           .body(JsonNode.class);
 
     } catch (AiServiceException ex) {
@@ -106,10 +112,15 @@ public class AiInsightService {
           .retrieve()
           .onStatus(
               status -> status.value() == 404,
-              (req, res) -> { /* return null below */ })
-          .onStatus(HttpStatusCode::isError, (req, res) -> {
-            throw new AiServiceException("Failed to fetch analysis", res.getStatusCode().value());
-          })
+              (req, res) -> {
+                /* return null below */
+              })
+          .onStatus(
+              HttpStatusCode::isError,
+              (req, res) -> {
+                throw new AiServiceException(
+                    "Failed to fetch analysis", res.getStatusCode().value());
+              })
           .body(JsonNode.class);
 
     } catch (AiServiceException ex) {

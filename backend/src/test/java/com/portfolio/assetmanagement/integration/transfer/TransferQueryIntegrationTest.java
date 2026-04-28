@@ -15,7 +15,6 @@ import io.restassured.module.mockmvc.response.MockMvcResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 
 @Epic("Backend")
 @Feature("Integração — Transfer")
@@ -43,7 +42,8 @@ class TransferQueryIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Consulta")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TQI01 - Listar transferências com paginação retorna 200 e campos page")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TQI01 - Listar transferências com paginação retorna 200 e campos page")
   void tqi01ListarTransferenciasComPaginacao() {
     Unit destino = testDataHelper.criarUnidade("Filial TQI01", organizacao);
     criarTransferenciasParaListagem(destino);
@@ -59,7 +59,8 @@ class TransferQueryIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Consulta")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TQI02 - Filtrar transferências por status retorna apenas itens esperados")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TQI02 - Filtrar transferências por status retorna apenas itens esperados")
   void tqi02FiltrarTransferenciasPorStatus() {
     Unit destino = testDataHelper.criarUnidade("Filial TQI02", organizacao);
     criarTransferenciasParaListagem(destino);
@@ -75,7 +76,8 @@ class TransferQueryIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Consulta")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TQI03 - Filtrar transferências por assetId retorna item correto")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TQI03 - Filtrar transferências por assetId retorna item correto")
   void tqi03FiltrarTransferenciasPorAssetId() {
     Unit destino = testDataHelper.criarUnidade("Filial TQI03", organizacao);
     String token = loginComoAdmin();
@@ -83,8 +85,7 @@ class TransferQueryIntegrationTest extends BaseIntegrationTest {
     criarAtivo("TRANSFER-LIST-03B");
     apiClient.solicitarTransferencia(alvo.getId(), destino.getId(), "Somente este ativo", token);
 
-    MockMvcResponse response =
-        apiClient.listarTransferencias(null, alvo.getId(), null, token);
+    MockMvcResponse response = apiClient.listarTransferencias(null, alvo.getId(), null, token);
 
     assertThat(response.statusCode()).isEqualTo(200);
     assertThat(((Number) response.path("totalElements")).intValue()).isEqualTo(1);
@@ -94,7 +95,8 @@ class TransferQueryIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Consulta")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TQI04 - Filtrar transferências por unitId retorna itens da unidade")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TQI04 - Filtrar transferências por unitId retorna itens da unidade")
   void tqi04FiltrarTransferenciasPorUnitId() {
     Unit destino = testDataHelper.criarUnidade("Filial TQI04", organizacao);
     criarTransferenciasParaListagem(destino);
@@ -104,19 +106,26 @@ class TransferQueryIntegrationTest extends BaseIntegrationTest {
 
     assertThat(response.statusCode()).isEqualTo(200);
     assertThat(((Number) response.path("totalElements")).intValue()).isGreaterThanOrEqualTo(2);
-    assertThat(((Number) response.path("content[0].toUnitId")).longValue()).isEqualTo(destino.getId());
+    assertThat(((Number) response.path("content[0].toUnitId")).longValue())
+        .isEqualTo(destino.getId());
   }
 
   @Test
   @Story("Controle de acesso")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("TQI05 - GESTOR vê apenas transferências da própria unidade")
+  @DisplayName("[INTEGRACAO][ASSET] TQI05 - GESTOR vê apenas transferências da própria unidade")
   void tqi05GestorVeApenasTransferenciasDaPropriaUnidade() {
     Unit outraUnidade = testDataHelper.criarUnidade("Filial TQI05", organizacao);
     String token = loginComoAdmin();
     Asset assetLocal = criarAtivo("TRANSFER-LIST-05A");
-    Asset assetOutra = testDataHelper.criarAtivo("TRANSFER-LIST-05B", com.portfolio.assetmanagement.domain.asset.enums.AssetType.NOTEBOOK, organizacao, outraUnidade);
-    apiClient.solicitarTransferencia(assetLocal.getId(), outraUnidade.getId(), "Visível para gestor", token);
+    Asset assetOutra =
+        testDataHelper.criarAtivo(
+            "TRANSFER-LIST-05B",
+            com.portfolio.assetmanagement.domain.asset.enums.AssetType.NOTEBOOK,
+            organizacao,
+            outraUnidade);
+    apiClient.solicitarTransferencia(
+        assetLocal.getId(), outraUnidade.getId(), "Visível para gestor", token);
     apiClient.solicitarTransferencia(assetOutra.getId(), unidade.getId(), "Também visível", token);
 
     MockMvcResponse response = apiClient.listarTransferencias(null, null, null, loginComoGestor());

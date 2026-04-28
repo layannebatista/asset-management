@@ -5,9 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.portfolio.assetmanagement.bdd.client.ApiClient;
 import com.portfolio.assetmanagement.bdd.context.ScenarioContext;
 import com.portfolio.assetmanagement.domain.transfer.enums.TransferStatus;
-import java.util.Map;
 import io.cucumber.java.pt.Quando;
 import io.restassured.module.mockmvc.response.MockMvcResponse;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /** Steps de ações de transferência. */
@@ -64,7 +64,8 @@ public class TransferActionSteps {
     }
   }
 
-  @Quando("solicito transferência do ativo {string} para a unidade de destino com motivo {string} sem autenticação")
+  @Quando(
+      "solicito transferência do ativo {string} para a unidade de destino com motivo {string} sem autenticação")
   public void solicitoTransferenciaSemAutenticacao(String assetTag, String motivo) {
     Long assetId = context.getId("ativoId_" + assetTag);
     Long unidadeDestinoId = transferContext.getUnidadeDestinoId();
@@ -76,19 +77,24 @@ public class TransferActionSteps {
     setLastResponse(response);
   }
 
-  @Quando("solicito transferência do ativo com ID {string} para a unidade de destino com motivo {string}")
+  @Quando(
+      "solicito transferência do ativo com ID {string} para a unidade de destino com motivo {string}")
   public void solicitoTransferenciaComAssetIdInvalido(String assetId, String motivo) {
     Long unidadeDestinoId = transferContext.getUnidadeDestinoId();
     MockMvcResponse response =
-        apiClient.solicitarTransferencia(Long.parseLong(assetId), unidadeDestinoId, motivo, context.getToken());
+        apiClient.solicitarTransferencia(
+            Long.parseLong(assetId), unidadeDestinoId, motivo, context.getToken());
     setLastResponse(response);
   }
 
-  @Quando("solicito transferência do ativo {string} para a unidade com ID {string} com motivo {string}")
-  public void solicitoTransferenciaComToUnitIdInvalido(String assetTag, String toUnitId, String motivo) {
+  @Quando(
+      "solicito transferência do ativo {string} para a unidade com ID {string} com motivo {string}")
+  public void solicitoTransferenciaComToUnitIdInvalido(
+      String assetTag, String toUnitId, String motivo) {
     Long assetId = context.getId("ativoId_" + assetTag);
     MockMvcResponse response =
-        apiClient.solicitarTransferencia(assetId, Long.parseLong(toUnitId), motivo, context.getToken());
+        apiClient.solicitarTransferencia(
+            assetId, Long.parseLong(toUnitId), motivo, context.getToken());
     setLastResponse(response);
   }
 
@@ -147,8 +153,7 @@ public class TransferActionSteps {
   @Quando("concluo a transferência salva")
   public void concluoATransferenciaSalva() {
     Long transferId = transferContext.getTransferId();
-    MockMvcResponse response =
-        apiClient.concluirTransferencia(transferId, context.getToken());
+    MockMvcResponse response = apiClient.concluirTransferencia(transferId, context.getToken());
     setLastResponse(response);
   }
 
@@ -162,8 +167,7 @@ public class TransferActionSteps {
   @Quando("cancelo a transferência salva")
   public void canceloATransferenciaSalva() {
     Long transferId = transferContext.getTransferId();
-    MockMvcResponse response =
-        apiClient.cancelarTransferencia(transferId, context.getToken());
+    MockMvcResponse response = apiClient.cancelarTransferencia(transferId, context.getToken());
     setLastResponse(response);
   }
 
@@ -183,21 +187,24 @@ public class TransferActionSteps {
   @Quando("listo as transferências com status {string}")
   public void listoAsTransferenciasComStatus(String status) {
     MockMvcResponse response =
-        apiClient.listarTransferencias(TransferStatus.valueOf(status), null, null, context.getToken());
+        apiClient.listarTransferencias(
+            TransferStatus.valueOf(status), null, null, context.getToken());
     setLastResponse(response);
   }
 
   @Quando("listo as transferências do ativo {string}")
   public void listoAsTransferenciasDoAtivo(String assetTag) {
     Long assetId = context.getId("ativoId_" + assetTag);
-    MockMvcResponse response = apiClient.listarTransferencias(null, assetId, null, context.getToken());
+    MockMvcResponse response =
+        apiClient.listarTransferencias(null, assetId, null, context.getToken());
     setLastResponse(response);
   }
 
   @Quando("listo as transferências da unidade de destino atual")
   public void listoAsTransferenciasDaUnidadeDeDestinoAtual() {
     Long unitId = transferContext.getUnidadeDestinoId();
-    MockMvcResponse response = apiClient.listarTransferencias(null, null, unitId, context.getToken());
+    MockMvcResponse response =
+        apiClient.listarTransferencias(null, null, unitId, context.getToken());
     setLastResponse(response);
   }
 

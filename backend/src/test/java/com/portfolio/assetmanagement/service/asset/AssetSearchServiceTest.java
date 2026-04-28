@@ -25,13 +25,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -77,7 +74,7 @@ class AssetSearchServiceTest {
   }
 
   @Test
-  @DisplayName("AS01 - ADMIN pode filtrar por qualquer unidade no searchAssets")
+  @DisplayName("[INTEGRACAO][ASSET] AS01 - ADMIN pode filtrar por qualquer unidade no searchAssets")
   void as01AdminPodeFiltrarPorQualquerUnidade() {
     Pageable pageable = PageRequest.of(0, 10);
     Asset asset = org.mockito.Mockito.mock(Asset.class);
@@ -101,7 +98,8 @@ class AssetSearchServiceTest {
   }
 
   @Test
-  @DisplayName("AS02 - ADMIN sem unitId — organizationId incluído, unitId ausente")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AS02 - ADMIN sem unitId — organizationId incluído, unitId ausente")
   void as02AdminSemUnitIdOrganizationIdSempNaSpec() {
     Pageable pageable = PageRequest.of(0, 10);
     Asset asset = org.mockito.Mockito.mock(Asset.class);
@@ -125,7 +123,8 @@ class AssetSearchServiceTest {
   }
 
   @Test
-  @DisplayName("AS03 - searchAssets de GESTOR deve filtrar pela unidade do próprio gestor")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AS03 - searchAssets de GESTOR deve filtrar pela unidade do próprio gestor")
   void as03SearchAssetsGestorDeveFiltrarPorUnidadeDoGestor() {
     Pageable pageable = PageRequest.of(0, 10);
     Asset asset = org.mockito.Mockito.mock(Asset.class);
@@ -154,7 +153,8 @@ class AssetSearchServiceTest {
   }
 
   @Test
-  @DisplayName("AS04 - searchAssets de OPERADOR deve filtrar pelos ativos do próprio usuário")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AS04 - searchAssets de OPERADOR deve filtrar pelos ativos do próprio usuário")
   void as04SearchAssetsOperadorDeveFiltrarPorUsuarioLogado() {
     Pageable pageable = PageRequest.of(0, 10);
     Asset asset = org.mockito.Mockito.mock(Asset.class);
@@ -188,4 +188,3 @@ class AssetSearchServiceTest {
         .collect(Collectors.toMap(FilterCriteria::getKey, FilterCriteria::getValue));
   }
 }
-

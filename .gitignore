@@ -38,6 +38,7 @@ build/
 
 ### Claude Code ###
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
 
 ### Allure – resultados e relatórios gerados (não versionar) ###
 backend/allure-results/*

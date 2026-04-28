@@ -32,13 +32,10 @@ import io.qameta.allure.Story;
 import java.math.BigDecimal;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -99,7 +96,8 @@ class MaintenanceCompleteServiceTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("MS07 - Deve concluir e retornar ativo para AVAILABLE quando sem usuário atribuído")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] MS07 - Deve concluir e retornar ativo para AVAILABLE quando sem usuário atribuído")
   void ms07DeveConcluirERetornarAssetParaAvailable() {
     MaintenanceRecord record = buildRecordMock(MaintenanceStatus.IN_PROGRESS);
     Asset asset = record.getAsset();
@@ -116,7 +114,8 @@ class MaintenanceCompleteServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("MS08 - Deve retornar ativo para ASSIGNED quando tinha usuário atribuído")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] MS08 - Deve retornar ativo para ASSIGNED quando tinha usuário atribuído")
   void ms08DeveRetornarAssetParaAssignedQuandoTinhaUsuario() {
     MaintenanceRecord record = buildRecordMock(MaintenanceStatus.IN_PROGRESS);
     Asset asset = record.getAsset();
@@ -131,7 +130,8 @@ class MaintenanceCompleteServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("MS09 - Deve lançar BusinessException quando resolução está ausente")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] MS09 - Deve lançar BusinessException quando resolução está ausente")
   void ms09DeveLancarQuandoResolucaoAusente() {
     MaintenanceRecord record = buildRecordMock(MaintenanceStatus.IN_PROGRESS);
     when(maintenanceRepository.findById(55L)).thenReturn(Optional.of(record));
@@ -146,4 +146,3 @@ class MaintenanceCompleteServiceTest {
     verify(record, never()).complete(anyLong(), any(), any());
   }
 }
-

@@ -64,7 +64,9 @@ public class AssetListingSteps {
 
     String assetTag = response.path("content[0].assetTag");
     assertThat(assetTag)
-        .as("Campo 'assetTag' não encontrado em content[0]. Body: %s", response.getBody().asString())
+        .as(
+            "Campo 'assetTag' não encontrado em content[0]. Body: %s",
+            response.getBody().asString())
         .isNotBlank();
   }
 

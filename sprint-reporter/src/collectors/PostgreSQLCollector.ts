@@ -1,4 +1,4 @@
-import { Pool, QueryResult } from 'pg';
+import { Pool } from 'pg';
 import { Logger } from 'winston';
 import { ICollector, CollectionResult } from './ICollector';
 import { PostgreSQLData } from '../types/report.types';
@@ -38,7 +38,7 @@ export class PostgreSQLCollector implements ICollector {
           decisions,
         };
 
-        this.logger.info(`PostgreSQL collected data`, {
+        this.logger.info('PostgreSQL collected data', {
           analyses: analysisHistory.length,
           decisions: decisions.length,
           tokenSaved: tokenSavings.totalTokensSaved,

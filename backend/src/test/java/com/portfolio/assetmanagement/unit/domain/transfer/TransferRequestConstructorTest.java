@@ -18,7 +18,6 @@ import io.qameta.allure.Story;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 
 @Epic("Backend")
 @Feature("Domínio — Transfer")
@@ -33,7 +32,8 @@ class TransferRequestConstructorTest {
   @DisplayName("TT01 - Construtor inicia transferência como PENDING com requestedAt preenchido")
   void tt01ConstrutorIniciaTransferenciaComoPending() {
     TransferRequest transfer =
-        new TransferRequest(buildAsset(), buildUnit(10L), buildUnit(20L), buildUser(), "Motivo válido");
+        new TransferRequest(
+            buildAsset(), buildUnit(10L), buildUnit(20L), buildUser(), "Motivo válido");
 
     assertThat(transfer.getStatus()).isEqualTo(TransferStatus.PENDING);
     assertThat(transfer.getRequestedAt()).isNotNull();
@@ -45,7 +45,8 @@ class TransferRequestConstructorTest {
   @Severity(SeverityLevel.NORMAL)
   @DisplayName("TT02 - Construtor falha quando asset é nulo")
   void tt02ConstrutorFalhaQuandoAssetENulo() {
-    assertThatThrownBy(() -> new TransferRequest(null, buildUnit(10L), buildUnit(20L), buildUser(), "Motivo"))
+    assertThatThrownBy(
+            () -> new TransferRequest(null, buildUnit(10L), buildUnit(20L), buildUser(), "Motivo"))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("asset é obrigatório");
   }
@@ -55,7 +56,9 @@ class TransferRequestConstructorTest {
   @DisplayName("TT03 - Construtor falha quando reason é blank")
   void tt03ConstrutorFalhaQuandoReasonEBlank() {
     assertThatThrownBy(
-            () -> new TransferRequest(buildAsset(), buildUnit(10L), buildUnit(20L), buildUser(), "   "))
+            () ->
+                new TransferRequest(
+                    buildAsset(), buildUnit(10L), buildUnit(20L), buildUser(), "   "))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("reason é obrigatório");
   }

@@ -13,7 +13,6 @@ import com.portfolio.assetmanagement.security.enums.UserRole;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 
 @DisplayName("User — domínio")
 @Tag("testType=Unit")
@@ -43,7 +42,8 @@ class UserEntityTest {
     when(org2.getId()).thenReturn(2L);
     when(unit.getOrganization()).thenReturn(org2);
 
-    assertThatThrownBy(() -> new User("Nome", "n@a.com", null, UserRole.OPERADOR, org1, unit, "123"))
+    assertThatThrownBy(
+            () -> new User("Nome", "n@a.com", null, UserRole.OPERADOR, org1, unit, "123"))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("Unidade não pertence");
   }

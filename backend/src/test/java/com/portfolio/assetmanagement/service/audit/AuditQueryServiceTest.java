@@ -13,9 +13,7 @@ import java.time.OffsetDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,7 +31,8 @@ class AuditQueryServiceTest {
   @InjectMocks private AuditQueryService service;
 
   @Test
-  @DisplayName("AUD-S01 - usuário não ADMIN sem acesso à organização recebe Forbidden")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AUD-S01 - usuário não ADMIN sem acesso à organização recebe Forbidden")
   void semAcessoOrganizacaoRecebeForbidden() {
     when(loggedUser.isAdmin()).thenReturn(false);
     when(loggedUser.getOrganizationId()).thenReturn(10L);
@@ -44,16 +43,12 @@ class AuditQueryServiceTest {
   }
 
   @Test
-  @DisplayName("AUD-S02 - período inválido gera ValidationException")
+  @DisplayName("[INTEGRACAO][ASSET] AUD-S02 - período inválido gera ValidationException")
   void periodoInvalidoGeraValidationException() {
     when(loggedUser.isAdmin()).thenReturn(true);
 
     assertThatThrownBy(
-            () ->
-                service.findByPeriod(
-                    1L,
-                    OffsetDateTime.now(),
-                    OffsetDateTime.now().minusDays(1)))
+            () -> service.findByPeriod(1L, OffsetDateTime.now(), OffsetDateTime.now().minusDays(1)))
         .isInstanceOf(ValidationException.class)
         .hasMessageContaining("Período inválido");
   }

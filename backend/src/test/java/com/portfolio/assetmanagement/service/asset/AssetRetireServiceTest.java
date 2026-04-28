@@ -24,13 +24,10 @@ import com.portfolio.assetmanagement.shared.exception.ForbiddenException;
 import com.portfolio.assetmanagement.shared.exception.NotFoundException;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -71,7 +68,8 @@ class AssetRetireServiceTest {
   }
 
   @Test
-  @DisplayName("AR01 - ADMIN aposenta ativo com sucesso — chama statusService.retire e audit")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AR01 - ADMIN aposenta ativo com sucesso — chama statusService.retire e audit")
   void ar01AdminAposentaAtivoComSucesso() {
     Asset asset = mock(Asset.class);
     Organization org = mock(Organization.class);
@@ -95,16 +93,16 @@ class AssetRetireServiceTest {
   }
 
   @Test
-  @DisplayName("AR02 - Ativo não encontrado — lança NotFoundException")
+  @DisplayName("[INTEGRACAO][ASSET] AR02 - Ativo não encontrado — lança NotFoundException")
   void ar02AtivoNaoEncontradoLancaNotFoundException() {
     when(repository.findById(999L)).thenReturn(Optional.empty());
 
-    assertThatThrownBy(() -> service.retireAsset(999L))
-        .isInstanceOf(NotFoundException.class);
+    assertThatThrownBy(() -> service.retireAsset(999L)).isInstanceOf(NotFoundException.class);
   }
 
   @Test
-  @DisplayName("AR03 - ADMIN tenta acessar ativo de outra organização — lança ForbiddenException")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AR03 - ADMIN tenta acessar ativo de outra organização — lança ForbiddenException")
   void ar03AdminAcessaAtivoDeOutraOrganizacaoLancaForbidden() {
     Asset asset = mock(Asset.class);
     Organization outroOrg = mock(Organization.class);
@@ -115,12 +113,12 @@ class AssetRetireServiceTest {
     when(loggedUser.isAdmin()).thenReturn(true);
     when(loggedUser.getOrganizationId()).thenReturn(10L);
 
-    assertThatThrownBy(() -> service.retireAsset(1L))
-        .isInstanceOf(ForbiddenException.class);
+    assertThatThrownBy(() -> service.retireAsset(1L)).isInstanceOf(ForbiddenException.class);
   }
 
   @Test
-  @DisplayName("AR04 - GESTOR tenta acessar ativo de unidade alheia — lança ForbiddenException")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AR04 - GESTOR tenta acessar ativo de unidade alheia — lança ForbiddenException")
   void ar04GestorAcessaAtivoDeUnidadeAlheiaLancaForbidden() {
     Asset asset = mock(Asset.class);
     Organization org = mock(Organization.class);
@@ -135,12 +133,12 @@ class AssetRetireServiceTest {
     when(loggedUser.isManager()).thenReturn(true);
     when(loggedUser.getUnitId()).thenReturn(20L);
 
-    assertThatThrownBy(() -> service.retireAsset(1L))
-        .isInstanceOf(ForbiddenException.class);
+    assertThatThrownBy(() -> service.retireAsset(1L)).isInstanceOf(ForbiddenException.class);
   }
 
   @Test
-  @DisplayName("AR05 - OPERADOR tenta acessar ativo não atribuído a ele — lança ForbiddenException")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AR05 - OPERADOR tenta acessar ativo não atribuído a ele — lança ForbiddenException")
   void ar05OperadorAcessaAtivoNaoAtribuidoLancaForbidden() {
     Asset asset = mock(Asset.class);
     User outroUsuario = mock(User.class);
@@ -152,8 +150,6 @@ class AssetRetireServiceTest {
     when(loggedUser.isManager()).thenReturn(false);
     when(loggedUser.getUserId()).thenReturn(5L);
 
-    assertThatThrownBy(() -> service.retireAsset(1L))
-        .isInstanceOf(ForbiddenException.class);
+    assertThatThrownBy(() -> service.retireAsset(1L)).isInstanceOf(ForbiddenException.class);
   }
 }
-

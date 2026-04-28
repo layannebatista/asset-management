@@ -3,7 +3,6 @@ package com.portfolio.assetmanagement.interfaces.rest.maintenance.controller;
 import com.portfolio.assetmanagement.application.maintenance.dto.MaintenanceBudgetDTO;
 import com.portfolio.assetmanagement.application.maintenance.dto.MaintenanceCreateDTO;
 import com.portfolio.assetmanagement.application.maintenance.dto.MaintenanceResponseDTO;
-import jakarta.validation.Valid;
 import com.portfolio.assetmanagement.application.maintenance.mapper.MaintenanceMapper;
 import com.portfolio.assetmanagement.application.maintenance.service.MaintenanceQueryService;
 import com.portfolio.assetmanagement.application.maintenance.service.MaintenanceService;
@@ -13,6 +12,7 @@ import com.portfolio.assetmanagement.shared.pagination.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.stream.Collectors;
@@ -92,7 +92,8 @@ public class MaintenanceController {
 
   @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
   @PostMapping
-  public ResponseEntity<MaintenanceResponseDTO> create(@RequestBody @Valid MaintenanceCreateDTO request) {
+  public ResponseEntity<MaintenanceResponseDTO> create(
+      @RequestBody @Valid MaintenanceCreateDTO request) {
     MaintenanceRecord record =
         maintenanceService.create(
             request.getAssetId(), request.getDescription(), request.getEstimatedCost());

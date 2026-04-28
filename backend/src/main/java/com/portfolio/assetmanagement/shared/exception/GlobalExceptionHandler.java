@@ -87,7 +87,8 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(
             ApiResponse.error(
-                new ErrorResponse(ErrorCodes.VALIDATION_ERROR, "Validation failed", List.of(detail))));
+                new ErrorResponse(
+                    ErrorCodes.VALIDATION_ERROR, "Validation failed", List.of(detail))));
   }
 
   @ExceptionHandler(ValidationException.class)

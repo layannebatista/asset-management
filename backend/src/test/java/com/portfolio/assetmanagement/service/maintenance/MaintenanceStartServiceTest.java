@@ -32,13 +32,10 @@ import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.Story;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -99,7 +96,7 @@ class MaintenanceStartServiceTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("MS04 - Deve iniciar manutenção corretamente")
+  @DisplayName("[INTEGRACAO][ASSET] MS04 - Deve iniciar manutenção corretamente")
   void ms04DeveIniciarCorretamente() {
     MaintenanceRecord record = buildRecordMock(MaintenanceStatus.REQUESTED);
     when(maintenanceRepository.findById(55L)).thenReturn(Optional.of(record));
@@ -114,7 +111,8 @@ class MaintenanceStartServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("MS05 - Deve lançar NotFoundException quando manutenção não existe")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] MS05 - Deve lançar NotFoundException quando manutenção não existe")
   void ms05DeveLancarQuandoManuNaoExiste() {
     when(maintenanceRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -127,7 +125,8 @@ class MaintenanceStartServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("MS06 - Deve lançar BusinessException quando validação falha ao iniciar")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] MS06 - Deve lançar BusinessException quando validação falha ao iniciar")
   void ms06DeveLancarQuandoValidacaoFalha() {
     MaintenanceRecord record = buildRecordMock(MaintenanceStatus.COMPLETED);
     when(maintenanceRepository.findById(55L)).thenReturn(Optional.of(record));
@@ -141,4 +140,3 @@ class MaintenanceStartServiceTest {
     verify(record, never()).start(anyLong());
   }
 }
-

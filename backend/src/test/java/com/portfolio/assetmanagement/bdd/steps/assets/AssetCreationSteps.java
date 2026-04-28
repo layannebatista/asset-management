@@ -109,7 +109,8 @@ public class AssetCreationSteps {
     Long orgId = context.getId("organizacaoId");
     Long unitId = context.getId("unidadeId");
     context.setLastResponse(
-        apiClient.criarAtivoAutoTag(orgId, AssetType.NOTEBOOK, "Modelo Auto", unitId, context.getToken()));
+        apiClient.criarAtivoAutoTag(
+            orgId, AssetType.NOTEBOOK, "Modelo Auto", unitId, context.getToken()));
   }
 
   @Quando("crio um ativo sem modelo na organização")

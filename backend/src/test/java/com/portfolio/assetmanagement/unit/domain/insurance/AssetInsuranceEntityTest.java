@@ -9,7 +9,6 @@ import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 
 @DisplayName("AssetInsurance — domínio")
 @Tag("testType=Unit")

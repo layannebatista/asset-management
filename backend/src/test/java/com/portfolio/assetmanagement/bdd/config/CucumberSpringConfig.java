@@ -18,9 +18,8 @@ import org.springframework.test.context.ActiveProfiles;
  * RestAssuredMockMvc usa o MockMvc internamente - Filtros de segurança (JWT) continuam funcionando
  * normalmente - Testcontainers sobe o PostgreSQL real via application-test.yml
  *
- * <p>POR QUE @ActiveProfiles("bdd")? Ativa o application-bdd.yml com PostgreSQL real,
- * Flyway habilitado e schema dedicado para execução dos cenários BDD sem poluição do banco
- * principal.
+ * <p>POR QUE @ActiveProfiles("bdd")? Ativa o application-bdd.yml com PostgreSQL real, Flyway
+ * habilitado e schema dedicado para execução dos cenários BDD sem poluição do banco principal.
  */
 @CucumberContextConfiguration
 @SpringBootTest(

@@ -34,7 +34,7 @@ export class RTKInsightsCollector implements ICollector {
         this.client.get(`/api/v1/insights/token-economy?days=${days}`),
         this.client.get(`/api/v1/insights/model-efficiency?days=${days}`),
         this.client.get(`/api/v1/insights/analysis-roi?days=${days}`),
-        this.client.get(`/api/v1/insights/history?months=3`),
+        this.client.get('/api/v1/insights/history?months=3'),
       ]);
 
       const summary = executiveSummaryResp.data?.summary ?? {};

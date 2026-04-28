@@ -81,27 +81,27 @@ public class ApiClient {
         .response();
   }
 
-        public MockMvcResponse verifyMfaSemCode(Long userId) {
-          return given()
-          .contentType(ContentType.JSON)
-          .body(Map.of("userId", userId))
-          .when()
-          .post("/auth/mfa/verify")
-          .then()
-          .extract()
-          .response();
-        }
+  public MockMvcResponse verifyMfaSemCode(Long userId) {
+    return given()
+        .contentType(ContentType.JSON)
+        .body(Map.of("userId", userId))
+        .when()
+        .post("/auth/mfa/verify")
+        .then()
+        .extract()
+        .response();
+  }
 
-        public MockMvcResponse verifyMfaSemUserId(String code) {
-          return given()
-          .contentType(ContentType.JSON)
-          .body(Map.of("code", code))
-          .when()
-          .post("/auth/mfa/verify")
-          .then()
-          .extract()
-          .response();
-        }
+  public MockMvcResponse verifyMfaSemUserId(String code) {
+    return given()
+        .contentType(ContentType.JSON)
+        .body(Map.of("code", code))
+        .when()
+        .post("/auth/mfa/verify")
+        .then()
+        .extract()
+        .response();
+  }
 
   public MockMvcResponse verifyMfaComIp(Long userId, String code, String ip) {
     return given()
@@ -289,17 +289,17 @@ public class ApiClient {
         .response();
   }
 
-        /** GET /assets — token sem prefixo Bearer (para testar 401). */
-        public MockMvcResponse listarAtivosComHeaderAuthorizationBruto(String token) {
-          return given()
-          .contentType(ContentType.JSON)
-          .header("Authorization", token)
-          .when()
-          .get("/assets")
-          .then()
-          .extract()
-          .response();
-        }
+  /** GET /assets — token sem prefixo Bearer (para testar 401). */
+  public MockMvcResponse listarAtivosComHeaderAuthorizationBruto(String token) {
+    return given()
+        .contentType(ContentType.JSON)
+        .header("Authorization", token)
+        .when()
+        .get("/assets")
+        .then()
+        .extract()
+        .response();
+  }
 
   /** GET /assets?status={status} — filtra ativos pelo status. */
   public MockMvcResponse listarAtivosPorStatus(String status, String token) {
@@ -329,13 +329,7 @@ public class ApiClient {
 
   /** GET /assets — lista sem autenticação (para testar 401). */
   public MockMvcResponse getSemToken(String path) {
-    return given()
-        .contentType(ContentType.JSON)
-        .when()
-        .get(path)
-        .then()
-        .extract()
-        .response();
+    return given().contentType(ContentType.JSON).when().get(path).then().extract().response();
   }
 
   // =========================================================
@@ -345,9 +339,7 @@ public class ApiClient {
   /** Executa requisição com bearer token para qualquer endpoint HTTP. */
   public MockMvcResponse request(String method, String path, Object body, String token) {
     MockMvcRequestSpecification request =
-        given()
-            .contentType(ContentType.JSON)
-            .header("Authorization", "Bearer " + token);
+        given().contentType(ContentType.JSON).header("Authorization", "Bearer " + token);
 
     if (body != null) {
       request = request.body(body);
@@ -368,10 +360,11 @@ public class ApiClient {
   }
 
   /**
-   * Executa requisição com header Authorization bruto.
-   * Útil para validar cenários com JWT inválido/forjado.
+   * Executa requisição com header Authorization bruto. Útil para validar cenários com JWT
+   * inválido/forjado.
    */
-  public MockMvcResponse requestWithRawAuth(String method, String path, Object body, String rawAuthorization) {
+  public MockMvcResponse requestWithRawAuth(
+      String method, String path, Object body, String rawAuthorization) {
     MockMvcRequestSpecification request =
         given().contentType(ContentType.JSON).header("Authorization", rawAuthorization);
 
@@ -426,7 +419,9 @@ public class ApiClient {
     return given()
         .contentType(ContentType.JSON)
         .header("Authorization", "Bearer " + token)
-        .body(Map.of("assetTag", "   ", "type", "NOTEBOOK", "model", "Modelo Espaço", "unitId", unitId))
+        .body(
+            Map.of(
+                "assetTag", "   ", "type", "NOTEBOOK", "model", "Modelo Espaço", "unitId", unitId))
         .when()
         .post("/assets/{orgId}", String.valueOf(orgId))
         .then()
@@ -656,8 +651,7 @@ public class ApiClient {
   /** GET /transfers — lista transferências com filtros opcionais. */
   public MockMvcResponse listarTransferencias(
       TransferStatus status, Long assetId, Long unitId, String token) {
-    var request =
-        given().contentType(ContentType.JSON).header("Authorization", "Bearer " + token);
+    var request = given().contentType(ContentType.JSON).header("Authorization", "Bearer " + token);
 
     if (status != null) {
       request = request.queryParam("status", status.name());
@@ -719,7 +713,8 @@ public class ApiClient {
   // =========================================================
 
   /** POST /assets/{orgId} — sem campo model (para testar 400). */
-  public MockMvcResponse criarAtivoSemModelo(Long orgId, String assetTag, Long unitId, String token) {
+  public MockMvcResponse criarAtivoSemModelo(
+      Long orgId, String assetTag, Long unitId, String token) {
     return given()
         .contentType(ContentType.JSON)
         .header("Authorization", "Bearer " + token)

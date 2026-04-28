@@ -17,9 +17,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -41,7 +39,7 @@ class UserDetailsServiceImplTest {
 
   @Test
   @Severity(SeverityLevel.BLOCKER)
-  @DisplayName("AU14 - Bloqueia autenticação de usuário não ACTIVE")
+  @DisplayName("[INTEGRACAO][ASSET] AU14 - Bloqueia autenticação de usuário não ACTIVE")
   void au14BloqueiaAutenticacaoDeUsuarioNaoActive() {
     UserDetailsServiceImpl service = new UserDetailsServiceImpl(userRepository);
     User blockedUser = buildUser(UserStatus.BLOCKED, "hash-ok");
@@ -55,7 +53,7 @@ class UserDetailsServiceImplTest {
 
   @Test
   @Severity(SeverityLevel.BLOCKER)
-  @DisplayName("AU15 - Bloqueia autenticação quando usuário não definiu senha")
+  @DisplayName("[INTEGRACAO][ASSET] AU15 - Bloqueia autenticação quando usuário não definiu senha")
   void au15BloqueiaAutenticacaoQuandoUsuarioNaoDefiniuSenha() {
     UserDetailsServiceImpl service = new UserDetailsServiceImpl(userRepository);
     User activeWithoutPassword = buildUser(UserStatus.ACTIVE, null);
@@ -70,7 +68,7 @@ class UserDetailsServiceImplTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("AU16 - Lança UsernameNotFoundException para email inexistente")
+  @DisplayName("[INTEGRACAO][ASSET] AU16 - Lança UsernameNotFoundException para email inexistente")
   void au16LancaUsernameNotFoundParaEmailInexistente() {
     UserDetailsServiceImpl service = new UserDetailsServiceImpl(userRepository);
     when(userRepository.findByEmail("missing@secure.com")).thenReturn(Optional.empty());

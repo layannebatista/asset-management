@@ -189,8 +189,14 @@ public class TestDataHelper {
   }
 
   public User criarUsuarioComTelefone(
-      String email, String senhaPlain, UserRole role, Organization org, Unit unit, String phoneNumber) {
-    return criarUsuarioComStatus(email, senhaPlain, role, org, unit, UserStatus.ACTIVE, phoneNumber);
+      String email,
+      String senhaPlain,
+      UserRole role,
+      Organization org,
+      Unit unit,
+      String phoneNumber) {
+    return criarUsuarioComStatus(
+        email, senhaPlain, role, org, unit, UserStatus.ACTIVE, phoneNumber);
   }
 
   /** Cria usuário ADMIN — atalho semântico mais legível nos steps. */
@@ -234,13 +240,15 @@ public class TestDataHelper {
   }
 
   public User obterUsuarioPorEmailObrigatorio(String email) {
-    return userRepository.findByEmail(email)
+    return userRepository
+        .findByEmail(email)
         .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado: " + email));
   }
 
   /** Obtém ID do usuário por email. Lança exceção se não encontrado. */
   public Long obterIdUsuarioPorEmail(String email) {
-    return userRepository.findByEmail(email)
+    return userRepository
+        .findByEmail(email)
         .map(User::getId)
         .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado: " + email));
   }
@@ -249,7 +257,10 @@ public class TestDataHelper {
     MfaCode code =
         mfaCodeRepository
             .findValidByUserId(userId, Instant.now())
-            .orElseThrow(() -> new IllegalArgumentException("Código MFA não encontrado para usuário: " + userId));
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Código MFA não encontrado para usuário: " + userId));
     return code.getCode();
   }
 
@@ -265,7 +276,12 @@ public class TestDataHelper {
 
   @Transactional
   public Asset criarAtivoComStatus(
-      String assetTag, AssetType tipo, String modelo, Organization org, Unit unit, AssetStatus status) {
+      String assetTag,
+      AssetType tipo,
+      String modelo,
+      Organization org,
+      Unit unit,
+      AssetStatus status) {
     Asset asset = new Asset(assetTag, tipo, modelo, org, unit);
     asset.changeStatus(status);
     return assetRepository.save(asset);
@@ -273,14 +289,18 @@ public class TestDataHelper {
 
   @Transactional
   public Asset criarAtivoComStatus(
-      String assetTag, AssetType tipo, String modelo, Long organizationId, Long unitId, AssetStatus status) {
+      String assetTag,
+      AssetType tipo,
+      String modelo,
+      Long organizationId,
+      Long unitId,
+      AssetStatus status) {
     Organization organization =
         organizationRepository
             .findById(organizationId)
             .orElseThrow(
                 () ->
-                    new IllegalArgumentException(
-                        "Organização não encontrada: " + organizationId));
+                    new IllegalArgumentException("Organização não encontrada: " + organizationId));
     Unit unit =
         unitRepository
             .findById(unitId)
@@ -290,7 +310,12 @@ public class TestDataHelper {
 
   @Transactional
   public Asset criarAtivoComUsuarioAtribuido(
-      String assetTag, AssetType tipo, String modelo, Long organizationId, Long unitId, String email) {
+      String assetTag,
+      AssetType tipo,
+      String modelo,
+      Long organizationId,
+      Long unitId,
+      String email) {
     Asset asset =
         criarAtivoComStatus(assetTag, tipo, modelo, organizationId, unitId, AssetStatus.AVAILABLE);
     User user = obterUsuarioPorEmailObrigatorio(email);
@@ -305,7 +330,10 @@ public class TestDataHelper {
         criarAtivoComStatus(assetTag, tipo, modelo, organizationId, unitId, AssetStatus.AVAILABLE);
     User user =
         userRepository.findAll().stream()
-            .filter(u -> u.getOrganization() != null && u.getOrganization().getId().equals(organizationId))
+            .filter(
+                u ->
+                    u.getOrganization() != null
+                        && u.getOrganization().getId().equals(organizationId))
             .findFirst()
             .orElseThrow(
                 () ->
@@ -322,8 +350,7 @@ public class TestDataHelper {
             .findById(organizationId)
             .orElseThrow(
                 () ->
-                    new IllegalArgumentException(
-                        "Organização não encontrada: " + organizationId));
+                    new IllegalArgumentException("Organização não encontrada: " + organizationId));
     return criarUnidade(nome, organization);
   }
 
@@ -369,8 +396,8 @@ public class TestDataHelper {
    * <p>Usa ExecutorService para criar threads paralelas e CountDownLatch para sincronização.
    * Armazena o número de sucessos (respostas com status < 400) em context.sucessos.
    *
-   * <p>IMPORTANTE: Este é um teste simplificado. Para testes concorrentes mais robustos,
-   * considere usar frameworks como Gatling ou JMH.
+   * <p>IMPORTANTE: Este é um teste simplificado. Para testes concorrentes mais robustos, considere
+   * usar frameworks como Gatling ou JMH.
    */
   public void testarConcorrencia(ConcurrentOperation operation) {
     int numThreads = 5; // Número de requisições paralelas
@@ -381,17 +408,18 @@ public class TestDataHelper {
     try {
       // Submete numThreads operações para execução paralela
       for (int i = 0; i < numThreads; i++) {
-        executorService.submit(() -> {
-          try {
-            // Executa a operação (ex: apiClient.atribuirAtivo(...))
-            operation.execute();
-            sucessos.incrementAndGet();
-          } catch (Exception e) {
-            // Operação falhou — esperado em testes de race condition
-          } finally {
-            latch.countDown();
-          }
-        });
+        executorService.submit(
+            () -> {
+              try {
+                // Executa a operação (ex: apiClient.atribuirAtivo(...))
+                operation.execute();
+                sucessos.incrementAndGet();
+              } catch (Exception e) {
+                // Operação falhou — esperado em testes de race condition
+              } finally {
+                latch.countDown();
+              }
+            });
       }
 
       // Aguarda que todas as threads terminem (máximo 10 segundos)

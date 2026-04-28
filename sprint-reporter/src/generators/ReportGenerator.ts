@@ -238,7 +238,7 @@ export class ReportGenerator {
     };
   }
 
-  private extractCodeQuality(data: CollectedData) {
+  private extractCodeQuality(_data: CollectedData) {
     return {
       coverage: 0,
       violations: 0,
@@ -253,7 +253,6 @@ export class ReportGenerator {
     const rtkApi = (data as any).rtkapi;
     if (rtkApi?.data) {
       const summary = rtkApi.data.summary || {};
-      const tokenEcon = rtkApi.data.tokenEconomy || {};
       const models = rtkApi.data.models || [];
       const analyses = rtkApi.data.analyses || [];
 
@@ -371,7 +370,7 @@ export class ReportGenerator {
 
   // ─── Analysis Methods ─────────────────────────────────────────────────────
 
-  private assessHealth(testMetrics: any, performance: any, cicd: any, ai: any): SystemHealth {
+  private assessHealth(testMetrics: any, performance: any, cicd: any, _ai: any): SystemHealth {
     const issues: string[] = [];
 
     if (testMetrics.failureRate > 5) issues.push('High failure rate');
@@ -392,7 +391,7 @@ export class ReportGenerator {
     };
   }
 
-  private identifyIssues(testMetrics: any, performance: any, cicd: any, ai: any, flow: any): Issue[] {
+  private identifyIssues(testMetrics: any, performance: any, cicd: any, _ai: any, _flow: any): Issue[] {
     const issues: Issue[] = [];
 
     if (testMetrics.failureRate > 5) {
@@ -431,7 +430,7 @@ export class ReportGenerator {
     return issues;
   }
 
-  private generateInsights(testMetrics: any, ai: any, flow: any, issues: Issue[]): Insight[] {
+  private generateInsights(testMetrics: any, ai: any, _flow: any, _issues: Issue[]): Insight[] {
     const insights: Insight[] = [];
 
     if (testMetrics.passRate > 95) {
@@ -455,7 +454,7 @@ export class ReportGenerator {
     return insights;
   }
 
-  private generateRecommendations(issues: Issue[], insights: Insight[]): Recommendation[] {
+  private generateRecommendations(issues: Issue[], _insights: Insight[]): Recommendation[] {
     const recommendations: Recommendation[] = [];
 
     for (const issue of issues) {

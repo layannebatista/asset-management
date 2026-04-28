@@ -29,9 +29,7 @@ public class MaintenanceVerificationSteps {
   @Então("a resposta deve ter status {int}")
   public void aRespostaDeveTerStatus(int statusEsperado) {
     assertThat(context.getLastResponse().statusCode())
-        .as(
-            "Status HTTP incorreto. Body: %s",
-            context.getLastResponse().getBody().asString())
+        .as("Status HTTP incorreto. Body: %s", context.getLastResponse().getBody().asString())
         .isEqualTo(statusEsperado);
   }
 
@@ -93,15 +91,14 @@ public class MaintenanceVerificationSteps {
   @Quando("listo as manutenções do ativo {string}")
   public void listoAsManutencoesDoAtivo(String assetTag) {
     Long assetId = context.getId("ativoId_" + assetTag);
-    MockMvcResponse response = apiClient.listMaintenancesByAssetWithToken(assetId, context.getToken());
+    MockMvcResponse response =
+        apiClient.listMaintenancesByAssetWithToken(assetId, context.getToken());
     context.setLastResponse(response);
   }
 
   @E("a resposta deve conter at least {int} manutenções")
   public void aRespostaDeveConterAtLeastManutencoes(int quantidade) {
     Integer tamanho = context.getLastResponse().path("content.size()");
-    assertThat(tamanho)
-        .as("Quantidade de manutenções esperada")
-        .isGreaterThanOrEqualTo(quantidade);
+    assertThat(tamanho).as("Quantidade de manutenções esperada").isGreaterThanOrEqualTo(quantidade);
   }
 }

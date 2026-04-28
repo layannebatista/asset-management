@@ -28,7 +28,8 @@ public class AssetSpecificationBuilder {
   }
 
   public AssetSpecification build() {
-    return new AssetSpecification(Collections.unmodifiableList(new ArrayList<>(criteriaList)), search);
+    return new AssetSpecification(
+        Collections.unmodifiableList(new ArrayList<>(criteriaList)), search);
   }
 
   public static class AssetSpecification implements Specification<Asset> {

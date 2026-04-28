@@ -15,9 +15,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -32,10 +30,9 @@ class CostCenterServiceTest {
   @InjectMocks private CostCenterService service;
 
   @Test
-  @DisplayName("CC-S01 - criação duplicada por código lança BusinessException")
+  @DisplayName("[INTEGRACAO][ASSET] CC-S01 - criação duplicada por código lança BusinessException")
   void criacaoDuplicadaLancaBusinessException() {
-    when(repository.existsByOrganizationIdAndCode(1L, "FIN"))
-        .thenReturn(true);
+    when(repository.existsByOrganizationIdAndCode(1L, "FIN")).thenReturn(true);
 
     assertThatThrownBy(() -> service.create(1L, 1L, "fin", "Financeiro"))
         .isInstanceOf(BusinessException.class)
@@ -45,7 +42,7 @@ class CostCenterServiceTest {
   }
 
   @Test
-  @DisplayName("CC-S02 - deactivate inexistente lança NotFoundException")
+  @DisplayName("[INTEGRACAO][ASSET] CC-S02 - deactivate inexistente lança NotFoundException")
   void deactivateInexistenteLancaNotFound() {
     when(repository.findById(99L)).thenReturn(Optional.empty());
 

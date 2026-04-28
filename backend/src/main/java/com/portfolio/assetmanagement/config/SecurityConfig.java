@@ -141,13 +141,8 @@ public class SecurityConfig {
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
     // Whitelisted headers apenas (não wildcard)
-    configuration.setAllowedHeaders(List.of(
-      "Content-Type",
-      "Authorization",
-      "X-Requested-With",
-      "Accept",
-      "Origin"
-    ));
+    configuration.setAllowedHeaders(
+        List.of("Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"));
 
     // permite o frontend ler o Authorization (token JWT)
     configuration.setExposedHeaders(List.of("Authorization"));

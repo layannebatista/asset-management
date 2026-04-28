@@ -13,7 +13,6 @@ import io.restassured.module.mockmvc.response.MockMvcResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 
 @Epic("Backend")
 @Feature("Integração — Assets")
@@ -25,7 +24,7 @@ class AssetRetireIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Aposentadoria de ativo")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("ADMIN aposta ativo disponível com sucesso — retorna 200")
+  @DisplayName("[INTEGRACAO][ASSET] ADMIN aposta ativo disponível com sucesso — retorna 200")
   void adminAposentaAtivoDisponivel() {
     Asset ativo = criarAtivo("RETIRE-001");
     String token = loginComoAdmin();
@@ -37,7 +36,7 @@ class AssetRetireIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Controle de acesso")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("GESTOR não pode aposentar — retorna 403")
+  @DisplayName("[INTEGRACAO][ASSET] GESTOR não pode aposentar — retorna 403")
   void gestorNaoPodeAposentar() {
     Asset ativo = criarAtivo("RETIRE-002");
     String token = loginComoGestor();
@@ -49,7 +48,7 @@ class AssetRetireIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Controle de acesso")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("User não pode aposentar ativo — retorna 403")
+  @DisplayName("[INTEGRACAO][ASSET] User não pode aposentar ativo — retorna 403")
   void operadorNaoPodeAposentar() {
     Asset ativo = criarAtivo("RETIRE-003");
     String token = loginComoOperador();
@@ -61,7 +60,7 @@ class AssetRetireIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Aposentadoria de ativo")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("Aposentar ativo inexistente retorna 404")
+  @DisplayName("[INTEGRACAO][ASSET] Aposentar ativo inexistente retorna 404")
   void aposentarAtivoInexistenteRetorna404() {
     String token = loginComoAdmin();
     MockMvcResponse response = apiClient.aposentarAtivo(99999L, token);
@@ -71,7 +70,7 @@ class AssetRetireIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Validação de estado")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("ADMIN aposta ativo já aposentado retorna 400")
+  @DisplayName("[INTEGRACAO][ASSET] ADMIN aposta ativo já aposentado retorna 400")
   void aposentarAtivoJaAposentadoRetorna400() {
     Asset ativo = criarAtivo("RETIRE-004");
     String token = loginComoAdmin();
@@ -86,8 +85,9 @@ class AssetRetireIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Story("Validação de estado")  @Severity(SeverityLevel.NORMAL)
-  @DisplayName("Aposentar ativo em manutenção retorna 400")
+  @Story("Validação de estado")
+  @Severity(SeverityLevel.NORMAL)
+  @DisplayName("[INTEGRACAO][ASSET] Aposentar ativo em manutenção retorna 400")
   void aposentarAtivoEmManutencaoRetorna400() {
     Asset ativo = testDataHelper.criarAtivoEmManutencao(organizacao, unidade);
     String token = loginComoAdmin();
@@ -98,15 +98,18 @@ class AssetRetireIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Story("Validação de estado")  @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("AR07 - Aposentar ativo com transferência PENDING ativa retorna 400")
+  @Story("Validação de estado")
+  @Severity(SeverityLevel.CRITICAL)
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AR07 - Aposentar ativo com transferência PENDING ativa retorna 400")
   void ar07AposentarAtivoComTransferenciaPendenteRetorna400() {
     Asset ativo = criarAtivo("RETIRE-007");
     String token = loginComoAdmin();
 
     // Cria uma unidade de destino e solicita transferência (ativo fica IN_TRANSFER)
     var unidadeDestino = testDataHelper.criarUnidade("Destino", organizacao);
-    apiClient.solicitarTransferencia(ativo.getId(), unidadeDestino.getId(), "Motivo de transferência", token);
+    apiClient.solicitarTransferencia(
+        ativo.getId(), unidadeDestino.getId(), "Motivo de transferência", token);
 
     // Tenta aposentar o ativo que está com transferência pendente — deve falhar
     MockMvcResponse response = apiClient.aposentarAtivo(ativo.getId(), token);

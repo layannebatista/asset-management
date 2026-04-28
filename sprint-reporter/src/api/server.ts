@@ -131,10 +131,10 @@ export async function createServer(): Promise<Express> {
   });
 
   // ─── Generate Report Endpoint ──────────────────────────────────────────────
-  app.post('/api/reports/sprint', async (req: Request<{}, ReportResponse, ReportRequest>, res: Response<ReportResponse>) => {
+  app.post('/api/reports/sprint', async (req: Request<Record<string, never>, ReportResponse, ReportRequest>, res: Response<ReportResponse>) => {
     try {
-      const fs = require('fs');
-      fs.writeFileSync('/tmp/endpoint-call.log', `[${new Date().toISOString()}] Endpoint called\n`, { flag: 'a' });
+      const fs2 = fs;
+      fs2.writeFileSync('/tmp/endpoint-call.log', `[${new Date().toISOString()}] Endpoint called\n`, { flag: 'a' });
       process.stderr.write('[ENDPOINT] POST /api/reports/sprint called\n');
       logger.info('📍 POST /api/reports/sprint endpoint called');
       const { startDate, endDate, projectName, format = 'json' } = req.body;
@@ -247,7 +247,6 @@ export async function createServer(): Promise<Express> {
 
       // ─── Load RTK Data ───────────────────────────────────────────────────
       try {
-        const fs = require('fs');
         fs.writeFileSync('/tmp/rtk-debug.log', '[RTK] Starting RTK data loading\n', { flag: 'a' });
         console.log('🔄 Iniciando carregamento de dados do RTK...');
         const rtkServiceUrl = process.env.RTK_SERVICE_URL || 'http://localhost:3100';
@@ -343,7 +342,7 @@ export async function createServer(): Promise<Express> {
   });
 
   // ─── Export PowerPoint Endpoint ────────────────────────────────────────────
-  app.post('/api/reports/export/powerpoint', async (req: Request<{}, any, SprintReport>, res: Response) => {
+  app.post('/api/reports/export/powerpoint', async (req: Request<Record<string, never>, unknown, SprintReport>, res: Response) => {
     try {
       const report = req.body;
 
@@ -391,7 +390,7 @@ export async function createServer(): Promise<Express> {
   });
 
   // ─── Tratador de Erros ────────────────────────────────────────────────────
-  app.use((err: any, req: Request, res: Response, next: Function) => {
+  app.use((err: any, req: Request, res: Response, _next: (e?: unknown) => void) => {
     logger.error('Erro não tratado', { error: err });
     res.status(500).json({
       success: false,
@@ -409,7 +408,7 @@ async function bootstrap() {
     const port = parseInt(process.env.PORT || '3200', 10);
 
     app.listen(port, '0.0.0.0', () => {
-      logger.info(`Sprint Reporter em execução`, { port });
+      logger.info('Sprint Reporter em execução', { port });
     });
   } catch (error) {
     logger.error('Falha ao iniciar servidor', { error });

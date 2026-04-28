@@ -18,7 +18,6 @@ import io.qameta.allure.Story;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 
 @Epic("Backend")
 @Feature("Domínio — Transfer")
@@ -95,7 +94,8 @@ class TransferRequestLifecycleTest {
   }
 
   private TransferRequest buildTransfer() {
-    return new TransferRequest(buildAsset(), buildUnit(10L), buildUnit(20L), buildUser(), "Motivo válido");
+    return new TransferRequest(
+        buildAsset(), buildUnit(10L), buildUnit(20L), buildUser(), "Motivo válido");
   }
 
   private TransferRequest buildApprovedTransfer() {

@@ -2,9 +2,8 @@ package com.portfolio.assetmanagement.integration.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.portfolio.assetmanagement.integration.BaseIntegrationTest;
-import com.portfolio.assetmanagement.domain.user.enums.UserStatus;
 import com.portfolio.assetmanagement.infrastructure.persistence.user.repository.UserRepository;
+import com.portfolio.assetmanagement.integration.BaseIntegrationTest;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Severity;
@@ -14,7 +13,6 @@ import io.restassured.module.mockmvc.response.MockMvcResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Epic("Backend")
@@ -29,7 +27,7 @@ class AuthSessionIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("AS01 - Refresh token válido retorna novos tokens")
+  @DisplayName("[INTEGRACAO][ASSET] AS01 - Refresh token válido retorna novos tokens")
   void as01RefreshTokenValidoRetornaNovosTokens() {
     MockMvcResponse loginResponse = apiClient.login("admin@test.com", "Senha@123");
     String refreshToken = loginResponse.path("refreshToken");
@@ -44,7 +42,7 @@ class AuthSessionIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("AS02 - Refresh com token inválido retorna 400")
+  @DisplayName("[INTEGRACAO][ASSET] AS02 - Refresh com token inválido retorna 400")
   void as02RefreshComTokenInvalidoRetorna400() {
     MockMvcResponse response = apiClient.refresh("refresh-invalido");
 
@@ -53,7 +51,7 @@ class AuthSessionIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("AS03 - Refresh sem token retorna 400")
+  @DisplayName("[INTEGRACAO][ASSET] AS03 - Refresh sem token retorna 400")
   void as03RefreshSemTokenRetorna400() {
     MockMvcResponse response = apiClient.refreshSemCorpo();
 
@@ -62,7 +60,7 @@ class AuthSessionIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("AS04 - Logout autenticado retorna 204")
+  @DisplayName("[INTEGRACAO][ASSET] AS04 - Logout autenticado retorna 204")
   void as04LogoutAutenticadoRetorna204() {
     String accessToken = loginComoAdmin();
 
@@ -73,7 +71,7 @@ class AuthSessionIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("AS05 - Logout revoga refresh tokens do usuário")
+  @DisplayName("[INTEGRACAO][ASSET] AS05 - Logout revoga refresh tokens do usuário")
   void as05LogoutRevogaRefreshTokens() {
     MockMvcResponse loginResponse = apiClient.login("admin@test.com", "Senha@123");
     String accessToken = loginResponse.path("accessToken");
@@ -88,7 +86,7 @@ class AuthSessionIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("AS06 - Logout não revoga o access token atual imediatamente")
+  @DisplayName("[INTEGRACAO][ASSET] AS06 - Logout não revoga o access token atual imediatamente")
   void as06LogoutNaoRevogaAccessTokenAtualImediatamente() {
     MockMvcResponse loginResponse = apiClient.login("admin@test.com", "Senha@123");
     String accessToken = loginResponse.path("accessToken");
@@ -102,7 +100,7 @@ class AuthSessionIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("AS07 - Refresh token de usuário desativado retorna 400")
+  @DisplayName("[INTEGRACAO][ASSET] AS07 - Refresh token de usuário desativado retorna 400")
   void as07RefreshTokenDeUsuarioDesativadoRetorna400() {
     // Obtém um refresh token válido antes de desativar o usuário
     MockMvcResponse loginResponse = apiClient.login("admin@test.com", "Senha@123");

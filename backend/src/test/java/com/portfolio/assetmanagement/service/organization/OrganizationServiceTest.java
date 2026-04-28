@@ -16,9 +16,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -36,7 +34,7 @@ class OrganizationServiceTest {
   @InjectMocks private OrganizationService service;
 
   @Test
-  @DisplayName("ORG-S01 - create com nome em branco lança BusinessException")
+  @DisplayName("[INTEGRACAO][ASSET] ORG-S01 - create com nome em branco lança BusinessException")
   void createNomeEmBrancoLancaBusinessException() {
     assertThatThrownBy(() -> service.createOrganization("   "))
         .isInstanceOf(BusinessException.class)
@@ -46,7 +44,7 @@ class OrganizationServiceTest {
   }
 
   @Test
-  @DisplayName("ORG-S02 - findById inexistente lança NotFoundException")
+  @DisplayName("[INTEGRACAO][ASSET] ORG-S02 - findById inexistente lança NotFoundException")
   void findByIdInexistenteLancaNotFound() {
     when(organizationRepository.findById(77L)).thenReturn(Optional.empty());
 
@@ -56,10 +54,11 @@ class OrganizationServiceTest {
   }
 
   @Test
-  @DisplayName("ORG-S03 - inactivate já inativa lança BusinessException")
+  @DisplayName("[INTEGRACAO][ASSET] ORG-S03 - inactivate já inativa lança BusinessException")
   void inactivateJaInativaLancaBusinessException() {
     Organization org = new Organization("Acme");
-    org.setStatus(com.portfolio.assetmanagement.domain.organization.enums.OrganizationStatus.INACTIVE);
+    org.setStatus(
+        com.portfolio.assetmanagement.domain.organization.enums.OrganizationStatus.INACTIVE);
     when(organizationRepository.findById(1L)).thenReturn(Optional.of(org));
 
     assertThatThrownBy(() -> service.inactivateOrganization(1L))

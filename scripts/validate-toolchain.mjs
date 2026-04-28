@@ -4,7 +4,6 @@ import path from 'node:path';
 const root = process.cwd();
 
 const policies = [
-  { file: 'ai-intelligence/package.json', minNode: 20, forbidViteBeta: false },
   { file: 'sprint-reporter/package.json', minNode: 20, forbidViteBeta: false },
   { file: 'frontend/package.json', minNode: 20, forbidViteBeta: true },
 ];

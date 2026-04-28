@@ -13,7 +13,6 @@ import io.restassured.module.mockmvc.response.MockMvcResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 
 @Epic("Backend")
 @Feature("Integração — Auth")
@@ -25,7 +24,8 @@ class AuthLoginIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("AL01 - Login com credenciais válidas retorna tokens e metadados do usuário")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AL01 - Login com credenciais válidas retorna tokens e metadados do usuário")
   void al01LoginValidoRetornaTokens() {
     MockMvcResponse response = apiClient.login("admin@test.com", "Senha@123");
 
@@ -39,7 +39,7 @@ class AuthLoginIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("AL02 - Login com senha inválida retorna 401")
+  @DisplayName("[INTEGRACAO][ASSET] AL02 - Login com senha inválida retorna 401")
   void al02LoginSenhaErradaRetorna401() {
     MockMvcResponse response = apiClient.login("admin@test.com", "SenhaErrada!");
 
@@ -48,7 +48,7 @@ class AuthLoginIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("AL03 - Login com email inexistente retorna 401")
+  @DisplayName("[INTEGRACAO][ASSET] AL03 - Login com email inexistente retorna 401")
   void al03LoginEmailInexistenteRetorna401() {
     MockMvcResponse response = apiClient.login("naoexiste@test.com", "Senha@123");
 
@@ -57,7 +57,7 @@ class AuthLoginIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("AL04 - Login com formato de email inválido retorna 400")
+  @DisplayName("[INTEGRACAO][ASSET] AL04 - Login com formato de email inválido retorna 400")
   void al04LoginComEmailInvalidoRetorna400() {
     MockMvcResponse response = apiClient.login("email-invalido", "Senha@123");
 
@@ -66,7 +66,7 @@ class AuthLoginIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("AL05 - Login com senha em branco retorna 400")
+  @DisplayName("[INTEGRACAO][ASSET] AL05 - Login com senha em branco retorna 400")
   void al05LoginComSenhaEmBrancoRetorna400() {
     MockMvcResponse response = apiClient.login("admin@test.com", "   ");
 
@@ -75,7 +75,7 @@ class AuthLoginIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("AL06 - Login de usuário com telefone retorna challenge MFA")
+  @DisplayName("[INTEGRACAO][ASSET] AL06 - Login de usuário com telefone retorna challenge MFA")
   void al06LoginComTelefoneRetornaChallengeMfa() {
     var user =
         testDataHelper.criarUsuarioComTelefone(

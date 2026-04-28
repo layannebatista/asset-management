@@ -22,9 +22,7 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -44,7 +42,8 @@ class TransferValidationServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TS12 - requireAssetExists lança NotFoundException para asset nulo")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TS12 - requireAssetExists lança NotFoundException para asset nulo")
   void ts12RequireAssetExistsLancaNotFoundParaAssetNulo() {
     TransferValidationService service = new TransferValidationService(transferRepository);
 
@@ -55,7 +54,8 @@ class TransferValidationServiceTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("TS13 - validateOwnership lança ForbiddenException para outra organização")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TS13 - validateOwnership lança ForbiddenException para outra organização")
   void ts13ValidateOwnershipLancaForbiddenParaOutraOrganizacao() {
     TransferValidationService service = new TransferValidationService(transferRepository);
     Asset asset = mock(Asset.class);
@@ -70,7 +70,8 @@ class TransferValidationServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TS14 - validateAssetAvailableForTransfer bloqueia ativo indisponível")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TS14 - validateAssetAvailableForTransfer bloqueia ativo indisponível")
   void ts14ValidateAssetAvailableForTransferBloqueiaAtivoIndisponivel() {
     TransferValidationService service = new TransferValidationService(transferRepository);
     Asset asset = mock(Asset.class);
@@ -83,7 +84,8 @@ class TransferValidationServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TS15 - validateTargetUnit bloqueia transferência para a mesma unidade")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TS15 - validateTargetUnit bloqueia transferência para a mesma unidade")
   void ts15ValidateTargetUnitBloqueiaTransferenciaParaMesmaUnidade() {
     TransferValidationService service = new TransferValidationService(transferRepository);
     Unit fromUnit = mock(Unit.class);
@@ -98,7 +100,8 @@ class TransferValidationServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TS16 - validateNoActiveTransfer bloqueia ativo com transferência ativa")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TS16 - validateNoActiveTransfer bloqueia ativo com transferência ativa")
   void ts16ValidateNoActiveTransferBloqueiaAtivoComTransferenciaAtiva() {
     TransferValidationService service = new TransferValidationService(transferRepository);
     Asset asset = mock(Asset.class);
@@ -112,4 +115,3 @@ class TransferValidationServiceTest {
         .hasMessageContaining("transferência ativa");
   }
 }
-

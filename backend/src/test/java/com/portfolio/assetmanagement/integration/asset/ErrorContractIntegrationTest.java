@@ -13,7 +13,6 @@ import io.restassured.module.mockmvc.response.MockMvcResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 
 @Epic("Backend")
 @Feature("Integração — Contratos de Erro")
@@ -25,7 +24,7 @@ class ErrorContractIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Contrato 400")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("Resposta 400 contém campos obrigatórios do contrato de erro")
+  @DisplayName("[INTEGRACAO][ASSET] Resposta 400 contém campos obrigatórios do contrato de erro")
   void resposta400ContémCamposDoContrato() {
     String token = loginComoAdmin();
     MockMvcResponse response = apiClient.criarAtivoComDadosInvalidos(organizacao.getId(), token);
@@ -40,7 +39,7 @@ class ErrorContractIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Contrato 401")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("Resposta 401 está no formato JSON")
+  @DisplayName("[INTEGRACAO][ASSET] Resposta 401 está no formato JSON")
   void resposta401EmJson() {
     MockMvcResponse response = apiClient.getSemToken("/assets");
 
@@ -51,7 +50,7 @@ class ErrorContractIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Contrato 403")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("Resposta 403 não expõe informações internas")
+  @DisplayName("[INTEGRACAO][ASSET] Resposta 403 não expõe informações internas")
   void resposta403NaoExpoeInformacoes() {
     criarAtivo("ERR-CONTRACT-001");
     String token = loginComoGestor();
@@ -71,7 +70,7 @@ class ErrorContractIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Contrato 404")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("Resposta 404 está no formato JSON com mensagem")
+  @DisplayName("[INTEGRACAO][ASSET] Resposta 404 está no formato JSON com mensagem")
   void resposta404EmJson() {
     String token = loginComoAdmin();
     MockMvcResponse response = apiClient.buscarAtivo(99999L, token);
@@ -85,7 +84,7 @@ class ErrorContractIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Contrato 404")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("Deve retornar 404 se ativo não existir")
+  @DisplayName("[INTEGRACAO][ASSET] Deve retornar 404 se ativo não existir")
   void retorna404ParaAtivoInexistente() {
     String token = loginComoAdmin();
     MockMvcResponse response = apiClient.buscarAtivo(99999L, token);

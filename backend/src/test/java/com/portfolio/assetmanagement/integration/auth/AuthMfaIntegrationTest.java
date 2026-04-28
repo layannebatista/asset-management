@@ -13,7 +13,6 @@ import io.restassured.module.mockmvc.response.MockMvcResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 
 @Epic("Backend")
 @Feature("Integração — Auth")
@@ -25,12 +24,7 @@ class AuthMfaIntegrationTest extends BaseIntegrationTest {
 
   private Long criarUsuarioComMfaEObterUserId() {
     testDataHelper.criarUsuarioComTelefone(
-        "gestor-mfa@test.com",
-        "Senha@123",
-        UserRole.GESTOR,
-        organizacao,
-        unidade,
-        "5511988887777");
+        "gestor-mfa@test.com", "Senha@123", UserRole.GESTOR, organizacao, unidade, "5511988887777");
 
     MockMvcResponse loginResponse = apiClient.login("gestor-mfa@test.com", "Senha@123");
     return ((Number) loginResponse.path("userId")).longValue();
@@ -38,7 +32,7 @@ class AuthMfaIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("AM01 - Verificação MFA com código válido retorna tokens")
+  @DisplayName("[INTEGRACAO][ASSET] AM01 - Verificação MFA com código válido retorna tokens")
   void am01VerifyMfaComCodigoValidoRetornaTokens() {
     Long userId = criarUsuarioComMfaEObterUserId();
     String code = testDataHelper.obterCodigoMfaValido(userId);
@@ -53,7 +47,7 @@ class AuthMfaIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("AM02 - Verificação MFA com código inválido retorna 400")
+  @DisplayName("[INTEGRACAO][ASSET] AM02 - Verificação MFA com código inválido retorna 400")
   void am02VerifyMfaComCodigoInvalidoRetorna400() {
     Long userId = criarUsuarioComMfaEObterUserId();
 
@@ -64,7 +58,7 @@ class AuthMfaIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("AM03 - Verificação MFA sem código retorna 400")
+  @DisplayName("[INTEGRACAO][ASSET] AM03 - Verificação MFA sem código retorna 400")
   void am03VerifyMfaSemCodigoRetorna400() {
     Long userId = criarUsuarioComMfaEObterUserId();
 
@@ -75,7 +69,7 @@ class AuthMfaIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("AM04 - Verificação MFA sem userId retorna 400")
+  @DisplayName("[INTEGRACAO][ASSET] AM04 - Verificação MFA sem userId retorna 400")
   void am04VerifyMfaSemUserIdRetorna400() {
     Long userId = criarUsuarioComMfaEObterUserId();
     String code = testDataHelper.obterCodigoMfaValido(userId);
@@ -87,7 +81,7 @@ class AuthMfaIntegrationTest extends BaseIntegrationTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("AM05 - Código MFA reutilizado retorna 400")
+  @DisplayName("[INTEGRACAO][ASSET] AM05 - Código MFA reutilizado retorna 400")
   void am05CodigoMfaReutilizadoRetorna400() {
     Long userId = criarUsuarioComMfaEObterUserId();
     String code = testDataHelper.obterCodigoMfaValido(userId);

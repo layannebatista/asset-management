@@ -3,7 +3,6 @@ package com.portfolio.assetmanagement.integration.asset;
 import static io.restassured.module.mockmvc.RestAssuredMockMvc.given;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.portfolio.assetmanagement.domain.asset.enums.AssetStatus;
 import com.portfolio.assetmanagement.domain.asset.enums.AssetType;
 import com.portfolio.assetmanagement.domain.unit.entity.Unit;
 import com.portfolio.assetmanagement.integration.BaseIntegrationTest;
@@ -16,7 +15,6 @@ import io.restassured.module.mockmvc.response.MockMvcResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 
 @Epic("Backend")
 @Feature("Integração — Assets")
@@ -28,7 +26,7 @@ class AssetFilterIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Listagem de ativos")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("Lista todos os ativos da organização sem filtros")
+  @DisplayName("[INTEGRACAO][ASSET] Lista todos os ativos da organização sem filtros")
   void listaAtivosSemFiltros() {
     criarAtivo("FILTER-001");
     criarAtivo("FILTER-002");
@@ -43,7 +41,7 @@ class AssetFilterIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Filtros")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("Filtra ativos por assetTag")
+  @DisplayName("[INTEGRACAO][ASSET] Filtra ativos por assetTag")
   void filtraPorAssetTag() {
     criarAtivo("FILTER-UNIQUE-001");
     criarAtivo("FILTER-UNIQUE-002");
@@ -68,7 +66,7 @@ class AssetFilterIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Filtros")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("Filtra ativos por tipo")
+  @DisplayName("[INTEGRACAO][ASSET] Filtra ativos por tipo")
   void filtraPorTipo() {
     criarAtivo("FILTER-NB-001", AssetType.NOTEBOOK);
     criarAtivo("FILTER-DT-001", AssetType.DESKTOP);
@@ -94,7 +92,7 @@ class AssetFilterIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Paginação")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("Paginação retorna campos page corretos")
+  @DisplayName("[INTEGRACAO][ASSET] Paginação retorna campos page corretos")
   void paginacaoRetornaCamposCorretos() {
     criarAtivo("PAGE-001");
     String token = loginComoAdmin();
@@ -120,7 +118,7 @@ class AssetFilterIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Filtros")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("Filtra ativos por status")
+  @DisplayName("[INTEGRACAO][ASSET] Filtra ativos por status")
   void filtraPorStatus() {
     criarAtivo("FILTER-STATUS-001");
     String token = loginComoAdmin();
@@ -144,11 +142,14 @@ class AssetFilterIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Filtros")
   @Severity(SeverityLevel.TRIVIAL)
-  @DisplayName("Filtra ativos por modelo (search)")
+  @DisplayName("[INTEGRACAO][ASSET] Filtra ativos por modelo (search)")
   void filtraPorModelo() {
     testDataHelper.criarAtivoComStatus(
-        "FILTER-DELL-001", AssetType.NOTEBOOK, "Dell XPS 15",
-        organizacao, unidade,
+        "FILTER-DELL-001",
+        AssetType.NOTEBOOK,
+        "Dell XPS 15",
+        organizacao,
+        unidade,
         com.portfolio.assetmanagement.domain.asset.enums.AssetStatus.AVAILABLE);
     String token = loginComoAdmin();
 
@@ -171,7 +172,7 @@ class AssetFilterIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Controle de acesso")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("GESTOR só vê ativos da sua unidade ao filtrar")
+  @DisplayName("[INTEGRACAO][ASSET] GESTOR só vê ativos da sua unidade ao filtrar")
   void gestorSoVeAtivosDaSuaUnidade() {
     Unit outraUnidade = testDataHelper.criarUnidade("Filial", organizacao);
     testDataHelper.criarAtivo("FILTER-UNIT-A", AssetType.NOTEBOOK, organizacao, unidade);

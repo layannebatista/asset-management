@@ -28,13 +28,10 @@ import io.qameta.allure.Severity;
 import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.Story;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -75,7 +72,8 @@ class TransferRequestServiceTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("TS01 - Solicita transferência com sucesso e muda ativo para IN_TRANSFER")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TS01 - Solicita transferência com sucesso e muda ativo para IN_TRANSFER")
   void ts01SolicitaTransferenciaComSucesso() {
     Asset asset = buildAsset(1L, 10L, AssetStatus.AVAILABLE);
     Unit destino = buildUnit(20L, 1L, "Filial");
@@ -88,7 +86,8 @@ class TransferRequestServiceTest {
     when(loggedUser.getUserId()).thenReturn(99L);
     when(assetService.findById(100L)).thenReturn(asset);
     when(unitService.findById(20L)).thenReturn(destino);
-    when(repository.save(any(TransferRequest.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    when(repository.save(any(TransferRequest.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
 
     service.request(100L, 20L, "Mudança operacional");
 
@@ -99,18 +98,19 @@ class TransferRequestServiceTest {
     verify(validationService).validateNoActiveTransfer(asset);
     verify(asset).changeStatus(AssetStatus.IN_TRANSFER);
     verify(repository).save(any(TransferRequest.class));
-    verify(auditService).registerEvent(
-      AuditEventType.TRANSFER_REQUESTED,
-      99L,
-      org.getId(),
-      origem.getId(),
-      null,
-      "Transferência solicitada para unidade Filial");
+    verify(auditService)
+        .registerEvent(
+            AuditEventType.TRANSFER_REQUESTED,
+            99L,
+            org.getId(),
+            origem.getId(),
+            null,
+            "Transferência solicitada para unidade Filial");
   }
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TS02 - Ativo sem unidade associada não pode ser transferido")
+  @DisplayName("[INTEGRACAO][ASSET] TS02 - Ativo sem unidade associada não pode ser transferido")
   void ts02AtivoSemUnidadeAssociadaNaoPodeSerTransferido() {
     Asset asset = buildAsset(1L, null, AssetStatus.AVAILABLE);
     when(assetService.findById(100L)).thenReturn(asset);
@@ -123,7 +123,8 @@ class TransferRequestServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TS03 - Propaga falha de validação quando já existe transferência ativa")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TS03 - Propaga falha de validação quando já existe transferência ativa")
   void ts03PropagaFalhaQuandoJaExisteTransferenciaAtiva() {
     Asset asset = buildAsset(1L, 10L, AssetStatus.AVAILABLE);
     Unit destino = buildUnit(20L, 1L, "Filial");
@@ -131,7 +132,8 @@ class TransferRequestServiceTest {
     when(assetService.findById(100L)).thenReturn(asset);
     when(unitService.findById(20L)).thenReturn(destino);
     when(loggedUser.getOrganizationId()).thenReturn(1L);
-    org.mockito.Mockito.doThrow(new BusinessException("Já existe transferência ativa para este ativo"))
+    org.mockito.Mockito.doThrow(
+            new BusinessException("Já existe transferência ativa para este ativo"))
         .when(validationService)
         .validateNoActiveTransfer(asset);
 
@@ -164,4 +166,3 @@ class TransferRequestServiceTest {
     return unit;
   }
 }
-

@@ -4,10 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.portfolio.assetmanagement.bdd.client.ApiClient;
 import com.portfolio.assetmanagement.bdd.context.ScenarioContext;
-import java.util.Map;
 import io.cucumber.java.pt.E;
 import io.cucumber.java.pt.Quando;
 import io.restassured.module.mockmvc.response.MockMvcResponse;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /** Steps de ações de criação de manutenção. */
@@ -83,7 +83,8 @@ public class MaintenanceCreationSteps {
     assertThat(assetId).as("Ativo '%s' não foi criado no Contexto", assetTag).isNotNull();
 
     MockMvcResponse response =
-        apiClient.postSemToken("/maintenance", Map.of("assetId", assetId, "description", descricao));
+        apiClient.postSemToken(
+            "/maintenance", Map.of("assetId", assetId, "description", descricao));
     setLastResponse(response);
   }
 

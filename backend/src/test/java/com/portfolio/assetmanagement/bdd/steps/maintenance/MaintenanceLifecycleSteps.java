@@ -52,14 +52,16 @@ public class MaintenanceLifecycleSteps {
   @Quando("concluo a manutenção salva com resolução {string}")
   public void concluoAManutencaoSalva(String resolucao) {
     Long manutencaoId = mainContext.getManutencaoId();
-    MockMvcResponse response = apiClient.concluirManutencao(manutencaoId, resolucao, context.getToken());
+    MockMvcResponse response =
+        apiClient.concluirManutencao(manutencaoId, resolucao, context.getToken());
     setLastResponse(response);
   }
 
   @Quando("concluo a manutenção salva sem enviar resolution")
   public void concluoAManutencaoSalvaSemEnviarResolution() {
     Long manutencaoId = mainContext.getManutencaoId();
-    MockMvcResponse response = apiClient.concluirManutencaoSemResolucao(manutencaoId, context.getToken());
+    MockMvcResponse response =
+        apiClient.concluirManutencaoSemResolucao(manutencaoId, context.getToken());
     setLastResponse(response);
   }
 

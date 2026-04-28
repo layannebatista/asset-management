@@ -1,6 +1,6 @@
 import PptxGenJS from 'pptxgenjs';
 import { SprintReport } from '../types/report.types';
-import { writeFileSync, readFileSync, unlinkSync } from 'fs';
+import { readFileSync, unlinkSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
@@ -54,7 +54,7 @@ export class PowerPointFormatter {
           }
         })
         .catch((err: any) => {
-          try { unlinkSync(tmpFile); } catch {}
+          try { unlinkSync(tmpFile); } catch (_e) { /* no-op */ }
           reject(err);
         });
     });
@@ -270,7 +270,6 @@ export class PowerPointFormatter {
     let recY = y + 0.4;
     const recommendations = report.recommendations?.slice(0, 3) || [];
     for (const rec of recommendations) {
-      const priorityColor = this.getPriorityColor(rec.priority);
       const priorityLabel = rec.priority === 'high' ? '🔴' : rec.priority === 'medium' ? '🟡' : '🟢';
 
       slide.addText(`${priorityLabel} ${rec.action}`, {

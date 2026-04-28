@@ -26,13 +26,10 @@ import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.Story;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -72,7 +69,7 @@ class AuthAuthenticateServiceTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("AU01 - Autentica usuário sem telefone e retorna tokens")
+  @DisplayName("[INTEGRACAO][ASSET] AU01 - Autentica usuário sem telefone e retorna tokens")
   void au01AutenticaUsuarioSemTelefoneERetornaTokens() {
     LoginRequestDTO request = new LoginRequestDTO();
     request.setEmail("admin@secure.com");
@@ -98,7 +95,8 @@ class AuthAuthenticateServiceTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("AU02 - Usuário com telefone recebe challenge MFA sem emitir tokens")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AU02 - Usuário com telefone recebe challenge MFA sem emitir tokens")
   void au02UsuarioComTelefoneRecebeChallengeMfa() {
     LoginRequestDTO request = new LoginRequestDTO();
     request.setEmail("admin-mfa@secure.com");
@@ -123,7 +121,8 @@ class AuthAuthenticateServiceTest {
 
   @Test
   @Severity(SeverityLevel.BLOCKER)
-  @DisplayName("AU03 - DisabledException é normalizada para credenciais inválidas")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AU03 - DisabledException é normalizada para credenciais inválidas")
   void au03DisabledExceptionENormalizadaParaCredenciaisInvalidas() {
     LoginRequestDTO request = new LoginRequestDTO();
     request.setEmail("blocked@secure.com");
@@ -139,7 +138,7 @@ class AuthAuthenticateServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("AU04 - Falha quando usuário não é encontrado após autenticação")
+  @DisplayName("[INTEGRACAO][ASSET] AU04 - Falha quando usuário não é encontrado após autenticação")
   void au04FalhaQuandoUsuarioNaoEncontradoAposAutenticacao() {
     LoginRequestDTO request = new LoginRequestDTO();
     request.setEmail("missing@secure.com");

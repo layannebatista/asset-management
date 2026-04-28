@@ -11,12 +11,12 @@ import com.portfolio.assetmanagement.infrastructure.persistence.asset.repository
 import io.cucumber.java.pt.E;
 import io.cucumber.java.pt.Então;
 import io.cucumber.java.pt.Quando;
-import org.springframework.beans.factory.annotation.Autowired;
 import java.math.BigDecimal;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * Steps de ciclo de vida do ativo: atribuição, desatribuição, aposentadoria,
- * manutenção e transferência — incluindo sequências e reentrâncias.
+ * Steps de ciclo de vida do ativo: atribuição, desatribuição, aposentadoria, manutenção e
+ * transferência — incluindo sequências e reentrâncias.
  */
 public class AssetLifecycleSteps {
 
@@ -152,7 +152,8 @@ public class AssetLifecycleSteps {
     Long assetId = context.getId("ativoId_" + assetTag);
     Long toUnitId = context.getId("unidadeExtraId2");
     context.setLastResponse(
-        apiClient.solicitarTransferencia(assetId, toUnitId, "Transferência E2E", context.getToken()));
+        apiClient.solicitarTransferencia(
+            assetId, toUnitId, "Transferência E2E", context.getToken()));
   }
 
   @Quando("solicito novamente transferência do ativo {string} para a unidade extra")
@@ -184,7 +185,10 @@ public class AssetLifecycleSteps {
     Asset asset =
         assetRepository
             .findById(assetId)
-            .orElseThrow(() -> new AssertionError("Ativo não encontrado para validação de status: " + currentTag));
+            .orElseThrow(
+                () ->
+                    new AssertionError(
+                        "Ativo não encontrado para validação de status: " + currentTag));
 
     assertThat(asset.getStatus().name()).as("Status do ativo incorreto").isEqualTo(statusEsperado);
   }
@@ -275,7 +279,7 @@ public class AssetLifecycleSteps {
     String responseBody = context.getLastResponse().getBody().asString();
     assertThat(responseBody)
         .as("Mensagem de erro não indica bloqueio de transferência de ativo atribuído")
-      .containsAnyOf("atribuído", "não está disponível");
+        .containsAnyOf("atribuído", "não está disponível");
   }
 
   // =========================================================

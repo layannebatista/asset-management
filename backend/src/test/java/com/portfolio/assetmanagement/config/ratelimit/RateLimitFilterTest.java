@@ -7,7 +7,6 @@ import java.io.IOException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -18,7 +17,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 class RateLimitFilterTest {
 
   @Test
-  @DisplayName("U07 - limita login por IP após 10 tentativas")
+  @DisplayName("[CONFIG][ASSET] U07 - limita login por IP após 10 tentativas")
   void limitaLoginPorIpAposDezTentativas() throws ServletException, IOException {
     RateLimitFilter filter = new RateLimitFilter();
     MockHttpServletResponse response = new MockHttpServletResponse();

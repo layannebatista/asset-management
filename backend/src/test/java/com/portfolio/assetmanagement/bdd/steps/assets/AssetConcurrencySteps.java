@@ -19,9 +19,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.springframework.beans.factory.annotation.Autowired;
 
-/**
- * Steps de concorrência, invariantes de negócio, consistência e edge cases.
- */
+/** Steps de concorrência, invariantes de negócio, consistência e edge cases. */
 public class AssetConcurrencySteps {
 
   @Autowired private ApiClient apiClient;
@@ -325,7 +323,8 @@ public class AssetConcurrencySteps {
     apiClient.aposentarAtivo(assetId, context.getToken());
     apiClient.desatribuirAtivo(assetId, context.getToken());
     context.setLastResponse(
-        apiClient.atribuirAtivo(assetId, testDataHelper.resolverFallbackUsuarioId(), context.getToken()));
+        apiClient.atribuirAtivo(
+            assetId, testDataHelper.resolverFallbackUsuarioId(), context.getToken()));
   }
 
   @Então("todas as transições inválidas devem ser rejeitadas")

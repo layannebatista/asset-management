@@ -32,13 +32,10 @@ import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.Story;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -90,7 +87,8 @@ class MaintenanceCreateServiceTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("MS01 - Deve criar manutenção e mudar status do ativo para IN_MAINTENANCE")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] MS01 - Deve criar manutenção e mudar status do ativo para IN_MAINTENANCE")
   void ms01DeveCriarEMudarStatusDoAtivo() {
     Asset asset = buildAssetMock(1L, 10L);
     when(assetRepository.findById(100L)).thenReturn(Optional.of(asset));
@@ -107,7 +105,7 @@ class MaintenanceCreateServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("MS02 - Deve lançar NotFoundException quando ativo não existe")
+  @DisplayName("[INTEGRACAO][ASSET] MS02 - Deve lançar NotFoundException quando ativo não existe")
   void ms02DeveLancarQuandoAtivoNaoExiste() {
     when(assetRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -121,7 +119,8 @@ class MaintenanceCreateServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("MS03 - Deve lançar BusinessException quando já existe manutenção ativa para o ativo")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] MS03 - Deve lançar BusinessException quando já existe manutenção ativa para o ativo")
   void ms03DeveLancarQuandoJaExisteManuAtiva() {
     Asset asset = buildAssetMock(1L, 10L);
     when(assetRepository.findById(100L)).thenReturn(Optional.of(asset));
@@ -137,4 +136,3 @@ class MaintenanceCreateServiceTest {
     verify(maintenanceRepository, never()).save(any());
   }
 }
-

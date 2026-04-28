@@ -33,7 +33,7 @@ class AssetIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @Severity(SeverityLevel.CRITICAL)
-    @DisplayName("ADMIN lista ativos da organização com sucesso")
+    @DisplayName("[INTEGRACAO][ASSET] ADMIN lista ativos da organização com sucesso")
     void adminListaAtivos() {
       criarAtivo("ASSET-INT-001");
       String token = loginComoAdmin();
@@ -46,7 +46,7 @@ class AssetIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @Severity(SeverityLevel.CRITICAL)
-    @DisplayName("GESTOR vê apenas ativos da sua unidade")
+    @DisplayName("[INTEGRACAO][ASSET] GESTOR vê apenas ativos da sua unidade")
     void gestorListaAtivosDaSuaUnidade() {
       criarAtivo("ASSET-INT-002");
       String token = loginComoGestor();
@@ -60,7 +60,7 @@ class AssetIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @Severity(SeverityLevel.CRITICAL)
-    @DisplayName("Listagem sem autenticação retorna 401")
+    @DisplayName("[INTEGRACAO][ASSET] Listagem sem autenticação retorna 401")
     void semTokenRetorna401() {
       MockMvcResponse response = apiClient.getSemToken("/assets");
       assertThat(response.statusCode()).isEqualTo(401);
@@ -78,7 +78,7 @@ class AssetIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @Severity(SeverityLevel.CRITICAL)
-    @DisplayName("ADMIN busca ativo existente — retorna 200 com assetTag")
+    @DisplayName("[INTEGRACAO][ASSET] ADMIN busca ativo existente — retorna 200 com assetTag")
     void adminBuscaAtivoExistente() {
       Asset ativo = criarAtivo("ASSET-INT-003");
       String token = loginComoAdmin();
@@ -91,7 +91,7 @@ class AssetIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @Severity(SeverityLevel.NORMAL)
-    @DisplayName("Deve retornar 404 se ativo não existir")
+    @DisplayName("[INTEGRACAO][ASSET] Deve retornar 404 se ativo não existir")
     void retorna404QuandoNaoEncontrado() {
       String token = loginComoAdmin();
       MockMvcResponse response = apiClient.buscarAtivo(99999L, token);
@@ -100,7 +100,7 @@ class AssetIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @Severity(SeverityLevel.CRITICAL)
-    @DisplayName("Busca sem autenticação retorna 401")
+    @DisplayName("[INTEGRACAO][ASSET] Busca sem autenticação retorna 401")
     void semTokenRetorna401() {
       MockMvcResponse response = apiClient.getSemToken("/assets/1");
       assertThat(response.statusCode()).isEqualTo(401);
@@ -118,15 +118,18 @@ class AssetIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @Severity(SeverityLevel.CRITICAL)
-    @DisplayName("ADMIN cria ativo com sucesso — retorna 201 com assetTag")
+    @DisplayName("[INTEGRACAO][ASSET] ADMIN cria ativo com sucesso — retorna 201 com assetTag")
     void adminCriaAtivo() {
       String token = loginComoAdmin();
 
       MockMvcResponse response =
           apiClient.criarAtivo(
-              organizacao.getId(), "ASSET-NEW-001",
+              organizacao.getId(),
+              "ASSET-NEW-001",
               com.portfolio.assetmanagement.domain.asset.enums.AssetType.NOTEBOOK,
-              "Dell Latitude", unidade.getId(), token);
+              "Dell Latitude",
+              unidade.getId(),
+              token);
 
       assertThat(response.statusCode()).isEqualTo(201);
       assertThat((String) response.path("assetTag")).isEqualTo("ASSET-NEW-001");
@@ -135,24 +138,26 @@ class AssetIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @Severity(SeverityLevel.NORMAL)
-    @DisplayName("Deve retornar 400 quando validação falhar")
+    @DisplayName("[INTEGRACAO][ASSET] Deve retornar 400 quando validação falhar")
     void retorna400ComDadosInvalidos() {
       String token = loginComoAdmin();
-      MockMvcResponse response =
-          apiClient.criarAtivoComDadosInvalidos(organizacao.getId(), token);
+      MockMvcResponse response = apiClient.criarAtivoComDadosInvalidos(organizacao.getId(), token);
       assertThat(response.statusCode()).isEqualTo(400);
     }
 
     @Test
     @Severity(SeverityLevel.CRITICAL)
-    @DisplayName("OPERADOR não deve criar asset — retorna 403")
+    @DisplayName("[INTEGRACAO][ASSET] OPERADOR não deve criar asset — retorna 403")
     void operadorNaoPodeCriarAtivo() {
       String token = loginComoOperador();
       MockMvcResponse response =
           apiClient.criarAtivo(
-              organizacao.getId(), "ASSET-OP",
+              organizacao.getId(),
+              "ASSET-OP",
               com.portfolio.assetmanagement.domain.asset.enums.AssetType.NOTEBOOK,
-              "Modelo", unidade.getId(), token);
+              "Modelo",
+              unidade.getId(),
+              token);
       assertThat(response.statusCode()).isEqualTo(403);
     }
   }
@@ -168,7 +173,7 @@ class AssetIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @Severity(SeverityLevel.CRITICAL)
-    @DisplayName("ADMIN aposta ativo com sucesso — retorna 200")
+    @DisplayName("[INTEGRACAO][ASSET] ADMIN aposta ativo com sucesso — retorna 200")
     void adminAposentaAtivo() {
       Asset ativo = criarAtivo("ASSET-RET-001");
       String token = loginComoAdmin();
@@ -179,7 +184,7 @@ class AssetIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @Severity(SeverityLevel.CRITICAL)
-    @DisplayName("GESTOR não pode aposentar — retorna 403")
+    @DisplayName("[INTEGRACAO][ASSET] GESTOR não pode aposentar — retorna 403")
     void gestorNaoPodeAposentar() {
       Asset ativo = criarAtivo("ASSET-RET-002");
       String token = loginComoGestor();
@@ -190,7 +195,7 @@ class AssetIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @Severity(SeverityLevel.CRITICAL)
-    @DisplayName("User não pode aposentar ativo — retorna 403")
+    @DisplayName("[INTEGRACAO][ASSET] User não pode aposentar ativo — retorna 403")
     void operadorNaoPodeAposentar() {
       Asset ativo = criarAtivo("ASSET-RET-003");
       String token = loginComoOperador();
@@ -211,7 +216,7 @@ class AssetIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @Severity(SeverityLevel.CRITICAL)
-    @DisplayName("User não pode atribuir ativo — retorna 403")
+    @DisplayName("[INTEGRACAO][ASSET] User não pode atribuir ativo — retorna 403")
     void operadorNaoPodeAtribuirAtivo() {
       Asset ativo = criarAtivo("ASSET-ASSIGN-001");
       String token = loginComoOperador();
@@ -222,7 +227,7 @@ class AssetIntegrationTest extends BaseIntegrationTest {
 
     @Test
     @Severity(SeverityLevel.CRITICAL)
-    @DisplayName("ADMIN atribui ativo ao operador com sucesso")
+    @DisplayName("[INTEGRACAO][ASSET] ADMIN atribui ativo ao operador com sucesso")
     void adminAtribuiAtivo() {
       Asset ativo = criarAtivo("ASSET-ASSIGN-002");
       String token = loginComoAdmin();

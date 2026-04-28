@@ -8,7 +8,6 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 
 @DisplayName("AiInsightService — resiliência")
 @Tag("testType=Integration")
@@ -16,7 +15,7 @@ import org.junit.jupiter.api.Tag;
 class AiInsightServiceTest {
 
   @Test
-  @DisplayName("AI-S01 - serviço indisponível lança AiServiceException")
+  @DisplayName("[INTEGRACAO][ASSET] AI-S01 - serviço indisponível lança AiServiceException")
   void servicoIndisponivelLancaAiServiceException() {
     AiInsightService service = new AiInsightService("http://127.0.0.1:1", "test-key");
 

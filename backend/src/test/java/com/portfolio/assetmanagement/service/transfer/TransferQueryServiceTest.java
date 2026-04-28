@@ -21,9 +21,7 @@ import java.util.Collections;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -49,7 +47,7 @@ class TransferQueryServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TS17 - ADMIN lista transferências com filtros e paginação")
+  @DisplayName("[INTEGRACAO][ASSET] TS17 - ADMIN lista transferências com filtros e paginação")
   void ts17AdminListaTransferenciasComFiltrosEPaginacao() {
     TransferQueryService service = new TransferQueryService(repository, loggedUser);
     Pageable pageable = PageRequest.of(0, 10);
@@ -66,7 +64,8 @@ class TransferQueryServiceTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("TS18 - GESTOR usa escopo da própria unidade independentemente do filtro recebido")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TS18 - GESTOR usa escopo da própria unidade independentemente do filtro recebido")
   void ts18GestorUsaEscopoDaPropriaUnidadeIndependentementeDoFiltroRecebido() {
     TransferQueryService service = new TransferQueryService(repository, loggedUser);
     Pageable pageable = PageRequest.of(0, 10);
@@ -81,4 +80,3 @@ class TransferQueryServiceTest {
     verify(repository).findAll(any(Specification.class), eq(pageable));
   }
 }
-

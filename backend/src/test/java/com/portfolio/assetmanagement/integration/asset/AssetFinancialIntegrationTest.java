@@ -13,7 +13,6 @@ import io.restassured.module.mockmvc.response.MockMvcResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 
 @Epic("Backend")
 @Feature("Integração — Assets")
@@ -25,13 +24,15 @@ class AssetFinancialIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Controle de acesso — dados financeiros")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("AF09 - OPERADOR não pode atualizar dados financeiros — retorna 403")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AF09 - OPERADOR não pode atualizar dados financeiros — retorna 403")
   void af09OperadorNaoPodeAtualizarDadosFinanceiros() {
     Asset ativo = criarAtivo("FINANCIAL-009");
     String token = loginComoOperador();
 
     MockMvcResponse response =
-        apiClient.atualizarDadosFinanceiros(ativo.getId(), new java.math.BigDecimal("1500.00"), null, token);
+        apiClient.atualizarDadosFinanceiros(
+            ativo.getId(), new java.math.BigDecimal("1500.00"), null, token);
 
     assertThat(response.statusCode()).isEqualTo(403);
   }
@@ -39,15 +40,17 @@ class AssetFinancialIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Controle de acesso — dados financeiros")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("AF10 - GESTOR não pode atualizar dados financeiros de ativo em outra unidade — retorna 403")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AF10 - GESTOR não pode atualizar dados financeiros de ativo em outra unidade — retorna 403")
   void af10GestorNaoPodeAtualizarFinanceiroEmOutraUnidade() {
     // Ativo criado em uma segunda unidade, fora do escopo do GESTOR padrão
     var outraUnidade = testDataHelper.criarUnidade("Filial Financeira", organizacao);
-    var ativoOutraUnidade = testDataHelper.criarAtivo(
-        "FINANCIAL-010",
-        com.portfolio.assetmanagement.domain.asset.enums.AssetType.NOTEBOOK,
-        organizacao,
-        outraUnidade);
+    var ativoOutraUnidade =
+        testDataHelper.criarAtivo(
+            "FINANCIAL-010",
+            com.portfolio.assetmanagement.domain.asset.enums.AssetType.NOTEBOOK,
+            organizacao,
+            outraUnidade);
 
     String tokenGestor = loginComoGestor();
 

@@ -2,11 +2,11 @@ package com.portfolio.assetmanagement.service.asset;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.portfolio.assetmanagement.application.asset.mapper.AssetMapper;
 import com.portfolio.assetmanagement.application.asset.service.AssetAssignmentHistoryService;
 import com.portfolio.assetmanagement.application.asset.service.AssetNumberGeneratorService;
 import com.portfolio.assetmanagement.application.asset.service.AssetService;
@@ -23,7 +23,6 @@ import com.portfolio.assetmanagement.infrastructure.persistence.user.repository.
 import com.portfolio.assetmanagement.security.context.LoggedUserContext;
 import com.portfolio.assetmanagement.shared.exception.BusinessException;
 import com.portfolio.assetmanagement.shared.exception.ForbiddenException;
-import com.portfolio.assetmanagement.application.asset.mapper.AssetMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -70,7 +69,8 @@ class AssetCreateServiceTest {
   }
 
   @Test
-  @DisplayName("AC01 - ADMIN cria ativo com sucesso — valida tag, unicidade e integridade")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AC01 - ADMIN cria ativo com sucesso — valida tag, unicidade e integridade")
   void ac01AdminCriaAtivoComValidacoes() {
     Organization org = mock(Organization.class);
     Unit unit = mock(Unit.class);
@@ -89,12 +89,12 @@ class AssetCreateServiceTest {
     verify(validationService).validateAssetTagUniqueness("TAG-001");
     verify(validationService).validateOrganizationUnitIntegrity(org, unit);
     verify(auditService)
-        .registerEvent(
-            AuditEventType.ASSET_CREATED, 1L, 10L, 20L, 100L, "Ativo criado");
+        .registerEvent(AuditEventType.ASSET_CREATED, 1L, 10L, 20L, 100L, "Ativo criado");
   }
 
   @Test
-  @DisplayName("AC02 - GESTOR tenta criar ativo em unidade alheia — lança ForbiddenException")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AC02 - GESTOR tenta criar ativo em unidade alheia — lança ForbiddenException")
   void ac02GestorNaoPodeCriarEmUnidadeAlheia() {
     Organization org = mock(Organization.class);
     Unit unit = mock(Unit.class);
@@ -104,13 +104,13 @@ class AssetCreateServiceTest {
     when(loggedUser.getUnitId()).thenReturn(20L);
     when(unit.getId()).thenReturn(99L);
 
-    assertThatThrownBy(
-            () -> service.createAsset("TAG-002", AssetType.DESKTOP, "LG 27", org, unit))
+    assertThatThrownBy(() -> service.createAsset("TAG-002", AssetType.DESKTOP, "LG 27", org, unit))
         .isInstanceOf(ForbiddenException.class);
   }
 
   @Test
-  @DisplayName("AC03 - createAssetAutoTag gera tag e persiste ativo com sucesso")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AC03 - createAssetAutoTag gera tag e persiste ativo com sucesso")
   void ac03CreateAssetAutoTagComSucesso() {
     Organization org = mock(Organization.class);
     Unit unit = mock(Unit.class);
@@ -129,12 +129,12 @@ class AssetCreateServiceTest {
     verify(numberGeneratorService).generate();
     verify(repository).save(any(Asset.class));
     verify(auditService)
-        .registerEvent(
-            AuditEventType.ASSET_CREATED, 1L, 10L, 20L, 101L, "Ativo criado");
+        .registerEvent(AuditEventType.ASSET_CREATED, 1L, 10L, 20L, 101L, "Ativo criado");
   }
 
   @Test
-  @DisplayName("AC04 - createAssetAutoTag com colisão de tag — lança BusinessException")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] AC04 - createAssetAutoTag com colisão de tag — lança BusinessException")
   void ac04CreateAssetAutoTagComColisaoLancaBusinessException() {
     Organization org = mock(Organization.class);
     Unit unit = mock(Unit.class);
@@ -144,9 +144,7 @@ class AssetCreateServiceTest {
     when(repository.save(any(Asset.class)))
         .thenThrow(new DataIntegrityViolationException("duplicate"));
 
-    assertThatThrownBy(
-            () -> service.createAssetAutoTag(AssetType.NOTEBOOK, "Dell", org, unit))
+    assertThatThrownBy(() -> service.createAssetAutoTag(AssetType.NOTEBOOK, "Dell", org, unit))
         .isInstanceOf(BusinessException.class);
   }
 }
-

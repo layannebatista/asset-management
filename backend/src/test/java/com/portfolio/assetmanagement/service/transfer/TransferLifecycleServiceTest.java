@@ -32,13 +32,10 @@ import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.Story;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -88,7 +85,8 @@ class TransferLifecycleServiceTest {
 
   @Test
   @Severity(SeverityLevel.BLOCKER)
-  @DisplayName("TS08 - Conclui transferência aprovada e move ativo para unidade destino")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TS08 - Conclui transferência aprovada e move ativo para unidade destino")
   void ts08ConcluiTransferenciaAprovadaEMoveAtivoParaUnidadeDestino() {
     TransferRequest transfer = buildTransfer(TransferStatus.APPROVED, true);
     Asset asset = transfer.getAsset();
@@ -104,12 +102,18 @@ class TransferLifecycleServiceTest {
     verify(repository).save(transfer);
     verify(auditService)
         .registerEvent(
-            eq(AuditEventType.TRANSFER_COMPLETED), eq(99L), eq(1L), eq(20L), eq(55L), eq("Transferência concluída"));
+            eq(AuditEventType.TRANSFER_COMPLETED),
+            eq(99L),
+            eq(1L),
+            eq(20L),
+            eq(55L),
+            eq("Transferência concluída"));
   }
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TS09 - Cancela transferência pendente e devolve ativo para AVAILABLE")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TS09 - Cancela transferência pendente e devolve ativo para AVAILABLE")
   void ts09CancelaTransferenciaPendenteEDevolveAtivoParaAvailable() {
     TransferRequest transfer = buildTransfer(TransferStatus.PENDING, true);
     Asset asset = transfer.getAsset();
@@ -127,7 +131,7 @@ class TransferLifecycleServiceTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("TS10 - OPERADOR sem atribuição não pode concluir transferência")
+  @DisplayName("[INTEGRACAO][ASSET] TS10 - OPERADOR sem atribuição não pode concluir transferência")
   void ts10OperadorSemAtribuicaoNaoPodeConcluirTransferencia() {
     TransferRequest transfer = buildTransfer(TransferStatus.APPROVED, false);
     when(repository.findById(55L)).thenReturn(Optional.of(transfer));
@@ -137,17 +141,18 @@ class TransferLifecycleServiceTest {
 
     assertThatThrownBy(() -> service.complete(55L))
         .isInstanceOf(ForbiddenException.class)
-      .hasMessageContaining("Acesso negado à transferência");
+        .hasMessageContaining("Acesso negado à transferência");
   }
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TS11 - Cancelação inválida propaga BusinessException")
+  @DisplayName("[INTEGRACAO][ASSET] TS11 - Cancelação inválida propaga BusinessException")
   void ts11CancelamentoInvalidoPropagaBusinessException() {
     TransferRequest transfer = buildTransfer(TransferStatus.APPROVED, true);
     when(repository.findById(55L)).thenReturn(Optional.of(transfer));
     when(loggedUser.isAdmin()).thenReturn(true);
-    org.mockito.Mockito.doThrow(new BusinessException("Apenas transferências pendentes podem ser canceladas"))
+    org.mockito.Mockito.doThrow(
+            new BusinessException("Apenas transferências pendentes podem ser canceladas"))
         .when(validationService)
         .validateCanCancel(transfer);
 
@@ -166,7 +171,8 @@ class TransferLifecycleServiceTest {
     Unit toUnit = mock(Unit.class);
     when(toUnit.getId()).thenReturn(20L);
 
-    com.portfolio.assetmanagement.domain.user.entity.User assignedUser = mock(com.portfolio.assetmanagement.domain.user.entity.User.class);
+    com.portfolio.assetmanagement.domain.user.entity.User assignedUser =
+        mock(com.portfolio.assetmanagement.domain.user.entity.User.class);
     when(assignedUser.getId()).thenReturn(10L);
 
     Asset asset = mock(Asset.class);
@@ -184,4 +190,3 @@ class TransferLifecycleServiceTest {
     return transfer;
   }
 }
-

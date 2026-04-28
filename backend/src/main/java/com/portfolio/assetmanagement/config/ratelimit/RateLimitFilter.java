@@ -117,8 +117,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
   }
 
   /**
-   * Utilizado pelos testes BDD para garantir isolamento entre cenários.
-   * Em produção, os buckets devem persistir durante a janela de rate limit.
+   * Utilizado pelos testes BDD para garantir isolamento entre cenários. Em produção, os buckets
+   * devem persistir durante a janela de rate limit.
    */
   public void clearAllBucketsForTests() {
     loginBuckets.clear();

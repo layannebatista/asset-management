@@ -16,7 +16,6 @@ import io.restassured.module.mockmvc.response.MockMvcResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 
 @Epic("Backend")
 @Feature("Integração — Assets")
@@ -28,7 +27,8 @@ class AssetMultiTenantIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Isolamento multi-tenant")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("ADMIN vê apenas ativos da sua organização — isolamento entre orgs")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] ADMIN vê apenas ativos da sua organização — isolamento entre orgs")
   void adminNaoVeAtivosDeOutraOrganizacao() {
     // Cria ativo na organização principal (Tech Corp)
     criarAtivo("ORG-A-ASSET-001");
@@ -57,7 +57,7 @@ class AssetMultiTenantIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Isolamento multi-tenant")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("GESTOR vê apenas ativos da sua unidade")
+  @DisplayName("[INTEGRACAO][ASSET] GESTOR vê apenas ativos da sua unidade")
   void gestorVeApenasAtivosDaSuaUnidade() {
     criarAtivo("UNIT-A-ASSET-001");
 
@@ -77,11 +77,13 @@ class AssetMultiTenantIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Controle de acesso")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("GESTOR não pode ver ativo de outra unidade por ID — retorna 403")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] GESTOR não pode ver ativo de outra unidade por ID — retorna 403")
   void gestorNaoPodeVerAtivoDeOutraUnidade() {
     Unit outraUnidade = testDataHelper.criarUnidade("Filial RJ", organizacao);
     Asset ativoOutraUnidade =
-        testDataHelper.criarAtivo("OTHER-UNIT-ASSET", AssetType.NOTEBOOK, organizacao, outraUnidade);
+        testDataHelper.criarAtivo(
+            "OTHER-UNIT-ASSET", AssetType.NOTEBOOK, organizacao, outraUnidade);
 
     String token = loginComoGestor(); // GESTOR da unidade "Sede"
     MockMvcResponse response = apiClient.buscarAtivo(ativoOutraUnidade.getId(), token);

@@ -21,13 +21,10 @@ import java.lang.reflect.Field;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -56,7 +53,8 @@ class TransferConcurrencyServiceTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("TS19 - executeWithAssetLock aplica lock pessimista e executa operação")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TS19 - executeWithAssetLock aplica lock pessimista e executa operação")
   void ts19ExecuteWithAssetLockAplicaLockPessimistaEExecutaOperacao() {
     Asset asset = mock(Asset.class);
     AtomicBoolean executed = new AtomicBoolean(false);
@@ -70,7 +68,7 @@ class TransferConcurrencyServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TS20 - executeWithAssetLock falha quando assetId é nulo")
+  @DisplayName("[INTEGRACAO][ASSET] TS20 - executeWithAssetLock falha quando assetId é nulo")
   void ts20ExecuteWithAssetLockFalhaQuandoAssetIdENulo() {
     assertThatThrownBy(() -> service.executeWithAssetLock(null, () -> {}))
         .isInstanceOf(IllegalArgumentException.class)
@@ -79,7 +77,8 @@ class TransferConcurrencyServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TS21 - executeWithAssetLock lança NotFoundException para ativo inexistente")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TS21 - executeWithAssetLock lança NotFoundException para ativo inexistente")
   void ts21ExecuteWithAssetLockLancaNotFoundParaAtivoInexistente() {
     when(assetRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -98,4 +97,3 @@ class TransferConcurrencyServiceTest {
     }
   }
 }
-

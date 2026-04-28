@@ -58,13 +58,15 @@ public class AuthMfaSteps {
   // AÇÕES — RATE LIMIT DE MFA
   // =========================================================
 
-  @Quando("verifico MFA com código {string} para o userId {long} a partir do IP {string} por {int} tentativas")
+  @Quando(
+      "verifico MFA com código {string} para o userId {long} a partir do IP {string} por {int} tentativas")
   public void verificoMfaComMesmoIpPorTentativas(
       String code, Long userId, String ip, int tentativas) {
     setLastResponse(executarTentativasMfa(code, userId, ip, tentativas));
   }
 
-  @Quando("verifico MFA com código inválido {string} para o usuário salvo a partir do IP {string} por {int} tentativas")
+  @Quando(
+      "verifico MFA com código inválido {string} para o usuário salvo a partir do IP {string} por {int} tentativas")
   public void verificoMfaComMesmoIpPorTentativasUsandoUsuarioSalvo(
       String code, String ip, int tentativas) {
     setLastResponse(executarTentativasMfa(code, authContext.getMfaUserId(), ip, tentativas));

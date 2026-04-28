@@ -1,8 +1,8 @@
 package com.portfolio.assetmanagement.bdd.steps.maintenance;
 
 /**
- * Context compartilhado entre os diferentes Steps de Maintenance.
- * Mantém o estado (ativos, ID da manutenção) necessário ao longo do cenário.
+ * Context compartilhado entre os diferentes Steps de Maintenance. Mantém o estado (ativos, ID da
+ * manutenção) necessário ao longo do cenário.
  */
 public class MaintenanceStepsContext {
 

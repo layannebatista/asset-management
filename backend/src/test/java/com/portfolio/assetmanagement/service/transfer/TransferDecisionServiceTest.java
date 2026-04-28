@@ -34,13 +34,10 @@ import io.qameta.allure.SeverityLevel;
 import io.qameta.allure.Story;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -90,7 +87,7 @@ class TransferDecisionServiceTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("TS04 - Aprova transferência pendente com lock, save e audit")
+  @DisplayName("[INTEGRACAO][ASSET] TS04 - Aprova transferência pendente com lock, save e audit")
   void ts04AprovaTransferenciaPendente() {
     TransferRequest transfer = buildTransfer(TransferStatus.PENDING, 10L, 20L, 1L, true);
     User approver = mock(User.class);
@@ -107,12 +104,18 @@ class TransferDecisionServiceTest {
     verify(repository).save(transfer);
     verify(auditService)
         .registerEvent(
-            eq(AuditEventType.TRANSFER_APPROVED), eq(99L), eq(1L), eq(10L), eq(55L), eq("Transferência aprovada"));
+            eq(AuditEventType.TRANSFER_APPROVED),
+            eq(99L),
+            eq(1L),
+            eq(10L),
+            eq(55L),
+            eq("Transferência aprovada"));
   }
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TS05 - Rejeita transferência pendente e devolve ativo para AVAILABLE")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TS05 - Rejeita transferência pendente e devolve ativo para AVAILABLE")
   void ts05RejeitaTransferenciaPendenteEDevolveAtivoParaAvailable() {
     TransferRequest transfer = buildTransfer(TransferStatus.PENDING, 10L, 20L, 1L, true);
     User approver = mock(User.class);
@@ -132,7 +135,7 @@ class TransferDecisionServiceTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("TS06 - GESTOR fora do escopo não pode aprovar transferência")
+  @DisplayName("[INTEGRACAO][ASSET] TS06 - GESTOR fora do escopo não pode aprovar transferência")
   void ts06GestorForaDoEscopoNaoPodeAprovarTransferencia() {
     TransferRequest transfer = buildTransfer(TransferStatus.PENDING, 10L, 20L, 1L, true);
     when(repository.findById(55L)).thenReturn(Optional.of(transfer));
@@ -142,14 +145,15 @@ class TransferDecisionServiceTest {
 
     assertThatThrownBy(() -> service.approve(55L, "Sem acesso"))
         .isInstanceOf(ForbiddenException.class)
-         .hasMessageContaining("Acesso negado à transferência");
+        .hasMessageContaining("Acesso negado à transferência");
 
     verify(repository, never()).save(any());
   }
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TS07 - Rejeitar transferência inexistente lança NotFoundException")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TS07 - Rejeitar transferência inexistente lança NotFoundException")
   void ts07RejeitarTransferenciaInexistenteLancaNotFound() {
     when(repository.findById(999L)).thenReturn(Optional.empty());
     when(loggedUser.isAdmin()).thenReturn(true);
@@ -160,7 +164,11 @@ class TransferDecisionServiceTest {
   }
 
   private TransferRequest buildTransfer(
-      TransferStatus status, Long fromUnitId, Long toUnitId, Long orgId, boolean assignedToRequester) {
+      TransferStatus status,
+      Long fromUnitId,
+      Long toUnitId,
+      Long orgId,
+      boolean assignedToRequester) {
     Organization org = mock(Organization.class);
     when(org.getId()).thenReturn(orgId);
 
@@ -188,4 +196,3 @@ class TransferDecisionServiceTest {
     return transfer;
   }
 }
-

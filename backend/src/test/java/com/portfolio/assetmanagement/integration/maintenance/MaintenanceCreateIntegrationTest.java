@@ -13,7 +13,6 @@ import io.restassured.module.mockmvc.response.MockMvcResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Epic("Backend")
@@ -28,7 +27,8 @@ class MaintenanceCreateIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Criação de manutenção")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("MI01 - ADMIN cria manutenção com dados válidos — retorna 201 e status REQUESTED")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] MI01 - ADMIN cria manutenção com dados válidos — retorna 201 e status REQUESTED")
   void mi01AdminCriaManutencaoComSucesso() {
     var ativo = criarAtivo("ASSET-MI01");
     String token = loginComoAdmin();
@@ -47,7 +47,7 @@ class MaintenanceCreateIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Criação de manutenção")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("MI02 - GESTOR cria manutenção na sua unidade — retorna 201")
+  @DisplayName("[INTEGRACAO][ASSET] MI02 - GESTOR cria manutenção na sua unidade — retorna 201")
   void mi02GestorCriaManutencaoNaSuaUnidade() {
     var ativo = criarAtivo("ASSET-MI02");
     String token = loginComoGestor();
@@ -62,7 +62,7 @@ class MaintenanceCreateIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Controle de acesso")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("MI03 - OPERADOR não pode criar manutenção — retorna 403")
+  @DisplayName("[INTEGRACAO][ASSET] MI03 - OPERADOR não pode criar manutenção — retorna 403")
   void mi03OperadorNaoPodeCriarManutencao() {
     var ativo = criarAtivo("ASSET-MI03");
     String token = loginComoOperador();
@@ -76,14 +76,15 @@ class MaintenanceCreateIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Controle de acesso")
   @Severity(SeverityLevel.BLOCKER)
-  @DisplayName("MI04 - Criação sem autenticação — retorna 401")
+  @DisplayName("[INTEGRACAO][ASSET] MI04 - Criação sem autenticação — retorna 401")
   void mi04CriacaoSemAutenticacaoRetorna401() {
     var ativo = criarAtivo("ASSET-MI04");
 
     MockMvcResponse response =
-        apiClient.postSemToken("/maintenance", java.util.Map.of(
-            "assetId", ativo.getId(),
-            "description", "Descrição longa o suficiente"));
+        apiClient.postSemToken(
+            "/maintenance",
+            java.util.Map.of(
+                "assetId", ativo.getId(), "description", "Descrição longa o suficiente"));
 
     assertThat(response.statusCode()).isEqualTo(401);
   }
@@ -91,7 +92,7 @@ class MaintenanceCreateIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Criação de manutenção")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("MI05 - Ativo inexistente — retorna 404")
+  @DisplayName("[INTEGRACAO][ASSET] MI05 - Ativo inexistente — retorna 404")
   void mi05AtivoInexistenteRetorna404() {
     String token = loginComoAdmin();
 
@@ -104,7 +105,7 @@ class MaintenanceCreateIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Criação de manutenção")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("MI06 - Ativo já em manutenção ativa — retorna 400")
+  @DisplayName("[INTEGRACAO][ASSET] MI06 - Ativo já em manutenção ativa — retorna 400")
   void mi06AtivoJaEmManutencaoRetorna400() {
     var ativo = criarAtivo("ASSET-MI06");
     String token = loginComoAdmin();
@@ -120,7 +121,8 @@ class MaintenanceCreateIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Criação de manutenção")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("MI07 - Descrição em branco — retorna 400 com mensagem de validação")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] MI07 - Descrição em branco — retorna 400 com mensagem de validação")
   void mi07DescricaoEmBrancoRetorna400() {
     var ativo = criarAtivo("ASSET-MI07");
     String token = loginComoAdmin();
@@ -133,7 +135,8 @@ class MaintenanceCreateIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Criação de manutenção")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("MI08 - Ativo aposentado (RETIRED) não aceita manutenção — retorna 400")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] MI08 - Ativo aposentado (RETIRED) não aceita manutenção — retorna 400")
   void mi08AtivoAposentadoNaoAceitaManutencao() {
     var ativo = testDataHelper.criarAtivoAposentado(organizacao, unidade);
     String token = loginComoAdmin();
@@ -147,7 +150,8 @@ class MaintenanceCreateIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Criação de manutenção")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("MI09 - Ativo em transferência (IN_TRANSFER) não aceita manutenção — retorna 400")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] MI09 - Ativo em transferência (IN_TRANSFER) não aceita manutenção — retorna 400")
   void mi09AtivoEmTransferenciaNaoAceitaManutencao() {
     var ativo = testDataHelper.criarAtivoEmTransferencia(organizacao, unidade);
     String token = loginComoAdmin();
@@ -158,4 +162,3 @@ class MaintenanceCreateIntegrationTest extends BaseIntegrationTest {
     assertThat(response.statusCode()).isEqualTo(400);
   }
 }
-

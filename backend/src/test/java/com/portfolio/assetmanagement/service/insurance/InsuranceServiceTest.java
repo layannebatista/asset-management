@@ -8,8 +8,8 @@ import static org.mockito.Mockito.when;
 import com.portfolio.assetmanagement.application.insurance.dto.InsuranceCreateDTO;
 import com.portfolio.assetmanagement.application.insurance.service.InsuranceService;
 import com.portfolio.assetmanagement.application.whatsapp.service.WhatsAppService;
-import com.portfolio.assetmanagement.domain.organization.entity.Organization;
 import com.portfolio.assetmanagement.domain.insurance.entity.AssetInsurance;
+import com.portfolio.assetmanagement.domain.organization.entity.Organization;
 import com.portfolio.assetmanagement.infrastructure.persistence.asset.repository.AssetRepository;
 import com.portfolio.assetmanagement.infrastructure.persistence.insurance.repository.InsuranceRepository;
 import com.portfolio.assetmanagement.infrastructure.persistence.user.repository.UserRepository;
@@ -21,9 +21,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -43,11 +41,11 @@ class InsuranceServiceTest {
   @InjectMocks private InsuranceService service;
 
   @Test
-  @DisplayName("INS-S01 - nova apólice desativa apólice anterior ativa")
+  @DisplayName("[INTEGRACAO][ASSET] INS-S01 - nova apólice desativa apólice anterior ativa")
   void novaApoliceDesativaAnteriorAtiva() {
     Long assetId = 10L;
 
-        Organization organization = organizationWithId(1L);
+    Organization organization = organizationWithId(1L);
     com.portfolio.assetmanagement.domain.unit.entity.Unit unit =
         new com.portfolio.assetmanagement.domain.unit.entity.Unit("Sede", organization, true);
     com.portfolio.assetmanagement.domain.asset.entity.Asset asset =
@@ -89,16 +87,15 @@ class InsuranceServiceTest {
     verify(insuranceRepository).save(old);
   }
 
-    private Organization organizationWithId(Long id) {
-        Organization organization = new Organization("Org " + id);
-        try {
-            Field field = Organization.class.getDeclaredField("id");
-            field.setAccessible(true);
-            field.set(organization, id);
-            return organization;
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException("Falha ao preparar Organization de teste", e);
+  private Organization organizationWithId(Long id) {
+    Organization organization = new Organization("Org " + id);
+    try {
+      Field field = Organization.class.getDeclaredField("id");
+      field.setAccessible(true);
+      field.set(organization, id);
+      return organization;
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException("Falha ao preparar Organization de teste", e);
     }
-    }
-
+  }
 }

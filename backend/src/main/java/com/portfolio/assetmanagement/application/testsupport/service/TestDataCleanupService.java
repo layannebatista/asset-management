@@ -23,7 +23,8 @@ public class TestDataCleanupService {
 
   private void runScript(String classpathLocation) {
     ResourceDatabasePopulator populator =
-        new ResourceDatabasePopulator(false, false, "UTF-8", new ClassPathResource(classpathLocation));
+        new ResourceDatabasePopulator(
+            false, false, "UTF-8", new ClassPathResource(classpathLocation));
     populator.execute(dataSource);
   }
 }

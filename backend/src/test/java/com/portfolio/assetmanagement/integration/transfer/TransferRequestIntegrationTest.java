@@ -17,7 +17,6 @@ import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 
 @Epic("Backend")
 @Feature("Integração — Transfer")
@@ -33,7 +32,8 @@ class TransferRequestIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Solicitação")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("TRI01 - ADMIN solicita transferência com sucesso e recebe status PENDING")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TRI01 - ADMIN solicita transferência com sucesso e recebe status PENDING")
   void tri01AdminSolicitaTransferenciaComSucesso() {
     Asset asset = criarAtivo("TRANSFER-REQ-01");
     Unit destino = criarOutraUnidade("Filial TRI01");
@@ -54,7 +54,7 @@ class TransferRequestIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Solicitação")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("TRI02 - GESTOR solicita transferência com sucesso")
+  @DisplayName("[INTEGRACAO][ASSET] TRI02 - GESTOR solicita transferência com sucesso")
   void tri02GestorSolicitaTransferenciaComSucesso() {
     Asset asset = criarAtivo("TRANSFER-REQ-02");
     Unit destino = criarOutraUnidade("Filial TRI02");
@@ -70,7 +70,7 @@ class TransferRequestIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Solicitação")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("TRI03 - OPERADOR não pode solicitar transferência")
+  @DisplayName("[INTEGRACAO][ASSET] TRI03 - OPERADOR não pode solicitar transferência")
   void tri03OperadorNaoPodeSolicitarTransferencia() {
     Asset asset = criarAtivo("TRANSFER-REQ-03");
     Unit destino = criarOutraUnidade("Filial TRI03");
@@ -85,7 +85,7 @@ class TransferRequestIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Solicitação")
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("TRI04 - Solicitação sem autenticação retorna 401")
+  @DisplayName("[INTEGRACAO][ASSET] TRI04 - Solicitação sem autenticação retorna 401")
   void tri04SolicitacaoSemAutenticacaoRetorna401() {
     Asset asset = criarAtivo("TRANSFER-REQ-04");
     Unit destino = criarOutraUnidade("Filial TRI04");
@@ -110,7 +110,7 @@ class TransferRequestIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Solicitação")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TRI05 - Solicitação para a mesma unidade retorna 400")
+  @DisplayName("[INTEGRACAO][ASSET] TRI05 - Solicitação para a mesma unidade retorna 400")
   void tri05SolicitacaoParaMesmaUnidadeRetorna400() {
     Asset asset = criarAtivo("TRANSFER-REQ-05");
 
@@ -124,7 +124,7 @@ class TransferRequestIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Solicitação")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TRI06 - Ativo inexistente retorna 404")
+  @DisplayName("[INTEGRACAO][ASSET] TRI06 - Ativo inexistente retorna 404")
   void tri06AtivoInexistenteRetorna404() {
     Unit destino = criarOutraUnidade("Filial TRI06");
 
@@ -138,12 +138,13 @@ class TransferRequestIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Solicitação")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TRI07 - Unidade destino inexistente retorna 404")
+  @DisplayName("[INTEGRACAO][ASSET] TRI07 - Unidade destino inexistente retorna 404")
   void tri07UnidadeDestinoInexistenteRetorna404() {
     Asset asset = criarAtivo("TRANSFER-REQ-07");
 
     MockMvcResponse response =
-        apiClient.solicitarTransferencia(asset.getId(), 99999L, "Destino ausente", loginComoAdmin());
+        apiClient.solicitarTransferencia(
+            asset.getId(), 99999L, "Destino ausente", loginComoAdmin());
 
     assertThat(response.statusCode()).isEqualTo(404);
   }
@@ -151,7 +152,8 @@ class TransferRequestIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Solicitação")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TRI08 - Ativo com transferência ativa não aceita nova solicitação")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] TRI08 - Ativo com transferência ativa não aceita nova solicitação")
   void tri08AtivoComTransferenciaAtivaNaoAceitaNovaSolicitacao() {
     Asset asset = criarAtivo("TRANSFER-REQ-08");
     Unit destinoA = criarOutraUnidade("Filial TRI08-A");
@@ -170,13 +172,14 @@ class TransferRequestIntegrationTest extends BaseIntegrationTest {
   @Test
   @Story("Solicitação")
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("TRI09 - Ativo em manutenção não pode ser transferido")
+  @DisplayName("[INTEGRACAO][ASSET] TRI09 - Ativo em manutenção não pode ser transferido")
   void tri09AtivoEmManutencaoNaoPodeSerTransferido() {
     Asset asset = testDataHelper.criarAtivoEmManutencao(organizacao, unidade);
     Unit destino = criarOutraUnidade("Filial TRI09");
 
     MockMvcResponse response =
-        apiClient.solicitarTransferencia(asset.getId(), destino.getId(), "Bloqueio por manutenção", loginComoAdmin());
+        apiClient.solicitarTransferencia(
+            asset.getId(), destino.getId(), "Bloqueio por manutenção", loginComoAdmin());
 
     assertThat(response.statusCode()).isEqualTo(400);
   }

@@ -14,9 +14,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -31,7 +29,8 @@ class AssetCategoryServiceTest {
   @InjectMocks private AssetCategoryService service;
 
   @Test
-  @DisplayName("CAT-S01 - criar categoria com nome duplicado lança BusinessException")
+  @DisplayName(
+      "[INTEGRACAO][ASSET] CAT-S01 - criar categoria com nome duplicado lança BusinessException")
   void criarCategoriaDuplicadaLancaBusinessException() {
     when(repository.existsByNameIgnoreCase("TI")).thenReturn(true);
 
@@ -41,7 +40,7 @@ class AssetCategoryServiceTest {
   }
 
   @Test
-  @DisplayName("CAT-S02 - update com ID inexistente lança NotFoundException")
+  @DisplayName("[INTEGRACAO][ASSET] CAT-S02 - update com ID inexistente lança NotFoundException")
   void updateInexistenteLancaNotFound() {
     when(repository.findById(99L)).thenReturn(Optional.empty());
 
@@ -51,7 +50,7 @@ class AssetCategoryServiceTest {
   }
 
   @Test
-  @DisplayName("CAT-S03 - delete lógico salva categoria desativada")
+  @DisplayName("[INTEGRACAO][ASSET] CAT-S03 - delete lógico salva categoria desativada")
   void deleteLogicoSalvaCategoriaDesativada() {
     AssetCategory category = new AssetCategory("HW", "Hardware");
     when(repository.findById(1L)).thenReturn(Optional.of(category));

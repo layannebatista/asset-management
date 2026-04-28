@@ -39,8 +39,8 @@ public class EmailService {
   /**
    * Envia o e-mail de ativação de conta com o link de primeiro acesso.
    *
-   * <p>O link expira em 24 horas conforme configurado em {@code TOKEN_EXPIRATION_SECONDS} no
-   * {@link com.portfolio.assetmanagement.application.user.service.UserActivationService}.
+   * <p>O link expira em 24 horas conforme configurado em {@code TOKEN_EXPIRATION_SECONDS} no {@link
+   * com.portfolio.assetmanagement.application.user.service.UserActivationService}.
    *
    * @param toEmail endereço de destino
    * @param userName nome do usuário para personalizar o e-mail
@@ -75,9 +75,7 @@ public class EmailService {
 
       log.info("E-mail enviado com sucesso para: {}", to);
 
-    } catch (MessagingException
-        | java.io.UnsupportedEncodingException
-        | MailException e) {
+    } catch (MessagingException | java.io.UnsupportedEncodingException | MailException e) {
 
       log.error("Falha ao enviar e-mail para {}: {}", to, e.getMessage(), e);
 

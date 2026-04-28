@@ -12,15 +12,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 /**
  * Steps genéricos para automação dos cenários BLOCKER/CRITICAL dos módulos novos.
  *
- * <p>Este step evita duplicação entre módulos mantendo o mesmo padrão de autenticação
- * e execução HTTP usado no restante da suíte BDD.
+ * <p>Este step evita duplicação entre módulos mantendo o mesmo padrão de autenticação e execução
+ * HTTP usado no restante da suíte BDD.
  */
 public class ModuleCriticalSecuritySteps {
 
   @Autowired private ApiClient apiClient;
   @Autowired private ScenarioContext context;
 
-  @Quando("acesso o endpoint de sucesso do módulo {string} autenticado como {string} com senha {string}")
+  @Quando(
+      "acesso o endpoint de sucesso do módulo {string} autenticado como {string} com senha {string}")
   public void acessoEndpointSucessoAutenticado(String modulo, String email, String senha) {
     String token = autenticar(email, senha);
     RequestPlan plan = successPlan(modulo);
@@ -28,7 +29,8 @@ public class ModuleCriticalSecuritySteps {
     context.setLastResponse(response);
   }
 
-  @Quando("acesso o endpoint restrito do módulo {string} autenticado como {string} com senha {string}")
+  @Quando(
+      "acesso o endpoint restrito do módulo {string} autenticado como {string} com senha {string}")
   public void acessoEndpointRestritoAutenticado(String modulo, String email, String senha) {
     String token = autenticar(email, senha);
     RequestPlan plan = forbiddenPlan(modulo);
@@ -39,7 +41,8 @@ public class ModuleCriticalSecuritySteps {
   @Quando("acesso o endpoint de sucesso do módulo {string} sem autenticação")
   public void acessoEndpointSucessoSemAutenticacao(String modulo) {
     RequestPlan plan = successPlan(modulo);
-    MockMvcResponse response = apiClient.requestWithoutAuth(plan.method(), plan.path(), plan.body());
+    MockMvcResponse response =
+        apiClient.requestWithoutAuth(plan.method(), plan.path(), plan.body());
     context.setLastResponse(response);
   }
 
@@ -47,7 +50,8 @@ public class ModuleCriticalSecuritySteps {
   public void acessoEndpointSucessoComTokenInvalido(String modulo, String tokenInvalido) {
     RequestPlan plan = successPlan(modulo);
     MockMvcResponse response =
-        apiClient.requestWithRawAuth(plan.method(), plan.path(), plan.body(), "Bearer " + tokenInvalido);
+        apiClient.requestWithRawAuth(
+            plan.method(), plan.path(), plan.body(), "Bearer " + tokenInvalido);
     context.setLastResponse(response);
   }
 
@@ -72,7 +76,8 @@ public class ModuleCriticalSecuritySteps {
       case "organization" -> new RequestPlan("GET", "/organizations", null);
       case "unit" -> new RequestPlan("GET", "/units/" + context.getId("organizacaoId"), null);
       case "user" -> new RequestPlan("POST", "/users", userBody());
-      default -> throw new IllegalArgumentException("Módulo não suportado no plano de sucesso: " + modulo);
+      default ->
+          throw new IllegalArgumentException("Módulo não suportado no plano de sucesso: " + modulo);
     };
   }
 
@@ -95,7 +100,8 @@ public class ModuleCriticalSecuritySteps {
       case "organization" -> new RequestPlan("GET", "/organizations", null);
       case "unit" -> new RequestPlan("GET", "/units/" + context.getId("organizacaoId"), null);
       case "user" -> new RequestPlan("POST", "/users", userBody());
-      default -> throw new IllegalArgumentException("Módulo não suportado no plano restrito: " + modulo);
+      default ->
+          throw new IllegalArgumentException("Módulo não suportado no plano restrito: " + modulo);
     };
   }
 

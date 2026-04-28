@@ -31,13 +31,7 @@ public class AuthSetupSteps {
     Unit unit = testDataHelper.obterUnidade(context.getId("unidadeId"));
     User user =
         testDataHelper.criarUsuarioComStatus(
-            email,
-            senha,
-            UserRole.valueOf(role),
-            org,
-            unit,
-            UserStatus.valueOf(status),
-            null);
+            email, senha, UserRole.valueOf(role), org, unit, UserStatus.valueOf(status), null);
     context.setId("usuarioId_" + email, user.getId());
   }
 
@@ -61,9 +55,7 @@ public class AuthSetupSteps {
     authContext.setRefreshToken(token);
     authContext.setPreviousRefreshToken(token);
 
-    assertThat(token)
-        .as("Refresh token nao encontrado para uso nos proximos steps")
-        .isNotBlank();
+    assertThat(token).as("Refresh token nao encontrado para uso nos proximos steps").isNotBlank();
   }
 
   @E("salvo o refresh token retornado como secundário")
@@ -76,8 +68,10 @@ public class AuthSetupSteps {
   @E("que o usuário com email {string} é desativado")
   public void queOUsuarioComEmailEDesativado(String email) {
     Long userId = context.getId("usuarioId_" + email);
-    User user = userRepository.findById(userId)
-        .orElseThrow(() -> new AssertionError("Usuário não encontrado: " + email));
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new AssertionError("Usuário não encontrado: " + email));
     user.inactivate();
     userRepository.save(user);
   }

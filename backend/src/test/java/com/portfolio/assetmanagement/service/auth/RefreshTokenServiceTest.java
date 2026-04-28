@@ -18,13 +18,10 @@ import java.lang.reflect.Field;
 import java.time.Instant;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.Tag;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -52,7 +49,7 @@ class RefreshTokenServiceTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("AU09 - generate cria e persiste refresh token")
+  @DisplayName("[INTEGRACAO][ASSET] AU09 - generate cria e persiste refresh token")
   void au09GenerateCriaEPersisteRefreshToken() {
     when(repository.save(anyToken())).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -66,7 +63,7 @@ class RefreshTokenServiceTest {
 
   @Test
   @Severity(SeverityLevel.CRITICAL)
-  @DisplayName("AU10 - validateAndRotate revoga token válido")
+  @DisplayName("[INTEGRACAO][ASSET] AU10 - validateAndRotate revoga token válido")
   void au10ValidateAndRotateRevogaTokenValido() {
     RefreshToken token = new RefreshToken(10L, 3600);
     when(repository.findByToken(token.getToken())).thenReturn(Optional.of(token));
@@ -79,7 +76,7 @@ class RefreshTokenServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("AU11 - validateAndRotate falha para token inexistente")
+  @DisplayName("[INTEGRACAO][ASSET] AU11 - validateAndRotate falha para token inexistente")
   void au11ValidateAndRotateFalhaParaTokenInexistente() {
     when(repository.findByToken("nao-existe")).thenReturn(Optional.empty());
 
@@ -90,7 +87,7 @@ class RefreshTokenServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("AU12 - revokeAll delega revogação para o repositório")
+  @DisplayName("[INTEGRACAO][ASSET] AU12 - revokeAll delega revogação para o repositório")
   void au12RevokeAllDelegaRevogacaoParaORepositorio() {
     service.revokeAll(99L);
 
@@ -99,7 +96,7 @@ class RefreshTokenServiceTest {
 
   @Test
   @Severity(SeverityLevel.NORMAL)
-  @DisplayName("AU13 - purgeExpired remove tokens expirados com Instant.now")
+  @DisplayName("[INTEGRACAO][ASSET] AU13 - purgeExpired remove tokens expirados com Instant.now")
   void au13PurgeExpiredRemoveTokensExpirados() {
     service.purgeExpired();
 

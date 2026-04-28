@@ -12,9 +12,9 @@ import io.restassured.module.mockmvc.response.MockMvcResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.ActiveProfiles;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -22,16 +22,16 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 /**
  * Classe base para testes de integração da camada HTTP.
  *
- * <p>Utiliza MockMvc via RestAssuredMockMvc (WebEnvironment.MOCK) — sem porta HTTP real.
- * Os filtros de segurança JWT são executados normalmente neste modo.
+ * <p>Utiliza MockMvc via RestAssuredMockMvc (WebEnvironment.MOCK) — sem porta HTTP real. Os filtros
+ * de segurança JWT são executados normalmente neste modo.
  *
  * <p>O perfil "test" é complementado via DynamicPropertySource para usar PostgreSQL real com
  * Testcontainers e Flyway habilitado, aproximando o comportamento de produção.
  *
  * <p>Cada teste parte de um banco limpo via cleanDatabase() no @BeforeEach.
  *
- * <p>Dados comuns (org/unidade/usuários/ativos) são criados via TestDataHelper,
- * que escreve diretamente no repositório sem passar pelos services (que exigem JWT).
+ * <p>Dados comuns (org/unidade/usuários/ativos) são criados via TestDataHelper, que escreve
+ * diretamente no repositório sem passar pelos services (que exigem JWT).
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles("test")

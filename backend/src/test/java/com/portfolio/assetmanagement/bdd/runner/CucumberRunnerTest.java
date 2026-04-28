@@ -11,14 +11,14 @@ import org.junit.platform.suite.api.Suite;
 /**
  * Runner oficial do Cucumber — descoberto automaticamente pelo Maven Surefire.
  *
- * <p>O nome "CucumberRunnerTest" segue a convenção *Test, garantindo que o Surefire
- * inclua esta classe na execução de `mvn verify` sem configuração adicional.
+ * <p>O nome "CucumberRunnerTest" segue a convenção *Test, garantindo que o Surefire inclua esta
+ * classe na execução de `mvn verify` sem configuração adicional.
  *
- * <p>DIFERENÇA em relação ao CucumberTestSuite: aquele usa sufixo "Suite" que o
- * Surefire ignora por padrão. Este usa sufixo "Test" e é descoberto automaticamente.
+ * <p>DIFERENÇA em relação ao CucumberTestSuite: aquele usa sufixo "Suite" que o Surefire ignora por
+ * padrão. Este usa sufixo "Test" e é descoberto automaticamente.
  *
- * <p>Todas as features em src/test/resources/features/ são descobertas automaticamente,
- * incluindo maintenance/ e asset/.
+ * <p>Todas as features em src/test/resources/features/ são descobertas automaticamente, incluindo
+ * maintenance/ e asset/.
  */
 @Suite
 @IncludeEngines("cucumber")

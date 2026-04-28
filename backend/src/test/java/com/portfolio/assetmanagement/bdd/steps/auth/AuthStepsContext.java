@@ -1,8 +1,8 @@
 package com.portfolio.assetmanagement.bdd.steps.auth;
 
 /**
- * Context compartilhado entre os diferentes Steps de Auth.
- * Mantém o estado (tokens, IDs) necessário ao longo do cenário.
+ * Context compartilhado entre os diferentes Steps de Auth. Mantém o estado (tokens, IDs) necessário
+ * ao longo do cenário.
  */
 public class AuthStepsContext {
 

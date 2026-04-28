@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.portfolio.assetmanagement.bdd.client.ApiClient;
 import com.portfolio.assetmanagement.bdd.context.ScenarioContext;
-import io.cucumber.java.pt.E;
 import io.cucumber.java.pt.Então;
 import io.cucumber.java.pt.Quando;
 import io.restassured.module.mockmvc.response.MockMvcResponse;
@@ -77,7 +76,8 @@ public class AuthRefreshSteps {
   // AÇÕES — RATE LIMIT DE REFRESH
   // =========================================================
 
-  @Quando("renovo a sessão com token inválido {string} a partir do IP {string} por {int} tentativas")
+  @Quando(
+      "renovo a sessão com token inválido {string} a partir do IP {string} por {int} tentativas")
   public void renovoSessaoComMesmoIpPorTentativas(String token, String ip, int tentativas) {
     setLastResponse(executarTentativasRefresh(token, ip, tentativas));
   }
