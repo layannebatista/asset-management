@@ -247,6 +247,7 @@ jobs:
             echo "MAIL_USERNAME=ci@test.com"
             echo "MAIL_PASSWORD=ci-password"
             echo "MAIL_FROM=ci@test.com"
+            echo "APP_RATE_LIMIT_ENABLED=false"
             echo "TEST_DATA_CLEANUP_KEY=ci-cleanup-key"
           } >> .env
 

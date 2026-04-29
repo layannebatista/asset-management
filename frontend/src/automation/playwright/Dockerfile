@@ -9,7 +9,7 @@ WORKDIR /app
 
 # ✅ Otimizações de memória e performance
 ENV NODE_OPTIONS="--max-old-space-size=2048 --max-http-header-size=16384"
-ENV NODE_ENV=production
+ENV NODE_ENV=development
 ENV PWHEADLESS=true
 ENV ALLURE_RESULTS_DIR=/allure-results
 

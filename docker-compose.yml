@@ -475,7 +475,7 @@ services:
       TEST_DATA_CLEANUP_KEY: ${TEST_DATA_CLEANUP_KEY:-cleanup-local-key}
       # Otimizações de performance
       NODE_OPTIONS: "--max-old-space-size=2048 --max-http-header-size=16384"
-      NODE_ENV: production
+      NODE_ENV: test
     command: ["npm", "test"]
     volumes:
       - ./allure-results:/allure-results

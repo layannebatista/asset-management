@@ -130,6 +130,8 @@ app:
     cleanup:
       enabled: ${TEST_DATA_CLEANUP_ENABLED:false}
       key: ${TEST_DATA_CLEANUP_KEY:}
+  rate-limit:
+    enabled: ${APP_RATE_LIMIT_ENABLED:true}
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
 logging:

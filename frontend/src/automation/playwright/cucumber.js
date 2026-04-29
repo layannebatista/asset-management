@@ -31,6 +31,7 @@ module.exports = {
     dryRun: false,
     failFast: false,
     parallel: 1, // 1 cenário por vez para economizar memória
+    retry: 1,
     retryTagFilter: '@flaky', // Retry apenas testes marcados como flaky
   },
 };
