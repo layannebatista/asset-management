@@ -19,7 +19,7 @@ class RateLimitFilterTest {
   @Test
   @DisplayName("[CONFIG][ASSET] U07 - limita login por IP após 10 tentativas")
   void limitaLoginPorIpAposDezTentativas() throws ServletException, IOException {
-    RateLimitFilter filter = new RateLimitFilter();
+    RateLimitFilter filter = new RateLimitFilter(true);
     MockHttpServletResponse response = new MockHttpServletResponse();
 
     for (int attempt = 0; attempt < 11; attempt++) {
