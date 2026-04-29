@@ -5,7 +5,7 @@
             "description": "",
             "item": [
                 {
-                    "id": "1ee355a0-7f97-414c-9f20-7c623ad4d7eb",
+                    "id": "59a08deb-e58d-4cfe-94f6-6dce4e908833",
                     "name": "Listar ativos (com filtros e paginação)",
                     "request": {
                         "name": "Listar ativos (com filtros e paginação)",
@@ -32,7 +32,7 @@
                     },
                     "response": [
                         {
-                            "id": "52adebe7-4969-4812-a83c-19f63a35e68c",
+                            "id": "365494d0-93be-4672-a131-ba50b48af8f5",
                             "name": "Lista paginada",
                             "originalRequest": {
                                 "url": {
@@ -70,7 +70,7 @@
                                     "value": "application/json"
                                 }
                             ],
-                            "body": "{\n  \"content\": [\n    {\n      \"id\": \"<integer>\",\n      \"assetTag\": \"<string>\",\n      \"type\": \"OTHER\",\n      \"model\": \"<string>\",\n      \"status\": \"IN_TRANSFER\",\n      \"organizationId\": \"<integer>\",\n      \"unitId\": \"<integer>\",\n      \"assignedUserId\": \"<integer>\"\n    },\n    {\n      \"id\": \"<integer>\",\n      \"assetTag\": \"<string>\",\n      \"type\": \"DESKTOP\",\n      \"model\": \"<string>\",\n      \"status\": \"IN_TRANSFER\",\n      \"organizationId\": \"<integer>\",\n      \"unitId\": \"<integer>\",\n      \"assignedUserId\": \"<integer>\"\n    }\n  ],\n  \"page\": \"<integer>\",\n  \"size\": \"<integer>\",\n  \"totalElements\": \"<integer>\",\n  \"totalPages\": \"<integer>\"\n}",
+                            "body": "{\n  \"content\": [\n    {\n      \"id\": \"<integer>\",\n      \"assetTag\": \"<string>\",\n      \"type\": \"NOTEBOOK\",\n      \"model\": \"<string>\",\n      \"status\": \"AVAILABLE\",\n      \"organizationId\": \"<integer>\",\n      \"unitId\": \"<integer>\",\n      \"assignedUserId\": \"<integer>\"\n    },\n    {\n      \"id\": \"<integer>\",\n      \"assetTag\": \"<string>\",\n      \"type\": \"NOTEBOOK\",\n      \"model\": \"<string>\",\n      \"status\": \"IN_MAINTENANCE\",\n      \"organizationId\": \"<integer>\",\n      \"unitId\": \"<integer>\",\n      \"assignedUserId\": \"<integer>\"\n    }\n  ],\n  \"page\": \"<integer>\",\n  \"size\": \"<integer>\",\n  \"totalElements\": \"<integer>\",\n  \"totalPages\": \"<integer>\"\n}",
                             "cookie": [],
                             "_postman_previewlanguage": "json"
                         }
@@ -85,7 +85,7 @@
                     "description": "",
                     "item": [
                         {
-                            "id": "6a26e4d6-ae5d-4a8d-93b8-67f217adc326",
+                            "id": "788eb2ef-4d45-4338-87b5-163629ad5ad2",
                             "name": "Buscar ativo por ID",
                             "request": {
                                 "name": "Buscar ativo por ID",
@@ -124,7 +124,7 @@
                             },
                             "response": [
                                 {
-                                    "id": "f5f4231a-2bd0-4f95-8eab-3151414ad161",
+                                    "id": "9246f5b7-8b6a-4faf-ab83-e618ab9a423a",
                                     "name": "Ativo encontrado",
                                     "originalRequest": {
                                         "url": {
@@ -174,12 +174,12 @@
                                             "value": "application/json"
                                         }
                                     ],
-                                    "body": "{\n  \"id\": \"<integer>\",\n  \"assetTag\": \"<string>\",\n  \"type\": \"TABLET\",\n  \"model\": \"<string>\",\n  \"status\": \"IN_MAINTENANCE\",\n  \"organizationId\": \"<integer>\",\n  \"unitId\": \"<integer>\",\n  \"assignedUserId\": \"<integer>\"\n}",
+                                    "body": "{\n  \"id\": \"<integer>\",\n  \"assetTag\": \"<string>\",\n  \"type\": \"NOTEBOOK\",\n  \"model\": \"<string>\",\n  \"status\": \"AVAILABLE\",\n  \"organizationId\": \"<integer>\",\n  \"unitId\": \"<integer>\",\n  \"assignedUserId\": \"<integer>\"\n}",
                                     "cookie": [],
                                     "_postman_previewlanguage": "json"
                                 },
                                 {
-                                    "id": "1728d4cc-785c-4076-bd7b-3dd8dcbb6269",
+                                    "id": "1b3bc980-c33f-418d-b3fb-60d5e1ecce4a",
                                     "name": "Não encontrado",
                                     "originalRequest": {
                                         "url": {
@@ -248,7 +248,7 @@
             "description": "",
             "item": [
                 {
-                    "id": "d1dbed28-c965-42b4-9137-e1ec80dac92f",
+                    "id": "20e15b6c-03f2-4a5b-8cff-e0d0ab115178",
                     "name": "Criar categoria",
                     "request": {
                         "name": "Criar categoria",
@@ -288,7 +288,7 @@
                     },
                     "response": [
                         {
-                            "id": "b110b674-212a-4780-a5f3-10cfe9346562",
+                            "id": "96e43714-de10-465e-b5cc-99e9703aff85",
                             "name": "Criada",
                             "originalRequest": {
                                 "url": {
@@ -350,7 +350,7 @@
                     }
                 },
                 {
-                    "id": "313104ae-774d-4497-a293-370016c372c4",
+                    "id": "68d34319-64d0-4ba6-b506-27b1877c5fba",
                     "name": "Listar categorias",
                     "request": {
                         "name": "Listar categorias",
@@ -377,7 +377,7 @@
                     },
                     "response": [
                         {
-                            "id": "e364d278-07c4-4875-9bfb-83f7aa5649f0",
+                            "id": "951a23ea-2a50-4e58-aea3-f08b2254dfa2",
                             "name": "Lista",
                             "originalRequest": {
                                 "url": {
@@ -440,7 +440,7 @@
                             "description": "",
                             "item": [
                                 {
-                                    "id": "643cef1c-77d7-4589-9395-04849b2b2e14",
+                                    "id": "e7346bb8-fcf5-4cdd-b40a-f9c82e7076fd",
                                     "name": "Dashboard executivo (ADMIN)",
                                     "request": {
                                         "name": "Dashboard executivo (ADMIN)",
@@ -469,7 +469,7 @@
                                     },
                                     "response": [
                                         {
-                                            "id": "a2797aff-2a06-4668-b328-5ae05548dab1",
+                                            "id": "07b7911a-6221-422f-b1bb-9063de76d784",
                                             "name": "Dados consolidados",
                                             "originalRequest": {
                                                 "url": {
@@ -514,7 +514,7 @@
                                             "_postman_previewlanguage": "json"
                                         },
                                         {
-                                            "id": "baaaf8c4-b3b3-49f1-8489-096e8fefa47a",
+                                            "id": "ffe56f7a-bfb0-4876-8d4a-941c741bbfd3",
                                             "name": "Acesso negado",
                                             "originalRequest": {
                                                 "url": {
@@ -579,7 +579,7 @@
         }
     ],
     "info": {
-        "_postman_id": "c0194dbc-b5ab-42b5-bd60-1f1fff61d47a",
+        "_postman_id": "d91768b4-62a1-45fc-9d81-01b32d6855f0",
         "name": "Enterprise Asset Management API",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
         "description": {

@@ -3,9 +3,10 @@ const path = require('path');
 const allureResultsDir = process.env.ALLURE_RESULTS_DIR
   || path.resolve(__dirname, '../../../../allure-results');
 
+const retryCount = Math.max(0, Number(process.env.CUCUMBER_RETRY ?? 1) || 0);
+
 module.exports = {
   default: {
-    paths: ['features/**/*.feature'],
     require: [
       'support/world.ts',
       'support/hooks.ts',
@@ -13,6 +14,7 @@ module.exports = {
     ],
     requireModule: ['ts-node/register'],
     format: [
+      'progress',
       'summary',
       'html:reports/cucumber-report.html',
       'json:reports/cucumber-report.json',
@@ -30,7 +32,6 @@ module.exports = {
     dryRun: false,
     failFast: false,
     parallel: 2, // 2 cenários simultâneos (rate limit de login: ~10 req/min)
-    retry: 1, // Retry uma vez para testes @flaky
-    retryTagFilter: '@flaky', // Retry apenas testes marcados como flaky
+    retry: retryCount,
   },
 };

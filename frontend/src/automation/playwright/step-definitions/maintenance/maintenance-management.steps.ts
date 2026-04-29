@@ -60,6 +60,29 @@ async function selectAssetByLabel(world: CustomWorld, assetTag: string) {
   await select.selectOption(value!);
 }
 
+function getCreateMaintenanceModal(world: CustomWorld) {
+  return world.page
+    .getByTestId('create-maintenance-modal')
+    .or(world.page.getByTestId('maintenance-modal'))
+    .first();
+}
+
+async function getCreateMaintenanceConfirmButton(world: CustomWorld) {
+  const modal = getCreateMaintenanceModal(world);
+  const createButton = modal.getByTestId('create-maintenance-confirm-btn').first();
+  if (await createButton.count().then((count) => count > 0)) {
+    return createButton;
+  }
+
+  const maintenanceButton = modal.getByTestId('maintenance-confirm-btn').first();
+  if (await maintenanceButton.count().then((count) => count > 0)) {
+    return maintenanceButton;
+  }
+
+  // Fallback estrito ao contexto de manutenção para evitar capturar ações de transferência.
+  return modal.getByRole('button', { name: /abrir ordem/i }).first();
+}
+
 function mockMaintenancePage(content: Array<Record<string, unknown>>) {
   return {
     content,
@@ -258,14 +281,17 @@ When('preencho a descrição da nova manutenção com um texto único', async fu
 });
 
 Then('o botão de abrir manutenção deve ficar desabilitado', async function (this: CustomWorld) {
-  await expect(this.page.getByTestId('create-maintenance-confirm-btn')).toBeDisabled();
+  await expect(getCreateMaintenanceModal(this)).toBeVisible({ timeout: 15000 });
+  const confirmButton = await getCreateMaintenanceConfirmButton(this);
+  await expect(confirmButton).toBeDisabled();
 });
 
 When('confirmo a nova manutenção', async function (this: CustomWorld) {
-  const confirmButton = this.page.getByTestId('create-maintenance-confirm-btn');
+  await expect(getCreateMaintenanceModal(this)).toBeVisible({ timeout: 15000 });
+  const confirmButton = await getCreateMaintenanceConfirmButton(this);
   await expect(confirmButton).toBeEnabled({ timeout: 15000 });
   await confirmButton.click();
-  await expect(this.page.getByTestId('create-maintenance-modal')).toBeHidden({
+  await expect(getCreateMaintenanceModal(this)).toBeHidden({
     timeout: 15000,
   });
   await waitForMaintenanceTable(this);

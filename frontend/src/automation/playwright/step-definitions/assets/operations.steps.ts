@@ -3,6 +3,27 @@ import { expect } from '@playwright/test';
 import { CustomWorld } from '../../support/world';
 import { E2E_ASSETS, findAssetRow, waitForSelectableOption } from './helpers';
 
+async function getAssetMaintenanceConfirmButton(world: CustomWorld) {
+  const modal = world.page
+    .getByTestId('maintenance-modal')
+    .or(world.page.getByTestId('create-maintenance-modal'))
+    .first();
+
+  await expect(modal).toBeVisible({ timeout: 15000 });
+
+  const maintenanceButton = modal.getByTestId('maintenance-confirm-btn').first();
+  if (await maintenanceButton.count().then((count) => count > 0)) {
+    return maintenanceButton;
+  }
+
+  const createButton = modal.getByTestId('create-maintenance-confirm-btn').first();
+  if (await createButton.count().then((count) => count > 0)) {
+    return createButton;
+  }
+
+  return modal.getByRole('button', { name: /abrir ordem/i }).first();
+}
+
 When('clico em "Atribuir usuário" do primeiro ativo disponível', async function (this: CustomWorld) {
   const row = await findAssetRow(this, E2E_ASSETS.assign);
   const btn = row.getByTestId('asset-action-assign');
@@ -47,13 +68,17 @@ When('preencho a descrição da manutenção com {string}', async function (this
 });
 
 When('confirmo a solicitação de manutenção', async function (this: CustomWorld) {
-  const confirmButton = this.page.getByTestId('maintenance-confirm-btn');
+  const confirmButton = await getAssetMaintenanceConfirmButton(this);
   await expect(confirmButton).toBeEnabled({ timeout: 15000 });
   await confirmButton.click();
 });
 
 Then('o modal de manutenção deve ser fechado', async function (this: CustomWorld) {
-  await expect(this.page.getByTestId('maintenance-modal')).toBeHidden({ timeout: 15000 });
+  const modal = this.page
+    .getByTestId('maintenance-modal')
+    .or(this.page.getByTestId('create-maintenance-modal'))
+    .first();
+  await expect(modal).toBeHidden({ timeout: 15000 });
   await this.waitForTableLoad();
 });
 

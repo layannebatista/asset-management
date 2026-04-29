@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Testes E2E com Playwright + Cucumber BDD para o módulo de gestão de ativos",
   "scripts": {
-    "test": "cucumber-js",
-    "test:headed": "cross-env PWHEADLESS=false cucumber-js",
-    "test:assets": "cucumber-js --tags @assets",
+    "test": "cucumber-js features/**/*.feature",
+    "test:headed": "cross-env PWHEADLESS=false cucumber-js features/**/*.feature",
+    "test:assets": "cucumber-js features/**/*.feature --tags @assets",
     "postinstall": "playwright install chromium"
   },
   "dependencies": {

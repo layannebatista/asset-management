@@ -38,6 +38,7 @@ When('abro o formulário de nova transferência', async function (this: CustomWo
   const newBtn = this.page.getByTestId('transfer-new-request-btn');
   await expect(newBtn).toBeVisible({ timeout: 15000 });
   await newBtn.click();
+  await expect(this.page.getByTestId('transfer-create-modal')).toBeVisible({ timeout: 15000 });
   await expect(this.page.getByRole('heading', { name: 'Nova Solicitação de Transferência' })).toBeVisible({ timeout: 15000 });
 });
 
@@ -80,7 +81,10 @@ When('seleciono a primeira unidade de destino na nova transferência', async fun
   }
 
   const modal = this.page.getByTestId('transfer-create-modal');
-  const select = modal.getByTestId('transfer-create-destination-select');
+  const select = modal
+    .getByTestId('transfer-create-destination-select')
+    .or(modal.locator('select').nth(1))
+    .first();
   await expect(select).toBeVisible({ timeout: 15000 });
 
   // Wait for options to load — the modal fetches units asynchronously after opening.

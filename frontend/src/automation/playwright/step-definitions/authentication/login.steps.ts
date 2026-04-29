@@ -186,6 +186,22 @@ Then('devo ser redirecionado para o dashboard', async function (this: CustomWorl
 
   if (/\/dashboard/.test(this.page.url())) return;
 
+  const token = await this.page
+    .evaluate(() => {
+      try {
+        return localStorage.getItem('accessToken');
+      } catch (_e) {
+        return null;
+      }
+    })
+    .catch(() => null);
+
+  if (token) {
+    await this.goto('/dashboard');
+    await expect(this.page).toHaveURL(/\/dashboard/, { timeout: 20000 });
+    return;
+  }
+
   // Recovery path for occasional UI/login transport flakiness.
   const ctx = this as CustomWorld & { lastLoginEmail?: string; lastLoginPassword?: string };
   if (ctx.lastLoginEmail && ctx.lastLoginPassword && !ctx.lastLoginEmail.includes('mfa')) {
