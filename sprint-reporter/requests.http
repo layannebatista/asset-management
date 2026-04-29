@@ -1,0 +1,83 @@
+### Sprint Reporter - Example Requests
+### Use with REST Client extension in VS Code
+
+# ────────────────────────────────────────────────────────────────────────────
+# Health Check
+# ────────────────────────────────────────────────────────────────────────────
+
+### Check service health
+GET http://localhost:3200/health
+
+# ────────────────────────────────────────────────────────────────────────────
+# Generate Reports
+# ────────────────────────────────────────────────────────────────────────────
+
+### Generate JSON report for last week
+POST http://localhost:3200/api/reports/sprint
+Content-Type: application/json
+
+{
+  "startDate": "2026-04-14",
+  "endDate": "2026-04-21",
+  "projectName": "asset-management",
+  "format": "json"
+}
+
+### Generate HTML report for entire sprint
+POST http://localhost:3200/api/reports/sprint
+Content-Type: application/json
+
+{
+  "startDate": "2026-04-01",
+  "endDate": "2026-04-14",
+  "projectName": "asset-management",
+  "format": "html"
+}
+
+### Generate report for custom period
+POST http://localhost:3200/api/reports/sprint
+Content-Type: application/json
+
+{
+  "startDate": "2026-03-15",
+  "endDate": "2026-04-21",
+  "projectName": "asset-management",
+  "format": "json"
+}
+
+# ────────────────────────────────────────────────────────────────────────────
+# Error Cases (for testing)
+# ────────────────────────────────────────────────────────────────────────────
+
+### Invalid date format
+POST http://localhost:3200/api/reports/sprint
+Content-Type: application/json
+
+{
+  "startDate": "invalid-date",
+  "endDate": "2026-04-14",
+  "projectName": "asset-management",
+  "format": "json"
+}
+
+### Start date after end date
+POST http://localhost:3200/api/reports/sprint
+Content-Type: application/json
+
+{
+  "startDate": "2026-04-14",
+  "endDate": "2026-04-01",
+  "projectName": "asset-management",
+  "format": "json"
+}
+
+### Missing project name
+POST http://localhost:3200/api/reports/sprint
+Content-Type: application/json
+
+{
+  "startDate": "2026-04-01",
+  "endDate": "2026-04-14",
+  "projectName": "",
+  "format": "json"
+}

@@ -4,6 +4,8 @@ server:
   shutdown: graceful
 
 spring:
+  config:
+    import: optional:file:.env[.properties],optional:file:../.env[.properties]
   application:
     name: asset-management
 
@@ -59,6 +61,9 @@ spring:
           starttls:
             enable: true
             required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
 
 # ─── Actuator / Observabilidade ───────────────────────────────────────────────
 management:
@@ -81,7 +86,7 @@ management:
 
   health:
     mail:
-      enabled: false   # ⛔ desativa erro de SMTP no health
+      enabled: true
 
   info:
     env:
@@ -121,12 +126,19 @@ app:
   mfa:
     expiration-seconds: ${MFA_EXPIRATION_SECONDS:300}
     code-length: 6
+  test-support:
+    cleanup:
+      enabled: ${TEST_DATA_CLEANUP_ENABLED:false}
+      key: ${TEST_DATA_CLEANUP_KEY:}
+  rate-limit:
+    enabled: ${APP_RATE_LIMIT_ENABLED:true}
 
 # ─── Logging ──────────────────────────────────────────────────────────────────
 logging:
   level:
     root: INFO
     com.portfolio.assetmanagement: INFO
+    com.portfolio.assetmanagement.application.email: DEBUG
     org.hibernate.SQL: OFF
     org.hibernate.type.descriptor.sql.BasicBinder: OFF
     # Reduz ruído de frameworks no desenvolvimento
@@ -134,6 +146,12 @@ logging:
     org.springframework.security: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+
+# ─── AI Intelligence Service ─────────────────────────────────────────────────
+ai:
+  service:
+    url: ${AI_SERVICE_URL:http://localhost:3100}
+    api-key: ${AI_SERVICE_API_KEY:}
 
 # ─── Swagger / OpenAPI ────────────────────────────────────────────────────────
 springdoc:

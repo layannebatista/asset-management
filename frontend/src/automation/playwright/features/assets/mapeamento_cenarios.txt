@@ -1,0 +1,162 @@
+================================================================================
+MAPEAMENTO DE CENARIOS DE TESTE - DOMINIO: ASSETS (Frontend)
+Projeto: Patrimonio 360 | Frontend Playwright + Cucumber
+Atualizado em: 2026-04-16
+================================================================================
+
+LEGENDA
+  Tipo        : E2E, SEGURANCA, USABILIDADE, RESILIENCIA, ACESSIBILIDADE
+  Criticidade : BLOCKER > CRITICAL > NORMAL > LOW
+  Status      : AUTOMATIZADO | PENDENTE | NAO_APLICAVEL
+  Camada      : feature/steps do dominio
+
+NOTAS GERAIS
+  - Inclui cobertura de lista, filtros, detalhes, modais, transicoes de estado e permissoes.
+  - Cenarios AUTOMATIZADO sao os atualmente implementados.
+  - Cenarios PENDENTE representam baseline QA senior para frontend.
+
+================================================================================
+SECAO 1 - LISTAGEM, FILTROS E PAGINACAO
+================================================================================
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+AL01 | Renderizar tabela de ativos com colunas principais          | USABILIDADE   | NORMAL      | AUTOMATIZADO | assets/asset-management.feature
+AL02 | Filtrar por status AVAILABLE                                | E2E           | NORMAL      | AUTOMATIZADO | assets/asset-management.feature
+AL03 | Filtrar por status ASSIGNED                                 | E2E           | NORMAL      | AUTOMATIZADO | assets/asset-management.feature
+AL04 | Buscar por modelo/codigo                                    | E2E           | NORMAL      | AUTOMATIZADO | assets/asset-management.feature
+AL05 | Filtrar por tipo (NOTEBOOK)                                 | E2E           | NORMAL      | AUTOMATIZADO | assets/asset-management.feature
+AL06 | Filtrar por status IN_MAINTENANCE                           | E2E           | NORMAL      | PENDENTE     | assets/asset-management.feature
+AL07 | Filtrar por status IN_TRANSFER                              | E2E           | NORMAL      | PENDENTE     | assets/asset-management.feature
+AL08 | Filtrar por status RETIRED                                  | E2E           | NORMAL      | PENDENTE     | assets/asset-management.feature
+AL09 | Mostrar estado vazio "Nenhum ativo encontrado"             | USABILIDADE   | NORMAL      | PENDENTE     | assets/asset-management.feature
+AL10 | Paginacao avanca/retrocede sem perder filtros              | E2E           | NORMAL      | PENDENTE     | assets/asset-management.feature
+AL11 | URL com params (status/unitId/assignedUserId/type) aplica  | E2E           | CRITICAL    | AUTOMATIZADO | assets/asset-management.feature
+AL12 | Modo insurance mostra banner e colunas corretas            | E2E           | NORMAL      | AUTOMATIZADO | assets/asset-management.feature
+AL13 | Modo insurance filtra somente assets com apolice vencendo  | E2E           | CRITICAL    | AUTOMATIZADO | assets/asset-management.feature
+AL14 | Ordenacao por coluna (assetTag, tipo, status, data) altera listagem | USABILIDADE | NORMAL   | PENDENTE     | pages/assets/AssetListPage.tsx
+AL15 | Multiplos filtros simultaneos (status + tipo + busca textual)  | E2E        | NORMAL      | PENDENTE     | pages/assets/AssetListPage.tsx
+
+================================================================================
+SECAO 2 - CRIACAO DE ATIVO
+================================================================================
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+AC01 | Validar campos obrigatorios no modal de criacao            | E2E           | NORMAL      | AUTOMATIZADO | assets/asset-management.feature
+AC02 | Criar ativo com sucesso                                     | E2E           | CRITICAL    | AUTOMATIZADO | assets/asset-management.feature
+AC03 | Falha de API em criacao exibe mensagem amigavel            | RESILIENCIA   | NORMAL      | PENDENTE     | pages/assets/AssetListPage.tsx
+AC04 | Sem unidade ativa exibe mensagem e bloqueia criacao        | E2E           | NORMAL      | PENDENTE     | components/modals/CreateAssetModal.tsx
+AC05 | Modelo com espacos apenas bloqueia confirmacao             | E2E           | NORMAL      | PENDENTE     | components/modals/CreateAssetModal.tsx
+AC06 | Limite de 255 chars no modelo respeitado                   | E2E           | LOW         | PENDENTE     | components/modals/CreateAssetModal.tsx
+
+================================================================================
+SECAO 3 - DETALHES DO ATIVO
+================================================================================
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+AD01 | Abrir pagina de detalhes de ativo                          | E2E           | NORMAL      | AUTOMATIZADO | assets/asset-management.feature
+AD02 | Navegar para aba depreciacao                               | E2E           | NORMAL      | AUTOMATIZADO | assets/asset-management.feature
+AD03 | Navegar para aba historico                                 | E2E           | NORMAL      | AUTOMATIZADO | assets/asset-management.feature
+AD04 | Aba info mostra org, unidade e responsavel                 | USABILIDADE   | NORMAL      | PENDENTE     | pages/assets/AssetDetailsPage.tsx
+AD05 | Ativo inexistente mostra estado "Ativo nao encontrado"     | E2E           | NORMAL      | PENDENTE     | pages/assets/AssetDetailsPage.tsx
+AD06 | Erro ao carregar detalhes nao quebra a tela                | RESILIENCIA   | NORMAL      | PENDENTE     | pages/assets/AssetDetailsPage.tsx
+AD07 | Voltar da pagina de detalhes preserva filtros e paginacao da lista | E2E       | NORMAL      | PENDENTE     | pages/assets/AssetListPage.tsx
+
+================================================================================
+SECAO 4 - OPERACOES DE ESTADO (ASSIGN, UNASSIGN, MAINTENANCE, TRANSFER, RETIRE)
+================================================================================
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+AO01 | Atribuir usuario em ativo AVAILABLE                         | E2E           | CRITICAL    | AUTOMATIZADO | assets/asset-management.feature
+AO02 | Desatribuir ativo ASSIGNED                                  | E2E           | CRITICAL    | AUTOMATIZADO | assets/asset-management.feature
+AO03 | Sem usuarios ativos no modal de atribuicao                  | E2E           | NORMAL      | PENDENTE     | components/modals/AssignUserModal.tsx
+AO04 | Solicitar manutencao com descricao minima invalida          | E2E           | NORMAL      | AUTOMATIZADO | assets/asset-management.feature
+AO05 | Solicitar manutencao com sucesso                            | E2E           | CRITICAL    | AUTOMATIZADO | assets/asset-management.feature
+AO06 | Solicitar manutencao com custo estimado opcional            | E2E           | NORMAL      | PENDENTE     | components/modals/MaintenanceModal.tsx
+AO07 | Solicitar transferencia com sucesso                         | E2E           | NORMAL      | AUTOMATIZADO | assets/asset-management.feature
+AO08 | Transferencia bloqueada sem unidade de destino valida       | E2E           | NORMAL      | PENDENTE     | components/modals/TransferModal.tsx
+AO09 | Transferencia bloqueada com motivo em branco               | E2E           | NORMAL      | PENDENTE     | components/modals/TransferModal.tsx
+AO10 | Aposentar ativo (confirmacao por digitacao correta)         | E2E           | CRITICAL    | AUTOMATIZADO | assets/asset-management.feature
+AO11 | Aposentar ativo bloqueado com digitacao incorreta           | E2E           | NORMAL      | AUTOMATIZADO | assets/asset-management.feature
+AO12 | Erro de API em assign/unassign exibe feedback              | RESILIENCIA   | NORMAL      | PENDENTE     | pages/assets/AssetListPage.tsx
+AO13 | Erro de API em maintenance/transfer/retire exibe feedback  | RESILIENCIA   | NORMAL      | PENDENTE     | pages/assets/AssetListPage.tsx
+AO14 | Acao disponivel por status (icone correto por linha)        | E2E           | CRITICAL    | AUTOMATIZADO | assets/asset-management.feature
+AO15 | Asset RETIRED nao exibe acoes de mudanca de estado         | SEGURANCA     | CRITICAL    | AUTOMATIZADO | assets/asset-management.feature
+AO16 | Duplo clique em botao de acao nao dispara operacao duas vezes | RESILIENCIA | CRITICAL  | PENDENTE     | pages/assets/AssetListPage.tsx
+AO17 | Menu de acoes de ativo IN_TRANSFER exibe apenas opcoes validas | E2E       | NORMAL      | PENDENTE     | pages/assets/AssetListPage.tsx
+AO18 | Ativo IN_MAINTENANCE nao pode ser transferido (bloqueio UI) | SEGURANCA    | CRITICAL    | PENDENTE     | components/modals/TransferModal.tsx
+
+================================================================================
+SECAO 5 - CONTROLE DE ACESSO E SEGURANCA
+================================================================================
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+AX01 | Operador nao ve botao "Novo Ativo"                         | SEGURANCA     | CRITICAL    | AUTOMATIZADO | assets/asset-management.feature
+AX02 | Gestor ve botao "Novo Ativo"                               | SEGURANCA     | NORMAL      | AUTOMATIZADO | assets/asset-management.feature
+AX03 | Admin ve botao aposentar                                    | SEGURANCA     | CRITICAL    | AUTOMATIZADO | assets/asset-management.feature
+AX04 | Gestor nao ve botao aposentar                               | SEGURANCA     | CRITICAL    | AUTOMATIZADO | assets/asset-management.feature
+AX05 | Operador acessa lista escopada por assignedUserId          | SEGURANCA     | CRITICAL    | AUTOMATIZADO | assets/asset-management.feature
+AX06 | Gestor acessa lista escopada por unitId                    | SEGURANCA     | CRITICAL    | AUTOMATIZADO | assets/asset-management.feature
+AX07 | Usuario sem sessao redirecionado para login                | SEGURANCA     | BLOCKER     | AUTOMATIZADO | assets/asset-management.feature
+AX08 | Erro 403 em operacao exibe mensagem correta                | SEGURANCA     | CRITICAL    | AUTOMATIZADO | assets/asset-management.feature
+AX09 | Token JWT expirado durante operacao exibe dialogo de reautenticacao | SEGURANCA | CRITICAL | PENDENTE   | api/ (interceptors)
+
+================================================================================
+SECAO 6 - EXPORTACAO, FINANCEIRO, SEGUROS E HISTORICO
+================================================================================
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+EX01 | Exportar CSV da lista de ativos                             | E2E           | NORMAL      | AUTOMATIZADO | assets/asset-management.feature
+EX02 | Falha no download de CSV tratada sem quebrar tela           | RESILIENCIA   | NORMAL      | PENDENTE     | pages/assets/AssetListPage.tsx
+EX03 | Editar dados financeiros em ativo nao RETIRED              | E2E           | NORMAL      | PENDENTE     | pages/assets/AssetDetailsPage.tsx
+EX04 | Bloquear edicao financeira para ativo RETIRED              | E2E           | NORMAL      | PENDENTE     | pages/assets/AssetDetailsPage.tsx
+EX05 | Aba de seguro permite operacoes para ADMIN/GESTOR          | E2E           | NORMAL      | PENDENTE     | pages/assets/AssetDetailsPage.tsx
+EX06 | Historico de status apresenta eventos na ordem correta      | E2E           | NORMAL      | PENDENTE     | pages/assets/AssetDetailsPage.tsx
+EX07 | Historico de atribuicao mostra desatribuido quando aplicavel| E2E          | NORMAL      | PENDENTE     | pages/assets/AssetDetailsPage.tsx
+EX08 | Campo purchaseValue aceita apenas valores numericos positivos | USABILIDADE | NORMAL     | PENDENTE     | pages/assets/AssetDetailsPage.tsx
+EX09 | purchaseValue negativo e rejeitado no formulario financeiro | E2E          | NORMAL      | PENDENTE     | pages/assets/AssetDetailsPage.tsx
+
+================================================================================
+SECAO 7 - ACESSIBILIDADE
+================================================================================
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+AA01 | Botaoes de acao possuem descricao acessivel (title/tip)     | ACESSIBILIDADE| NORMAL      | PENDENTE     | pages/assets/AssetListPage.tsx
+AA02 | Focus visivel em filtros e tabela                           | ACESSIBILIDADE| LOW         | PENDENTE     | assets/asset-management.feature
+AA03 | Modais fecham com clique externo no backdrop                | USABILIDADE   | LOW         | PENDENTE     | components/modals/*.tsx
+
+================================================================================
+SECAO 8 - CROSS-DOMAIN E CONSISTENCIA DE ESTADO
+================================================================================
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+CR01 | Ativo com manutencao concluida volta para AVAILABLE na lista | E2E          | NORMAL      | PENDENTE     | pages/assets/AssetListPage.tsx
+CR02 | Ativo com transferencia concluida muda de unidade na lista  | E2E           | CRITICAL    | PENDENTE     | pages/assets/AssetListPage.tsx
+CR03 | Ativo RETIRED some dos resultados de filtros ativos         | E2E           | NORMAL      | PENDENTE     | pages/assets/AssetListPage.tsx
+
+================================================================================
+RESUMO DE COBERTURA
+================================================================================
+
+Status                  Contagem  Porcentagem
+---------------------------------------------
+AUTOMATIZADO            32        49%
+PENDENTE                33        51%
+NAO_APLICAVEL           0         0%
+---------------------------------------------
+TOTAL                   65
+
+Novos cenarios adicionados (2026-04-21): AL14, AL15, AD07, AO16, AO17, AO18, AX09, EX08, EX09, CR01-CR03
+Cenarios de ordenacao, multi-filtro, double-click, cross-domain e validacao financeira nao estavam mapeados.
+
+Arquivos de referencia do dominio:
+  - features/assets/asset-management.feature
+  - step-definitions/assets/*.steps.ts
+================================================================================

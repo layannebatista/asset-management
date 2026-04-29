@@ -1,126 +1,590 @@
 {
-  "info": {
-    "name": "Enterprise Asset Management API",
-    "_postman_id": "enterprise-asset-management-full",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Collection completa gerada a partir do Swagger oficial."
-  },
-  "variable": [
-    { "key": "baseUrl", "value": "http://localhost:8080/api/v1" },
-    { "key": "token", "value": "" }
-  ],
-  "auth": {
-    "type": "bearer",
-    "bearer": [
-      { "key": "token", "value": "{{token}}", "type": "string" }
-    ]
-  },
-  "item": [
-
-    {
-      "name": "Assets",
-      "item": [
-        { "name": "Get Asset by ID", "request": { "method": "GET", "url": "{{baseUrl}}/assets/{{id}}" } },
-        { "name": "Create Asset Manual", "request": { "method": "POST", "url": "{{baseUrl}}/assets/{{organizationId}}" } },
-        { "name": "Create Asset Auto", "request": { "method": "POST", "url": "{{baseUrl}}/assets/{{organizationId}}/auto" } },
-        { "name": "Retire Asset", "request": { "method": "PATCH", "url": "{{baseUrl}}/assets/{{id}}/retire" } },
-        { "name": "Assign Asset", "request": { "method": "PATCH", "url": "{{baseUrl}}/assets/{{assetId}}/assign/{{userId}}" } },
-        { "name": "Unassign Asset", "request": { "method": "PATCH", "url": "{{baseUrl}}/assets/{{assetId}}/unassign" } }
-      ]
+    "item": [
+        {
+            "name": "assets",
+            "description": "",
+            "item": [
+                {
+                    "id": "1ee355a0-7f97-414c-9f20-7c623ad4d7eb",
+                    "name": "Listar ativos (com filtros e paginação)",
+                    "request": {
+                        "name": "Listar ativos (com filtros e paginação)",
+                        "description": {},
+                        "url": {
+                            "path": [
+                                "assets"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "method": "GET",
+                        "body": {},
+                        "auth": null
+                    },
+                    "response": [
+                        {
+                            "id": "52adebe7-4969-4812-a83c-19f63a35e68c",
+                            "name": "Lista paginada",
+                            "originalRequest": {
+                                "url": {
+                                    "path": [
+                                        "assets"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "description": {
+                                            "content": "Added as a part of security scheme: bearer",
+                                            "type": "text/plain"
+                                        },
+                                        "key": "Authorization",
+                                        "value": "Bearer <token>"
+                                    }
+                                ],
+                                "method": "GET",
+                                "body": {}
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"content\": [\n    {\n      \"id\": \"<integer>\",\n      \"assetTag\": \"<string>\",\n      \"type\": \"OTHER\",\n      \"model\": \"<string>\",\n      \"status\": \"IN_TRANSFER\",\n      \"organizationId\": \"<integer>\",\n      \"unitId\": \"<integer>\",\n      \"assignedUserId\": \"<integer>\"\n    },\n    {\n      \"id\": \"<integer>\",\n      \"assetTag\": \"<string>\",\n      \"type\": \"DESKTOP\",\n      \"model\": \"<string>\",\n      \"status\": \"IN_TRANSFER\",\n      \"organizationId\": \"<integer>\",\n      \"unitId\": \"<integer>\",\n      \"assignedUserId\": \"<integer>\"\n    }\n  ],\n  \"page\": \"<integer>\",\n  \"size\": \"<integer>\",\n  \"totalElements\": \"<integer>\",\n  \"totalPages\": \"<integer>\"\n}",
+                            "cookie": [],
+                            "_postman_previewlanguage": "json"
+                        }
+                    ],
+                    "event": [],
+                    "protocolProfileBehavior": {
+                        "disableBodyPruning": true
+                    }
+                },
+                {
+                    "name": "{id}",
+                    "description": "",
+                    "item": [
+                        {
+                            "id": "6a26e4d6-ae5d-4a8d-93b8-67f217adc326",
+                            "name": "Buscar ativo por ID",
+                            "request": {
+                                "name": "Buscar ativo por ID",
+                                "description": {},
+                                "url": {
+                                    "path": [
+                                        "assets",
+                                        ":id"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": [
+                                        {
+                                            "type": "any",
+                                            "value": "<integer>",
+                                            "key": "id",
+                                            "disabled": false,
+                                            "description": {
+                                                "content": "(Required) ",
+                                                "type": "text/plain"
+                                            }
+                                        }
+                                    ]
+                                },
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    }
+                                ],
+                                "method": "GET",
+                                "body": {},
+                                "auth": null
+                            },
+                            "response": [
+                                {
+                                    "id": "f5f4231a-2bd0-4f95-8eab-3151414ad161",
+                                    "name": "Ativo encontrado",
+                                    "originalRequest": {
+                                        "url": {
+                                            "path": [
+                                                "assets",
+                                                ":id"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": [
+                                                {
+                                                    "disabled": false,
+                                                    "description": {
+                                                        "content": "(Required) ",
+                                                        "type": "text/plain"
+                                                    },
+                                                    "type": "any",
+                                                    "value": "<integer>",
+                                                    "key": "id"
+                                                }
+                                            ]
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            },
+                                            {
+                                                "description": {
+                                                    "content": "Added as a part of security scheme: bearer",
+                                                    "type": "text/plain"
+                                                },
+                                                "key": "Authorization",
+                                                "value": "Bearer <token>"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {}
+                                    },
+                                    "status": "OK",
+                                    "code": 200,
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/json"
+                                        }
+                                    ],
+                                    "body": "{\n  \"id\": \"<integer>\",\n  \"assetTag\": \"<string>\",\n  \"type\": \"TABLET\",\n  \"model\": \"<string>\",\n  \"status\": \"IN_MAINTENANCE\",\n  \"organizationId\": \"<integer>\",\n  \"unitId\": \"<integer>\",\n  \"assignedUserId\": \"<integer>\"\n}",
+                                    "cookie": [],
+                                    "_postman_previewlanguage": "json"
+                                },
+                                {
+                                    "id": "1728d4cc-785c-4076-bd7b-3dd8dcbb6269",
+                                    "name": "Não encontrado",
+                                    "originalRequest": {
+                                        "url": {
+                                            "path": [
+                                                "assets",
+                                                ":id"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": [
+                                                {
+                                                    "disabled": false,
+                                                    "description": {
+                                                        "content": "(Required) ",
+                                                        "type": "text/plain"
+                                                    },
+                                                    "type": "any",
+                                                    "value": "<integer>",
+                                                    "key": "id"
+                                                }
+                                            ]
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            },
+                                            {
+                                                "description": {
+                                                    "content": "Added as a part of security scheme: bearer",
+                                                    "type": "text/plain"
+                                                },
+                                                "key": "Authorization",
+                                                "value": "Bearer <token>"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {}
+                                    },
+                                    "status": "Not Found",
+                                    "code": 404,
+                                    "header": [
+                                        {
+                                            "key": "Content-Type",
+                                            "value": "application/json"
+                                        }
+                                    ],
+                                    "body": "{\n  \"timestamp\": \"<dateTime>\",\n  \"status\": \"<integer>\",\n  \"error\": \"<string>\",\n  \"message\": \"<string>\",\n  \"path\": \"<string>\"\n}",
+                                    "cookie": [],
+                                    "_postman_previewlanguage": "json"
+                                }
+                            ],
+                            "event": [],
+                            "protocolProfileBehavior": {
+                                "disableBodyPruning": true
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "categories",
+            "description": "",
+            "item": [
+                {
+                    "id": "d1dbed28-c965-42b4-9137-e1ec80dac92f",
+                    "name": "Criar categoria",
+                    "request": {
+                        "name": "Criar categoria",
+                        "description": {},
+                        "url": {
+                            "path": [
+                                "categories"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "method": "POST",
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"<string>\",\n  \"description\": \"<string>\"\n}",
+                            "options": {
+                                "raw": {
+                                    "headerFamily": "json",
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "auth": null
+                    },
+                    "response": [
+                        {
+                            "id": "b110b674-212a-4780-a5f3-10cfe9346562",
+                            "name": "Criada",
+                            "originalRequest": {
+                                "url": {
+                                    "path": [
+                                        "categories"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Content-Type",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "description": {
+                                            "content": "Added as a part of security scheme: bearer",
+                                            "type": "text/plain"
+                                        },
+                                        "key": "Authorization",
+                                        "value": "Bearer <token>"
+                                    }
+                                ],
+                                "method": "POST",
+                                "body": {
+                                    "mode": "raw",
+                                    "raw": "{\n  \"name\": \"<string>\",\n  \"description\": \"<string>\"\n}",
+                                    "options": {
+                                        "raw": {
+                                            "headerFamily": "json",
+                                            "language": "json"
+                                        }
+                                    }
+                                }
+                            },
+                            "status": "Created",
+                            "code": 201,
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "{\n  \"id\": \"<integer>\",\n  \"name\": \"<string>\",\n  \"description\": \"<string>\",\n  \"active\": \"<boolean>\"\n}",
+                            "cookie": [],
+                            "_postman_previewlanguage": "json"
+                        }
+                    ],
+                    "event": [],
+                    "protocolProfileBehavior": {
+                        "disableBodyPruning": true
+                    }
+                },
+                {
+                    "id": "313104ae-774d-4497-a293-370016c372c4",
+                    "name": "Listar categorias",
+                    "request": {
+                        "name": "Listar categorias",
+                        "description": {},
+                        "url": {
+                            "path": [
+                                "categories"
+                            ],
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "query": [],
+                            "variable": []
+                        },
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "method": "GET",
+                        "body": {},
+                        "auth": null
+                    },
+                    "response": [
+                        {
+                            "id": "e364d278-07c4-4875-9bfb-83f7aa5649f0",
+                            "name": "Lista",
+                            "originalRequest": {
+                                "url": {
+                                    "path": [
+                                        "categories"
+                                    ],
+                                    "host": [
+                                        "{{baseUrl}}"
+                                    ],
+                                    "query": [],
+                                    "variable": []
+                                },
+                                "header": [
+                                    {
+                                        "key": "Accept",
+                                        "value": "application/json"
+                                    },
+                                    {
+                                        "description": {
+                                            "content": "Added as a part of security scheme: bearer",
+                                            "type": "text/plain"
+                                        },
+                                        "key": "Authorization",
+                                        "value": "Bearer <token>"
+                                    }
+                                ],
+                                "method": "GET",
+                                "body": {}
+                            },
+                            "status": "OK",
+                            "code": 200,
+                            "header": [
+                                {
+                                    "key": "Content-Type",
+                                    "value": "application/json"
+                                }
+                            ],
+                            "body": "[\n  {\n    \"id\": \"<integer>\",\n    \"name\": \"<string>\",\n    \"description\": \"<string>\",\n    \"active\": \"<boolean>\"\n  },\n  {\n    \"id\": \"<integer>\",\n    \"name\": \"<string>\",\n    \"description\": \"<string>\",\n    \"active\": \"<boolean>\"\n  }\n]",
+                            "cookie": [],
+                            "_postman_previewlanguage": "json"
+                        }
+                    ],
+                    "event": [],
+                    "protocolProfileBehavior": {
+                        "disableBodyPruning": true
+                    }
+                }
+            ]
+        },
+        {
+            "name": "api",
+            "description": "",
+            "item": [
+                {
+                    "name": "dashboard",
+                    "description": "",
+                    "item": [
+                        {
+                            "name": "executive",
+                            "description": "",
+                            "item": [
+                                {
+                                    "id": "643cef1c-77d7-4589-9395-04849b2b2e14",
+                                    "name": "Dashboard executivo (ADMIN)",
+                                    "request": {
+                                        "name": "Dashboard executivo (ADMIN)",
+                                        "description": {},
+                                        "url": {
+                                            "path": [
+                                                "api",
+                                                "dashboard",
+                                                "executive"
+                                            ],
+                                            "host": [
+                                                "{{baseUrl}}"
+                                            ],
+                                            "query": [],
+                                            "variable": []
+                                        },
+                                        "header": [
+                                            {
+                                                "key": "Accept",
+                                                "value": "application/json"
+                                            }
+                                        ],
+                                        "method": "GET",
+                                        "body": {},
+                                        "auth": null
+                                    },
+                                    "response": [
+                                        {
+                                            "id": "a2797aff-2a06-4668-b328-5ae05548dab1",
+                                            "name": "Dados consolidados",
+                                            "originalRequest": {
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "dashboard",
+                                                        "executive"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "key": "Accept",
+                                                        "value": "application/json"
+                                                    },
+                                                    {
+                                                        "description": {
+                                                            "content": "Added as a part of security scheme: bearer",
+                                                            "type": "text/plain"
+                                                        },
+                                                        "key": "Authorization",
+                                                        "value": "Bearer <token>"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {}
+                                            },
+                                            "status": "OK",
+                                            "code": 200,
+                                            "header": [
+                                                {
+                                                    "key": "Content-Type",
+                                                    "value": "application/json"
+                                                }
+                                            ],
+                                            "body": "{\n  \"totalAssets\": \"<integer>\",\n  \"activeAssets\": \"<integer>\",\n  \"maintenanceAssets\": \"<integer>\",\n  \"retiredAssets\": \"<integer>\"\n}",
+                                            "cookie": [],
+                                            "_postman_previewlanguage": "json"
+                                        },
+                                        {
+                                            "id": "baaaf8c4-b3b3-49f1-8489-096e8fefa47a",
+                                            "name": "Acesso negado",
+                                            "originalRequest": {
+                                                "url": {
+                                                    "path": [
+                                                        "api",
+                                                        "dashboard",
+                                                        "executive"
+                                                    ],
+                                                    "host": [
+                                                        "{{baseUrl}}"
+                                                    ],
+                                                    "query": [],
+                                                    "variable": []
+                                                },
+                                                "header": [
+                                                    {
+                                                        "description": {
+                                                            "content": "Added as a part of security scheme: bearer",
+                                                            "type": "text/plain"
+                                                        },
+                                                        "key": "Authorization",
+                                                        "value": "Bearer <token>"
+                                                    }
+                                                ],
+                                                "method": "GET",
+                                                "body": {}
+                                            },
+                                            "status": "Forbidden",
+                                            "code": 403,
+                                            "header": [],
+                                            "cookie": [],
+                                            "_postman_previewlanguage": "text"
+                                        }
+                                    ],
+                                    "event": [],
+                                    "protocolProfileBehavior": {
+                                        "disableBodyPruning": true
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "auth": {
+        "type": "bearer",
+        "bearer": [
+            {
+                "type": "any",
+                "value": "{{bearerToken}}",
+                "key": "token"
+            }
+        ]
     },
-
-    {
-      "name": "Asset History",
-      "item": [
-        { "name": "Status History", "request": { "method": "GET", "url": "{{baseUrl}}/assets/{{assetId}}/history/status" } },
-        { "name": "Assignment History", "request": { "method": "GET", "url": "{{baseUrl}}/assets/{{assetId}}/history/assignment" } }
-      ]
-    },
-
-    {
-      "name": "Audit",
-      "item": [
-        { "name": "Audit by User", "request": { "method": "GET", "url": "{{baseUrl}}/audit/user/{{userId}}" } },
-        { "name": "Audit by Type", "request": { "method": "GET", "url": "{{baseUrl}}/audit/type/{{type}}" } },
-        { "name": "Audit by Target", "request": { "method": "GET", "url": "{{baseUrl}}/audit/target" } },
-        { "name": "Audit by Period", "request": { "method": "GET", "url": "{{baseUrl}}/audit/period" } },
-        { "name": "Last Audit by Target", "request": { "method": "GET", "url": "{{baseUrl}}/audit/target/last" } }
-      ]
-    },
-
-    {
-      "name": "Inventory",
-      "item": [
-        { "name": "Get Inventory", "request": { "method": "GET", "url": "{{baseUrl}}/inventory/{{id}}" } },
-        { "name": "Start Inventory", "request": { "method": "PATCH", "url": "{{baseUrl}}/inventory/{{id}}/start" } },
-        { "name": "Close Inventory", "request": { "method": "PATCH", "url": "{{baseUrl}}/inventory/{{id}}/close" } },
-        { "name": "Cancel Inventory", "request": { "method": "PATCH", "url": "{{baseUrl}}/inventory/{{id}}/cancel" } }
-      ]
-    },
-
-    {
-      "name": "Maintenance",
-      "item": [
-        { "name": "Start Maintenance", "request": { "method": "POST", "url": "{{baseUrl}}/maintenance/{{id}}/start" } },
-        { "name": "Complete Maintenance", "request": { "method": "POST", "url": "{{baseUrl}}/maintenance/{{id}}/complete" } },
-        { "name": "Cancel Maintenance", "request": { "method": "POST", "url": "{{baseUrl}}/maintenance/{{id}}/cancel" } }
-      ]
-    },
-
-    {
-      "name": "Organizations",
-      "item": [
-        { "name": "Get Organization", "request": { "method": "GET", "url": "{{baseUrl}}/organizations/{{id}}" } },
-        { "name": "Activate Organization", "request": { "method": "PATCH", "url": "{{baseUrl}}/organizations/{{id}}/activate" } },
-        { "name": "Inactivate Organization", "request": { "method": "PATCH", "url": "{{baseUrl}}/organizations/{{id}}/inactivate" } }
-      ]
-    },
-
-    {
-      "name": "Transfers",
-      "item": [
-        { "name": "Approve Transfer", "request": { "method": "PATCH", "url": "{{baseUrl}}/transfers/{{id}}/approve" } },
-        { "name": "Reject Transfer", "request": { "method": "PATCH", "url": "{{baseUrl}}/transfers/{{id}}/reject" } },
-        { "name": "Complete Transfer", "request": { "method": "PATCH", "url": "{{baseUrl}}/transfers/{{id}}/complete" } }
-      ]
-    },
-
-    {
-      "name": "Units",
-      "item": [
-        { "name": "Create Unit", "request": { "method": "POST", "url": "{{baseUrl}}/units/{{organizationId}}" } },
-        { "name": "List Units", "request": { "method": "GET", "url": "{{baseUrl}}/units/{{organizationId}}" } },
-        { "name": "Get Unit by ID", "request": { "method": "GET", "url": "{{baseUrl}}/units/unit/{{id}}" } },
-        { "name": "Activate Unit", "request": { "method": "PATCH", "url": "{{baseUrl}}/units/{{id}}/activate" } },
-        { "name": "Inactivate Unit", "request": { "method": "PATCH", "url": "{{baseUrl}}/units/{{id}}/inactivate" } }
-      ]
-    },
-
-    {
-      "name": "User Activation",
-      "item": [
-        { "name": "Generate Activation Token", "request": { "method": "POST", "url": "{{baseUrl}}/users/activation/token/{{userId}}" } },
-        { "name": "Activate User", "request": { "method": "POST", "url": "{{baseUrl}}/users/activation/activate" } }
-      ]
-    },
-
-    {
-      "name": "Users",
-      "item": [
-        { "name": "Get User", "request": { "method": "GET", "url": "{{baseUrl}}/users/{{id}}" } },
-        { "name": "Block User", "request": { "method": "PATCH", "url": "{{baseUrl}}/users/{{id}}/block" } },
-        { "name": "Activate User", "request": { "method": "PATCH", "url": "{{baseUrl}}/users/{{id}}/activate" } },
-        { "name": "Inactivate User", "request": { "method": "PATCH", "url": "{{baseUrl}}/users/{{id}}/inactivate" } }
-      ]
-    },
-
-    {
-      "name": "Dashboard",
-      "item": [
-        { "name": "Executive Dashboard (ADMIN)", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/executive" } },
-        { "name": "Unit Dashboard (MANAGER)", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/unit" } },
-        { "name": "Personal Dashboard (OPERATOR)", "request": { "method": "GET", "url": "{{baseUrl}}/dashboard/personal" } }
-      ]
+    "event": [],
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:8080"
+        }
+    ],
+    "info": {
+        "_postman_id": "c0194dbc-b5ab-42b5-bd60-1f1fff61d47a",
+        "name": "Enterprise Asset Management API",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "description": {
+            "content": "Enterprise-grade multi-tenant asset lifecycle management API. Designed for backend architecture and automation practice.\n",
+            "type": "text/plain"
+        }
     }
-  ]
 }

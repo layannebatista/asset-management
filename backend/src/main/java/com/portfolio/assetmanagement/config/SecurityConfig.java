@@ -1,5 +1,6 @@
 package com.portfolio.assetmanagement.config;
 
+import com.portfolio.assetmanagement.config.ratelimit.RateLimitFilter;
 import com.portfolio.assetmanagement.security.filter.JwtAuthenticationFilter;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,6 +28,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+  private final RateLimitFilter rateLimitFilter;
   private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
   /**
@@ -41,9 +43,11 @@ public class SecurityConfig {
   private String allowedOrigins;
 
   public SecurityConfig(
+      RateLimitFilter rateLimitFilter,
       JwtAuthenticationFilter jwtAuthenticationFilter,
       JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint) {
 
+    this.rateLimitFilter = rateLimitFilter;
     this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
   }
@@ -87,7 +91,12 @@ public class SecurityConfig {
                     .permitAll()
 
                     // Swagger
-                    .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
+                    .requestMatchers(
+                        "/v3/api-docs",
+                        "/v3/api-docs/**",
+                        "/v3/api-docs.yaml",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html")
                     .permitAll()
 
                     // =========================
@@ -104,6 +113,9 @@ public class SecurityConfig {
                     // =========================
                     .anyRequest()
                     .authenticated())
+
+        // rate limit precisa executar antes dos filtros de autenticação
+        .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
 
         // filtro JWT
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -128,18 +140,19 @@ public class SecurityConfig {
 
     CorsConfiguration configuration = new CorsConfiguration();
 
-    // 🔥 garante que múltiplas origens funcionem corretamente
+    // garante que múltiplas origens funcionem corretamente
     configuration.setAllowedOriginPatterns(List.of(allowedOrigins.split(",")));
 
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
-    // 🔥 libera TODOS os headers (essencial pro preflight)
-    configuration.setAllowedHeaders(List.of("*"));
+    // Whitelisted headers apenas (não wildcard)
+    configuration.setAllowedHeaders(
+        List.of("Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"));
 
-    // 🔥 permite o frontend ler o Authorization (token JWT)
+    // permite o frontend ler o Authorization (token JWT)
     configuration.setExposedHeaders(List.of("Authorization"));
 
-    // 🔥 necessário quando usa cookies/token/header auth
+    // necessário quando usa cookies/token/header auth
     configuration.setAllowCredentials(true);
 
     // 🔥 importante para cache do preflight (evita múltiplos OPTIONS)

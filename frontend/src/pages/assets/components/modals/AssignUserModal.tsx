@@ -37,7 +37,7 @@ export function AssignUserModal({
   }
 
   return (
-    <Modal open={!!asset} onClose={onClose} title="Atribuir Usuário ao Ativo">
+    <Modal open={!!asset} onClose={onClose} title="Atribuir Usuário ao Ativo" testId="assign-user-modal" closeButtonTestId="assign-user-close-btn">
       {/* Info do ativo */}
       <div className="bg-slate-50 border border-slate-200 rounded-[8px] px-4 py-3 mb-4">
         <div className="text-[10.5px] text-slate-400 uppercase tracking-[.4px] mb-[2px]">
@@ -59,6 +59,7 @@ export function AssignUserModal({
           </p>
         ) : (
           <select
+            data-testid="assign-user-select"
             value={assignUserId}
             onChange={(e) => setAssignUserId(e.target.value)}
             className={INPUT_CLS}
@@ -80,6 +81,8 @@ export function AssignUserModal({
         loading={saving}
         confirmLabel="Confirmar Atribuição"
         disabled={!assignUserId || saving}
+        cancelTestId="assign-user-cancel-btn"
+        confirmTestId="assign-user-confirm-btn"
       />
     </Modal>
   )

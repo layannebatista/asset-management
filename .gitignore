@@ -36,11 +36,47 @@ build/
 ### VS Code ###
 .vscode/
 
+### Claude Code ###
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
 ### Allure – resultados e relatórios gerados (não versionar) ###
 backend/allure-results/*
 !backend/allure-results/.gitkeep
 backend/allure-reports/
 
+# Resultados de execução de testes (arquivos gerados em cada run)
+# Apenas o histórico de tendências é versionado
+allure-results/*.json
+allure-results/*.png
+allure-results/*.csv
+allure-results/*.xml
+allure-results/*.txt
+allure-results/*.properties
+allure-results/*.mp4
+allure-results/*.webm
+# executor.json é gerado pelo allure-docker-service, não versionar
+allure-results/executor.json
+
+frontend/allure-results/
+
 ### Relatórios de build gerados ###
 backend/target/cucumber-reports/
 backend/target/site/
+
+### Node/TypeScript build artifacts ###
+**/node_modules/
+rtk-dashboard/dist/
+sprint-reporter/dist/
+frontend/dist/
+**/*.tsbuildinfo
+**/coverage/
+frontend/src/automation/playwright/reports/
+
+### Load/perf generated outputs ###
+k6/k6-summary.json
+
+### Temporary logs and diagnostics ###
+*.log
+*.tmp
+*.pid

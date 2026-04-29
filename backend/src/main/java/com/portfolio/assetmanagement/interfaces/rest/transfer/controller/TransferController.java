@@ -77,6 +77,7 @@ public class TransferController {
   }
 
   @Operation(summary = "Solicitar transferência")
+  @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
   @PostMapping
   public ResponseEntity<TransferResponseDTO> request(@RequestBody @Valid TransferCreateDTO dto) {
     return ResponseEntity.status(HttpStatus.CREATED)
@@ -107,6 +108,16 @@ public class TransferController {
   @PatchMapping("/{id}/complete")
   public ResponseEntity<Void> complete(@PathVariable Long id) {
     transferService.complete(id);
+    return ResponseEntity.noContent().build();
+  }
+
+  @Operation(
+      summary = "Cancelar transferência",
+      description =
+          "Cancela uma transferência pendente. Somente transferências PENDING podem ser canceladas.")
+  @PatchMapping("/{id}/cancel")
+  public ResponseEntity<Void> cancel(@PathVariable Long id) {
+    transferService.cancel(id);
     return ResponseEntity.noContent().build();
   }
 }

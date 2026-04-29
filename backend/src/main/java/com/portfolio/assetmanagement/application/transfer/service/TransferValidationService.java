@@ -112,4 +112,13 @@ public class TransferValidationService {
       throw new BusinessException("Transferência deve estar aprovada");
     }
   }
+
+  /** Garante que pode cancelar. */
+  public void validateCanCancel(TransferRequest transfer) {
+
+    if (transfer.getStatus() != TransferStatus.PENDING) {
+
+      throw new BusinessException("Apenas transferências pendentes podem ser canceladas");
+    }
+  }
 }
