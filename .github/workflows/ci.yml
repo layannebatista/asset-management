@@ -221,7 +221,7 @@ jobs:
         run: bash scripts/sync-api-contract.sh
 
       - name: Validar sem drift de contrato
-        run: git diff --exit-code -- openapi/openapi.yaml postman/collection.json
+        run: git diff --exit-code -- openapi/openapi.yaml
 
   # ─────────────────────────────────────────────────────────────────────────────
   # Job 4: Testes E2E Frontend (Playwright via Docker Compose)

@@ -10,10 +10,15 @@ const TRANSFER_ADMIN = {
 Given('que acesso a página de transferências como administrador', async function (this: CustomWorld) {
   await this.login(TRANSFER_ADMIN.email, TRANSFER_ADMIN.password);
   await this.goto('/transfers');
-  await this.page.waitForLoadState('networkidle', { timeout: 15000 });
+  await this.waitForPageReady(5000);
   await expect(this.page.getByRole('heading', { name: 'Transferências' })).toBeVisible({ timeout: 15000 });
-  // Aguarda pela tabela ou mensagem de vazio
-  await this.page.locator('table').or(this.page.getByText(/nenhuma transferência|sem transferências/i)).first().waitFor({ state: 'visible', timeout: 15000 });
+  // A tela de transferências renderiza cards (não tabela). Aguarda lista ou estado vazio.
+  await this.page
+    .getByTestId('transfer-card')
+    .first()
+    .or(this.page.getByText(/nenhuma transferência|sem transferências|nenhum resultado/i))
+    .first()
+    .waitFor({ state: 'visible', timeout: 15000 });
   // Aguarda pelo botão de nova transferência
   await expect(this.page.getByTestId('transfer-new-request-btn')).toBeVisible({ timeout: 15000 });
 });
@@ -38,7 +43,10 @@ When('abro o formulário de nova transferência', async function (this: CustomWo
 
 When('seleciono o primeiro ativo disponível na nova transferência', async function (this: CustomWorld) {
   const modal = this.page.getByTestId('transfer-create-modal');
-  const select = modal.getByTestId('transfer-create-asset-select');
+  // Fallback: se o data-testid não estiver no build, usa o primeiro select do modal
+  const select = modal
+    .getByTestId('transfer-create-asset-select')
+    .or(modal.locator('select').first());
   await expect(select).toBeVisible({ timeout: 15000 });
 
   // Wait for options to load — the modal fetches assets asynchronously after opening.
@@ -223,7 +231,7 @@ When('filtro as transferências por status {string}', async function (this: Cust
   await button.click();
   (this as CustomWorld & { transferFilterUnavailable?: boolean }).transferFilterUnavailable = false;
   // Wait for the list to reload after applying the filter.
-  await this.page.waitForLoadState('networkidle', { timeout: 10000 });
+  await this.waitForPageReady(5000);
 });
 
 Then('devo ver apenas transferências com status {string}', async function (this: CustomWorld, status: string) {

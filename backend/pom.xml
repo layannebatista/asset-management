@@ -276,23 +276,11 @@
                 </configuration>
             </plugin>
 
-            <!-- ================= Surefire (unit/fast tests) ================= -->
+            <!-- ================= Surefire (all tests) ================= -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.2.5</version>
-                <configuration>
-                    <!--
-                      Keep CI fast and deterministic by running only local unit/service tests here.
-                      Integration/BDD suites depend on Docker/Testcontainers and should run in dedicated pipelines.
-                    -->
-                    <excludes>
-                        <exclude>**/integration/**</exclude>
-                        <exclude>**/bdd/**</exclude>
-                        <exclude>**/*IntegrationTest.java</exclude>
-                        <exclude>**/CucumberRunnerTest.java</exclude>
-                    </excludes>
-                </configuration>
             </plugin>
 
             <!-- ================= Allure ================= -->

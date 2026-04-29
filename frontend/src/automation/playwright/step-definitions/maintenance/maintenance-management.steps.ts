@@ -25,12 +25,20 @@ async function waitForMaintenanceTable(world: CustomWorld) {
 async function waitForSelectableOption(select: Locator) {
   await expect(select).toBeVisible({ timeout: 15000 });
   // <option> elements are never "visible" in Playwright (no bounding box inside closed <select>).
-  // Use toBeAttached() to verify the option exists in the DOM.
-  await expect(select.locator('option:not([value=""])').first()).toBeAttached({ timeout: 15000 });
+  // Use toBeAttached() to verify the option exists. Poll to handle async asset loading.
+  await expect
+    .poll(
+      async () => await select.locator('option:not([disabled]):not([value=""])').count(),
+      { timeout: 20000, message: 'Nenhum ativo disponível no select de manutenção.' },
+    )
+    .toBeGreaterThan(0);
 }
 
 async function selectAssetByLabel(world: CustomWorld, assetTag: string) {
-  const select = world.page.getByTestId('create-maintenance-asset-select');
+  // Fallback: se o data-testid não estiver no build compilado, usa o select dentro do modal
+  const select = world.page
+    .getByTestId('create-maintenance-asset-select')
+    .or(world.page.getByTestId('create-maintenance-modal').locator('select').first());
   await waitForSelectableOption(select);
 
   const option = select.locator('option:not([value=""])').filter({ hasText: assetTag }).first();
@@ -79,7 +87,7 @@ Given('que acesso a página de manutenção como administrador', async function 
   await this.login(MAINTENANCE_ADMIN.email, MAINTENANCE_ADMIN.password);
   await this.goto('/maintenance');
   // Aguarda carregamento completo
-  await this.page.waitForLoadState('networkidle', { timeout: 15000 });
+  await this.waitForPageReady(5000);
   await expect(this.page.getByRole('heading', { name: 'Manutenção' })).toBeVisible({ timeout: 15000 });
   // Aguarda pelos filtros de status ficarem visíveis
   await expect(this.page.getByTestId('maintenance-status-filter-all')).toBeVisible({ timeout: 15000 });
@@ -113,7 +121,7 @@ When('seleciono o ativo seeded para cancelamento de manutenção em andamento', 
 Given('que acesso a página de manutenção como gestor', async function (this: CustomWorld) {
   await this.login('gestor@empresa.com', 'Gestor@123');
   await this.goto('/maintenance');
-  await this.page.waitForLoadState('networkidle', { timeout: 15000 });
+  await this.waitForPageReady(5000);
   await expect(this.page.getByRole('heading', { name: 'Manutenção' })).toBeVisible({ timeout: 15000 });
   await expect(this.page.getByTestId('maintenance-status-filter-all')).toBeVisible({ timeout: 15000 });
   await waitForMaintenanceTable(this);
@@ -122,7 +130,7 @@ Given('que acesso a página de manutenção como gestor', async function (this: 
 Given('que acesso a página de manutenção como operador', async function (this: CustomWorld) {
   await this.login('operador@empresa.com', 'Op@12345');
   await this.goto('/maintenance');
-  await this.page.waitForLoadState('networkidle', { timeout: 15000 });
+  await this.waitForPageReady(5000);
   await expect(this.page.getByRole('heading', { name: 'Manutenção' })).toBeVisible({ timeout: 15000 });
   await expect(this.page.getByTestId('maintenance-status-filter-all')).toBeVisible({ timeout: 15000 });
   await waitForMaintenanceTable(this);

@@ -49,21 +49,17 @@ export function TestIdInjector() {
         }
       })
 
-      // Injeta em selects
+      // Injeta em selects de forma conservadora para evitar IDs duplicados
       let selectCount = 0
-      document.querySelectorAll('select').forEach((select, index) => {
-        if (!select.hasAttribute('data-testid')) {
-          let testId = null
-          if (index === 0) testId = 'asset-type-filter'
-          else if (index === 1) testId = 'create-asset-unit-select'
-
-          if (testId) {
-            select.setAttribute('data-testid', testId)
-            selectCount++
-            console.log(`  ✅ Select ${testId} injetado`)
-          }
+      const assetTypeFilter = document.querySelector('select[data-testid="asset-type-filter"]')
+      if (!assetTypeFilter) {
+        const firstSelect = document.querySelector('select')
+        if (firstSelect && !firstSelect.hasAttribute('data-testid')) {
+          firstSelect.setAttribute('data-testid', 'asset-type-filter')
+          selectCount++
+          console.log('  ✅ Select asset-type-filter injetado')
         }
-      })
+      }
 
       console.log(`💉 Injeção completa: ${btnCount} botões, ${inputCount} inputs, ${selectCount} selects`)
     }

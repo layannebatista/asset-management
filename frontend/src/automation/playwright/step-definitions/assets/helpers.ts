@@ -17,17 +17,24 @@ export const E2E_ASSETS = {
 };
 
 export async function searchAsset(world: CustomWorld, term: string) {
-  const searchInput = world.page.getByTestId('asset-search-input');
+  // Usa .or() como fallback para quando o data-testid não está no build compilado
+  const searchInput = world.page
+    .getByTestId('asset-search-input')
+    .or(world.page.getByPlaceholder(/buscar/i))
+    .first();
+  await expect(searchInput).toBeVisible({ timeout: 15000 });
+
   const responsePromise = world.page
     .waitForResponse((resp) => resp.url().includes('/assets') && resp.status() === 200, {
       timeout: 10000,
     })
     .then(() => true)
     .catch(() => false);
+
   await searchInput.fill(term);
   const responseArrived = await responsePromise;
   if (!responseArrived) {
-    await world.page.waitForLoadState('networkidle', { timeout: 10000 });
+    await world.waitForPageReady();
   }
   await world.waitForTableLoad();
 }
@@ -41,7 +48,10 @@ export async function findAssetRow(world: CustomWorld, preferredTerm?: string) {
       return preferredRow;
     }
 
-    const searchInput = world.page.getByTestId('asset-search-input');
+    const searchInput = world.page
+      .getByTestId('asset-search-input')
+      .or(world.page.getByPlaceholder(/buscar/i))
+      .first();
     await searchInput.fill('');
     await world.waitForTableLoad();
   }
@@ -52,8 +62,9 @@ export async function findAssetRow(world: CustomWorld, preferredTerm?: string) {
 }
 
 export async function waitForSelectableOption(select: ReturnType<Page['locator']>) {
-  await expect(select).toBeVisible({ timeout: 15000 });
-  await expect(select.locator('option:not([disabled]):not([value=""])').first()).toBeAttached({
+  const firstSelect = select.first();
+  await expect(firstSelect).toBeVisible({ timeout: 15000 });
+  await expect(firstSelect.locator('option:not([disabled]):not([value=""])').first()).toBeAttached({
     timeout: 15000,
   });
 }

@@ -190,7 +190,7 @@ When('acesso a página de ativos com a URL {string}', async function (this: Cust
     .catch(() => false);
 
   if (!responseArrived) {
-    await this.page.waitForLoadState('networkidle', { timeout: 10000 });
+    await this.waitForPageReady();
   }
 
   await this.waitForTableLoad();
@@ -300,7 +300,7 @@ Given('que a listagem de ativos com múltiplos status está mockada', async func
 });
 
 Then('devo ver as ações corretas para cada status de ativo', async function (this: CustomWorld) {
-  await this.page.waitForLoadState('networkidle', { timeout: 10000 });
+  await this.waitForPageReady();
   await this.waitForTableLoad();
 
   const availableRow = this.page.locator('tbody tr').filter({ hasText: 'STS-AVAIL-001' }).first();

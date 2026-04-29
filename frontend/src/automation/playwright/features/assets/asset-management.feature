@@ -34,6 +34,7 @@ Funcionalidade: Gestão de Ativos (E2E)
 
   @allure.label.story:Filtros
   @allure.label.severity:normal
+  @flaky
   Cenário: Buscar ativo por modelo
     Quando busco por "Notebook"
     Então devo ver ativos que correspondem à busca

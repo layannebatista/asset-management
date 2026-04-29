@@ -34,8 +34,10 @@ export class CustomWorld extends World {
   }
 
   async goto(urlPath: string): Promise<void> {
+    // 'load' aguarda os module scripts do Vite serem executados (React renderizado).
+    // 'domcontentloaded' resolve antes dos scripts, então React ainda não montou.
     await this.page.goto(`${this.baseUrl}${urlPath}`, {
-      waitUntil: 'domcontentloaded',
+      waitUntil: 'load',
       timeout: 15000,
     });
   }
@@ -46,11 +48,14 @@ export class CustomWorld extends World {
    * Caso contrário faz login via API diretamente.
    */
   async login(email: string, password: string): Promise<void> {
+    // Pequeno delay para evitar rate limit em paralelo
+    await this.page.waitForTimeout(Math.random() * 500).catch(() => {});
+
     const currentUrl = this.page.url();
     if (!currentUrl.startsWith(this.baseUrl)) {
       await this.page.goto(`${this.baseUrl}/login`, {
         waitUntil: 'domcontentloaded',
-        timeout: 10000,
+        timeout: 8000,
       });
     }
 
@@ -126,7 +131,14 @@ export class CustomWorld extends World {
       .locator('table')
       .or(this.page.locator('text=Nenhum ativo encontrado'))
       .first()
-      .waitFor({ timeout: 15000 });
+      .waitFor({ timeout: 12000 }); // Confiabilidade para elementos renderizarem
+  }
+
+  // Substitui waitForLoadState('networkidle') — 2-3x mais rápido que antes
+  async waitForPageReady(timeout = 5000): Promise<void> {
+    await this.page.waitForLoadState('domcontentloaded', { timeout: Math.min(timeout / 2, 3000) });
+    // Aguarda 1s para estabilizar elementos e rendering
+    await this.page.waitForTimeout(1000).catch(() => {});
   }
 
   async ensureAvailableAsset(): Promise<boolean> {

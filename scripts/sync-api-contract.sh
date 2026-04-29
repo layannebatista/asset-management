@@ -19,7 +19,11 @@ trap cleanup EXIT
 echo "[sync-api-contract] iniciando backend para exportar OpenAPI"
 (
   cd "$BACKEND_DIR"
-  mvn -DskipTests spring-boot:run >"$APP_LOG" 2>&1
+  if [[ -x "./mvnw" ]]; then
+    ./mvnw -DskipTests spring-boot:run >"$APP_LOG" 2>&1
+  else
+    mvn -DskipTests spring-boot:run >"$APP_LOG" 2>&1
+  fi
 ) &
 APP_PID=$!
 

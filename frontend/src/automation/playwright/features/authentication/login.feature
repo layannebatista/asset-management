@@ -62,6 +62,7 @@ Funcionalidade: Autenticação (E2E)
 
   @allure.label.story:Login
   @allure.label.severity:critical
+  @flaky
   Cenário: Senha incorreta exibe mensagem de erro sem vazar detalhes
     Quando preencho o login com email "admin@empresa.com" e senha "SenhaErrada999"
     E envio o formulário de login

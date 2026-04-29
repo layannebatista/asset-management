@@ -26,12 +26,11 @@ module.exports = {
       baseUrl: process.env.BASE_URL || 'http://localhost:5173',
       headless: process.env.PWHEADLESS !== 'false',
     },
-    // ✅ Aumenta timeouts para evitar SIGTERM
-    timeout: 120000, // 2 minutos por step
+    timeout: 40000, // 40 segundos por step (balance entre speed e confiabilidade)
     dryRun: false,
     failFast: false,
-    parallel: 1, // 1 cenário por vez para economizar memória
-    retry: 1,
+    parallel: 2, // 2 cenários simultâneos (rate limit de login: ~10 req/min)
+    retry: 1, // Retry uma vez para testes @flaky
     retryTagFilter: '@flaky', // Retry apenas testes marcados como flaky
   },
 };

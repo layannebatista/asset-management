@@ -4,7 +4,7 @@ import { CustomWorld } from './world';
 import fs from 'fs';
 import path from 'path';
 
-setDefaultTimeout(60000);
+setDefaultTimeout(40000); // Balance entre speed e confiabilidade
 
 const REPORTS_DIR = path.resolve(process.cwd(), 'reports');
 const SCREENSHOTS_DIR = path.resolve(REPORTS_DIR, 'screenshots');
@@ -118,10 +118,9 @@ Before({ timeout: 30000 }, async function (this: CustomWorld) {
       document.querySelectorAll('input[placeholder*="Buscar"]').forEach(el => el.setAttribute('data-testid', 'asset-search-input'));
       document.querySelectorAll('input[placeholder*="código"], input[placeholder="000000"]').forEach(el => el.setAttribute('data-testid', 'mfa-code-input'));
 
-      // Selects
-      const selects = document.querySelectorAll('select');
-      if (selects[0]) selects[0].setAttribute('data-testid', 'asset-type-filter');
-      if (selects[1]) selects[1].setAttribute('data-testid', 'create-asset-unit-select');
+      // Selects: evita atribuir IDs duplicados em modais/componentes já instrumentados
+      const firstSelect = document.querySelector('select:not([data-testid])');
+      if (firstSelect) firstSelect.setAttribute('data-testid', 'asset-type-filter');
 
       // Filtros
       document.querySelectorAll('button[class*="rounded-full"]').forEach((btn: HTMLButtonElement) => {

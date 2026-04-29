@@ -22,7 +22,7 @@ function getStatusFilterLocator(world: CustomWorld, status: string) {
 
 async function clickStatusFilter(world: CustomWorld, status: string) {
   // Aguarda pela página carregar
-  await world.page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+  await world.waitForPageReady().catch(() => {
     // Continua mesmo se falhar
   });
 
@@ -43,14 +43,14 @@ async function clickStatusFilter(world: CustomWorld, status: string) {
 
 Given('que filtro os ativos por status {string}', async function (this: CustomWorld, status: string) {
   await clickStatusFilter(this, status);
-  await this.page.waitForLoadState('networkidle', { timeout: 10000 });
+  await this.waitForPageReady();
   await this.waitForTableLoad();
 
   if (status === 'Disponível') {
     const created = await this.ensureAvailableAsset();
     if (created) {
       await clickStatusFilter(this, status);
-      await this.page.waitForLoadState('networkidle', { timeout: 10000 });
+      await this.waitForPageReady();
       await this.waitForTableLoad();
     }
     await searchAsset(this, E2E_ASSETS.availableFilter);
@@ -63,14 +63,14 @@ Given('que filtro os ativos por status {string}', async function (this: CustomWo
 
 When('filtro os ativos por status {string}', async function (this: CustomWorld, status: string) {
   await clickStatusFilter(this, status);
-  await this.page.waitForLoadState('networkidle', { timeout: 10000 });
+  await this.waitForPageReady();
   await this.waitForTableLoad();
 
   if (status === 'Disponível') {
     const created = await this.ensureAvailableAsset();
     if (created) {
       await clickStatusFilter(this, status);
-      await this.page.waitForLoadState('networkidle', { timeout: 10000 });
+      await this.waitForPageReady();
       await this.waitForTableLoad();
     }
     await searchAsset(this, E2E_ASSETS.availableFilter);
@@ -82,15 +82,18 @@ When('filtro os ativos por status {string}', async function (this: CustomWorld, 
 });
 
 When('busco por {string}', async function (this: CustomWorld, termo: string) {
-  const searchInput = this.page.getByTestId('asset-search-input');
+  const searchInput = this.page
+    .getByTestId('asset-search-input')
+    .or(this.page.getByPlaceholder(/buscar/i))
+    .first();
   await expect(searchInput).toBeVisible({ timeout: 15000 });
   await searchInput.fill(termo);
-  await this.page.waitForLoadState('networkidle', { timeout: 10000 });
+  await this.waitForPageReady();
   await this.waitForTableLoad();
 });
 
 Then('devo ver a lista de ativos', async function (this: CustomWorld) {
-  await this.page.waitForLoadState('networkidle', { timeout: 10000 });
+  await this.waitForPageReady();
   await this.waitForTableLoad();
   const rows = this.page.locator('tbody tr');
   const count = await rows.count();
@@ -135,9 +138,9 @@ Then('devo ver ativos que correspondem à busca', async function (this: CustomWo
 When('seleciono o tipo {string} no filtro de tipo', async function (this: CustomWorld, tipo: string) {
   const select = this.page.getByTestId('asset-type-filter');
   await expect(select).toBeVisible({ timeout: 15000 });
-  await this.page.waitForLoadState('networkidle', { timeout: 10000 });
+  await this.waitForPageReady();
   await select.selectOption({ label: tipo });
-  await this.page.waitForLoadState('networkidle', { timeout: 10000 });
+  await this.waitForPageReady();
   await this.waitForTableLoad();
 });
 
