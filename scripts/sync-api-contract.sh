@@ -5,6 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BACKEND_DIR="$ROOT_DIR/backend"
 OPENAPI_FILE="$ROOT_DIR/openapi/openapi.yaml"
 POSTMAN_FILE="$ROOT_DIR/postman/collection.json"
+SERVER_PORT="${CONTRACT_SERVER_PORT:-18080}"
 APP_LOG="$(mktemp)"
 
 cleanup() {
@@ -20,27 +21,27 @@ echo "[sync-api-contract] iniciando backend para exportar OpenAPI"
 (
   cd "$BACKEND_DIR"
   if [[ -x "./mvnw" ]]; then
-    ./mvnw -DskipTests spring-boot:run >"$APP_LOG" 2>&1
+    ./mvnw -DskipTests -Dspring-boot.run.arguments="--server.port=$SERVER_PORT" -Dspring-boot.run.profiles=test spring-boot:run >"$APP_LOG" 2>&1
   else
-    mvn -DskipTests spring-boot:run >"$APP_LOG" 2>&1
+    mvn -DskipTests -Dspring-boot.run.arguments="--server.port=$SERVER_PORT" -Dspring-boot.run.profiles=test spring-boot:run >"$APP_LOG" 2>&1
   fi
 ) &
 APP_PID=$!
 
 for i in {1..180}; do
-  if curl -fsS "http://localhost:8080/v3/api-docs.yaml" -o "$OPENAPI_FILE"; then
+  if curl -fsS "http://localhost:$SERVER_PORT/v3/api-docs.yaml" -o "$OPENAPI_FILE"; then
     echo "[sync-api-contract] OpenAPI atualizado em $OPENAPI_FILE"
     break
   fi
   if ! kill -0 "$APP_PID" 2>/dev/null; then
-    echo "[sync-api-contract] backend encerrou antes de responder /v3/api-docs.yaml" >&2
+    echo "[sync-api-contract] backend encerrou antes de responder /v3/api-docs.yaml na porta $SERVER_PORT" >&2
     echo "[sync-api-contract] ultimas linhas do backend:" >&2
     tail -n 120 "$APP_LOG" >&2 || true
     exit 1
   fi
   sleep 2
   if [[ "$i" == "180" ]]; then
-    echo "[sync-api-contract] timeout aguardando /v3/api-docs.yaml" >&2
+    echo "[sync-api-contract] timeout aguardando /v3/api-docs.yaml na porta $SERVER_PORT" >&2
     echo "[sync-api-contract] ultimas linhas do backend:" >&2
     tail -n 120 "$APP_LOG" >&2 || true
     exit 1
@@ -48,7 +49,7 @@ for i in {1..180}; do
 done
 
 echo "[sync-api-contract] gerando Postman a partir do OpenAPI"
-npx --yes openapi-to-postmanv2 \
+npm exec --yes openapi-to-postmanv2 -- \
   -s "$OPENAPI_FILE" \
   -o "$POSTMAN_FILE" \
   -p

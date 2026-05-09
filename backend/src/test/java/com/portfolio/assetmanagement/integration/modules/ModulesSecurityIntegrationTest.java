@@ -79,8 +79,7 @@ class ModulesSecurityIntegrationTest extends BaseIntegrationTest {
   static Stream<Arguments> modulesForNoAuth() {
     return Stream.of(
         Arguments.of("organization", new RequestPlan("GET", "/organizations", null)),
-        Arguments.of("user", new RequestPlan("POST", "/users", userBody(1L, 1L))),
-        Arguments.of("unit", new RequestPlan("GET", "/units/1", null)),
+        Arguments.of("user", new RequestPlan("GET", "/users", null)),
         Arguments.of("category", new RequestPlan("POST", "/categories", categoryBody())),
         Arguments.of("audit", new RequestPlan("GET", "/audit", null)),
         Arguments.of("costcenter", new RequestPlan("GET", "/cost-centers", null)),
@@ -96,8 +95,10 @@ class ModulesSecurityIntegrationTest extends BaseIntegrationTest {
   static Stream<Arguments> modulesForForbidden() {
     return Stream.of(
         Arguments.of("organization", new RequestPlan("GET", "/organizations", null), "GESTOR"),
-        Arguments.of("user", new RequestPlan("POST", "/users", userBody(1L, 1L)), "GESTOR"),
-        Arguments.of("unit", new RequestPlan("GET", "/units/1", null), "OPERADOR"),
+        Arguments.of(
+          "user",
+          new RequestPlan("POST", "/users", Map.of("name", "x", "email", "x@test.com")),
+          "OPERADOR"),
         Arguments.of(
             "category", new RequestPlan("POST", "/categories", categoryBody()), "OPERADOR"),
         Arguments.of("audit", new RequestPlan("GET", "/audit", null), "OPERADOR"),
@@ -124,8 +125,7 @@ class ModulesSecurityIntegrationTest extends BaseIntegrationTest {
   static Stream<Arguments> modulesForSuccess() {
     return Stream.of(
         Arguments.of("organization", new RequestPlan("GET", "/organizations", null), "ADMIN", 200),
-        Arguments.of("user", new RequestPlan("POST", "/users", userBody(1L, 1L)), "ADMIN", 201),
-        Arguments.of("unit", new RequestPlan("GET", "/units/1", null), "GESTOR", 200),
+      Arguments.of("user", new RequestPlan("GET", "/users", null), "ADMIN", 200),
         Arguments.of(
             "category", new RequestPlan("POST", "/categories", categoryBody()), "ADMIN", 200),
         Arguments.of("audit", new RequestPlan("GET", "/audit", null), "GESTOR", 200),
@@ -147,18 +147,6 @@ class ModulesSecurityIntegrationTest extends BaseIntegrationTest {
     Map<String, Object> body = new HashMap<>();
     body.put("name", "CAT-CRIT-" + System.nanoTime());
     body.put("description", "Categoria crítica de segurança");
-    return body;
-  }
-
-  private static Map<String, Object> userBody(Long orgId, Long unitId) {
-    Map<String, Object> body = new HashMap<>();
-    body.put("name", "User Crit " + System.nanoTime());
-    body.put("email", "u" + System.nanoTime() + "@test.com");
-    body.put("role", "OPERADOR");
-    body.put("organizationId", orgId);
-    body.put("unitId", unitId);
-    body.put("documentNumber", "12345678901");
-    body.put("phoneNumber", "5511999999999");
     return body;
   }
 

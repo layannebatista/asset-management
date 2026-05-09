@@ -9,6 +9,7 @@ import com.portfolio.assetmanagement.domain.unit.entity.Unit;
 import com.portfolio.assetmanagement.domain.user.entity.User;
 import com.portfolio.assetmanagement.domain.user.enums.UserStatus;
 import com.portfolio.assetmanagement.infrastructure.persistence.asset.repository.AssetRepository;
+import com.portfolio.assetmanagement.infrastructure.persistence.auth.repository.RefreshTokenRepository;
 import com.portfolio.assetmanagement.infrastructure.persistence.maintenance.repository.MaintenanceRepository;
 import com.portfolio.assetmanagement.infrastructure.persistence.mfa.repository.MfaCodeRepository;
 import com.portfolio.assetmanagement.infrastructure.persistence.organization.repository.OrganizationRepository;
@@ -52,6 +53,7 @@ public class TestDataHelper {
   private final UnitRepository unitRepository;
   private final UserRepository userRepository;
   private final AssetRepository assetRepository;
+  private final RefreshTokenRepository refreshTokenRepository;
   private final MaintenanceRepository maintenanceRepository;
   private final TransferRepository transferRepository;
   private final MfaCodeRepository mfaCodeRepository;
@@ -62,6 +64,7 @@ public class TestDataHelper {
       UnitRepository unitRepository,
       UserRepository userRepository,
       AssetRepository assetRepository,
+      RefreshTokenRepository refreshTokenRepository,
       MaintenanceRepository maintenanceRepository,
       TransferRepository transferRepository,
       MfaCodeRepository mfaCodeRepository,
@@ -70,6 +73,7 @@ public class TestDataHelper {
     this.unitRepository = unitRepository;
     this.userRepository = userRepository;
     this.assetRepository = assetRepository;
+    this.refreshTokenRepository = refreshTokenRepository;
     this.maintenanceRepository = maintenanceRepository;
     this.transferRepository = transferRepository;
     this.mfaCodeRepository = mfaCodeRepository;
@@ -91,6 +95,7 @@ public class TestDataHelper {
     transferRepository.deleteAll();
     maintenanceRepository.deleteAll();
     mfaCodeRepository.deleteAll();
+    refreshTokenRepository.deleteAll();
     assetRepository.deleteAll();
     userRepository.deleteAll();
     unitRepository.deleteAll();

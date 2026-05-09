@@ -45,7 +45,7 @@ class TransferAccessIntegrationTest extends BaseIntegrationTest {
             .contentType(ContentType.JSON)
             .body(Map.of("comment", "Sem token"))
             .when()
-            .patch("/transfers/{id}/approve", 99999L)
+            .patch("/transfers/{id}/approve", "99999")
             .then()
             .extract()
             .response();
