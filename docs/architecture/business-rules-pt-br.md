@@ -1,113 +1,84 @@
-# Regras de Negócio
+# Regras de negócio
 
-Documento revisado com base nas regras hoje refletidas pelos services, controllers e migrations do projeto.
+Este documento resume as regras que protegem o uso correto do sistema. Ele deve ser lido antes de alterar serviços, endpoints ou telas que mexem com ativos.
 
----
+## Escopo dos dados
 
-# 1. Multi-Tenant
+- Todo dado operacional pertence a uma organização.
+- Muitos dados também pertencem a uma unidade.
+- Usuários só devem ver e alterar dados dentro do escopo permitido.
+- Consultas precisam respeitar organização/unidade, não apenas o identificador do registro.
 
-- cada organização representa um tenant
-- o acesso entre tenants é proibido
-- operações e consultas devem respeitar o escopo da organização do usuário autenticado
+## Perfis de acesso
 
----
+| Perfil | Pode fazer |
+|---|---|
+| `ADMIN` | Administrar organização, usuários, unidades e dados globais |
+| `GESTOR` | Gerenciar ativos e operações da sua unidade ou escopo |
+| `OPERADOR` | Executar ações operacionais permitidas |
 
-# 2. Usuários e Acesso
+Se uma ação mudar patrimônio, responsabilidade ou status, registre auditoria.
 
-- usuário pertence a uma organização e a uma unidade da mesma organização
-- papéis válidos: `ADMIN`, `GESTOR`, `OPERADOR`
-- usuário nasce em `PENDING_ACTIVATION`
-- senha é definida no fluxo de ativação
-- usuários `BLOCKED` e `INACTIVE` não autenticam
+## Usuários
 
-Regras adicionais implementadas hoje:
+- Usuários precisam pertencer a uma organização.
+- Contas podem exigir ativação antes do uso.
+- Senhas devem ser armazenadas com hash, nunca em texto puro.
+- MFA pode ser exigido no login conforme configuração.
+- Sessões usam access token e refresh token.
 
-- usuário com `phoneNumber` cadastrado entra em fluxo de MFA
-- o MFA usa OTP de uso único e expiração curta
-- refresh tokens são rotativos e podem ser revogados por logout
+## Ativos
 
----
+Um ativo representa um bem da empresa. As informações mais relevantes são:
 
-# 3. Ativação de Conta
+- Identificação e número patrimonial.
+- Organização e unidade.
+- Responsável atual.
+- Status.
+- Categoria, centro de custo, valor e dados complementares.
 
-- o token de ativação é de uso único
-- tokens expirados ou já usados são rejeitados
-- a ativação é pública porque o usuário ainda não possui credencial válida
+Mudanças importantes devem gerar histórico, especialmente:
 
----
+- Troca de responsável.
+- Mudança de status.
+- Transferência entre unidades.
+- Aposentadoria ou baixa.
 
-# 4. Ativos
+## Transferências
 
-- `assetTag` é único
-- o ativo pertence a uma organização e a uma unidade
-- o ativo não é excluído fisicamente; é aposentado com `RETIRED`
-- o status inicial é `AVAILABLE`
+- Transferência move um ativo entre responsáveis e/ou unidades.
+- Deve existir aprovação quando a regra do perfil exigir.
+- A transferência não deve quebrar o isolamento por organização.
+- Ao concluir, atualize o ativo e registre histórico.
 
-Status relevantes:
+## Inventário
 
-- `AVAILABLE`
-- `ASSIGNED`
-- `IN_TRANSFER`
-- `IN_MAINTENANCE`
-- `UNAVAILABLE`
-- `RETIRED`
+- Inventário verifica se os ativos registrados continuam no local e estado esperados.
+- Uma sessão de inventário agrupa vários itens.
+- Cada item deve indicar se foi encontrado, divergente ou pendente.
+- Divergências devem ficar rastreáveis para ação posterior.
 
-O ativo também pode receber dados:
+## Manutenção
 
-- fiscais
-- garantia
-- depreciação
-- centro de custo
+- Manutenções registram intervenções, custos, datas e observações.
+- Um ativo em manutenção pode ter restrições de uso.
+- Histórico de manutenção ajuda a entender custo total do ativo.
 
----
+## Financeiro e apoio
 
-# 5. Transferências
+- Centro de custo ajuda a organizar despesas.
+- Seguro registra cobertura, vigência e seguradora.
+- Depreciação e valores devem ser tratados com cuidado porque influenciam relatórios.
 
-- origem e destino devem ser diferentes
-- não pode haver mais de uma transferência ativa por ativo
-- a abertura coloca o ativo em `IN_TRANSFER`
-- aprovação antecede conclusão
-- rejeição ou cancelamento devolvem o ativo ao estado operacional válido
+## Auditoria
 
----
+Registre eventos que respondam:
 
-# 6. Inventário
+- Quem fez?
+- O que mudou?
+- Quando aconteceu?
+- Em qual organização/unidade?
+- Qual era o contexto?
 
-- só pode existir uma sessão ativa por unidade
-- a sessão segue `OPEN -> IN_PROGRESS -> CLOSED` com alternativa `CANCELLED`
-- `OPERADOR` pode consultar, mas não controla o ciclo da sessão
+Auditoria não é enfeite: ela é a trilha para investigar erro, fraude, divergência ou incidente.
 
----
-
-# 7. Manutenção
-
-- a criação coloca o ativo imediatamente em `IN_MAINTENANCE`
-- `description` é obrigatória na abertura
-- `resolution` é obrigatória na conclusão
-- `actualCost` pode ser informado na conclusão
-- manutenção `COMPLETED` não pode ser cancelada
-
----
-
-# 8. Financeiro, Seguro e Centro de Custo
-
-- depreciação depende de dados financeiros válidos no ativo
-- centros de custo são únicos por organização + código
-- apólices de seguro pertencem ao ativo e à organização
-
----
-
-# 9. Auditoria e Rastreabilidade
-
-- operações críticas geram `audit_events`
-- mudanças de status e atribuição de ativos também geram histórico dedicado
-- registros de auditoria não devem ser alterados ou removidos
-
----
-
-# 10. Autorização
-
-- `ADMIN` governa organizações, usuários e operações sensíveis
-- `GESTOR` executa gestão operacional ampla
-- `OPERADOR` tem escopo operacional mais restrito
-- as roles são reforçadas com validação de tenant e regras de negócio

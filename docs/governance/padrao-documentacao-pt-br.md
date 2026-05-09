@@ -1,39 +1,60 @@
-# Padrao de Documentacao (pt-br)
+# Padrão de documentação
 
-## Escopo
-Este padrao vale para todos os arquivos dentro de `docs/`.
+O objetivo da documentação é ajudar alguém a usar, manter ou decidir algo no projeto. Se o texto não ajuda nisso, provavelmente pode ser cortado.
 
 ## Idioma
-- Idioma obrigatorio: portugues brasileiro.
-- Evitar blocos longos em ingles, exceto termos tecnicos inevitaveis.
-- Preferir vocabulario simples e direto.
 
-## Nomenclatura de Arquivos
-- Formato obrigatorio: `assunto-pt-br.md`.
-- Usar somente minusculas.
-- Usar `-` como separador.
-- Nao usar espacos, camelCase ou sufixo `pt-BR`.
+- Escrever em português do Brasil.
+- Usar termos técnicos quando forem necessários.
+- Explicar siglas na primeira aparição.
 
-## Estrutura Recomendada
-Todo documento deve seguir, quando aplicavel:
-1. Titulo
-2. Objetivo
-3. Contexto
-4. Passos/Procedimento
-5. Validacao
-6. Referencias
+## Estilo
 
-## Estilo de Escrita
-- Frases curtas.
-- Listas objetivas.
-- Evitar duplicacao de conteudo entre arquivos.
-- Quando houver sobreposicao, manter um documento principal e referenciar os demais.
+- Preferir frases curtas.
+- Começar pelo objetivo do documento.
+- Usar tabelas para comparação.
+- Usar comandos copiáveis.
+- Evitar diagramas enormes quando uma lista resolve.
+- Não repetir o README em todos os arquivos.
 
-## Vinculacao e Referencias
-- Links relativos dentro de `docs/`.
-- Evitar links quebrados para arquivos removidos/renomeados.
-- Atualizar o indice em `docs/indice-pt-br.md` sempre que criar, mover ou remover documentos.
+## Estrutura recomendada
 
-## Excecoes Controladas
-- Arquivos operacionais exigidos por ferramentas podem permanecer fora de `docs/`.
-- Quando houver excecao, manter espelho em `docs/governance/` e registrar no indice.
+```text
+# Título
+
+Resumo do que este documento resolve.
+
+## Quando usar
+## Como fazer
+## Cuidados
+## Troubleshooting
+```
+
+Nem todo documento precisa de todas as seções.
+
+## O que manter
+
+- URLs locais importantes.
+- Comandos realmente usados.
+- Regras de negócio.
+- Decisões de arquitetura.
+- Cuidados de segurança.
+- Links para documentos relacionados.
+
+## O que evitar
+
+- Texto genérico sem ação prática.
+- Explicação longa de tecnologia conhecida.
+- Duplicação entre documentos.
+- Lista de controles que não existe no projeto.
+- Promessas que o código ainda não entrega.
+
+## Revisão
+
+Ao alterar documentação, pergunte:
+
+- Uma pessoa nova entenderia?
+- O comando funciona no projeto atual?
+- Existe informação demais para a pergunta respondida?
+- O documento aponta para o próximo lugar certo?
+

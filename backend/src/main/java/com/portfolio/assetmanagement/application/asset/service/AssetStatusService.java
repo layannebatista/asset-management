@@ -79,6 +79,14 @@ public class AssetStatusService {
       throw new BusinessException("Ativo já está aposentado");
     }
 
+    if (asset.getStatus() == AssetStatus.IN_MAINTENANCE) {
+      throw new BusinessException("Ativo em manutenção não pode ser aposentado");
+    }
+
+    if (asset.getStatus() == AssetStatus.IN_TRANSFER) {
+      throw new BusinessException("Ativo com transferência pendente não pode ser aposentado");
+    }
+
     AssetStatus previous = asset.getStatus();
     asset.retire();
     historyService.registerStatusChange(asset, previous, AssetStatus.RETIRED);

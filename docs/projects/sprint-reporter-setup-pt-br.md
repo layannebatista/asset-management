@@ -1,24 +1,38 @@
-# Sprint Reporter - Setup e Operacao
+# Sprint Reporter - setup rápido
 
-## Objetivo
-Gerar relatorio de sprint com agregacao de testes, CI/CD, IA e performance.
+O Sprint Reporter gera dashboards e apresentações com dados de sprint, testes, CI e métricas auxiliares.
 
-## Execucao Local
-1. `cd sprint-reporter`
-2. `npm install`
-3. `npm run dev`
+## Subir pelo Docker
 
-Acesso padrao: `http://localhost:3200`
+```bash
+docker compose up --build
+```
 
-## Endpoints
-- `GET /health`
-- `POST /api/reports/sprint`
-- `POST /api/reports/export/powerpoint`
+Acesse:
 
-## Configuracoes Comuns
-- DB host/user/password
-- URL e chave do servico IA
-- caminho de resultados Allure
+```text
+http://localhost:3200
+```
 
-## Observacao
-Este guia substitui o README do modulo sprint-reporter como referencia de setup.
+Healthcheck:
+
+```text
+http://localhost:3200/health
+```
+
+## Variáveis úteis
+
+| Variável | Uso |
+|---|---|
+| `GITHUB_TOKEN` | Coleta de dados do GitHub |
+| `DATABASE_URL` ou equivalentes | Conexão com banco |
+| `ALLURE_RESULTS_DIR` | Origem dos resultados de teste |
+
+## Uso básico
+
+1. Abra o dashboard.
+2. Escolha o período da sprint.
+3. Gere o relatório.
+4. Revise o resumo.
+5. Baixe o PowerPoint se precisar apresentar.
+

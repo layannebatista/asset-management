@@ -97,7 +97,7 @@ class ModulesSecurityIntegrationTest extends BaseIntegrationTest {
         Arguments.of("organization", new RequestPlan("GET", "/organizations", null), "GESTOR"),
         Arguments.of(
           "user",
-          new RequestPlan("POST", "/users", Map.of("name", "x", "email", "x@test.com")),
+          new RequestPlan("POST", "/users", userBody()),
           "OPERADOR"),
         Arguments.of(
             "category", new RequestPlan("POST", "/categories", categoryBody()), "OPERADOR"),
@@ -147,6 +147,17 @@ class ModulesSecurityIntegrationTest extends BaseIntegrationTest {
     Map<String, Object> body = new HashMap<>();
     body.put("name", "CAT-CRIT-" + System.nanoTime());
     body.put("description", "Categoria crítica de segurança");
+    return body;
+  }
+
+  private static Map<String, Object> userBody() {
+    Map<String, Object> body = new HashMap<>();
+    body.put("name", "Usuário Teste");
+    body.put("email", "test-" + System.nanoTime() + "@security.test");
+    body.put("documentNumber", "12345678901");
+    body.put("role", "OPERADOR");
+    body.put("organizationId", 1L);
+    body.put("unitId", 1L);
     return body;
   }
 

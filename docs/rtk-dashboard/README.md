@@ -1,62 +1,38 @@
-# RTK Dashboard — Documentação
+# RTK Dashboard
 
-> RTK = **Rust Token Killer** — Sistema local de otimização de tokens
+Documentação do dashboard de economia de tokens.
 
-## 📚 Documentos
+## Guias
 
-### 🆕 [Guia Completo](guia-completo-pt-br.md)
-Tudo que você precisa saber sobre o RTK Dashboard:
-- O que o dashboard mostra
-- Endpoints da API
-- Exemplos práticos
-- Interpretação de dados
-- Como começar
+| Documento | Conteúdo |
+|---|---|
+| [Guia completo](guia-completo-pt-br.md) | Visão geral, métricas e uso |
+| [Coleta de dados](coleta-dados-pt-br.md) | De onde vêm os dados |
+| [Explicação RTK](RTK-EXPLICACAO-PT-BR.md) | Conceitos em linguagem simples |
+| [Migração RTK](MIGRACAO-RTK-PT-BR.md) | Como migrar/organizar o uso |
 
-### 🔄 [Migração para RTK](MIGRACAO-RTK-PT-BR.md)
-O que mudou da versão anterior:
-- Mudanças estruturais
-- Remoção de analisadores complexos
-- Foco em economia de tokens
-- Dados antes vs. depois
+## Acesso local
 
-### 📖 [Explicação RTK](RTK-EXPLICACAO-PT-BR.md)
-Entenda o conceito:
-- O que é RTK e como funciona
-- Casos de uso reais
-- Cálculos de economia
-- Exemplos práticos com números
-
-## 🚀 Acesso Rápido
-
-**Dashboard:** http://localhost:3100
-
-**API Base:** `http://localhost:3100/api/v1/insights/`
-
-**Endpoints:**
-- `/token-economy` — Economia geral de tokens
-- `/model-efficiency` — Eficiência dos modelos
-- `/analysis-roi` — ROI por tipo de análise
-- `/executive-summary` — Resumo executivo
-- `/history` — Histórico dos últimos 3 meses
-
-## ⚙️ Configuração
-
-**Variáveis de Ambiente:**
-```
-AI_SERVICE_PORT=3100
-AI_SERVICE_API_KEY=test_key_123456
-LOCAL_ONLY_MODE=true
+```text
+http://localhost:3100
 ```
 
-## 💡 Conceitos-Chave
+Healthcheck:
 
-- **RTK:** Reduz tokens desnecessários antes de enviar ao LLM
-- **Economia:** Mantém qualidade enquanto reduz custos
-- **Local:** 100% local, sem APIs externas pagas
-- **Dashboard:** Interface visual com métricas de negócio
+```text
+http://localhost:3100/health
+```
 
----
+## O que observar
 
-**Versão:** 2.0  
-**Status:** ✅ Produção  
-**Última atualização:** Abril 2026
+- tokens economizados;
+- redução percentual;
+- eficiência por modelo;
+- ROI por tipo de análise;
+- histórico recente;
+- alertas quando a eficiência cai.
+
+## Leitura correta
+
+O dashboard ajuda a enxergar tendência. Ele não substitui análise financeira formal. Se os dados estiverem zerados, primeiro confirme se houve coleta no período.
+

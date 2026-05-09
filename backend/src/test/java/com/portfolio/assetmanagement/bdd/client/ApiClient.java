@@ -8,6 +8,7 @@ import io.restassured.http.ContentType;
 import io.restassured.module.mockmvc.RestAssuredMockMvc;
 import io.restassured.module.mockmvc.response.MockMvcResponse;
 import io.restassured.module.mockmvc.specification.MockMvcRequestSpecification;
+import java.util.HashMap;
 import java.util.Map;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.WebApplicationContext;
@@ -733,10 +734,14 @@ public class ApiClient {
   /** PATCH /assets/{id}/financial — atualiza dados financeiros. */
   public MockMvcResponse atualizarDadosFinanceiros(
       Long assetId, java.math.BigDecimal purchaseValue, String supplier, String token) {
+    Map<String, Object> body = new HashMap<>();
+    body.put("purchaseValue", purchaseValue);
+    body.put("supplier", supplier);
+    
     return given()
         .contentType(ContentType.JSON)
         .header("Authorization", "Bearer " + token)
-        .body(Map.of("purchaseValue", purchaseValue, "supplier", supplier))
+        .body(body)
         .when()
         .patch("/assets/{id}/financial", String.valueOf(assetId))
         .then()

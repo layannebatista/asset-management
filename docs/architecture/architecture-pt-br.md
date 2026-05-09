@@ -1,174 +1,87 @@
-# Arquitetura Enterprise
+# Arquitetura
 
-Documento revisado contra a estrutura atual do repositório e os módulos implementados.
+Este projeto é uma aplicação de gestão de ativos com frontend, backend, banco de dados e serviços de apoio para qualidade e observabilidade.
 
-## 1. Visão Geral do Sistema
+## Visão rápida
 
-O sistema é composto por:
+```text
+Usuário
+  -> Frontend React
+  -> API Spring Boot
+  -> PostgreSQL
 
-- frontend React + TypeScript
-- backend Spring Boot
-- PostgreSQL com Flyway
-- microsserviço `ai-intelligence` em Node.js + TypeScript
-- stack de observabilidade com Prometheus, Grafana, InfluxDB, cAdvisor e Allure
-
-O backend continua sendo o núcleo transacional e o ponto central de autenticação, autorização e multi-tenancy.
-
----
-
-## 2. Estrutura em Camadas do Backend
-
-Organização observada no código:
-
-- `interfaces` — controllers REST
-- `application` — services, DTOs, mappers e orquestração de casos de uso
-- `domain` — entidades, enums e regras centrais
-- `infrastructure` — persistência e integrações
-- `shared` — paginação, exceções, exportação e utilitários transversais
-
-Além disso, existem pacotes dedicados para:
-
-- `security`
-- `config`
-
----
-
-## 3. Módulos Funcionais Implementados
-
-Módulos confirmados no backend:
-
-- autenticação, MFA e refresh token
-- organizações, unidades e usuários
-- ativos e histórico de ativos
-- transferências
-- inventário
-- manutenção
-- auditoria
-- categorias
-- exportação CSV
-- dashboards
-- depreciação
-- seguros
-- centros de custo
-- AI Intelligence
-
----
-
-## 4. Multi-Tenant
-
-O tenant é a organização.
-
-A implementação combina:
-
-- contexto do usuário autenticado
-- filtros e validações por `organization_id`
-- checagens adicionais de ownership nas regras de serviço
-
-Nem toda tabela precisa armazenar `organization_id` diretamente; em alguns casos o tenant é herdado por relacionamento.
-
----
-
-## 5. Segurança
-
-Camadas principais:
-
-1. `SecurityFilterChain` com JWT stateless
-2. `@PreAuthorize` nos controllers
-3. validações de negócio e escopo no service layer
-4. constraints e foreign keys no banco
-
-O modelo de papéis implementado é:
-
-- `ADMIN`
-- `GESTOR`
-- `OPERADOR`
-
-Além do JWT, o sistema já suporta:
-
-- MFA opcional via WhatsApp
-- refresh tokens rotativos
-- integração service-to-service com `X-AI-Service-Key`
-
----
-
-## 6. Persistência
-
-Banco principal:
-
-- PostgreSQL
-
-Migrations:
-
-- Flyway
-
-Evoluções recentes do schema:
-
-- MFA
-- refresh tokens
-- dados fiscais e financeiros dos ativos
-- custo de manutenção
-- centros de custo
-- seguros
-
----
-
-## 7. Arquitetura de Deploy
-
-Topologia local observada no `docker-compose.yml`:
-
-```
-Frontend (Nginx)
-  -> Backend Spring Boot
-     -> PostgreSQL
-     -> AI Intelligence
-     -> Prometheus / Allure / Grafana / InfluxDB
+Serviços de apoio:
+  -> Grafana/Prometheus para métricas
+  -> Allure para testes
+  -> Sprint Reporter para relatórios
+  -> RTK Dashboard para economia de tokens
 ```
 
-O frontend em Docker recebe `VITE_API_URL=/api` e usa o Nginx para proxy reverso até o backend.
+## Backend
 
----
+O backend fica em `backend/` e usa Spring Boot. A organização segue uma ideia simples:
 
-## 8. Observabilidade e Qualidade
+- Controllers recebem chamadas HTTP.
+- Services aplicam regras de negócio.
+- Domain representa entidades e decisões do negócio.
+- Repositories conversam com o banco.
+- Configurations cuidam de segurança, CORS, observabilidade e integração.
 
-Componentes integrados:
+Essa separação ajuda a evitar que regra de negócio fique espalhada por controller ou SQL.
 
-- Actuator + Micrometer
-- Prometheus
-- Grafana
-- cAdvisor
-- InfluxDB para k6
-- Allure para relatórios de teste
+## Frontend
 
-O repositório também contém:
+O frontend fica em `frontend/` e usa React com TypeScript. Ele consome a API REST e concentra a experiência de uso: login, listagem de ativos, ações operacionais e telas de apoio.
 
-- CI via GitHub Actions
-- build e scan de imagens Docker
-- suíte E2E Playwright
+## Banco de dados
 
----
+O PostgreSQL guarda usuários, organizações, unidades, ativos, históricos, transferências, inventários, manutenção, custos, seguros e auditoria.
 
-## 9. AI Intelligence
+As mudanças de schema devem passar por migrações Flyway. Evite alterar tabelas manualmente em ambiente compartilhado.
 
-O microsserviço `ai-intelligence` roda separado do backend e é acessado pelo módulo `/api/ai`.
+## Segurança
 
-Coletores confirmados:
+O acesso é feito por JWT. Cada usuário tem perfil:
 
-- Prometheus
-- Allure
-- GitHub Actions
-- backend
+- `ADMIN`: visão global.
+- `GESTOR`: visão da unidade ou escopo permitido.
+- `OPERADOR`: visão operacional limitada.
 
-Tipos de análise expostos hoje:
+O sistema também filtra dados por organização e unidade para reduzir risco de vazamento entre tenants.
 
-- `observability`
-- `test-intelligence`
-- `cicd`
-- `incident`
-- `risk`
-- `multi-agent`
+## Multi-tenant
 
----
+Multi-tenant aqui significa que o mesmo sistema pode atender organizações diferentes. A API sempre precisa considerar o escopo do usuário logado antes de consultar ou alterar dados.
 
-## 10. Resumo
+Na prática: nunca busque ativos, usuários ou inventários apenas pelo `id`; aplique também organização/unidade quando a regra exigir.
 
-A arquitetura atual é mais ampla do que a primeira versão puramente backend. Hoje ela combina aplicação transacional, capacidades financeiras, observabilidade e um sidecar de IA, mantendo o backend Spring Boot como centro de segurança, tenant e regras de negócio.
+## Serviços auxiliares
+
+| Serviço | Papel |
+|---|---|
+| Prometheus | Coleta métricas |
+| Grafana | Exibe dashboards |
+| Allure | Mostra resultados de testes |
+| Sprint Reporter | Junta métricas da sprint e exporta PowerPoint |
+| RTK Dashboard | Mostra economia de tokens e ROI |
+| k6/InfluxDB | Testes e histórico de performance |
+
+## Decisões importantes
+
+- Docker Compose é o caminho padrão para execução local.
+- Swagger é a referência prática para testar API.
+- Flyway é a fonte de verdade para evolução do banco.
+- Testes devem cobrir regra de negócio, API e fluxos principais do frontend.
+- Logs, métricas e healthchecks devem ser mantidos simples e úteis.
+
+## Onde mexer
+
+| Quero alterar | Comece por |
+|---|---|
+| Regra de ativo | `backend/` services e domain |
+| Endpoint | controller, service e testes |
+| Tela | `frontend/` |
+| Relatório executivo | `sprint-reporter/` |
+| Métrica/alerta | `infra/prometheus/` e `infra/grafana/` |
+| Banco | migrações Flyway no backend |
+
