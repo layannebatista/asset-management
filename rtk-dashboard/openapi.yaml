@@ -1,0 +1,594 @@
+openapi: 3.0.0
+info:
+  title: RTK Dashboard — Otimização de Tokens
+  version: 2.0.0
+  description: |
+    # 📊 RTK Dashboard — Economia Real de Tokens
+
+    O **RTK Dashboard** oferece análises de economia de tokens em tempo real, mostrando ROI e eficiência
+    de modelos LLM sem depender de APIs pagas de inteligência artificial.
+
+    ## 🎯 O que você obtém
+
+    - **Economia em Tempo Real**: Veja exatamente quanto está economizando em tokens
+    - **ROI por Análise**: Qual tipo de análise traz mais valor
+    - **Eficiência de Modelos**: Performance de cada modelo LLM (Claude, GPT, etc)
+    - **Histórico 3 Meses**: Tendências e padrões de economia
+    - **100% Local**: Sem APIs pagas, sem integração com OpenAI/Anthropic
+
+    ## 💡 Casos de Uso
+
+    ### Para CFO / Gestores
+    - Quanto custa rodar IA atualmente?
+    - Qual é o ROI do RTK?
+    - Como a economia varia por modelo?
+
+    ### Para Engenheiros
+    - Qual modelo tem melhor qualidade/custo?
+    - Que tipos de análise economizam mais tokens?
+    - Como melhorar a eficiência geral?
+
+    ### Para QA
+    - Métricas de economia para relatório de sprint
+    - Tendências de custo over time
+    - Alertas quando ROI cai
+
+    ## 🔐 Autenticação
+
+    Opcionalmente, use `X-AI-Service-Key` header para rastreamento:
+
+    ```bash
+    curl -H "X-AI-Service-Key: seu-api-key" http://localhost:3100/api/v1/insights/executive-summary
+    ```
+
+    **Nota**: APIs são abertas por padrão (sem autenticação obrigatória).
+
+  contact:
+    name: Suporte RTK Dashboard
+    email: contato@empresa.com
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3100
+    description: Desenvolvimento Local
+  - url: https://rtk.seu-dominio.com
+    description: Produção (quando disponível)
+
+tags:
+  - name: Health
+    description: Verificação de status do serviço
+
+  - name: Insights
+    description: |
+      Análises de economia de tokens e ROI.
+      Dados em tempo real do PostgreSQL (100% local).
+
+  - name: Dashboard
+    description: |
+      Interface visual interativa.
+      Acesse em http://localhost:3100
+
+components:
+  securitySchemes:
+    optionalApiKey:
+      type: apiKey
+      in: header
+      name: X-AI-Service-Key
+      description: |
+        Chave de API opcional para rastreamento.
+        Se fornecida, requisições são rastreadas por cliente.
+
+  schemas:
+    ErrorResponse:
+      type: object
+      description: Resposta de erro padrão
+      properties:
+        error:
+          type: string
+          description: Código do erro
+          example: INVALID_REQUEST
+        message:
+          type: string
+          description: Descrição detalhada
+          example: Parâmetro 'days' deve ser entre 1 e 30
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-04-23T10:30:00Z"
+
+    HealthStatus:
+      type: object
+      description: Status de saúde do serviço
+      required:
+        - status
+        - service
+      properties:
+        status:
+          type: string
+          enum:
+            - UP
+            - DOWN
+            - DEGRADED
+          description: Status operacional
+          example: UP
+        service:
+          type: string
+          example: rtk-dashboard
+        version:
+          type: string
+          example: "2.0.0"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-04-23T10:30:00Z"
+
+    ExecutiveSummary:
+      type: object
+      description: Resumo executivo da economia RTK
+      properties:
+        summary:
+          type: object
+          properties:
+            period:
+              type: string
+              description: Período de análise
+              example: "Últimos 30 dias"
+            totalAnalysesExecuted:
+              type: integer
+              example: 1250
+            metrics:
+              type: object
+              properties:
+                tokensSaved:
+                  type: integer
+                  description: Total de tokens economizados
+                  example: 1550000
+                usdSaved:
+                  type: number
+                  format: float
+                  description: Equivalente em USD
+                  example: 775.00
+                savingsPercentage:
+                  type: number
+                  format: float
+                  description: Percentual de redução de tokens
+                  example: 62.0
+                qualityScore:
+                  type: number
+                  format: float
+                  description: Qualidade mantida (0-100%)
+                  example: 94.5
+            recommendation:
+              type: string
+              description: Recomendação estratégica
+              example: "Manter RTK ativado, ROI positivo"
+
+    TokenEconomy:
+      type: object
+      description: Detalhes de economia de tokens
+      properties:
+        tokenEconomy:
+          type: object
+          properties:
+            tokensWithoutRTK:
+              type: integer
+              description: Tokens que seriam usados sem otimização
+              example: 2500000
+            tokensWithRTK:
+              type: integer
+              description: Tokens usados com RTK ativo
+              example: 950000
+            savingsPercentage:
+              type: number
+              format: float
+              description: Percentual economizado
+              example: 62.0
+            financialImpact:
+              type: object
+              properties:
+                costWithoutOptimization:
+                  type: number
+                  format: float
+                  description: Custo sem RTK
+                  example: 1250.00
+                costWithOptimization:
+                  type: number
+                  format: float
+                  description: Custo com RTK
+                  example: 475.00
+                usdSaved:
+                  type: number
+                  format: float
+                  description: Economia em USD
+                  example: 775.00
+
+    ModelEfficiency:
+      type: object
+      description: Eficiência por modelo LLM
+      properties:
+        models:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                example: "claude-3-opus"
+              executions:
+                type: integer
+                description: Número de execuções
+                example: 500
+              avgFinalTokens:
+                type: number
+                format: float
+                description: Média de tokens finais após RTK
+                example: 1250
+              avgReductionPercentage:
+                type: number
+                format: float
+                description: Redução média percentual
+                example: 65.0
+              avgAccuracy:
+                type: number
+                format: float
+                description: Acurácia mantida (0-100%)
+                example: 96.5
+              costPerAnalysis:
+                type: number
+                format: float
+                description: Custo médio por análise
+                example: 0.95
+              recommendation:
+                type: string
+                enum:
+                  - RECOMENDADO
+                  - NÃO RECOMENDADO
+                description: Se modelo deve ser usado
+                example: RECOMENDADO
+
+    AnalysisROI:
+      type: object
+      description: ROI por tipo de análise
+      properties:
+        analyses:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                description: Tipo de análise
+                example: "token_optimization"
+              executions:
+                type: integer
+                example: 250
+              avgEfficiency:
+                type: number
+                format: float
+                description: Eficiência média
+                example: 0.85
+              avgAccuracy:
+                type: number
+                format: float
+                example: 0.94
+              totalUsdSaved:
+                type: number
+                format: float
+                example: 185.00
+              roiPercentage:
+                type: number
+                format: float
+                description: "ROI %: (savings / cost) * 100"
+                example: 92.0
+              recommendation:
+                type: string
+                enum:
+                  - ALTA
+                  - REVISAR
+                description: "ALTA (ROI > 70%), REVISAR (ROI < 70%)"
+                example: ALTA
+
+    HistoryItem:
+      type: object
+      description: Dados históricos semanais
+      properties:
+        week:
+          type: string
+          description: Semana (YYYY-W##)
+          example: "2026-W17"
+        totalAnalyses:
+          type: integer
+          example: 325
+        savingsPercentage:
+          type: number
+          format: float
+          example: 60.5
+        usdSaved:
+          type: number
+          format: float
+          example: 195.50
+        avgAccuracy:
+          type: number
+          format: float
+          example: 94.2
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Verificar se o RTK Dashboard está rodando
+      description: |
+        Verifica se a API está operacional e conectada ao banco de dados.
+
+        **Respostas:**
+        - **UP**: Serviço funcionando normalmente
+        - **DOWN**: Serviço indisponível (banco de dados offline?)
+        - **DEGRADED**: Serviço parcialmente funcional
+
+        **Use para:**
+        - Monitoramento contínuo (Prometheus, healthcheck)
+        - Verificação antes de chamar outras APIs
+        - Alertas se o serviço cair
+
+      operationId: getHealth
+      responses:
+        "200":
+          description: Serviço está UP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+              example:
+                status: UP
+                service: rtk-dashboard
+                version: "2.0.0"
+                timestamp: "2026-04-23T10:30:00Z"
+        "503":
+          description: Serviço está DOWN ou DEGRADED
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /api/v1/insights/executive-summary:
+    get:
+      tags:
+        - Insights
+      summary: Resumo executivo da economia RTK
+      description: |
+        Retorna um resumo executivo com as principais métricas de economia.
+
+        **Use para:**
+        - Dashboard principal (KPIs)
+        - Relatório de sprint executivo
+        - Apresentação para stakeholders
+
+        **Inclui:**
+        - Total de análises executadas
+        - Tokens economizados (número e %)
+        - USD economizado
+        - Qualidade mantida
+        - Recomendação estratégica
+
+        **Exemplo de interpretação:**
+        ```
+        "Em 30 dias, economizou $775 (62% de redução de tokens)
+         mantendo 94.5% de qualidade em 1.250 análises"
+        ```
+
+      operationId: getExecutiveSummary
+      security:
+        - optionalApiKey: []
+      parameters:
+        - name: days
+          in: query
+          description: Período em dias (1-90)
+          schema:
+            type: integer
+            default: 30
+            minimum: 1
+            maximum: 90
+      responses:
+        "200":
+          description: Resumo retornado com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExecutiveSummary"
+        "400":
+          description: Parâmetro inválido
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/v1/insights/token-economy:
+    get:
+      tags:
+        - Insights
+      summary: Análise detalhada de economia de tokens
+      description: |
+        Análise completa mostrando tokens com/sem RTK e impacto financeiro.
+
+        **Use para:**
+        - Calcular ROI do RTK
+        - Apresentar economia em dólares
+        - Comparar custo antes/depois
+
+        **Fórmulas:**
+        ```
+        Economia = tokensWithoutRTK - tokensWithRTK
+        Redução% = (Economia / tokensWithoutRTK) × 100
+        USD Economizado = Economia × $0.0005
+        ```
+
+      operationId: getTokenEconomy
+      security:
+        - optionalApiKey: []
+      parameters:
+        - name: days
+          in: query
+          description: Período em dias (1-90)
+          schema:
+            type: integer
+            default: 30
+      responses:
+        "200":
+          description: Análise de economia retornada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenEconomy"
+
+  /api/v1/insights/model-efficiency:
+    get:
+      tags:
+        - Insights
+      summary: Eficiência de cada modelo LLM
+      description: |
+        Compara a eficiência de cada modelo (Claude, GPT, etc).
+
+        **Use para:**
+        - Entender qual modelo economiza mais tokens
+        - Decidir qual modelo usar para novos projetos
+        - Identificar modelos com má relação custo/benefício
+
+        **Status:**
+        - **RECOMENDADO**: Ótimo custo-benefício (qualidade ≥ 95%, redução ≥ 60%)
+        - **NÃO REC.**: Revisar uso (qualidade < 90% ou custo muito alto)
+
+      operationId: getModelEfficiency
+      security:
+        - optionalApiKey: []
+      parameters:
+        - name: days
+          in: query
+          description: Período em dias (1-90)
+          schema:
+            type: integer
+            default: 30
+      responses:
+        "200":
+          description: Eficiência dos modelos retornada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModelEfficiency"
+
+  /api/v1/insights/analysis-roi:
+    get:
+      tags:
+        - Insights
+      summary: ROI por tipo de análise
+      description: |
+        Mostra qual tipo de análise traz mais retorno (economia vs custo).
+
+        **Use para:**
+        - Priorizar quais análises usar
+        - Justificar investimento em IA
+        - Identificar análises com ROI baixo
+
+        **Interpretação:**
+        ```
+        ROI > 70% (ALTA):  Implementar, muito valor
+        ROI 30-70%: OK, monitorar
+        ROI < 30% (REVISAR): Considerar remover
+        ```
+
+      operationId: getAnalysisROI
+      security:
+        - optionalApiKey: []
+      parameters:
+        - name: days
+          in: query
+          description: Período em dias (1-90)
+          schema:
+            type: integer
+            default: 30
+      responses:
+        "200":
+          description: ROI das análises retornado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisROI"
+
+  /api/v1/insights/history:
+    get:
+      tags:
+        - Insights
+      summary: Histórico de economia (últimos 3 meses)
+      description: |
+        Dados históricos agrupados por semana para ver tendências.
+
+        **Use para:**
+        - Gráficos de tendência
+        - Ver se economia está aumentando/diminuindo
+        - Identificar padrões sazonais
+
+        **Exemplo:**
+        ```json
+        [
+          {
+            "week": "2026-W17",
+            "totalAnalyses": 325,
+            "savingsPercentage": 60.5,
+            "usdSaved": 195.50
+          },
+          {
+            "week": "2026-W18",
+            "totalAnalyses": 380,
+            "savingsPercentage": 62.1,
+            "usdSaved": 225.75
+          }
+        ]
+        ```
+
+      operationId: getHistory
+      security:
+        - optionalApiKey: []
+      parameters:
+        - name: months
+          in: query
+          description: Últimos N meses (1-3)
+          schema:
+            type: integer
+            default: 3
+            minimum: 1
+            maximum: 3
+      responses:
+        "200":
+          description: Histórico retornado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HistoryItem"
+
+  /:
+    get:
+      tags:
+        - Dashboard
+      summary: Interface visual do RTK Dashboard
+      description: |
+        Acesse a interface gráfica em http://localhost:3100
+
+        **O que você vê:**
+        - 📊 Resumo Executivo (5 KPIs principais)
+        - 💰 Economia de Tokens (gráficos)
+        - 🤖 Eficiência de Modelos (tabela)
+        - 📈 ROI por Análise (gráficos + tabela)
+        - 🚨 Alertas automáticos (ROI baixo, qualidade baixa)
+        - 📄 Export PDF (relatório completo)
+
+      operationId: getDashboard
+      responses:
+        "200":
+          description: Dashboard HTML
+          content:
+            text/html:
+              schema:
+                type: string

@@ -5,6 +5,7 @@ interface TipButtonProps {
   onClick?: () => void
   danger?: boolean
   disabled?: boolean
+  testId?: string
   /** Exibe spinner de loading no lugar do children */
   loading?: boolean
   children: ReactNode
@@ -14,13 +15,14 @@ interface TipButtonProps {
  * Botão quadrado pequeno com tooltip no hover.
  * Versão canônica — suporta loading com spinner, danger e disabled.
  */
-export function TipButton({ tip, onClick, danger, disabled, loading, children }: TipButtonProps) {
+export function TipButton({ tip, onClick, danger, disabled, testId, loading, children }: TipButtonProps) {
   const isDisabled = disabled || loading
 
   return (
     <div className="relative group">
       <button
         type="button"
+        data-testid={testId}
         title={tip}
         aria-label={tip}
         onClick={() => {

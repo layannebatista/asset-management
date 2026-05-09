@@ -60,7 +60,7 @@ export function CreateAssetModal({
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Novo Ativo">
+    <Modal open={open} onClose={onClose} title="Novo Ativo" testId="create-asset-modal" closeButtonTestId="create-asset-close-btn">
       {/* erro */}
       {error && (
         <div className="mb-3 bg-red-50 border border-red-200 rounded-[8px] p-3 text-[12.5px] text-red-700">
@@ -72,6 +72,7 @@ export function CreateAssetModal({
       <div className="grid grid-cols-2 gap-3">
         <Field label="Tipo *">
           <select
+            data-testid="create-asset-type-select"
             value={form.type}
             onChange={(e) => {
               const value = e.target.value as AssetType | ''
@@ -90,6 +91,7 @@ export function CreateAssetModal({
 
         <Field label="Modelo *">
           <input
+            data-testid="create-asset-model-input"
             value={form.model}
             maxLength={255}
             onChange={(e) =>
@@ -109,6 +111,7 @@ export function CreateAssetModal({
           </p>
         ) : (
           <select
+            data-testid="create-asset-unit-select"
             value={form.unitId}
             onChange={(e) =>
               setForm((f) => ({ ...f, unitId: e.target.value }))
@@ -132,6 +135,8 @@ export function CreateAssetModal({
         loading={saving}
         confirmLabel="Criar Ativo"
         disabled={!isValid || saving}
+        cancelTestId="create-asset-cancel-btn"
+        confirmTestId="create-asset-confirm-btn"
       />
     </Modal>
   )

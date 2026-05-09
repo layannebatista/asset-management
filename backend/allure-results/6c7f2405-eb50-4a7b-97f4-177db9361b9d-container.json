@@ -1,1 +1,0 @@
-{"uuid":"6c7f2405-eb50-4a7b-97f4-177db9361b9d","name":"deve lançar BusinessException quando já existe manutenção ativa para o ativo","children":["6233b4b9-cf24-43d7-9617-4140552bde45"],"befores":[],"afters":[],"start":1772850472458,"stop":1772850472475}

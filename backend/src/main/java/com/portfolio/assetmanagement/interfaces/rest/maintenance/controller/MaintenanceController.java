@@ -12,6 +12,7 @@ import com.portfolio.assetmanagement.shared.pagination.PageResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.stream.Collectors;
@@ -91,7 +92,8 @@ public class MaintenanceController {
 
   @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
   @PostMapping
-  public ResponseEntity<MaintenanceResponseDTO> create(@RequestBody MaintenanceCreateDTO request) {
+  public ResponseEntity<MaintenanceResponseDTO> create(
+      @RequestBody @Valid MaintenanceCreateDTO request) {
     MaintenanceRecord record =
         maintenanceService.create(
             request.getAssetId(), request.getDescription(), request.getEstimatedCost());

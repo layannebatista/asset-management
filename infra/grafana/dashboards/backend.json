@@ -110,7 +110,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "sum(rate(http_server_requests_seconds_count{application=\"asset-management\",status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count{application=\"asset-management\"}[5m]))",
+          "expr": "(sum(rate(http_server_requests_seconds_count{application=\"asset-management\",status=~\"5..\"}[5m])) / clamp_min(sum(rate(http_server_requests_seconds_count{application=\"asset-management\"}[5m])),1)) or vector(0)",
           "legendFormat": "erros 5xx"
         }
       ],
@@ -331,8 +331,28 @@
     },
 
     {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Ranking dinamico dos cinco endpoints com maior latencia p95 nos ultimos 5 minutos. Use este painel para priorizar investigacoes de performance no endpoint que mais impacta a experiencia do usuario.",
+      "title": "Top 5 Endpoints Mais Lentos (p95)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 22 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "targets": [
+        {
+          "expr": "topk(5, histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{application=\"asset-management\"}[5m])) by (le, uri)))",
+          "legendFormat": "{{uri}}"
+        }
+      ]
+    },
+
+    {
       "collapsed": false,
-      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 },
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 30 },
       "id": 20,
       "title": "☕ JVM — Memória, CPU e Threads",
       "type": "row"
@@ -541,7 +561,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "prometheus" },
-          "expr": "rate(hikaricp_connection_acquired_nanos_sum{application=\"asset-management\"}[2m]) / rate(hikaricp_connection_acquired_nanos_count{application=\"asset-management\"}[2m]) / 1e6",
+          "expr": "(rate(hikaricp_connection_acquired_nanos_sum{application=\"asset-management\"}[2m]) / rate(hikaricp_connection_acquired_nanos_count{application=\"asset-management\"}[2m]) / 1e6) or vector(0)",
           "legendFormat": "Tempo médio de aquisição (ms)"
         },
         {

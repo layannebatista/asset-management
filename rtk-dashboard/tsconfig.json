@@ -1,0 +1,51 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noImplicitAny": false,
+    "forceConsistentCasingInFileNames": false,
+    "resolveJsonModule": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": false,
+    "noEmitOnError": false,
+    "paths": {
+      "@config/*": ["./src/config/*"],
+      "@types/*": ["./src/types/*"],
+      "@analyzers/*": ["./src/analyzers/*"],
+      "@collectors/*": ["./src/collectors/*"],
+      "@llm/*": ["./src/llm/*"],
+      "@context/*": ["./src/context/*"],
+      "@orchestrator/*": ["./src/orchestrator/*"],
+      "@agents/*": ["./src/agents/*"],
+      "@storage/*": ["./src/storage/*"],
+      "@api/*": ["./src/api/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "src/gateway/**/*",
+    "src/optimization/**/*",
+    "src/predictive/**/*",
+    "src/production/**/*",
+    "src/eval/**/*",
+    "src/api/routes/analysis.enterprise.routes.ts",
+    "src/api/routes/production-decision.routes.ts",
+    "src/api/routes/value-decision.routes.ts",
+    "src/analyzers/observability/ObservabilityAnalyzerWithTokenTracking.ts",
+    "src/observability/OTelInstrumentation.ts",
+    "src/observability/TokenSavingsRecorder.ts"
+  ]
+}

@@ -2,7 +2,7 @@ import axios from 'axios'
 import type { AxiosError, AxiosRequestConfig } from 'axios'
 import { tokenService } from '../utils/token'
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
+const API_URL = import.meta.env.VITE_API_URL || '/api'
 
 // ── Instances ───────────────────────────────────────────
 export const api = axios.create({
@@ -70,7 +70,9 @@ api.interceptors.response.use(
       return Promise.reject(error)
     }
 
-    if (error.response?.status === 401 && !original._retry) {
+    // Não tenta refresh em rotas de autenticação (login, mfa, refresh)
+    const isAuthRoute = original.url?.includes('/auth/')
+    if (error.response?.status === 401 && !original._retry && !isAuthRoute) {
       if (isRefreshing) {
         return new Promise<string>((resolve, reject) => {
           failedQueue.push({ resolve, reject })

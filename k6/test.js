@@ -1,5 +1,6 @@
 import http from 'k6/http';
 import { check, group, sleep } from 'k6';
+import exec from 'k6/execution';
 import { Trend, Rate, Counter } from 'k6/metrics';
 
 // ── Métricas customizadas ──────────────────────────────────────────────────────
@@ -52,11 +53,18 @@ export const options = {
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
+const ADMIN_EMAIL = __ENV.ADMIN_EMAIL || 'admin@empresa.com';
+const ADMIN_PASSWORD = __ENV.ADMIN_PASSWORD || 'Admin@123';
+const TEST_DATA_CLEANUP_KEY = __ENV.TEST_DATA_CLEANUP_KEY || '';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
 function authHeaders(token) {
   return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+}
+
+function isSmokeFirstIteration() {
+  return exec.scenario.name === 'smoke' && __ITER === 0;
 }
 
 function post(path, body, headers = JSON_HEADERS) {
@@ -79,16 +87,74 @@ function login(email, password) {
   const res = post('/auth/login', { email, password });
   loginDuration.add(res.timings.duration);
 
+  let body;
+  try {
+    body = JSON.parse(res.body);
+  } catch {
+    body = {};
+  }
+
+  const isSuccess = res.status === 200;
+  const hasToken = !!body.accessToken;
+  const isMfa = body.mfaRequired === true;
+
   const ok = check(res, {
-    'login: status 200': (r) => r.status === 200,
-    'login: tem accessToken': (r) => {
-      try { return !!JSON.parse(r.body).accessToken; } catch { return false; }
-    },
+    'login: status 200': () => isSuccess,
+    'login: sucesso ou MFA': () => hasToken || isMfa,
   });
+
   errorRate.add(!ok);
 
   if (!ok) return null;
-  return JSON.parse(res.body).accessToken;
+
+  if (hasToken) {
+    return body.accessToken;
+  }
+
+  if (isMfa) {
+    return handleMfa(body.userId);
+  }
+
+  return null;
+}
+
+function loginWithRetry(email, password, attempts = 3) {
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const token = login(email, password);
+    if (token) return token;
+
+    if (attempt < attempts) {
+      sleep(0.5 * attempt);
+    }
+  }
+
+  return null;
+}
+
+// ── MFA ────────────────────────────────────────────────────────────
+function handleMfa(userId) {
+  const res = post('/auth/mfa/verify', {
+    userId: userId,
+    code: '123456',
+  });
+
+  let body;
+  try {
+    body = JSON.parse(res.body);
+  } catch {
+    body = {};
+  }
+
+  const ok = check(res, {
+    'mfa: status 200': (r) => r.status === 200,
+    'mfa: tem token': () => !!body.accessToken,
+  });
+
+  errorRate.add(!ok);
+
+  if (!ok) return null;
+
+  return body.accessToken;
 }
 
 // ── Grupos de teste ────────────────────────────────────────────────────────────
@@ -102,9 +168,11 @@ function testHealth() {
 }
 
 function testAuth() {
+  if (!isSmokeFirstIteration()) return;
+
   group('Autenticação', () => {
     group('login com credenciais válidas', () => {
-      const token = login('admin@acme.com', 'Senha@123');
+      const token = login(ADMIN_EMAIL, ADMIN_PASSWORD);
       check({ token }, { 'auth: token obtido': (t) => t.token !== null });
     });
 
@@ -114,7 +182,7 @@ function testAuth() {
     });
 
     group('refresh token', () => {
-      const loginRes = post('/auth/login', { email: 'admin@acme.com', password: 'Senha@123' });
+      const loginRes = post('/auth/login', { email: ADMIN_EMAIL, password: ADMIN_PASSWORD });
       if (loginRes.status !== 200) return;
       const { refreshToken } = JSON.parse(loginRes.body);
       const res = post('/auth/refresh', { refreshToken });
@@ -181,7 +249,7 @@ function testAssets(token) {
     });
 
     group('criar ativo (auto tag)', () => {
-      // necessita de organizationId válido — usa o primeiro disponível
+      // necessita de organizationId e unitId válidos — usa o primeiro disponível
       const orgRes = get('/organizations', headers);
       if (orgRes.status !== 200) return;
       const orgs = JSON.parse(orgRes.body);
@@ -189,9 +257,15 @@ function testAssets(token) {
       if (!orgList || orgList.length === 0) return;
 
       const orgId = orgList[0].id;
+      const unitsRes = get(`/units/${orgId}`, headers);
+      if (unitsRes.status !== 200) return;
+      const units = JSON.parse(unitsRes.body);
+      if (!Array.isArray(units) || units.length === 0) return;
+      const unitId = units[0].id;
+
       const createRes = post(
         `/assets/${orgId}/auto`,
-        { type: 'NOTEBOOK', model: `Dell K6 ${Date.now()}`, unitId: null },
+        { type: 'NOTEBOOK', model: `Dell K6 ${Date.now()}`, unitId },
         headers,
       );
       check(createRes, { 'asset: criação auto retorna 201': (r) => r.status === 201 });
@@ -229,12 +303,13 @@ function testMaintenance(token) {
     });
 
     group('fluxo completo de manutenção', () => {
-      // busca um ativo disponível para associar
-      const assetsRes = get('/assets', headers, { page: 0, size: 1 });
+      // usa preferencialmente os assets seed E2E para não tocar em dados arbitrários
+      const assetsRes = get('/assets', headers, { page: 0, size: 20, search: 'E2E-' });
       if (assetsRes.status !== 200) return;
       const assets = JSON.parse(assetsRes.body).content;
       if (!assets || assets.length === 0) return;
-      const assetId = assets[0].id;
+      const candidate = assets.find((asset) => asset.status === 'AVAILABLE') || assets[0];
+      const assetId = candidate.id;
 
       const createRes = post(
         '/maintenance',
@@ -327,13 +402,13 @@ function testAudit(token) {
 }
 
 // ── Entrypoint principal ───────────────────────────────────────────────────────
-export default function () {
+export default function (data) {
   testHealth();
 
   testAuth();
   sleep(0.5);
 
-  const token = login('admin@acme.com', 'Senha@123');
+  const token = data?.token || loginWithRetry(ADMIN_EMAIL, ADMIN_PASSWORD);
   if (!token) {
     errorRate.add(1);
     sleep(1);
@@ -361,4 +436,24 @@ export default function () {
   testAudit(token);
 
   sleep(1);
+}
+
+export function teardown() {
+  if (!TEST_DATA_CLEANUP_KEY) return;
+
+  const token = loginWithRetry(ADMIN_EMAIL, ADMIN_PASSWORD);
+  if (!token) return;
+
+  requestsTotal.add(1);
+  http.post(`${BASE_URL}/test-support/cleanup`, null, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'X-Test-Cleanup-Key': TEST_DATA_CLEANUP_KEY,
+    },
+  });
+}
+
+export function setup() {
+  const token = loginWithRetry(ADMIN_EMAIL, ADMIN_PASSWORD, 5);
+  return { token };
 }

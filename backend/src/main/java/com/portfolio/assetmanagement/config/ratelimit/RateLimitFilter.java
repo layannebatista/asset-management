@@ -9,6 +9,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -30,6 +31,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
  */
 @Component
 public class RateLimitFilter extends OncePerRequestFilter {
+
+  private final boolean enabled;
 
   private static class Bucket {
     private final int capacity;
@@ -61,10 +64,19 @@ public class RateLimitFilter extends OncePerRequestFilter {
   private final Map<String, Bucket> refreshBuckets = new ConcurrentHashMap<>();
   private final Map<String, Bucket> globalBuckets = new ConcurrentHashMap<>();
 
+  public RateLimitFilter(@Value("${app.rate-limit.enabled:true}") boolean enabled) {
+    this.enabled = enabled;
+  }
+
   @Override
   protected void doFilterInternal(
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
+
+    if (!enabled) {
+      filterChain.doFilter(request, response);
+      return;
+    }
 
     String ip = extractIp(request);
     String path = request.getRequestURI();
@@ -114,5 +126,16 @@ public class RateLimitFilter extends OncePerRequestFilter {
     return path.startsWith("/v3/api-docs")
         || path.startsWith("/swagger-ui")
         || path.equals("/actuator/health");
+  }
+
+  /**
+   * Utilizado pelos testes BDD para garantir isolamento entre cenários. Em produção, os buckets
+   * devem persistir durante a janela de rate limit.
+   */
+  public void clearAllBucketsForTests() {
+    loginBuckets.clear();
+    mfaBuckets.clear();
+    refreshBuckets.clear();
+    globalBuckets.clear();
   }
 }

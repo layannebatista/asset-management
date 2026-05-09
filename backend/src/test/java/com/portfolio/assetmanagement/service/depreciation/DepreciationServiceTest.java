@@ -13,19 +13,32 @@ import com.portfolio.assetmanagement.domain.unit.entity.Unit;
 import com.portfolio.assetmanagement.infrastructure.persistence.asset.repository.AssetRepository;
 import com.portfolio.assetmanagement.security.context.LoggedUserContext;
 import com.portfolio.assetmanagement.shared.exception.BusinessException;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Story;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("DepreciationService — cálculo matemático")
+@MockitoSettings(strictness = Strictness.LENIENT)
+@Epic("Backend")
+@Feature("Serviços — Depreciação")
+@DisplayName("Serviço de Depreciação")
+@Tag("testType=Integration")
+@Tag("module=Depreciation")
 class DepreciationServiceTest {
 
   @Mock private AssetRepository assetRepository;
@@ -59,10 +72,15 @@ class DepreciationServiceTest {
   }
 
   @Nested
-  @DisplayName("LINEAR (Quotas Constantes)")
+  @DisplayName("Depreciação Linear (Quotas Constantes)")
+  @Story("Cálculo Linear")
+  @Tag("testType=Integration")
+  @Tag("module=Depreciation")
   class Linear {
 
     @Test
+    @Severity(SeverityLevel.CRITICAL)
+    @DisplayName("[INTEGRACAO][ASSET] Depreciação após 12 meses deve ser proporcional")
     void linearAfter12Months() {
 
       Asset asset =
@@ -83,13 +101,13 @@ class DepreciationServiceTest {
       assertThat(result.getCurrentValue()).isEqualByComparingTo(new BigDecimal("9600.00"));
 
       assertThat(result.getElapsedMonths()).isEqualTo(12);
-
       assertThat(result.getRemainingMonths()).isEqualTo(48);
-
       assertThat(result.isFullyDepreciated()).isFalse();
     }
 
     @Test
+    @Severity(SeverityLevel.NORMAL)
+    @DisplayName("[INTEGRACAO][ASSET] Deve respeitar valor residual")
     void linearRespectsResidualValue() {
 
       Asset asset =
@@ -108,11 +126,12 @@ class DepreciationServiceTest {
           .isEqualByComparingTo(new BigDecimal("9000.00"));
 
       assertThat(result.getCurrentValue()).isEqualByComparingTo(new BigDecimal("1000.00"));
-
       assertThat(result.isFullyDepreciated()).isTrue();
     }
 
     @Test
+    @Severity(SeverityLevel.NORMAL)
+    @DisplayName("[INTEGRACAO][ASSET] Deve atingir 100% ao final da vida útil")
     void linearFullyDepreciatedAt100Percent() {
 
       Asset asset =
@@ -134,10 +153,16 @@ class DepreciationServiceTest {
   }
 
   @Nested
-  @DisplayName("DECLINING_BALANCE")
+  @DisplayName("Depreciação Saldo Decrescente")
+  @Story("Cálculo Acelerado")
+  @Tag("testType=Integration")
+  @Tag("module=Depreciation")
   class DecliningBalance {
 
     @Test
+    @Severity(SeverityLevel.NORMAL)
+    @DisplayName(
+        "[INTEGRACAO][ASSET] Método acelerado deve depreciar mais rápido que linear no início")
     void decliningFasterThanLinearInFirstYear() {
 
       BigDecimal purchaseValue = new BigDecimal("10000.00");
@@ -159,11 +184,9 @@ class DepreciationServiceTest {
               LocalDate.now().minusMonths(12));
 
       when(assetRepository.findById(1L)).thenReturn(Optional.of(linearAsset));
-
       DepreciationResultDTO linearResult = depreciationService.calculate(1L);
 
       when(assetRepository.findById(1L)).thenReturn(Optional.of(decliningAsset));
-
       DepreciationResultDTO decliningResult = depreciationService.calculate(1L);
 
       assertThat(decliningResult.getAccumulatedDepreciation())
@@ -172,10 +195,16 @@ class DepreciationServiceTest {
   }
 
   @Nested
-  @DisplayName("SUM_OF_YEARS")
+  @DisplayName("Depreciação Soma dos Dígitos dos Anos")
+  @Story("Cálculo Acelerado")
+  @Tag("testType=Integration")
+  @Tag("module=Depreciation")
   class SumOfYears {
 
     @Test
+    @Severity(SeverityLevel.NORMAL)
+    @DisplayName(
+        "[INTEGRACAO][ASSET] Método soma dos dígitos deve ser mais rápido que linear no início")
     void sydFasterThanLinearInitially() {
 
       BigDecimal purchaseValue = new BigDecimal("12000.00");
@@ -197,11 +226,9 @@ class DepreciationServiceTest {
               LocalDate.now().minusMonths(6));
 
       when(assetRepository.findById(1L)).thenReturn(Optional.of(linearAsset));
-
       DepreciationResultDTO linearResult = depreciationService.calculate(1L);
 
       when(assetRepository.findById(1L)).thenReturn(Optional.of(sydAsset));
-
       DepreciationResultDTO sydResult = depreciationService.calculate(1L);
 
       assertThat(sydResult.getAccumulatedDepreciation())
@@ -210,10 +237,15 @@ class DepreciationServiceTest {
   }
 
   @Nested
-  @DisplayName("Validações")
+  @DisplayName("ValidaçÃµes")
+  @Story("Validação de dados")
+  @Tag("testType=Integration")
+  @Tag("module=Depreciation")
   class Validations {
 
     @Test
+    @Severity(SeverityLevel.CRITICAL)
+    @DisplayName("[INTEGRACAO][ASSET] Deve lançar exceção quando não há valor de compra")
     void throwsWhenNoPurchaseValue() {
 
       Asset asset =
@@ -227,6 +259,8 @@ class DepreciationServiceTest {
     }
 
     @Test
+    @Severity(SeverityLevel.CRITICAL)
+    @DisplayName("[INTEGRACAO][ASSET] Deve lançar exceção quando não há vida útil")
     void throwsWhenNoUsefulLife() {
 
       Asset asset =

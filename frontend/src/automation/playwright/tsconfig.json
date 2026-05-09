@@ -1,15 +1,22 @@
 {
+  "ts-node": {
+    "transpileOnly": true,
+    "cache": false
+  },
   "compilerOptions": {
     "target": "ES2022",
     "module": "commonjs",
-    "lib": ["ES2022"],
+    "lib": ["ES2022", "DOM"],
     "types": ["node"],
-    "moduleResolution": "node",
     "esModuleInterop": true,
     "strict": false,
     "skipLibCheck": true
   },
   "include": [
-    "**/*.ts"
+    "support/**/*.ts",
+    "step-definitions/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
   ]
 }

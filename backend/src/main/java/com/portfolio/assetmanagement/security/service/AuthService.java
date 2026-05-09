@@ -3,12 +3,14 @@ package com.portfolio.assetmanagement.security.service;
 import com.portfolio.assetmanagement.application.mfa.service.MfaService;
 import com.portfolio.assetmanagement.domain.auth.entity.RefreshToken;
 import com.portfolio.assetmanagement.domain.user.entity.User;
+import com.portfolio.assetmanagement.domain.user.enums.UserStatus;
 import com.portfolio.assetmanagement.infrastructure.persistence.user.repository.UserRepository;
 import com.portfolio.assetmanagement.security.dto.LoginRequestDTO;
 import com.portfolio.assetmanagement.security.dto.LoginResponseDTO;
 import com.portfolio.assetmanagement.security.dto.MfaVerifyRequestDTO;
 import com.portfolio.assetmanagement.security.dto.RefreshRequestDTO;
 import com.portfolio.assetmanagement.security.enums.UserRole;
+import com.portfolio.assetmanagement.shared.exception.BusinessException;
 import com.portfolio.assetmanagement.shared.exception.NotFoundException;
 import java.util.List;
 import org.slf4j.Logger;
@@ -127,6 +129,10 @@ public class AuthService {
         userRepository
             .findById(old.getUserId())
             .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
+
+    if (user.getStatus() != UserStatus.ACTIVE) {
+      throw new BusinessException("Usuário não está ativo");
+    }
 
     UserDetails userDetails = buildUserDetails(user);
     String newAccessToken = tokenService.generateToken(userDetails);

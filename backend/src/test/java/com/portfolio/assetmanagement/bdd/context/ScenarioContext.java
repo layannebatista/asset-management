@@ -92,4 +92,55 @@ public class ScenarioContext {
   public Long getLastCreatedId() {
     return getId("lastCreatedId");
   }
+
+  // =========================================================
+  // Valores nomeados — para armazenar dados genéricos (strings, ints, etc)
+  // =========================================================
+
+  private final Map<String, Object> values = new HashMap<>();
+
+  public void setValue(String name, Object value) {
+    values.put(name, value);
+  }
+
+  public Object getValue(String name) {
+    Object value = values.get(name);
+    if (value == null) {
+      throw new IllegalStateException(
+          "Valor '"
+              + name
+              + "' não encontrado no contexto do cenário. "
+              + "Verifique se foi definido anteriormente com setValue().");
+    }
+    return value;
+  }
+
+  public String getStringValue(String name) {
+    return (String) getValue(name);
+  }
+
+  public Integer getIntValue(String name) {
+    Object value = getValue(name);
+    if (value instanceof Integer) {
+      return (Integer) value;
+    } else if (value instanceof Number) {
+      return ((Number) value).intValue();
+    }
+    throw new ClassCastException(
+        "Valor '" + name + "' não é um inteiro: " + value.getClass().getSimpleName());
+  }
+
+  // =========================================================
+  // Atalhos semânticos de domínio
+  // =========================================================
+
+  public String getCurrentAssetTag() {
+    try {
+      return getStringValue("ativoTagAtual");
+    } catch (IllegalStateException ex) {
+      throw new IllegalStateException(
+          "Tag do ativo atual não encontrada no contexto. "
+              + "Garanta que um passo de criação do ativo foi executado antes da operação.");
+    }
+  }
 }

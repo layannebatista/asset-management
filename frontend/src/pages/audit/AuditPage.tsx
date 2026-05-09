@@ -6,7 +6,7 @@ import type { AuditEvent, UserResponse, UnitResponse } from '../../types'
 import {
   AUDIT_EVENT_LABELS, AUDIT_EVENT_FILTER_OPTIONS,
   resolveUserName, resolveUnitName,
-  DateRangeFilter, ErrorBanner,
+  DateRangeFilter,
 } from '../../shared'
 
 const EVENT_ICON: Record<string, React.ReactNode> = {

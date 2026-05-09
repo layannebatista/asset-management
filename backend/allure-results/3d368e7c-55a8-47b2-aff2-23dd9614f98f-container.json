@@ -1,1 +1,0 @@
-{"uuid":"3d368e7c-55a8-47b2-aff2-23dd9614f98f","name":"deve lançar BusinessException ao cancelar manutenção já CANCELLED","children":["6b475398-4378-4be5-ad89-6e4e53750061"],"befores":[],"afters":[],"start":1772851250408,"stop":1772851250423}

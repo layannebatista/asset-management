@@ -79,15 +79,15 @@ components:
 
     AssetStatus:
       type: string
-      enum: [ACTIVE, RETIRED, IN_MAINTENANCE]
+      enum: [AVAILABLE, ASSIGNED, IN_TRANSFER, IN_MAINTENANCE, UNAVAILABLE, RETIRED]
 
     AssetType:
       type: string
-      enum: [EQUIPMENT, VEHICLE, FURNITURE, IT]
+      enum: [MOBILE_PHONE, NOTEBOOK, TABLET, DESKTOP, VEHICLE, OTHER]
 
     UserRole:
       type: string
-      enum: [ADMIN, MANAGER, OPERATOR]
+      enum: [ADMIN, GESTOR, OPERADOR]
 
     ############################################
     # ASSET
@@ -257,17 +257,192 @@ components:
     # DASHBOARD
     ############################################
 
+    AssetIdleItem:
+      type: object
+      properties:
+        assetTag:
+          type: string
+        model:
+          type: string
+        type:
+          $ref: '#/components/schemas/AssetType'
+        idleDays:
+          type: integer
+          format: int64
+
     ExecutiveDashboard:
       type: object
       properties:
+        # Basic metrics
         totalAssets:
           type: integer
-        activeAssets:
+          format: int64
+        totalMaintenance:
           type: integer
-        maintenanceAssets:
+          format: int64
+        totalUsers:
           type: integer
-        retiredAssets:
+          format: int64
+        # Asset distribution
+        assetsByStatus:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        assetsByUnit:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        assetsByType:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        # Maintenance metrics
+        maintenanceByStatus:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        maintenanceByMonth:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        # Transfer metrics
+        transferByStatus:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        transferByMonth:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        # User metrics
+        usersByStatus:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        usersByRole:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        # Operational fields
+        assetsAvailable:
           type: integer
+          format: int64
+        assetsRetiredThisMonth:
+          type: integer
+          format: int64
+        assetsIdleCount:
+          type: integer
+          format: int64
+        pendingTransfersCount:
+          type: integer
+          format: int64
+        maintenanceCostMonth:
+          type: number
+        insuranceExpiringCount:
+          type: integer
+          format: int64
+
+    UnitDashboard:
+      type: object
+      properties:
+        # Basic metrics
+        totalAssets:
+          type: integer
+          format: int64
+        totalMaintenance:
+          type: integer
+          format: int64
+        totalUsers:
+          type: integer
+          format: int64
+        # Distributions
+        assetsByStatus:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        maintenanceByStatus:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+        # Operational fields
+        assetsAvailable:
+          type: integer
+          format: int64
+        utilizationRate:
+          type: number
+        pendingTransfersCount:
+          type: integer
+          format: int64
+        maintenanceCostMonth:
+          type: number
+        assetsIdleList:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssetIdleItem'
+
+    PersonalAsset:
+      type: object
+      properties:
+        assetTag:
+          type: string
+        model:
+          type: string
+        type:
+          $ref: '#/components/schemas/AssetType'
+        status:
+          $ref: '#/components/schemas/AssetStatus'
+        assignedSince:
+          type: string
+          format: date-time
+          nullable: true
+        maintenanceCode:
+          type: string
+          nullable: true
+
+    PersonalMaintenance:
+      type: object
+      properties:
+        code:
+          type: string
+        assetTag:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    PersonalDashboard:
+      type: object
+      properties:
+        totalAssetsAssigned:
+          type: integer
+          format: int64
+        totalMaintenanceRelated:
+          type: integer
+          format: int64
+        myAssets:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonalAsset'
+        myPendingTransfers:
+          type: integer
+          format: int64
+        myOpenMaintenances:
+          type: array
+          items:
+            $ref: '#/components/schemas/PersonalMaintenance'
 
 paths:
 
@@ -363,3 +538,31 @@ paths:
                 $ref: '#/components/schemas/ExecutiveDashboard'
         403:
           description: Acesso negado
+
+  /api/dashboard/unit:
+    get:
+      tags: [Dashboard]
+      summary: Dashboard operacional (GESTOR)
+      responses:
+        200:
+          description: Dados da unidade
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnitDashboard'
+        403:
+          description: Acesso negado
+
+  /api/dashboard/personal:
+    get:
+      tags: [Dashboard]
+      summary: Dashboard pessoal (OPERADOR)
+      responses:
+        200:
+          description: Dados do usuário
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonalDashboard'
+        401:
+          description: Não autenticado

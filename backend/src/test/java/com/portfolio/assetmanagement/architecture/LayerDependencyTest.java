@@ -6,8 +6,14 @@ import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Story;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -29,7 +35,11 @@ import org.junit.jupiter.api.Test;
  * noClasses().that()...should() para proibir algo - Use classes().that()...should() para exigir
  * algo - Sempre adicione .because("explicação do motivo") para documentar
  */
-@DisplayName("Regras de Arquitetura em Camadas")
+@Epic("Backend")
+@Feature("Arquitetura — Camadas")
+@DisplayName("[CONFIG][ASSET] Dependências entre Camadas")
+@Tag("testType=Architecture")
+@Tag("module=General")
 class LayerDependencyTest {
 
   private static final String PACOTE_BASE = "com.portfolio.assetmanagement";
@@ -58,7 +68,9 @@ class LayerDependencyTest {
   // =========================================================
 
   @Test
-  @DisplayName("Domain não deve importar classes de Application")
+  @Story("Dependências de camada")
+  @Severity(SeverityLevel.BLOCKER)
+  @DisplayName("[CONFIG][ASSET] Domain não deve importar classes de Application")
   void domainNaoDeveImportarApplication() {
     noClasses()
         .that()
@@ -73,7 +85,9 @@ class LayerDependencyTest {
   }
 
   @Test
-  @DisplayName("Domain não deve importar classes de Interfaces (controllers)")
+  @Story("Dependências de camada")
+  @Severity(SeverityLevel.BLOCKER)
+  @DisplayName("[CONFIG][ASSET] Domain não deve importar classes de Interfaces (controllers)")
   void domainNaoDeveImportarInterfaces() {
     noClasses()
         .that()
@@ -88,7 +102,9 @@ class LayerDependencyTest {
   }
 
   @Test
-  @DisplayName("Domain não deve importar classes de Infrastructure")
+  @Story("Dependências de camada")
+  @Severity(SeverityLevel.BLOCKER)
+  @DisplayName("[CONFIG][ASSET] Domain não deve importar classes de Infrastructure")
   void domainNaoDeveImportarInfrastructure() {
     noClasses()
         .that()
@@ -107,7 +123,9 @@ class LayerDependencyTest {
   // =========================================================
 
   @Test
-  @DisplayName("Application não deve importar classes de Interfaces (controllers)")
+  @Story("Dependências de camada")
+  @Severity(SeverityLevel.BLOCKER)
+  @DisplayName("[CONFIG][ASSET] Application não deve importar classes de Interfaces (controllers)")
   void applicationNaoDeveImportarInterfaces() {
     noClasses()
         .that()
@@ -126,7 +144,9 @@ class LayerDependencyTest {
   // =========================================================
 
   @Test
-  @DisplayName("Controllers não devem importar repositórios diretamente")
+  @Story("Convenções de nomenclatura")
+  @Severity(SeverityLevel.CRITICAL)
+  @DisplayName("[CONFIG][ASSET] Controllers não devem importar repositórios diretamente")
   void controllersNaoDevemImportarRepositorios() {
     // ATENÇÃO: Esta regra detectou uma violação REAL no AssetHistoryController,
     // que injeta AssetStatusHistoryRepository e AssetAssignmentHistoryRepository diretamente.
@@ -150,7 +170,9 @@ class LayerDependencyTest {
   // =========================================================
 
   @Test
-  @DisplayName("Classes em interfaces/rest devem terminar com Controller")
+  @Story("Convenções de nomenclatura")
+  @Severity(SeverityLevel.NORMAL)
+  @DisplayName("[CONFIG][ASSET] Classes em interfaces/rest devem terminar com Controller")
   void controllerDevemTerminarComController() {
     classes()
         .that()
@@ -166,7 +188,9 @@ class LayerDependencyTest {
   }
 
   @Test
-  @DisplayName("Classes anotadas com @Repository devem terminar com Repository")
+  @Story("Convenções de nomenclatura")
+  @Severity(SeverityLevel.NORMAL)
+  @DisplayName("[CONFIG][ASSET] Classes anotadas com @Repository devem terminar com Repository")
   void repositoriosDevemTerminarComRepository() {
     classes()
         .that()
@@ -180,7 +204,9 @@ class LayerDependencyTest {
   }
 
   @Test
-  @DisplayName("Classes anotadas com @Service devem terminar com Service")
+  @Story("Convenções de nomenclatura")
+  @Severity(SeverityLevel.NORMAL)
+  @DisplayName("[CONFIG][ASSET] Classes anotadas com @Service devem terminar com Service")
   void servicosDevemTerminarComService() {
     classes()
         .that()
@@ -202,7 +228,9 @@ class LayerDependencyTest {
   // =========================================================
 
   @Test
-  @DisplayName("Controllers não devem retornar entidades de domínio diretamente")
+  @Story("Dependências de camada")
+  @Severity(SeverityLevel.BLOCKER)
+  @DisplayName("[CONFIG][ASSET] Controllers não devem retornar entidades de domínio diretamente")
   void controllersNaoDevemRetornarEntidadesDeDominio() {
     // Verifica usando noMethods() — API disponível no ArchUnit 1.2.1
     // Impede que métodos de controllers retornem tipos anotados com @Entity

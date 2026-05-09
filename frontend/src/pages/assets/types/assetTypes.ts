@@ -17,6 +17,7 @@ export interface TransferPayload {
 export interface MaintenancePayload {
   assetId: number
   description: string
+  estimatedCost?: number
 }
 
 // ─── Parâmetros de listagem (query) ─────────────────────────────────────────

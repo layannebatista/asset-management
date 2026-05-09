@@ -8,7 +8,7 @@ import {
   ASSET_STATUS_LABELS, ASSET_STATUS_COLORS,
   MAINTENANCE_STATUS_LABELS, MAINTENANCE_STATUS_COLORS,
   ASSET_TYPE_LABELS,
-  formatCode, formatDate,
+  formatDate,
 } from '../../shared'
 
 interface MetricCardProps {

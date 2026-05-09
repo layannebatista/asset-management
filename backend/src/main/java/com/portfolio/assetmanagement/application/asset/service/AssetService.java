@@ -68,7 +68,12 @@ public class AssetService {
   }
 
   private void validateAccess(Asset asset) {
-    if (loggedUser.isAdmin()) return;
+    if (loggedUser.isAdmin()) {
+      if (!asset.getOrganization().getId().equals(loggedUser.getOrganizationId())) {
+        throw new ForbiddenException("Access denied");
+      }
+      return;
+    }
 
     if (loggedUser.isManager()) {
       if (asset.getUnit() == null || !asset.getUnit().getId().equals(loggedUser.getUnitId())) {

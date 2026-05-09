@@ -44,19 +44,6 @@ updates:
       - dependency-name: "vite"
         update-types: ["version-update:semver-major", "version-update:semver-minor"]
 
-  # ─── Automação de testes: Cypress ─────────────────────────────────────────
-  - package-ecosystem: "npm"
-    directory: "/frontend/src/automation/cypress"
-    schedule:
-      interval: "monthly"
-    open-pull-requests-limit: 3
-    commit-message:
-      prefix: "chore(deps)"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "testing"
-
   # ─── Automação de testes: Playwright ──────────────────────────────────────
   - package-ecosystem: "npm"
     directory: "/frontend/src/automation/playwright"

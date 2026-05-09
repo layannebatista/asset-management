@@ -24,6 +24,15 @@ SET row_security = off;
 SET default_tablespace = '';
 SET default_table_access_method = heap;
 
+-- Garante compatibilidade em CI/teste quando o role esperado ainda nao existe.
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'asset_user') THEN
+        CREATE ROLE asset_user;
+    END IF;
+END
+$$;
+
 -- ============================================================
 -- ORGANIZATIONS
 -- ============================================================

@@ -1,0 +1,251 @@
+{
+  "title": "Patrimonio 360 - Executive Overview",
+  "uid": "executive-overview",
+  "schemaVersion": 38,
+  "version": 2,
+  "refresh": "30s",
+  "description": "Resumo executivo da operacao. Este dashboard mostra saude, experiencia do usuario e capacidade em alto nivel, sem repetir os graficos detalhados do dashboard tecnico do backend.",
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "Status executivo",
+      "type": "row"
+    },
+    {
+      "type": "stat",
+      "title": "Disponibilidade monitorada",
+      "description": "Percentual de alvos monitorados pelo Prometheus que estao de pe entre backend, Prometheus e cAdvisor.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "100 * avg(up{job=~\"asset-management-backend|prometheus|cadvisor\"})"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 95 },
+              { "color": "green", "value": 100 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 }
+    },
+    {
+      "type": "stat",
+      "title": "Latencia p95 da API",
+      "description": "Percentil 95 da latencia HTTP total da API. E o numero executivo mais util para acompanhar experiencia do usuario sem abrir o dashboard tecnico.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{application=\"asset-management\"}[5m])) by (le))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.5 },
+              { "color": "red", "value": 1.5 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 }
+    },
+    {
+      "type": "stat",
+      "title": "Erros 5xx",
+      "description": "Percentual de respostas 5xx nos ultimos 5 minutos. Serve como indicador rapido de incidente em andamento.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "100 * ((sum(rate(http_server_requests_seconds_count{application=\"asset-management\",status=~\"5..\"}[5m])) / clamp_min(sum(rate(http_server_requests_seconds_count{application=\"asset-management\"}[5m])), 1)) or vector(0))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 }
+    },
+    {
+      "type": "stat",
+      "title": "Volume 30 min",
+      "description": "Quantidade total de requisicoes atendidas nos ultimos 30 minutos. Ajuda a separar problema de produto de problema de demanda.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "sum(increase(http_server_requests_seconds_count{application=\"asset-management\"}[30m]))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 }
+    },
+    {
+      "type": "stat",
+      "title": "Heap usado",
+      "description": "Percentual medio de heap ocupado pela JVM. Quando sobe de forma persistente, o risco de pausas de GC e falta de memoria aumenta.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "100 * (sum(jvm_memory_used_bytes{application=\"asset-management\",area=\"heap\"}) / clamp_min(sum(jvm_memory_max_bytes{application=\"asset-management\",area=\"heap\"}), 1))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 75 },
+              { "color": "red", "value": 90 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 5 }
+    },
+    {
+      "type": "stat",
+      "title": "Saturacao do pool DB",
+      "description": "Percentual de uso do pool HikariCP. Quando se aproxima de 100%, a aplicacao passa a esperar conexao e a latencia explode.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "100 * max((hikaricp_connections_active{application=\"asset-management\"} / clamp_min(hikaricp_connections_max{application=\"asset-management\"}, 1)) or vector(0))"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 90 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 5 }
+    },
+    {
+      "type": "stat",
+      "title": "CPU do processo",
+      "description": "Uso de CPU da JVM. Serve para perceber rapidamente se a aplicacao esta computacionalmente pressionada.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "100 * process_cpu_usage{application=\"asset-management\"}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 90 }
+            ]
+          },
+          "color": { "mode": "thresholds" }
+        }
+      },
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 5 }
+    },
+    {
+      "type": "stat",
+      "title": "Uptime da API",
+      "description": "Tempo sem reinicio do processo principal da API. Reinicios frequentes costumam indicar instabilidade, crash ou deploy excessivo.",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "process_uptime_seconds{application=\"asset-management\"}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": { "mode": "palette-classic" }
+        }
+      },
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 5 }
+    }
+  ],
+  "time": { "from": "now-6h", "to": "now" },
+  "timezone": "browser"
+}

@@ -30,6 +30,7 @@ export function CreateMaintenanceModal({
 
   return (
     <div
+      data-testid="create-maintenance-modal"
       className="fixed inset-0 bg-slate-900/50 z-50 flex items-center justify-center p-5"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
@@ -58,6 +59,7 @@ export function CreateMaintenanceModal({
               Ativo *
             </label>
             <select
+              data-testid="create-maintenance-asset-select"
               value={form.assetId}
               onChange={(e) => setForm((f) => ({ ...f, assetId: e.target.value }))}
               className={INPUT_CLS}
@@ -80,6 +82,7 @@ export function CreateMaintenanceModal({
               <span className="normal-case font-normal">(10–1000 caracteres)</span>
             </label>
             <textarea
+              data-testid="create-maintenance-description-input"
               rows={4}
               value={form.description}
               onChange={(e) => {
@@ -107,6 +110,7 @@ export function CreateMaintenanceModal({
               <span className="normal-case font-normal text-slate-400">(opcional)</span>
             </label>
             <input
+              data-testid="create-maintenance-cost-input"
               inputMode="numeric"
               value={form.estimatedCost}
               onChange={(e) =>
@@ -126,6 +130,7 @@ export function CreateMaintenanceModal({
           <div className="flex gap-2 justify-end pt-2 border-t border-slate-100">
             <button
               type="button"
+              data-testid="create-maintenance-cancel-btn"
               onClick={onClose}
               className="px-4 py-[8px] rounded-[8px] border-[1.5px] border-slate-200 text-[13px] font-semibold hover:bg-slate-50"
             >
@@ -133,6 +138,7 @@ export function CreateMaintenanceModal({
             </button>
             <button
               type="button"
+              data-testid="create-maintenance-confirm-btn"
               onClick={onConfirm}
               disabled={saving || !form.assetId || form.description.trim().length < 10}
               className="px-4 py-[8px] rounded-[8px] bg-blue-700 text-white text-[13px] font-semibold hover:bg-blue-800 disabled:opacity-50"

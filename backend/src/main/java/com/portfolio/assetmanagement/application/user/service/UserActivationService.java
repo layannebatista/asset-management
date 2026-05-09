@@ -81,7 +81,7 @@ public class UserActivationService {
     UserActivationToken token = new UserActivationToken(user, TOKEN_EXPIRATION_SECONDS);
     tokenRepository.save(token);
 
-    String activationLink = frontendUrl + "/ativar?token=" + token.getToken();
+    String activationLink = frontendUrl + "/activate?token=" + token.getToken();
 
     // Sempre envia por e-mail
     emailService.sendActivationEmail(user.getEmail(), user.getName(), token.getToken());

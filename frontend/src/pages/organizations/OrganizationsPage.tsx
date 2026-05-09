@@ -3,7 +3,7 @@ import { Building2, Pencil, X, Check } from 'lucide-react'
 import { organizationApi, unitApi } from '../../api'
 import { useAuth } from '../../context/AuthContext'
 import type { OrganizationResponse, UnitResponse } from '../../types'
-import { INPUT_CLS, ErrorBanner } from '../../shared'
+import { ErrorBanner } from '../../shared'
 
 // ─── Linha de informação ──────────────────────────────────────────────────────
 function InfoRow({ label, value }: { label: string; value: string }) {
@@ -111,6 +111,13 @@ export default function OrganizationsPage() {
       </div>
 
       <ErrorBanner message={loadError} onDismiss={() => setLoadError('')} />
+      <ErrorBanner message={saveError} onDismiss={() => setSaveError('')} />
+
+      {saveSuccess && (
+        <div className="mb-4 rounded-[10px] border border-emerald-200 bg-emerald-50 p-3 text-[12.5px] text-emerald-700">
+          Nome da organização atualizado com sucesso.
+        </div>
+      )}
 
       {org && (
         <>

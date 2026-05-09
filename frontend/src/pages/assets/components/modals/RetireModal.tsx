@@ -41,6 +41,7 @@ export function RetireModal({
 
   return (
     <div
+      data-testid="retire-modal"
       className="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-5"
       onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
@@ -90,6 +91,7 @@ export function RetireModal({
           </label>
 
           <input
+            data-testid="retire-confirm-input"
             value={typed}
             onChange={(e) => setTyped(e.target.value)}
             placeholder={asset.assetTag}
@@ -99,6 +101,7 @@ export function RetireModal({
           {/* footer */}
           <div className="flex gap-2 justify-end pt-4 mt-2 border-t border-slate-100">
             <button
+              data-testid="retire-cancel-btn"
               onClick={handleClose}
               className="px-4 py-[8px] rounded-[8px] border-[1.5px] border-slate-200 text-[13px] font-semibold text-slate-700 hover:bg-slate-50 transition"
             >
@@ -106,6 +109,7 @@ export function RetireModal({
             </button>
 
             <button
+              data-testid="retire-confirm-btn"
               onClick={handleConfirm}
               disabled={!confirmed || loading}
               className="px-4 py-[8px] rounded-[8px] bg-red-600 text-white text-[13px] font-semibold hover:bg-red-700 transition disabled:opacity-40 disabled:cursor-not-allowed"

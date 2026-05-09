@@ -29,6 +29,7 @@ interface TabInsuranceProps {
   setInsurance: React.Dispatch<React.SetStateAction<AssetInsurance[]>>
   isAdmin: boolean
   isGestor: boolean
+  retired?: boolean
 }
 
 export function TabInsurance({
@@ -37,6 +38,7 @@ export function TabInsurance({
   setInsurance,
   isAdmin,
   isGestor,
+  retired = false,
 }: TabInsuranceProps) {
   const [insPage, setInsPage] = useState(0)
   const [showIns, setShowIns] = useState(false)
@@ -138,7 +140,7 @@ export function TabInsurance({
 
   return (
     <div>
-      {(isAdmin || isGestor) && (
+      {(isAdmin || isGestor) && !retired && (
         <div className="flex justify-end mb-3">
           <button
             type="button"
@@ -175,7 +177,7 @@ export function TabInsurance({
                     </span>
                   </div>
 
-                  {(isAdmin || isGestor) && (
+                  {(isAdmin || isGestor) && !retired && (
                     <button
                       type="button"
                       onClick={() => handleDelete(ins.id)}

@@ -20,7 +20,10 @@ FROM eclipse-temurin:17-jre-jammy
 WORKDIR /app
 
 # Usuário não-privilegiado para reduzir superfície de ataque
-RUN groupadd --system appgroup && \
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends wget && \
+    rm -rf /var/lib/apt/lists/* && \
+    groupadd --system appgroup && \
     useradd --system --gid appgroup --no-create-home appuser
 
 COPY --from=build --chown=appuser:appgroup /app/target/*.jar app.jar

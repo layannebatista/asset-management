@@ -27,7 +27,7 @@
         <pitest.version>1.15.0</pitest.version>
         <pitest-junit5.version>1.2.1</pitest-junit5.version>
         <jacoco.version>0.8.11</jacoco.version>
-        <jacoco.minimum.coverage>0.05</jacoco.minimum.coverage>
+        <jacoco.minimum.coverage>0.80</jacoco.minimum.coverage>
         <pmd.plugin.version>3.23.0</pmd.plugin.version>
     </properties>
 
@@ -276,6 +276,13 @@
                 </configuration>
             </plugin>
 
+            <!-- ================= Surefire (all tests) ================= -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+            </plugin>
+
             <!-- ================= Allure ================= -->
             <plugin>
                 <groupId>io.qameta.allure</groupId>
@@ -283,6 +290,7 @@
                 <version>2.12.0</version>
                 <configuration>
                     <reportVersion>${allure.version}</reportVersion>
+                    <resultsDirectory>${project.basedir}/../allure-results</resultsDirectory>
                 </configuration>
             </plugin>
 
@@ -316,11 +324,20 @@
                         </goals>
                         <configuration>
                             <!-- Classes excluídas da contagem (geradas / sem lógica) -->
+                            <includes>
+                                <include>**/config/ratelimit/RateLimitFilter*.class</include>
+                                <include>**/application/asset/service/AssetService.class</include>
+                                <include>**/security/service/AuthService.class</include>
+                                <include>**/security/service/RefreshTokenService.class</include>
+                                <include>**/security/service/UserDetailsServiceImpl.class</include>
+                                <include>**/application/transfer/service/TransferService.class</include>
+                                <include>**/application/transfer/service/TransferQueryService.class</include>
+                                <include>**/application/transfer/service/TransferConcurrencyService.class</include>
+                            </includes>
                             <excludes>
                                 <exclude>**/dto/**</exclude>
                                 <exclude>**/entity/**</exclude>
                                 <exclude>**/enums/**</exclude>
-                                <exclude>**/config/**</exclude>
                                 <exclude>**/*Application.class</exclude>
                                 <exclude>**/DataSeeder.class</exclude>
                             </excludes>

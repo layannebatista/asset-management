@@ -1,0 +1,122 @@
+================================================================================
+MAPEAMENTO DE CENARIOS DE TESTE - DOMINIO: AUTHENTICATION (Frontend)
+Projeto: Patrimonio 360 | Frontend Playwright + Cucumber
+Atualizado em: 2026-04-16
+================================================================================
+
+LEGENDA
+  Tipo        : E2E, SEGURANCA, USABILIDADE, RESILIENCIA, ACESSIBILIDADE
+  Criticidade : BLOCKER > CRITICAL > NORMAL > LOW
+  Status      : AUTOMATIZADO | PENDENTE | NAO_APLICAVEL
+  Camada      : feature/steps do dominio
+
+NOTAS GERAIS
+  - Mapeamento considera login com e sem MFA, guardas de rota e persistencia de sessao.
+  - Cenarios AUTOMATIZADO sao os atualmente presentes nas features.
+  - Cenarios PENDENTE representam cobertura QA recomendada para frontend.
+
+================================================================================
+SECAO 1 - UI DE LOGIN E USABILIDADE
+================================================================================
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+LG01 | Exibir formulario com email, senha e CTA principal          | USABILIDADE   | NORMAL      | AUTOMATIZADO | authentication/login.feature
+LG02 | Exibir perfis demo ADMIN/GESTOR/OPERADOR                   | USABILIDADE   | NORMAL      | AUTOMATIZADO | authentication/login.feature
+LG03 | Clique no perfil demo preenche email e senha               | E2E           | NORMAL      | AUTOMATIZADO | authentication/login.feature
+LG04 | Botao "Entrar" fica desabilitado durante submit            | USABILIDADE   | LOW         | PENDENTE     | authentication/login.feature
+LG05 | Mensagem de erro e limpa em nova tentativa                 | USABILIDADE   | NORMAL      | PENDENTE     | authentication/login.feature
+LG06 | Enter no campo senha dispara submit                        | USABILIDADE   | LOW         | PENDENTE     | authentication/login.feature
+LG07 | Campos required impedem submit vazio                       | E2E           | NORMAL      | PENDENTE     | authentication/login.feature
+LG08 | Browser back após logout não exibe página protegida (cache)| SEGURANCA     | CRITICAL    | PENDENTE     | components/ProtectedRoute.tsx
+LG09 | Múltiplas abas abertas — logout em uma não quebra outras   | USABILIDADE   | NORMAL      | PENDENTE     | authentication/login.feature
+
+================================================================================
+SECAO 2 - AUTENTICACAO SEM MFA
+================================================================================
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+AU01 | Login invalido exibe mensagem de erro                       | SEGURANCA     | CRITICAL    | AUTOMATIZADO | authentication/login.feature
+AU02 | Login ADMIN valido redireciona para /dashboard             | E2E           | BLOCKER     | AUTOMATIZADO | authentication/login.feature
+AU03 | Login GESTOR valido redireciona para dashboard gestor      | E2E           | CRITICAL    | AUTOMATIZADO | authentication/login.feature
+AU04 | Login OPERADOR valido redireciona para dashboard operador  | E2E           | CRITICAL    | AUTOMATIZADO | authentication/login.feature
+AU05 | Email inexistente retorna erro amigavel                    | SEGURANCA     | CRITICAL    | AUTOMATIZADO | authentication/login.feature
+AU06 | Senha incorreta retorna erro sem vazar detalhe sensivel    | SEGURANCA     | CRITICAL    | AUTOMATIZADO | authentication/login.feature
+AU07 | Erro 500 no login exibe fallback de erro                   | RESILIENCIA   | NORMAL      | PENDENTE     | authentication/login.feature
+AU08 | Erro de rede no login exibe fallback de erro               | RESILIENCIA   | NORMAL      | PENDENTE     | authentication/login.feature
+
+================================================================================
+SECAO 3 - FLUXO MFA
+================================================================================
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+MF01 | Usuario com MFA entra no passo de verificacao              | E2E           | BLOCKER     | AUTOMATIZADO | authentication/login.feature
+MF02 | Campo MFA aceita somente digitos                           | E2E           | NORMAL      | PENDENTE     | authentication/login.feature
+MF03 | Botao "Confirmar" habilita apenas com 6 digitos           | USABILIDADE   | NORMAL      | PENDENTE     | authentication/login.feature
+MF04 | Codigo MFA valido redireciona para dashboard               | E2E           | BLOCKER     | AUTOMATIZADO | authentication/login.feature
+MF05 | Codigo MFA invalido exibe erro                             | SEGURANCA     | CRITICAL    | AUTOMATIZADO | authentication/login.feature
+MF06 | Codigo MFA expirado exibe mensagem correta                 | SEGURANCA     | CRITICAL    | AUTOMATIZADO | authentication/login.feature
+MF07 | Erro de rede na confirmacao MFA exibe fallback             | RESILIENCIA   | NORMAL      | PENDENTE     | authentication/login.feature
+MF08 | Cancelar fluxo MFA e retornar para tela de login inicial   | E2E           | NORMAL      | PENDENTE     | authentication/login.feature
+
+================================================================================
+SECAO 4 - SESSAO, ROTAS E SEGURANCA
+================================================================================
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+SR01 | Acesso a rota protegida sem sessao redireciona para /login | SEGURANCA     | BLOCKER     | AUTOMATIZADO | authentication/login.feature
+SR02 | Acesso a rota /login com sessao ativa redireciona dashboard| E2E           | NORMAL      | PENDENTE     | components/ProtectedRoute.tsx
+SR03 | ADMIN nao acessa rota exclusiva de ADMIN/GESTOR? nao aplica| SEGURANCA     | LOW         | NAO_APLICAVEL| routes/AppRoutes.tsx
+SR04 | GESTOR bloqueado em rota ADMIN exclusiva                   | SEGURANCA     | CRITICAL    | AUTOMATIZADO | authentication/login.feature
+SR05 | OPERADOR bloqueado em rotas ADMIN e ADMIN/GESTOR           | SEGURANCA     | CRITICAL    | AUTOMATIZADO | authentication/login.feature
+SR06 | Refresh de pagina preserva sessao valida                   | E2E           | CRITICAL    | AUTOMATIZADO | authentication/login.feature
+SR07 | Sessao invalida remove credenciais locais                  | SEGURANCA     | CRITICAL    | AUTOMATIZADO | authentication/login.feature
+SR08 | Apos login, redireciona para URL originalmente solicitada  | E2E           | NORMAL      | PENDENTE     | components/ProtectedRoute.tsx
+SR09 | Token expirado durante navegacao dispara refresh silencioso| RESILIENCIA   | CRITICAL    | PENDENTE     | api/ (interceptors)
+
+================================================================================
+SECAO 5 - ACESSIBILIDADE
+================================================================================
+
+NOTA: Os cenários de acessibilidade cobrem conformidade WCAG 2.1 nível AA para o fluxo de login.
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+AX01 | Labels associados aos campos de login                       | ACESSIBILIDADE| NORMAL      | PENDENTE     | authentication/login.feature
+AX02 | Ordem de tab navegavel (email -> senha -> botao)           | ACESSIBILIDADE| NORMAL      | PENDENTE     | authentication/login.feature
+AX03 | Mensagens de erro sao perceptiveis por leitor de tela      | ACESSIBILIDADE| NORMAL      | PENDENTE     | authentication/login.feature
+
+================================================================================
+SECAO 6 - SESSAO E COMPORTAMENTO DE EXPIRACAO
+================================================================================
+
+ID   | Cenario                                                     | Tipo          | Criticidade | Status       | Camada / Arquivo
+-----|-------------------------------------------------------------|---------------|-------------|--------------|-------------------------------------------------------------
+SS01 | Sessao expira enquanto usuario esta ativo → redirect login  | RESILIENCIA   | CRITICAL    | PENDENTE     | api/ (interceptors + context)
+SS02 | Token access expira e refresh token renova sessao silencio  | RESILIENCIA   | CRITICAL    | PENDENTE     | api/ (interceptors)
+SS03 | Refresh token expirado expulsa usuario para login           | SEGURANCA     | BLOCKER     | PENDENTE     | api/ (interceptors + context)
+SS04 | Varias tentativas falhas exibem mensagem de bloqueio/espera | SEGURANCA     | CRITICAL    | PENDENTE     | authentication/login.feature
+SS05 | Sessao nao persiste apos fechar e reabrir o navegador (sem remember me) | SEGURANCA | NORMAL | PENDENTE | context/AuthContext.tsx
+
+================================================================================
+RESUMO DE COBERTURA
+================================================================================
+
+Status                  Contagem  Porcentagem
+---------------------------------------------
+AUTOMATIZADO            17        49%
+PENDENTE                26        75%
+NAO_APLICAVEL           1         3%
+---------------------------------------------
+TOTAL                   34
+
+Novos cenarios adicionados (2026-04-21): LG08, LG09, MF08, SR08, SR09, SS01-SS05
+Cenarios de sessao/expiracao nao estavam mapeados em nenhum arquivo anterior.
+
+Arquivos de referencia do dominio:
+  - features/authentication/login.feature
+  - step-definitions/authentication/login.steps.ts
+================================================================================

@@ -1,1 +1,0 @@
-{"uuid":"5cdb7c1f-c0d6-4d82-9812-4574201c33b8","name":"deve lançar BusinessException quando status não é REQUESTED","children":["e5765016-9f05-41b0-aa47-6a21e54678ab"],"befores":[],"afters":[],"start":1772850066141,"stop":1772850066162}

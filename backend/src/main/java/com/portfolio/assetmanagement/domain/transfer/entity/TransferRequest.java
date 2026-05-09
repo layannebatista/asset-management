@@ -162,4 +162,14 @@ public class TransferRequest {
     this.status = TransferStatus.COMPLETED;
     this.completedAt = OffsetDateTime.now(); // C2
   }
+
+  public void cancel() {
+    if (status != TransferStatus.PENDING)
+      throw new IllegalStateException("Apenas transferências PENDING podem ser canceladas");
+    this.status = TransferStatus.CANCELLED;
+  }
+
+  public boolean isCancelled() {
+    return status == TransferStatus.CANCELLED;
+  }
 }
